@@ -23,8 +23,7 @@ import (
 // CompletePage flag is on.
 const Version = "2.0"
 
-// Extensions is a bitwise or'ed collection of enabled Blackfriday's
-// extensions.
+// Extensions is a bitfield of enabled extensions.
 type Extensions int
 
 // These are the supported markdown parsing extensions.
@@ -321,15 +320,14 @@ func WithRenderer(r Renderer) Option {
 	}
 }
 
-// WithExtensions allows you to pick some of the many extensions provided by
-// Blackfriday. You can bitwise OR them.
+// WithExtensions allows you to enable extensions
 func WithExtensions(e Extensions) Option {
 	return func(p *Markdown) {
 		p.extensions = e
 	}
 }
 
-// WithNoExtensions turns off all extensions and custom behavior.
+// WithNoExtensions turns off all extensions
 func WithNoExtensions() Option {
 	return func(p *Markdown) {
 		p.extensions = NoExtensions

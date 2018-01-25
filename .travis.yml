@@ -1,13 +1,12 @@
 # Travis CI (http://travis-ci.org/) is a continuous integration service for
 # open source projects. This file configures it to run unit tests for
-# blackfriday.
+# markdown.
 
 language: go
 
 go:
     - 1.5
-    - 1.6
-    - 1.7
+    - 1.9
 
 install:
     - go get -d -t -v ./...
