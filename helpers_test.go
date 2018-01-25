@@ -11,7 +11,7 @@
 // Helper functions for unit testing
 //
 
-package blackfriday
+package markdown
 
 import (
 	"io/ioutil"

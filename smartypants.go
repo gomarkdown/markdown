@@ -13,7 +13,7 @@
 //
 //
 
-package blackfriday
+package markdown
 
 import (
 	"bytes"

@@ -11,7 +11,7 @@
 // Functions to parse inline elements.
 //
 
-package blackfriday
+package markdown
 
 import (
 	"bytes"

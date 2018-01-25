@@ -5,7 +5,7 @@
 // Distributed under the Simplified BSD License.
 // See README.md for details.
 
-package blackfriday
+package markdown
 
 import (
 	"bytes"

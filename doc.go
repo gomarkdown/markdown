@@ -1,4 +1,4 @@
-// Package blackfriday is a markdown processor.
+// package markdown is a markdown processor.
 //
 // It translates plain text with simple formatting rules into an AST, which can
 // then be further processed to HTML (provided by Blackfriday itself) or other
@@ -15,4 +15,4 @@
 //
 // If you're interested in calling Blackfriday from command line, see
 // https://github.com/russross/blackfriday-tool.
-package blackfriday
+package markdown

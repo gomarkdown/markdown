@@ -11,7 +11,7 @@
 // Unit tests for full document parsing and rendering
 //
 
-package blackfriday
+package markdown
 
 import "testing"
 

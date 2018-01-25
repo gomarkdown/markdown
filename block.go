@@ -11,7 +11,7 @@
 // Functions to parse block-level elements.
 //
 
-package blackfriday
+package markdown
 
 import (
 	"bytes"

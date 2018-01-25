@@ -11,7 +11,7 @@
 // Unit tests for block parsing
 //
 
-package blackfriday
+package markdown
 
 import (
 	"strings"

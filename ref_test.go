@@ -11,7 +11,7 @@
 // Markdown 1.0.3 reference tests
 //
 
-package blackfriday
+package markdown
 
 import (
 	"io/ioutil"

@@ -11,7 +11,7 @@
 // Unit tests for inline parsing
 //
 
-package blackfriday
+package markdown
 
 import (
 	"regexp"

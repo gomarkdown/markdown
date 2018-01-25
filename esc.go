@@ -1,4 +1,4 @@
-package blackfriday
+package markdown
 
 import (
 	"html"
