@@ -19,7 +19,11 @@ import (
 	"testing"
 )
 
+// Note: the expensive test is "Markdown Documentation - Syntax", which takes ~7 secs
+// This limits gains from parallization of tests
+
 func TestReference(t *testing.T) {
+	t.Parallel()
 	files := []string{
 		"Amps and angle encoding",
 		"Auto links",
@@ -48,6 +52,7 @@ func TestReference(t *testing.T) {
 }
 
 func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
+	t.Parallel()
 	files := []string{
 		"Amps and angle encoding",
 		"Auto links",
