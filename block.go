@@ -17,8 +17,7 @@ import (
 	"bytes"
 	"html"
 	"regexp"
-
-	"github.com/shurcooL/sanitized_anchor_name"
+	"unicode"
 )
 
 const (
@@ -30,6 +29,26 @@ var (
 	reBackslashOrAmp      = regexp.MustCompile("[\\&]")
 	reEntityOrEscapedChar = regexp.MustCompile("(?i)\\\\" + escapable + "|" + charEntity)
 )
+
+// sanitizeAnchorName returns a sanitized anchor name for the given text.
+// taken from https://github.com/shurcooL/sanitized_anchor_name/blob/master/main.go#L14:1
+func sanitizeAnchorName(text string) string {
+	var anchorName []rune
+	var futureDash = false
+	for _, r := range text {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsNumber(r):
+			if futureDash && len(anchorName) > 0 {
+				anchorName = append(anchorName, '-')
+			}
+			futureDash = false
+			anchorName = append(anchorName, unicode.ToLower(r))
+		default:
+			futureDash = true
+		}
+	}
+	return string(anchorName)
+}
 
 // Parse block-level data.
 // Note: this function and many that it calls assume that
@@ -258,7 +277,7 @@ func (p *Markdown) prefixHeading(data []byte) int {
 	}
 	if end > i {
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			id = sanitized_anchor_name.Create(string(data[i:end]))
+			id = sanitizeAnchorName(string(data[i:end]))
 		}
 		block := p.addBlock(Heading, data[i:end])
 		block.HeadingID = id
@@ -1462,7 +1481,7 @@ func (p *Markdown) paragraph(data []byte) int {
 
 				id := ""
 				if p.extensions&AutoHeadingIDs != 0 {
-					id = sanitized_anchor_name.Create(string(data[prev:eol]))
+					id = sanitizeAnchorName(string(data[prev:eol]))
 				}
 
 				block := p.addBlock(Heading, data[prev:eol])
