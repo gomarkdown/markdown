@@ -26,8 +26,8 @@ const Version = "2.0"
 // Extensions is a bitfield of enabled extensions.
 type Extensions int
 
-// These are the supported markdown parsing extensions.
-// OR these values together to select multiple extensions.
+// Bitflags representing markdown parsing extensions.
+// Use | (or) to specify multiple extensions.
 const (
 	NoExtensions           Extensions = 0
 	NoIntraEmphasis        Extensions = 1 << iota // Ignore emphasis markers inside words

@@ -491,11 +491,16 @@ func (p *Markdown) htmlHr(data []byte, doRender bool) int {
 	return 0
 }
 
-func (p *Markdown) htmlFindTag(data []byte) (string, bool) {
-	i := 0
-	for i < len(data) && isalnum(data[i]) {
+func skipAlnum(data []byte, i int) int {
+	n := len(data)
+	for i < n && isalnum(data[i]) {
 		i++
 	}
+	return i
+}
+
+func (p *Markdown) htmlFindTag(data []byte) (string, bool) {
+	i := skipAlnum(data, 0)
 	key := string(data[:i])
 	if _, ok := blockTags[key]; ok {
 		return key, true
