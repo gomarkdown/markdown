@@ -108,7 +108,7 @@ markdown file using a standalone program.  You can also browse the
 source directly on github if you are just looking for some example
 code:
 
-* <http://github.com/russross/blackfriday-tool>
+* <https://github.com/gomarkdown/markdown-tool>
 
 Note that if you have not already done so, installing
 `blackfriday-tool` will be sufficient to download and install
@@ -198,7 +198,7 @@ implements the following extensions:
 
         Cat
         : Fluffy animal everyone likes
-        
+
         Internet
         : Vector of transmission for pictures of cats
 
@@ -209,7 +209,7 @@ implements the following extensions:
     end of the document. A footnote looks like this:
 
         This is a footnote.[^1]
-        
+
         [^1]: the footnote text.
 
 *   **Autolinking**. Blackfriday can find URLs that have not been

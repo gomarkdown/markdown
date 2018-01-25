@@ -1,6 +1,6 @@
 //
-// Blackfriday Markdown Processor
-// Available at http://github.com/russross/blackfriday
+// Markdown Processor for Go
+// Available at https://github.com/gomarkdown/markdown
 //
 // Copyright © 2011 Russ Ross <russ@russross.com>.
 // Distributed under the Simplified BSD License.
@@ -1613,7 +1613,7 @@ func TestCompletePage(t *testing.T) {
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title></title>
-  <meta name="GENERATOR" content="Blackfriday Markdown Processor v2.0" />
+  <meta name="GENERATOR" content="Markdown Processor for Go v2.0" />
   <meta charset="utf-8" />
 </head>
 <body>

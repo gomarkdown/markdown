@@ -1,6 +1,6 @@
 //
-// Blackfriday Markdown Processor
-// Available at http://github.com/russross/blackfriday
+// Markdown Processor for Go
+// Available at https://github.com/gomarkdown/markdown
 //
 // Copyright © 2011 Russ Ross <russ@russross.com>.
 // Distributed under the Simplified BSD License.
@@ -859,7 +859,7 @@ func (r *HTMLRenderer) writeDocumentHeader(w io.Writer) {
 		escapeHTML(w, []byte(r.Title))
 	}
 	io.WriteString(w, "</title>\n")
-	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"Blackfriday Markdown Processor v")
+	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"Markdown Processor for Go v")
 	io.WriteString(w, Version)
 	io.WriteString(w, "\"")
 	io.WriteString(w, ending)
