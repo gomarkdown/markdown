@@ -1472,10 +1472,7 @@ func (p *Parser) renderParagraph(data []byte) {
 	}
 
 	// trim leading spaces
-	beg := 0
-	for data[beg] == ' ' {
-		beg++
-	}
+	beg := skipChar(data, 0, ' ')
 
 	end := len(data)
 	// trim trailing newline
@@ -1555,10 +1552,7 @@ func (p *Parser) paragraph(data []byte) int {
 				p.addBlock(d, data[prev:eol])
 
 				// find the end of the underline
-				for i < len(data) && data[i] != '\n' {
-					i++
-				}
-				return i
+				return skipUntilChar(data, i, '\n')
 			}
 		}
 
