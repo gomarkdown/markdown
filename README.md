@@ -1,7 +1,8 @@
 Markdown [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
 ===========
 
-Package github.com/gomarkdown/markdown is a [Markdown](https://daringfireball.net/projects/markdown/) parser and HTML renderer implemented in Go.
+Package `github.com/gomarkdown/markdown` is a [Markdown](https://daringfireball.net/projects/markdown/) parser and HTML renderer implemented in Go.
+
 It's fast and supports common extensions.
 
 Installation
@@ -16,17 +17,15 @@ API Docs: https://godoc.org/github.com/gomarkdown/markdown
 Usage
 -----
 
-To convert input `[]byte` slice to HTML using reasonable defaults, do:
+To convert markdown text to HTML using reasonable defaults:
 
 ```go
 md := []byte("## markdown document")
 output := markdown.ToHTML(md, nil, nil)
 ```
 
-This will parse the input using most common parser extensions and render with
-`HTMLRenderer` (also in most common configuration).
+To customize both parser and HTML renderer:
 
-To parse without any extensions:
 ```go
 md := []byte("markdown text")
 extensions := CommonExtensions | AutoHeadingIDs
