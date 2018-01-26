@@ -100,7 +100,7 @@ type Parser struct {
 	// the bottom will be used to fill in the link details.
 	ReferenceOverride ReferenceOverrideFunc
 
-	// after parsing, this is root of parsed ast
+	// after parsing, this is AST root of parsed markdown text
 	Doc *Node
 
 	extensions Extensions
