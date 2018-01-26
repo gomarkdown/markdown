@@ -383,9 +383,8 @@ func link(p *Parser, data []byte, offset int) (int, *Node) {
 		// look for the id
 		i++
 		linkB := i
-		for i < len(data) && data[i] != ']' {
-			i++
-		}
+		i = skipUntilChar(data, i, ']')
+
 		if i >= len(data) {
 			return 0, nil
 		}
