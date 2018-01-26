@@ -281,25 +281,6 @@ func (n *Node) canContain(v NodeData) bool {
 		return isTableCellData(v)
 	}
 	return false
-
-	/*
-		if n.Type == List {
-			return t == Item
-		}
-		if n.Type == Document || n.Type == BlockQuote || n.Type == Item {
-			return t != Item
-		}
-		if n.Type == Table {
-			return t == TableHead || t == TableBody
-		}
-		if n.Type == TableHead || n.Type == TableBody {
-			return t == TableRow
-		}
-		if n.Type == TableRow {
-			return t == TableCell
-		}
-		return false
-	*/
 }
 
 // WalkStatus allows NodeVisitor to have some control over the tree traversal.
