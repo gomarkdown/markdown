@@ -152,7 +152,7 @@ func codeSpan(p *Markdown, data []byte, offset int) (int, *Node) {
 
 	// render the code span
 	if fBegin != fEnd {
-		code := NewNode(Code)
+		code := NewNode(&CodeData{})
 		code.Literal = data[fBegin:fEnd]
 		return end, code
 	}
@@ -169,7 +169,7 @@ func maybeLineBreak(p *Markdown, data []byte, offset int) (int, *Node) {
 
 	if offset < len(data) && data[offset] == '\n' {
 		if offset-origOffset >= 2 {
-			return offset - origOffset + 1, NewNode(Hardbreak)
+			return offset - origOffset + 1, NewNode(&HardbreakData{})
 		}
 		return offset - origOffset, nil
 	}
@@ -179,7 +179,7 @@ func maybeLineBreak(p *Markdown, data []byte, offset int) (int, *Node) {
 // newline without two spaces works when HardLineBreak is enabled
 func lineBreak(p *Markdown, data []byte, offset int) (int, *Node) {
 	if p.extensions&HardLineBreak != 0 {
-		return 1, NewNode(Hardbreak)
+		return 1, NewNode(&HardbreakData{})
 	}
 	return 0, nil
 }
@@ -464,7 +464,7 @@ func link(p *Markdown, data []byte, offset int) (int, *Node) {
 			}
 		}
 
-		footnoteNode = NewNode(Item)
+		footnoteNode = NewNode(&ItemData{})
 		if t == linkInlineFootnote {
 			// create a new reference
 			noteID = len(p.notes) + 1
@@ -535,9 +535,11 @@ func link(p *Markdown, data []byte, offset int) (int, *Node) {
 	var linkNode *Node
 	switch t {
 	case linkNormal:
-		linkNode = NewNode(Link)
-		linkNode.Destination = normalizeURI(uLink)
-		linkNode.Title = title
+		d := &LinkData{
+			Destination: normalizeURI(uLink),
+			Title:       title,
+		}
+		linkNode = NewNode(d)
 		if len(altContent) > 0 {
 			linkNode.AppendChild(text(altContent))
 		} else {
@@ -550,18 +552,22 @@ func link(p *Markdown, data []byte, offset int) (int, *Node) {
 		}
 
 	case linkImg:
-		linkNode = NewNode(Image)
-		linkNode.Destination = uLink
-		linkNode.Title = title
+		d := &ImageData{
+			Destination: uLink,
+			Title:       title,
+		}
+		linkNode = NewNode(d)
 		linkNode.AppendChild(text(data[1:txtE]))
 		i++
 
 	case linkInlineFootnote, linkDeferredFootnote:
-		linkNode = NewNode(Link)
-		linkNode.Destination = link
-		linkNode.Title = title
-		linkNode.NoteID = noteID
-		linkNode.Footnote = footnoteNode
+		d := &LinkData{
+			Destination: link,
+			Title:       title,
+			NoteID:      noteID,
+			Footnote:    footnoteNode,
+		}
+		linkNode = NewNode(d)
 		if t == linkInlineFootnote {
 			i++
 		}
@@ -625,16 +631,18 @@ func leftAngle(p *Markdown, data []byte, offset int) (int, *Node) {
 			unescapeText(&uLink, data[1:end+1-2])
 			if uLink.Len() > 0 {
 				link := uLink.Bytes()
-				node := NewNode(Link)
-				node.Destination = link
+				d := &LinkData{
+					Destination: link,
+				}
+				node := NewNode(d)
 				if altype == emailAutolink {
-					node.Destination = append([]byte("mailto:"), link...)
+					d.Destination = append([]byte("mailto:"), link...)
 				}
 				node.AppendChild(text(stripMailto(link)))
 				return end, node
 			}
 		} else {
-			htmlTag := NewNode(HTMLSpan)
+			htmlTag := NewNode(&HTMLSpanData{})
 			htmlTag.Literal = data[:end]
 			return end, htmlTag
 		}
@@ -651,7 +659,7 @@ func escape(p *Markdown, data []byte, offset int) (int, *Node) {
 
 	if len(data) > 1 {
 		if p.extensions&BackslashLineBreak != 0 && data[1] == '\n' {
-			return 2, NewNode(Hardbreak)
+			return 2, NewNode(&HardbreakData{})
 		}
 		if bytes.IndexByte(escapeChars, data[1]) < 0 {
 			return 0, nil
@@ -776,7 +784,7 @@ func autoLink(p *Markdown, data []byte, offset int) (int, *Node) {
 
 	anchorStr := anchorRe.Find(data[anchorStart:])
 	if anchorStr != nil {
-		anchorClose := NewNode(HTMLSpan)
+		anchorClose := NewNode(&HTMLSpanData{})
 		anchorClose.Literal = anchorStr[offsetFromAnchor:]
 		return len(anchorStr) - offsetFromAnchor, anchorClose
 	}
@@ -875,8 +883,10 @@ func autoLink(p *Markdown, data []byte, offset int) (int, *Node) {
 	unescapeText(&uLink, data[:linkEnd])
 
 	if uLink.Len() > 0 {
-		node := NewNode(Link)
-		node.Destination = uLink.Bytes()
+		d := &LinkData{
+			Destination: uLink.Bytes(),
+		}
+		node := NewNode(d)
 		node.AppendChild(text(uLink.Bytes()))
 		return linkEnd, node
 	}
@@ -1126,7 +1136,7 @@ func helperEmphasis(p *Markdown, data []byte, c byte) (int, *Node) {
 				}
 			}
 
-			emph := NewNode(Emph)
+			emph := NewNode(&EmphData{})
 			p.inline(emph, data[:i])
 			return i + 1, emph
 		}
@@ -1146,11 +1156,11 @@ func helperDoubleEmphasis(p *Markdown, data []byte, c byte) (int, *Node) {
 		i += length
 
 		if i+1 < len(data) && data[i] == c && data[i+1] == c && i > 0 && !isspace(data[i-1]) {
-			nodeType := Strong
+			var nodeData NodeData = &StrongData{}
 			if c == '~' {
-				nodeType = Del
+				nodeData = &DelData{}
 			}
-			node := NewNode(nodeType)
+			node := NewNode(nodeData)
 			p.inline(node, data[:i])
 			return i + 2, node
 		}
@@ -1179,8 +1189,8 @@ func helperTripleEmphasis(p *Markdown, data []byte, offset int, c byte) (int, *N
 		switch {
 		case i+2 < len(data) && data[i+1] == c && data[i+2] == c:
 			// triple symbol found
-			strong := NewNode(Strong)
-			em := NewNode(Emph)
+			strong := NewNode(&StrongData{})
+			em := NewNode(&EmphData{})
 			strong.AppendChild(em)
 			p.inline(em, data[:i])
 			return i + 3, strong
@@ -1204,7 +1214,7 @@ func helperTripleEmphasis(p *Markdown, data []byte, offset int, c byte) (int, *N
 }
 
 func text(s []byte) *Node {
-	node := NewNode(Text)
+	node := NewNode(&TextData{})
 	node.Literal = s
 	return node
 }

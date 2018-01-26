@@ -217,12 +217,12 @@ func (p *Markdown) finalize(block *Node) {
 	p.tip = above
 }
 
-func (p *Markdown) addChild(node NodeType, offset uint32) *Node {
-	return p.addExistingChild(NewNode(node), offset)
+func (p *Markdown) addChild(d NodeData, offset uint32) *Node {
+	return p.addExistingChild(NewNode(d), offset)
 }
 
 func (p *Markdown) addExistingChild(node *Node, offset uint32) *Node {
-	for !p.tip.canContain(node.Type) {
+	for !p.tip.canContain(node.Data) {
 		p.finalize(p.tip)
 	}
 	p.tip.AppendChild(node)
@@ -275,7 +275,7 @@ func New(opts ...Option) *Markdown {
 	p.refs = make(map[string]*reference)
 	p.maxNesting = 16
 	p.insideLink = false
-	docNode := NewNode(Document)
+	docNode := NewNode(&DocumentData{})
 	p.doc = docNode
 	p.tip = docNode
 	p.oldTip = docNode
@@ -406,7 +406,8 @@ func (p *Markdown) Parse(input []byte) *Node {
 	}
 	// Walk the tree again and process inline markdown in each block
 	p.doc.Walk(func(node *Node, entering bool) WalkStatus {
-		if node.Type == Paragraph || node.Type == Heading || node.Type == TableCell {
+		switch node.Data.(type) {
+		case *ParagraphData, *HeadingData, *TableCellData:
 			p.inline(node, node.content)
 			node.content = nil
 		}
@@ -421,9 +422,11 @@ func (p *Markdown) parseRefsToAST() {
 		return
 	}
 	p.tip = p.doc
-	block := p.addBlock(List, nil)
-	block.IsFootnotesList = true
-	block.ListFlags = ListTypeOrdered
+	d := &ListData{
+		IsFootnotesList: true,
+		ListFlags:       ListTypeOrdered,
+	}
+	block := p.addBlock(d, nil)
 	flags := ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is
 	// because the body of the loop will append nested footnotes to p.notes and
@@ -433,8 +436,9 @@ func (p *Markdown) parseRefsToAST() {
 		ref := p.notes[i]
 		p.addExistingChild(ref.footnote, 0)
 		block := ref.footnote
-		block.ListFlags = flags | ListTypeOrdered
-		block.RefLink = ref.link
+		blockData := block.Data.(*ItemData)
+		blockData.ListFlags = flags | ListTypeOrdered
+		blockData.RefLink = ref.link
 		if ref.hasBlock {
 			flags |= ListItemContainsBlock
 			p.block(ref.title)
@@ -444,10 +448,11 @@ func (p *Markdown) parseRefsToAST() {
 		flags &^= ListItemBeginningOfList | ListItemContainsBlock
 	}
 	above := block.Parent
-	finalizeList(block)
+	finalizeList(block, d)
 	p.tip = above
 	block.Walk(func(node *Node, entering bool) WalkStatus {
-		if node.Type == Paragraph || node.Type == Heading {
+		switch node.Data.(type) {
+		case *ParagraphData, *HeadingData:
 			p.inline(node, node.content)
 			node.content = nil
 		}

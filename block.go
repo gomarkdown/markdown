@@ -143,7 +143,7 @@ func (p *Markdown) block(data []byte) {
 		// or
 		// ______
 		if p.isHRule(data) {
-			p.addBlock(HorizontalRule, nil)
+			p.addBlock(&HorizontalRuleData{}, nil)
 			var i int
 			for i = 0; i < len(data) && data[i] != '\n'; i++ {
 			}
@@ -216,9 +216,9 @@ func (p *Markdown) block(data []byte) {
 	p.nesting--
 }
 
-func (p *Markdown) addBlock(typ NodeType, content []byte) *Node {
+func (p *Markdown) addBlock(d NodeData, content []byte) *Node {
 	p.closeUnmatchedBlocks()
-	container := p.addChild(typ, 0)
+	container := p.addChild(d, 0)
 	container.content = content
 	return container
 }
@@ -279,9 +279,11 @@ func (p *Markdown) prefixHeading(data []byte) int {
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
 			id = sanitizeAnchorName(string(data[i:end]))
 		}
-		block := p.addBlock(Heading, data[i:end])
-		block.HeadingID = id
-		block.Level = level
+		d := &HeadingData{
+			HeadingID: id,
+			Level:     level,
+		}
+		p.addBlock(d, data[i:end])
 	}
 	return skip
 }
@@ -327,9 +329,11 @@ func (p *Markdown) titleBlock(data []byte, doRender bool) int {
 	consumed := len(data)
 	data = bytes.TrimPrefix(data, []byte("% "))
 	data = bytes.Replace(data, []byte("\n% "), []byte("\n"), -1)
-	block := p.addBlock(Heading, data)
-	block.Level = 1
-	block.IsTitleblock = true
+	d := &HeadingData{
+		Level:        1,
+		IsTitleblock: true,
+	}
+	p.addBlock(d, data)
 
 	return consumed
 }
@@ -426,7 +430,7 @@ func (p *Markdown) html(data []byte, doRender bool) int {
 		for end > 0 && data[end-1] == '\n' {
 			end--
 		}
-		finalizeHTMLBlock(p.addBlock(HTMLBlock, data[:end]))
+		finalizeHTMLBlock(p.addBlock(&HTMLBlockData{}, data[:end]))
 	}
 
 	return i
@@ -449,7 +453,7 @@ func (p *Markdown) htmlComment(data []byte, doRender bool) int {
 			for end > 0 && data[end-1] == '\n' {
 				end--
 			}
-			block := p.addBlock(HTMLBlock, data[:end])
+			block := p.addBlock(&HTMLBlockData{}, data[:end])
 			finalizeHTMLBlock(block)
 		}
 		return size
@@ -483,7 +487,7 @@ func (p *Markdown) htmlHr(data []byte, doRender bool) int {
 				for end > 0 && data[end-1] == '\n' {
 					end--
 				}
-				finalizeHTMLBlock(p.addBlock(HTMLBlock, data[:end]))
+				finalizeHTMLBlock(p.addBlock(&HTMLBlockData{}, data[:end]))
 			}
 			return size
 		}
@@ -728,9 +732,11 @@ func (p *Markdown) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 
 	if doRender {
-		block := p.addBlock(CodeBlock, work.Bytes()) // TODO: get rid of temp buffer
-		block.IsFenced = true
-		finalizeCodeBlock(block)
+		d := &CodeBlockData{
+			IsFenced: true,
+		}
+		block := p.addBlock(d, work.Bytes()) // TODO: get rid of temp buffer
+		finalizeCodeBlock(block, d)
 	}
 
 	return beg
@@ -750,12 +756,12 @@ func unescapeString(str []byte) []byte {
 	return str
 }
 
-func finalizeCodeBlock(block *Node) {
-	if block.IsFenced {
+func finalizeCodeBlock(block *Node, code *CodeBlockData) {
+	if code.IsFenced {
 		newlinePos := bytes.IndexByte(block.content, '\n')
 		firstLine := block.content[:newlinePos]
 		rest := block.content[newlinePos+1:]
-		block.Info = unescapeString(bytes.Trim(firstLine, "\n"))
+		code.Info = unescapeString(bytes.Trim(firstLine, "\n"))
 		block.Literal = rest
 	} else {
 		block.Literal = block.content
@@ -764,7 +770,7 @@ func finalizeCodeBlock(block *Node) {
 }
 
 func (p *Markdown) table(data []byte) int {
-	table := p.addBlock(Table, nil)
+	table := p.addBlock(&TableData{}, nil)
 	i, columns := p.tableHeader(data)
 	if i == 0 {
 		p.tip = table.Parent
@@ -772,7 +778,7 @@ func (p *Markdown) table(data []byte) int {
 		return 0
 	}
 
-	p.addBlock(TableBody, nil)
+	p.addBlock(&TableBodyData{}, nil)
 
 	for i < len(data) {
 		pipes, rowStart := 0, i
@@ -910,7 +916,7 @@ func (p *Markdown) tableHeader(data []byte) (size int, columns []CellAlignFlags)
 		return
 	}
 
-	p.addBlock(TableHead, nil)
+	p.addBlock(&TableHeadData{}, nil)
 	p.tableRow(header, columns, true)
 	size = i
 	if size < len(data) && data[size] == '\n' {
@@ -920,7 +926,7 @@ func (p *Markdown) tableHeader(data []byte) (size int, columns []CellAlignFlags)
 }
 
 func (p *Markdown) tableRow(data []byte, columns []CellAlignFlags, header bool) {
-	p.addBlock(TableRow, nil)
+	p.addBlock(&TableRowData{}, nil)
 	i, col := 0, 0
 
 	if data[i] == '|' && !isBackslashEscaped(data, i) {
@@ -947,16 +953,20 @@ func (p *Markdown) tableRow(data []byte, columns []CellAlignFlags, header bool) 
 			cellEnd--
 		}
 
-		cell := p.addBlock(TableCell, data[cellStart:cellEnd])
-		cell.IsHeader = header
-		cell.Align = columns[col]
+		d := &TableCellData{
+			IsHeader: header,
+			Align:    columns[col],
+		}
+		p.addBlock(d, data[cellStart:cellEnd])
 	}
 
 	// pad it out with empty columns to get the right number
 	for ; col < len(columns); col++ {
-		cell := p.addBlock(TableCell, nil)
-		cell.IsHeader = header
-		cell.Align = columns[col]
+		d := &TableCellData{
+			IsHeader: header,
+			Align:    columns[col],
+		}
+		p.addBlock(d, nil)
 	}
 
 	// silently ignore rows with too many cells
@@ -991,7 +1001,7 @@ func (p *Markdown) terminateBlockquote(data []byte, beg, end int) bool {
 
 // parse a blockquote fragment
 func (p *Markdown) quote(data []byte) int {
-	block := p.addBlock(BlockQuote, nil)
+	block := p.addBlock(&BlockQuoteData{}, nil)
 	var raw bytes.Buffer
 	beg, end := 0, 0
 	for beg < len(data) {
@@ -1080,9 +1090,11 @@ func (p *Markdown) code(data []byte) int {
 
 	work.WriteByte('\n')
 
-	block := p.addBlock(CodeBlock, work.Bytes()) // TODO: get rid of temp buffer
-	block.IsFenced = false
-	finalizeCodeBlock(block)
+	d := &CodeBlockData{
+		IsFenced: false,
+	}
+	block := p.addBlock(d, work.Bytes()) // TODO: get rid of temp buffer
+	finalizeCodeBlock(block, d)
 
 	return i
 }
@@ -1150,14 +1162,16 @@ func (p *Markdown) dliPrefix(data []byte) int {
 func (p *Markdown) list(data []byte, flags ListType) int {
 	i := 0
 	flags |= ListItemBeginningOfList
-	block := p.addBlock(List, nil)
-	block.ListFlags = flags
-	block.Tight = true
+	d := &ListData{
+		ListFlags: flags,
+		Tight:     true,
+	}
+	block := p.addBlock(d, nil)
 
 	for i < len(data) {
 		skip := p.listItem(data[i:], &flags)
 		if flags&ListItemContainsBlock != 0 {
-			block.ListData.Tight = false
+			d.Tight = false
 		}
 		i += skip
 		if skip == 0 || flags&ListItemEndOfList != 0 {
@@ -1167,7 +1181,7 @@ func (p *Markdown) list(data []byte, flags ListType) int {
 	}
 
 	above := block.Parent
-	finalizeList(block)
+	finalizeList(block, d)
 	p.tip = above
 	return i
 }
@@ -1180,23 +1194,23 @@ func endsWithBlankLine(block *Node) bool {
 		//if block.lastLineBlank {
 		//return true
 		//}
-		t := block.Type
-		if t == List || t == Item {
+		switch block.Data.(type) {
+		case *ListData, *ItemData:
 			block = block.LastChild
-		} else {
-			break
+		default:
+			return false
 		}
 	}
 	return false
 }
 
-func finalizeList(block *Node) {
+func finalizeList(block *Node, listData *ListData) {
 	block.open = false
 	item := block.FirstChild
 	for item != nil {
 		// check for non-final list item ending with blank line:
 		if endsWithBlankLine(item) && item.Next != nil {
-			block.ListData.Tight = false
+			listData.Tight = false
 			break
 		}
 		// recurse into children of list item, to see if there are spaces
@@ -1204,7 +1218,7 @@ func finalizeList(block *Node) {
 		subItem := item.FirstChild
 		for subItem != nil {
 			if endsWithBlankLine(subItem) && (item.Next != nil || subItem.Next != nil) {
-				block.ListData.Tight = false
+				listData.Tight = false
 				break
 			}
 			subItem = subItem.Next
@@ -1377,11 +1391,13 @@ gatherlines:
 
 	rawBytes := raw.Bytes()
 
-	block := p.addBlock(Item, nil)
-	block.ListFlags = *flags
-	block.Tight = false
-	block.BulletChar = bulletChar
-	block.Delimiter = '.' // Only '.' is possible in Markdown, but ')' will also be possible in CommonMark
+	d := &ItemData{
+		ListFlags:  *flags,
+		Tight:      false,
+		BulletChar: bulletChar,
+		Delimiter:  '.', // Only '.' is possible in Markdown, but ')' will also be possible in CommonMark
+	}
+	p.addBlock(d, nil)
 
 	// render the contents of the list item
 	if *flags&ListItemContainsBlock != 0 && *flags&ListTypeTerm == 0 {
@@ -1395,11 +1411,11 @@ gatherlines:
 	} else {
 		// intermediate render of inline item
 		if sublist > 0 {
-			child := p.addChild(Paragraph, 0)
+			child := p.addChild(&ParagraphData{}, 0)
 			child.content = rawBytes[:sublist]
 			p.block(rawBytes[sublist:])
 		} else {
-			child := p.addChild(Paragraph, 0)
+			child := p.addChild(&ParagraphData{}, 0)
 			child.content = rawBytes
 		}
 	}
@@ -1429,7 +1445,7 @@ func (p *Markdown) renderParagraph(data []byte) {
 		end--
 	}
 
-	p.addBlock(Paragraph, data[beg:end])
+	p.addBlock(&ParagraphData{}, data[beg:end])
 }
 
 func (p *Markdown) paragraph(data []byte) int {
@@ -1489,9 +1505,11 @@ func (p *Markdown) paragraph(data []byte) int {
 					id = sanitizeAnchorName(string(data[prev:eol]))
 				}
 
-				block := p.addBlock(Heading, data[prev:eol])
-				block.Level = level
-				block.HeadingID = id
+				d := &HeadingData{
+					Level:     level,
+					HeadingID: id,
+				}
+				p.addBlock(d, data[prev:eol])
 
 				// find the end of the underline
 				for i < len(data) && data[i] != '\n' {

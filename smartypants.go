@@ -8,9 +8,7 @@
 //
 
 //
-//
 // SmartyPants rendering
-//
 //
 
 package markdown

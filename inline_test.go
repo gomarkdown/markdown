@@ -193,6 +193,14 @@ func TestStrong(t *testing.T) {
 	doTestsInline(t, tests)
 }
 
+func TestStrongShort(t *testing.T) {
+	var tests = []string{
+		"**`/usr`** :\n\n this folder is named `usr`\n",
+		"<p><strong><code>/usr</code></strong> :</p>\n\n<p>this folder is named <code>usr</code></p>\n",
+	}
+	doTestsInline(t, tests)
+
+}
 func TestEmphasisMix(t *testing.T) {
 	var tests = []string{
 		"***triple emphasis***\n",
