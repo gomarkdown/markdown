@@ -170,6 +170,9 @@ type inlineParser func(p *Parser, data []byte, offset int) (int, *Node)
 // Parser is a type that holds extensions and the runtime state used by
 // Parse, and the renderer. You can not use it directly, construct it with New.
 type Parser struct {
+	// after parsing, this is root of parsed ast
+	Doc *Node
+
 	referenceOverride ReferenceOverrideFunc
 	refs              map[string]*reference
 	inlineCallback    [256]inlineParser
@@ -183,14 +186,10 @@ type Parser struct {
 	// in notes. Slice is nil if footnotes not enabled.
 	notes []*reference
 
-	doc                  *Node
 	tip                  *Node // = doc
 	oldTip               *Node
 	lastMatchedContainer *Node // = doc
 	allClosed            bool
-
-	// after parsing, this is root of parsed ast
-	ParsedAst *Node
 }
 
 func (p *Parser) getRef(refid string) (ref *reference, found bool) {
@@ -272,7 +271,7 @@ func NewParser(opts ...Option) *Parser {
 	p.maxNesting = 16
 	p.insideLink = false
 	docNode := NewNode(&DocumentData{})
-	p.doc = docNode
+	p.Doc = docNode
 	p.tip = docNode
 	p.oldTip = docNode
 	p.lastMatchedContainer = docNode
@@ -343,7 +342,7 @@ func WithRefOverride(o ReferenceOverrideFunc) Option {
 	}
 }
 
-// ParseAndRender is the main entry point to Blackfriday. It parses and renders a
+// ToHTML is the main entry point to Blackfriday. It parses and renders a
 // block of markdown-encoded text.
 //
 // The simplest invocation of Run takes one argument, input:
@@ -370,7 +369,7 @@ func ToHTML(input []byte, opts ...Option) []byte {
 	optList = append(optList, opts...)
 	parser := NewParser(optList...)
 	parser.Parse(input)
-	return Render(parser, r)
+	return parser.Render(r)
 }
 
 // ParseAndRender parsers input and renders it with a renderer
@@ -379,13 +378,13 @@ func ParseAndRender(input []byte, r Renderer, opts ...Option) []byte {
 	optList = append(optList, opts...)
 	parser := NewParser(optList...)
 	parser.Parse(input)
-	return Render(parser, r)
+	return parser.Render(r)
 }
 
 // Render renders a parsed data in parser with a given renderer
-func Render(parser *Parser, renderer Renderer) []byte {
+func (p *Parser) Render(renderer Renderer) []byte {
 	var buf bytes.Buffer
-	ast := parser.ParsedAst
+	ast := p.Doc
 	renderer.RenderHeader(&buf, ast)
 	ast.Walk(func(node *Node, entering bool) WalkStatus {
 		return renderer.RenderNode(&buf, node, entering)
@@ -406,7 +405,7 @@ func (p *Parser) Parse(input []byte) *Node {
 		p.finalize(p.tip)
 	}
 	// Walk the tree again and process inline markdown in each block
-	p.doc.Walk(func(node *Node, entering bool) WalkStatus {
+	p.Doc.Walk(func(node *Node, entering bool) WalkStatus {
 		switch node.Data.(type) {
 		case *ParagraphData, *HeadingData, *TableCellData:
 			p.inline(node, node.content)
@@ -415,15 +414,14 @@ func (p *Parser) Parse(input []byte) *Node {
 		return GoToNext
 	})
 	p.parseRefsToAST()
-	p.ParsedAst = p.doc
-	return p.doc
+	return p.Doc
 }
 
 func (p *Parser) parseRefsToAST() {
 	if p.extensions&Footnotes == 0 || len(p.notes) == 0 {
 		return
 	}
-	p.tip = p.doc
+	p.tip = p.Doc
 	d := &ListData{
 		IsFootnotesList: true,
 		ListFlags:       ListTypeOrdered,
