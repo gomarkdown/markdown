@@ -1,4 +1,4 @@
-Markdown Parser and HTML Renderer for Go [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
+Markdown Parser and HTML Renderer for Go [![GoDoc](https://godoc.org/github.com/gomarkdown/markdown?status.svg)](https://godoc.org/github.com/gomarkdown/markdown) [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
 ===========
 
 Package `github.com/gomarkdown/markdown` is a [Markdown](https://daringfireball.net/projects/markdown/) parser and HTML renderer implemented in Go.
