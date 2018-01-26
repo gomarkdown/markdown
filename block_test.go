@@ -1731,7 +1731,7 @@ func TestSanitizedAnchorName(t *testing.T) {
 		},
 		{
 			text: "main.go",
-			want: "main-go",
+			want: "maingo",
 		},
 		{
 			text: "Article 123",
