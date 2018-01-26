@@ -30,9 +30,9 @@ var (
 	reEntityOrEscapedChar = regexp.MustCompile("(?i)\\\\" + escapable + "|" + charEntity)
 )
 
-// sanitizeAnchorName returns a sanitized anchor name for the given text.
+// SanitizeAnchorName returns a sanitized anchor name for the given text.
 // taken from https://github.com/shurcooL/sanitized_anchor_name/blob/master/main.go#L14:1
-func sanitizeAnchorName(text string) string {
+func SanitizeAnchorName(text string) string {
 	var anchorName []rune
 	var futureDash = false
 	for _, r := range text {
@@ -277,7 +277,7 @@ func (p *Parser) prefixHeading(data []byte) int {
 	}
 	if end > i {
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			id = sanitizeAnchorName(string(data[i:end]))
+			id = SanitizeAnchorName(string(data[i:end]))
 		}
 		d := &HeadingData{
 			HeadingID: id,
@@ -1502,7 +1502,7 @@ func (p *Parser) paragraph(data []byte) int {
 
 				id := ""
 				if p.extensions&AutoHeadingIDs != 0 {
-					id = sanitizeAnchorName(string(data[prev:eol]))
+					id = SanitizeAnchorName(string(data[prev:eol]))
 				}
 
 				d := &HeadingData{
