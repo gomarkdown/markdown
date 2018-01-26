@@ -189,9 +189,7 @@ func (p *Parser) block(data []byte) {
 		// ______
 		if p.isHRule(data) {
 			p.addBlock(&HorizontalRuleData{}, nil)
-			var i int
-			for i = 0; i < len(data) && data[i] != '\n'; i++ {
-			}
+			i := skipUntilChar(data, 0, '\n')
 			data = data[i:]
 			continue
 		}
@@ -1619,17 +1617,19 @@ func (p *Parser) paragraph(data []byte) int {
 	return i
 }
 
-func skipChar(data []byte, start int, char byte) int {
-	i := start
-	for i < len(data) && data[i] == char {
+// skipChar advances i as long as data[i] == c
+func skipChar(data []byte, i int, c byte) int {
+	n := len(data)
+	for i < n && data[i] == c {
 		i++
 	}
 	return i
 }
 
-func skipUntilChar(text []byte, start int, char byte) int {
-	i := start
-	for i < len(text) && text[i] != char {
+// skipUntilChar advances i as long as data[i] != c
+func skipUntilChar(data []byte, i int, c byte) int {
+	n := len(data)
+	for i < n && data[i] != c {
 		i++
 	}
 	return i
