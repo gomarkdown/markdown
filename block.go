@@ -28,6 +28,51 @@ const (
 var (
 	reBackslashOrAmp      = regexp.MustCompile("[\\&]")
 	reEntityOrEscapedChar = regexp.MustCompile("(?i)\\\\" + escapable + "|" + charEntity)
+
+	// blockTags is a set of tags that are recognized as HTML block tags.
+	// Any of these can be included in markdown text without special escaping.
+	blockTags = map[string]struct{}{
+		"blockquote": struct{}{},
+		"del":        struct{}{},
+		"div":        struct{}{},
+		"dl":         struct{}{},
+		"fieldset":   struct{}{},
+		"form":       struct{}{},
+		"h1":         struct{}{},
+		"h2":         struct{}{},
+		"h3":         struct{}{},
+		"h4":         struct{}{},
+		"h5":         struct{}{},
+		"h6":         struct{}{},
+		"iframe":     struct{}{},
+		"ins":        struct{}{},
+		"math":       struct{}{},
+		"noscript":   struct{}{},
+		"ol":         struct{}{},
+		"pre":        struct{}{},
+		"p":          struct{}{},
+		"script":     struct{}{},
+		"style":      struct{}{},
+		"table":      struct{}{},
+		"ul":         struct{}{},
+
+		// HTML5
+		"address":    struct{}{},
+		"article":    struct{}{},
+		"aside":      struct{}{},
+		"canvas":     struct{}{},
+		"figcaption": struct{}{},
+		"figure":     struct{}{},
+		"footer":     struct{}{},
+		"header":     struct{}{},
+		"hgroup":     struct{}{},
+		"main":       struct{}{},
+		"nav":        struct{}{},
+		"output":     struct{}{},
+		"progress":   struct{}{},
+		"section":    struct{}{},
+		"video":      struct{}{},
+	}
 )
 
 // SanitizeAnchorName returns a sanitized anchor name for the given text.
