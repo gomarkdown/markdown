@@ -13,6 +13,8 @@
 //
 // Customizing parsing and HTML rendering
 //
+// Youc can customize parser and HTML renderer:
+//
 //  md := []byte("markdown document")
 //  extensions := markdown.CommonExtensions | markdown.AutoHeadingIDs
 //  parser := markdown.NewParserWithExensions(extensions)
