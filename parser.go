@@ -649,12 +649,6 @@ gatherLines:
 	return
 }
 
-//
-//
-// Miscellaneous helper functions
-//
-//
-
 // Test if a character is a punctuation symbol.
 // Taken from a private function in regexp in the stdlib.
 func ispunct(c byte) bool {
