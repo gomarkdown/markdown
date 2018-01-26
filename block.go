@@ -1307,9 +1307,7 @@ func (p *Parser) listItem(data []byte, flags *ListType) int {
 	}
 
 	// skip leading whitespace on first line
-	for i < len(data) && data[i] == ' ' {
-		i++
-	}
+	i = skipChar(data, i, ' ')
 
 	// find the end of the line
 	line := i
