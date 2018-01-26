@@ -272,10 +272,7 @@ func (p *Parser) isPrefixHeading(data []byte) bool {
 	}
 
 	if p.extensions&SpaceHeadings != 0 {
-		level := 0
-		for level < 6 && level < len(data) && data[level] == '#' {
-			level++
-		}
+		level := skipCharN(data, 0, '#', 6)
 		if level == len(data) || data[level] != ' ' {
 			return false
 		}
@@ -284,10 +281,7 @@ func (p *Parser) isPrefixHeading(data []byte) bool {
 }
 
 func (p *Parser) prefixHeading(data []byte) int {
-	level := 0
-	for level < 6 && level < len(data) && data[level] == '#' {
-		level++
-	}
+	level := skipCharN(data, 0, '#', 6)
 	i := skipChar(data, level, ' ')
 	end := skipUntilChar(data, i, '\n')
 	skip := end

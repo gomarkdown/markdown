@@ -1652,6 +1652,17 @@ func TestCompletePage(t *testing.T) {
 	doTestsParam(t, tests, TestParams{HTMLFlags: UseXHTML | CompletePage})
 }
 
+func TestSpaceHeadings(t *testing.T) {
+	tests := []string{
+		"######",
+		"<p>######</p>\n",
+
+		"###### hdr",
+		"<h6>hdr</h6>\n",
+	}
+	doTestsParam(t, tests, TestParams{extensions: SpaceHeadings})
+}
+
 func TestIsFenceLine(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
