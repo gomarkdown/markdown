@@ -1,8 +1,7 @@
 Markdown [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
 ===========
 
-Package markdown is a [Markdown][1] parser and HTML renderer implemented in [Go][2].
-
+Package github.com/gomarkdown/markdown is a [Markdown](https://daringfireball.net/projects/markdown/) parser and HTML renderer implemented in Go.
 It's fast and supports common extensions.
 
 Installation
@@ -10,9 +9,9 @@ Installation
 
 To install the library:
 
-    go get github.com/gomarkdown/markdown
+    go get -u github.com/gomarkdown/markdown
 
-Docs: https://godoc.org/github.com/gomarkdown/markdown
+API Docs: https://godoc.org/github.com/gomarkdown/markdown
 
 Usage
 -----
@@ -20,7 +19,8 @@ Usage
 To convert input `[]byte` slice to HTML using reasonable defaults, do:
 
 ```go
-output := markdown.ToHTML(input, nil, nil)
+md := []byte("## markdown document")
+output := markdown.ToHTML(md, nil, nil)
 ```
 
 This will parse the input using most common parser extensions and render with
@@ -28,16 +28,20 @@ This will parse the input using most common parser extensions and render with
 
 To parse without any extensions:
 ```go
-parser := markdown.NewParserWithExtensions(markdown.NoExtensions)
-output := blackfriday.Run(input, parser, nil)
+md := []byte("markdown text")
+extensions := CommonExtensions | AutoHeadingIDs
+parser := NewParserWithExensions(extensions)
+htmlParams := CommonHTMLFlags | HrefTargetBlank
+renderer := NewHTMLRenderer(htmlParams)
+html := ToHTML(md, parser, renderer)
 ```
 
 ### Sanitize untrusted content
 
 We don't protect against malicious content. When dealing with user-provided
-markdown, run renderer HTML through HTML sanitizer such as [Bluemonday][5].
+markdown, run renderer HTML through HTML sanitizer such as [Bluemonday](https://github.com/microcosm-cc/bluemonday).
 
-Here's an example of simple usage of Blackfriday together with Bluemonday:
+Here's an example of simple usage with Bluemonday:
 
 ```go
 import (
@@ -56,10 +60,11 @@ Ways to customize parser:
 * use custom extensions by creating parser with `markdown.NewParserWithExtensions(extensions)`
 * over-ride `Parser.ReferenceOverride` function
 
-You can also check out [cmd/mdhtml](https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example
-of how to use it. You can install it with:
+You can also check out [cmd/mdhtml](https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example of how to use it.
 
-    go get github.com/gomarkdown/markdown/cmd/mdtohtml
+You can install it with:
+
+    go get -u github.com/gomarkdown/markdown/cmd/mdtohtml
 
 This is a simple command-line tool to convert markdown files to HTML.
 
@@ -68,7 +73,7 @@ Features
 
 *   **Compatibility**. The Markdown v1.0.3 test suite passes with
     the `--tidy` option.  Without `--tidy`, the differences are
-    mostly in whitespace and entity escaping, where blackfriday is
+    mostly in whitespace and entity escaping, where this package is
     more consistent and cleaner.
 
 *   **Common extensions**, including table support, fenced code
@@ -106,7 +111,7 @@ implements the following extensions:
 *   **Intra-word emphasis supression**. The `_` character is
     commonly used inside words when discussing code, so having
     markdown interpret it as an emphasis command is usually the
-    wrong thing. Blackfriday lets you treat all emphasis markers as
+    wrong thing. We let you treat all emphasis markers as
     normal characters when they occur inside a word.
 
 *   **Tables**. Tables can be created by drawing them in the input
@@ -152,7 +157,7 @@ implements the following extensions:
 
         [^1]: the footnote text.
 
-*   **Autolinking**. Blackfriday can find URLs that have not been
+*   **Autolinking**. We can find URLs that have not been
     explicitly marked as links and turn them into links.
 
 *   **Strikethrough**. Use two tildes (`~~`) to mark text that
@@ -197,18 +202,13 @@ History
 -------
 
 markdown is a fork of v2 of github.com/russross/blackfriday that is:
-* active maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
+
+* actively maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
 * cleaned up API to make it easier to use (IMHO)
+
+Blackfriday itself was based on C implementation [sundown](https://github.com/vmg/sundown) which in turn was based on [libsoldout](http://fossil.instinctive.eu/libsoldout/home).
 
 License
 -------
 
 [markdown is distributed under the Simplified BSD License](LICENSE.txt)
-
-
-   [1]: https://daringfireball.net/projects/markdown/ "Markdown"
-   [2]: https://golang.org/ "Go Language"
-   [3]: https://github.com/vmg/sundown "Sundown"
-   [4]: https://godoc.org/gopkg.in/russross/blackfriday.v2#Parse "Parse func"
-   [5]: https://github.com/microcosm-cc/bluemonday "Bluemonday"
-   [6]: https://labix.org/gopkg.in "gopkg.in"
