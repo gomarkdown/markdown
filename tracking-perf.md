@@ -63,3 +63,39 @@ BenchmarkReferenceTidyness-8                    	  200000	      8677 ns/op	   11
 ```
 
 Not necessarily faster, but uses less bytes per op (but sometimes more allocs).
+
+After tweaking the API:
+```
+$ ./s/run-bench.sh
+
+go test -bench=. -test.benchmem
+goos: darwin
+goarch: amd64
+pkg: github.com/gomarkdown/markdown
+BenchmarkEscapeHTML-8                           	 2000000	       834 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSmartDoubleQuotes-8                    	  300000	      3486 ns/op	    6160 B/op	      27 allocs/op
+BenchmarkReferenceAmps-8                        	  100000	     18158 ns/op	   14792 B/op	     125 allocs/op
+BenchmarkReferenceAutoLinks-8                   	  100000	     16824 ns/op	   14272 B/op	     112 allocs/op
+BenchmarkReferenceBackslashEscapes-8            	   30000	     44066 ns/op	   35040 B/op	     215 allocs/op
+BenchmarkReferenceBlockquotesWithCodeBlocks-8   	  200000	      6868 ns/op	    7824 B/op	      38 allocs/op
+BenchmarkReferenceCodeBlocks-8                  	  200000	      7157 ns/op	    9168 B/op	      45 allocs/op
+BenchmarkReferenceCodeSpans-8                   	  200000	      6663 ns/op	    8160 B/op	      40 allocs/op
+BenchmarkReferenceHardWrappedPara-8             	  300000	      4821 ns/op	    6768 B/op	      28 allocs/op
+BenchmarkReferenceHorizontalRules-8             	  100000	     13033 ns/op	   12512 B/op	      75 allocs/op
+BenchmarkReferenceInlineHTMLAdvances-8          	  300000	      4998 ns/op	    7190 B/op	      33 allocs/op
+BenchmarkReferenceInlineHTMLSimple-8            	  100000	     17696 ns/op	   15464 B/op	      92 allocs/op
+BenchmarkReferenceInlineHTMLComments-8          	  300000	      5506 ns/op	    7648 B/op	      35 allocs/op
+BenchmarkReferenceLinksInline-8                 	  100000	     14450 ns/op	   13824 B/op	     123 allocs/op
+BenchmarkReferenceLinksReference-8              	   30000	     52561 ns/op	   35104 B/op	     416 allocs/op
+BenchmarkReferenceLinksShortcut-8               	  100000	     15616 ns/op	   13504 B/op	     138 allocs/op
+BenchmarkReferenceLiterQuotesInTitles-8         	  200000	      7772 ns/op	    8960 B/op	      68 allocs/op
+BenchmarkReferenceMarkdownBasics-8              	   10000	    121436 ns/op	   84176 B/op	     387 allocs/op
+BenchmarkReferenceMarkdownSyntax-8              	    3000	    487404 ns/op	  290818 B/op	    1530 allocs/op
+BenchmarkReferenceNestedBlockquotes-8           	  300000	      5098 ns/op	    7104 B/op	      35 allocs/op
+BenchmarkReferenceOrderedAndUnorderedLists-8    	   20000	     74422 ns/op	   51936 B/op	     418 allocs/op
+BenchmarkReferenceStrongAndEm-8                 	  200000	      7888 ns/op	    9088 B/op	      49 allocs/op
+BenchmarkReferenceTabs-8                        	  200000	     10061 ns/op	   10688 B/op	      58 allocs/op
+BenchmarkReferenceTidyness-8                    	  200000	      7152 ns/op	    8208 B/op	      46 allocs/op
+PASS
+ok  	github.com/gomarkdown/markdown	40.809s
+```
