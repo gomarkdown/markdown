@@ -7,9 +7,7 @@
 // See README.md for details.
 //
 
-//
-// Functions to parse block-level elements.
-//
+// Parsing block-level elements.
 
 package markdown
 
@@ -76,7 +74,7 @@ var (
 )
 
 // SanitizeAnchorName returns a sanitized anchor name for the given text.
-// taken from https://github.com/shurcooL/sanitized_anchor_name/blob/master/main.go#L14:1
+// Taken from https://github.com/shurcooL/sanitized_anchor_name/blob/master/main.go#L14:1
 func SanitizeAnchorName(text string) string {
 	var anchorName []rune
 	var futureDash = false

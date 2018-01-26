@@ -47,7 +47,7 @@ func (p *Parser) inline(currBlock *Node, data []byte) {
 				end++
 			} else {
 				// Copy inactive chars into the output.
-				currBlock.AppendChild(text(data[beg:end]))
+				currBlock.AppendChild(newTextNode(data[beg:end]))
 				if node != nil {
 					currBlock.AppendChild(node)
 				}
@@ -63,7 +63,7 @@ func (p *Parser) inline(currBlock *Node, data []byte) {
 		if data[end-1] == '\n' {
 			end--
 		}
-		currBlock.AppendChild(text(data[beg:end]))
+		currBlock.AppendChild(newTextNode(data[beg:end]))
 	}
 	p.nesting--
 }
@@ -530,7 +530,7 @@ func link(p *Parser, data []byte, offset int) (int, *Node) {
 		}
 		linkNode = NewNode(d)
 		if len(altContent) > 0 {
-			linkNode.AppendChild(text(altContent))
+			linkNode.AppendChild(newTextNode(altContent))
 		} else {
 			// links cannot contain other links, so turn off link parsing
 			// temporarily and recurse
@@ -546,7 +546,7 @@ func link(p *Parser, data []byte, offset int) (int, *Node) {
 			Title:       title,
 		}
 		linkNode = NewNode(d)
-		linkNode.AppendChild(text(data[1:txtE]))
+		linkNode.AppendChild(newTextNode(data[1:txtE]))
 		i++
 
 	case linkInlineFootnote, linkDeferredFootnote:
@@ -627,7 +627,7 @@ func leftAngle(p *Parser, data []byte, offset int) (int, *Node) {
 				if altype == emailAutolink {
 					d.Destination = append([]byte("mailto:"), link...)
 				}
-				node.AppendChild(text(stripMailto(link)))
+				node.AppendChild(newTextNode(stripMailto(link)))
 				return end, node
 			}
 		} else {
@@ -654,7 +654,7 @@ func escape(p *Parser, data []byte, offset int) (int, *Node) {
 			return 0, nil
 		}
 
-		return 2, text(data[1:2])
+		return 2, newTextNode(data[1:2])
 	}
 
 	return 2, nil
@@ -709,7 +709,7 @@ func entity(p *Parser, data []byte, offset int) (int, *Node) {
 		ent = []byte{'&'}
 	}
 
-	return end, text(ent)
+	return end, newTextNode(ent)
 }
 
 func linkEndsWithEntity(data []byte, linkEnd int) bool {
@@ -876,7 +876,7 @@ func autoLink(p *Parser, data []byte, offset int) (int, *Node) {
 			Destination: uLink.Bytes(),
 		}
 		node := NewNode(d)
-		node.AppendChild(text(uLink.Bytes()))
+		node.AppendChild(newTextNode(uLink.Bytes()))
 		return linkEnd, node
 	}
 
@@ -1202,7 +1202,7 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, *Nod
 	return 0, nil
 }
 
-func text(s []byte) *Node {
+func newTextNode(s []byte) *Node {
 	node := NewNode(&TextData{})
 	node.Literal = s
 	return node
