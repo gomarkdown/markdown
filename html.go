@@ -304,8 +304,11 @@ func needSkipLink(flags HTMLFlags, dest []byte) bool {
 }
 
 func isSmartypantable(node *Node) bool {
-	pt := node.Parent.Type
-	return pt != Link && pt != CodeBlock && pt != Code
+	switch node.Parent.Data.(type) {
+	case *LinkData, *CodeBlockData, *CodeData:
+		return false
+	}
+	return true
 }
 
 func appendLanguageAttr(attrs []string, info []byte) []string {
@@ -329,7 +332,7 @@ func (r *HTMLRenderer) tag(w io.Writer, name []byte, attrs []string) {
 	r.lastOutputLen = 1
 }
 
-func footnoteRef(prefix string, node *Node) []byte {
+func footnoteRef(prefix string, node *LinkData) []byte {
 	urlFrag := prefix + string(slugify(node.Destination))
 	anchor := fmt.Sprintf(`<a rel="footnote" href="#fn:%s">%d</a>`, urlFrag, node.NoteID)
 	return []byte(fmt.Sprintf(`<sup class="footnote-ref" id="fnref:%s">%s</sup>`, urlFrag, anchor))
@@ -348,17 +351,20 @@ func itemOpenCR(node *Node) bool {
 	if node.Prev == nil {
 		return false
 	}
-	ld := node.Parent.ListData
+	ld := node.Parent.Data.(*ListData)
 	return !ld.Tight && ld.ListFlags&ListTypeDefinition == 0
 }
 
 func skipParagraphTags(node *Node) bool {
-	grandparent := node.Parent.Parent
-	if grandparent == nil || grandparent.Type != List {
+	parent := node.Parent
+	grandparent := parent.Parent
+	if grandparent == nil || !isListData(grandparent.Data) {
 		return false
 	}
-	tightOrTerm := grandparent.Tight || node.Parent.ListFlags&ListTypeTerm != 0
-	return grandparent.Type == List && tightOrTerm
+	isParentTerm := isItemTerm(parent)
+	grandparentListData := grandparent.Data.(*ListData)
+	tightOrTerm := grandparentListData.Tight || isParentTerm
+	return tightOrTerm
 }
 
 func cellAlignment(align CellAlignFlags) string {
@@ -496,55 +502,55 @@ func (r *HTMLRenderer) outHRTag(w io.Writer) {
 // traversal to the next node.
 func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkStatus {
 	attrs := []string{}
-	switch node.Type {
-	case Text:
+	switch nodeData := node.Data.(type) {
+	case *TextData:
 		if r.Flags&Smartypants != 0 {
 			var tmp bytes.Buffer
 			escapeHTML(&tmp, node.Literal)
 			r.sr.Process(w, tmp.Bytes())
 		} else {
-			if node.Parent.Type == Link {
+			if isLinkData(node.Parent.Data) {
 				escLink(w, node.Literal)
 			} else {
 				escapeHTML(w, node.Literal)
 			}
 		}
-	case Softbreak:
+	case *SoftbreakData:
 		r.cr(w)
 		// TODO: make it configurable via out(renderer.softbreak)
-	case Hardbreak:
+	case *HardbreakData:
 		if r.Flags&UseXHTML == 0 {
 			r.out(w, brTag)
 		} else {
 			r.out(w, brXHTMLTag)
 		}
 		r.cr(w)
-	case Emph:
+	case *EmphData:
 		if entering {
 			r.out(w, emTag)
 		} else {
 			r.out(w, emCloseTag)
 		}
-	case Strong:
+	case *StrongData:
 		if entering {
 			r.out(w, strongTag)
 		} else {
 			r.out(w, strongCloseTag)
 		}
-	case Del:
+	case *DelData:
 		if entering {
 			r.out(w, delTag)
 		} else {
 			r.out(w, delCloseTag)
 		}
-	case HTMLSpan:
+	case *HTMLSpanData:
 		if r.Flags&SkipHTML != 0 {
 			break
 		}
 		r.out(w, node.Literal)
-	case Link:
+	case *LinkData:
 		// mark it but don't link it if it is not a safe link: no smartypants
-		dest := node.LinkData.Destination
+		dest := nodeData.Destination
 		if needSkipLink(r.Flags, dest) {
 			if entering {
 				r.out(w, ttTag)
@@ -559,32 +565,32 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 				escLink(&hrefBuf, dest)
 				hrefBuf.WriteByte('"')
 				attrs = append(attrs, hrefBuf.String())
-				if node.NoteID != 0 {
-					r.out(w, footnoteRef(r.FootnoteAnchorPrefix, node))
+				if nodeData.NoteID != 0 {
+					r.out(w, footnoteRef(r.FootnoteAnchorPrefix, nodeData))
 					break
 				}
 				attrs = appendLinkAttrs(attrs, r.Flags, dest)
-				if len(node.LinkData.Title) > 0 {
+				if len(nodeData.Title) > 0 {
 					var titleBuff bytes.Buffer
 					titleBuff.WriteString("title=\"")
-					escapeHTML(&titleBuff, node.LinkData.Title)
+					escapeHTML(&titleBuff, nodeData.Title)
 					titleBuff.WriteByte('"')
 					attrs = append(attrs, titleBuff.String())
 				}
 				r.tag(w, aTag, attrs)
 			} else {
-				if node.NoteID != 0 {
+				if nodeData.NoteID != 0 {
 					break
 				}
 				r.out(w, aCloseTag)
 			}
 		}
-	case Image:
+	case *ImageData:
 		if r.Flags&SkipImages != 0 {
 			return SkipChildren
 		}
 		if entering {
-			dest := node.LinkData.Destination
+			dest := nodeData.Destination
 			dest = r.addAbsPrefix(dest)
 			if r.disableTags == 0 {
 				//if options.safe && potentiallyUnsafe(dest) {
@@ -599,20 +605,19 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 		} else {
 			r.disableTags--
 			if r.disableTags == 0 {
-				if node.LinkData.Title != nil {
+				if nodeData.Title != nil {
 					r.out(w, []byte(`" title="`))
-					escapeHTML(w, node.LinkData.Title)
+					escapeHTML(w, nodeData.Title)
 				}
 				r.out(w, []byte(`" />`))
 			}
 		}
-	case Code:
+	case *CodeData:
 		r.out(w, codeTag)
 		escapeHTML(w, node.Literal)
 		r.out(w, codeCloseTag)
-	case Document:
-		break
-	case Paragraph:
+	case *DocumentData:
+	case *ParagraphData:
 		if skipParagraphTags(node) {
 			break
 		}
@@ -620,22 +625,22 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			// TODO: untangle this clusterfuck about when the newlines need
 			// to be added and when not.
 			if node.Prev != nil {
-				switch node.Prev.Type {
-				case HTMLBlock, List, Paragraph, Heading, CodeBlock, BlockQuote, HorizontalRule:
+				switch node.Prev.Data.(type) {
+				case *HTMLBlockData, *ListData, *ParagraphData, *HeadingData, *CodeBlockData, *BlockQuoteData, *HorizontalRuleData:
 					r.cr(w)
 				}
 			}
-			if node.Parent.Type == BlockQuote && node.Prev == nil {
+			if isBlockQuoteData(node.Parent.Data) && node.Prev == nil {
 				r.cr(w)
 			}
 			r.out(w, pTag)
 		} else {
 			r.out(w, pCloseTag)
-			if !(node.Parent.Type == Item && node.Next == nil) {
+			if !(isItemData(node.Parent.Data) && node.Next == nil) {
 				r.cr(w)
 			}
 		}
-	case BlockQuote:
+	case *BlockQuoteData:
 		if entering {
 			r.cr(w)
 			r.out(w, blockquoteTag)
@@ -643,21 +648,21 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.out(w, blockquoteCloseTag)
 			r.cr(w)
 		}
-	case HTMLBlock:
+	case *HTMLBlockData:
 		if r.Flags&SkipHTML != 0 {
 			break
 		}
 		r.cr(w)
 		r.out(w, node.Literal)
 		r.cr(w)
-	case Heading:
-		openTag, closeTag := headingTagsFromLevel(node.Level)
+	case *HeadingData:
+		openTag, closeTag := headingTagsFromLevel(nodeData.Level)
 		if entering {
-			if node.IsTitleblock {
+			if nodeData.IsTitleblock {
 				attrs = append(attrs, `class="title"`)
 			}
-			if node.HeadingID != "" {
-				id := r.ensureUniqueHeadingID(node.HeadingID)
+			if nodeData.HeadingID != "" {
+				id := r.ensureUniqueHeadingID(nodeData.HeadingID)
 				if r.HeadingIDPrefix != "" {
 					id = r.HeadingIDPrefix + id
 				}
@@ -670,34 +675,37 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.tag(w, openTag, attrs)
 		} else {
 			r.out(w, closeTag)
-			if !(node.Parent.Type == Item && node.Next == nil) {
+			if !(isItemData(node.Parent.Data) && node.Next == nil) {
 				r.cr(w)
 			}
 		}
-	case HorizontalRule:
+	case *HorizontalRuleData:
 		r.cr(w)
 		r.outHRTag(w)
 		r.cr(w)
-	case List:
+	case *ListData:
 		openTag := ulTag
 		closeTag := ulCloseTag
-		if node.ListFlags&ListTypeOrdered != 0 {
+		if nodeData.ListFlags&ListTypeOrdered != 0 {
 			openTag = olTag
 			closeTag = olCloseTag
 		}
-		if node.ListFlags&ListTypeDefinition != 0 {
+		if nodeData.ListFlags&ListTypeDefinition != 0 {
 			openTag = dlTag
 			closeTag = dlCloseTag
 		}
 		if entering {
-			if node.IsFootnotesList {
+			if nodeData.IsFootnotesList {
 				r.out(w, footnotesDivBytes)
 				r.outHRTag(w)
 				r.cr(w)
 			}
 			r.cr(w)
-			if node.Parent.Type == Item && node.Parent.Parent.Tight {
-				r.cr(w)
+			if isItemData(node.Parent.Data) {
+				grand := node.Parent.Parent
+				if isListTight(grand.Data) {
+					r.cr(w)
+				}
 			}
 			r.tag(w, openTag[:len(openTag)-1], attrs)
 			r.cr(w)
@@ -707,24 +715,24 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			//if node.parent.Type != Item {
 			//	cr(w)
 			//}
-			if node.Parent.Type == Item && node.Next != nil {
+			if isItemData(node.Parent.Data) && node.Next != nil {
 				r.cr(w)
 			}
-			if node.Parent.Type == Document || node.Parent.Type == BlockQuote {
+			if isDocumentData(node.Parent.Data) || isBlockQuoteData(node.Parent.Data) {
 				r.cr(w)
 			}
-			if node.IsFootnotesList {
+			if nodeData.IsFootnotesList {
 				r.out(w, footnotesCloseDivBytes)
 			}
 		}
-	case Item:
+	case *ItemData:
 		openTag := liTag
 		closeTag := liCloseTag
-		if node.ListFlags&ListTypeDefinition != 0 {
+		if nodeData.ListFlags&ListTypeDefinition != 0 {
 			openTag = ddTag
 			closeTag = ddCloseTag
 		}
-		if node.ListFlags&ListTypeTerm != 0 {
+		if nodeData.ListFlags&ListTypeTerm != 0 {
 			openTag = dtTag
 			closeTag = dtCloseTag
 		}
@@ -732,15 +740,15 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			if itemOpenCR(node) {
 				r.cr(w)
 			}
-			if node.ListData.RefLink != nil {
-				slug := slugify(node.ListData.RefLink)
+			if nodeData.RefLink != nil {
+				slug := slugify(nodeData.RefLink)
 				r.out(w, footnoteItem(r.FootnoteAnchorPrefix, slug))
 				break
 			}
 			r.out(w, openTag)
 		} else {
-			if node.ListData.RefLink != nil {
-				slug := slugify(node.ListData.RefLink)
+			if nodeData.RefLink != nil {
+				slug := slugify(nodeData.RefLink)
 				if r.Flags&FootnoteReturnLinks != 0 {
 					r.out(w, footnoteReturnLink(r.FootnoteAnchorPrefix, r.FootnoteReturnLinkContents, slug))
 				}
@@ -748,18 +756,18 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.out(w, closeTag)
 			r.cr(w)
 		}
-	case CodeBlock:
-		attrs = appendLanguageAttr(attrs, node.Info)
+	case *CodeBlockData:
+		attrs = appendLanguageAttr(attrs, nodeData.Info)
 		r.cr(w)
 		r.out(w, preTag)
 		r.tag(w, codeTag[:len(codeTag)-1], attrs)
 		escapeHTML(w, node.Literal)
 		r.out(w, codeCloseTag)
 		r.out(w, preCloseTag)
-		if node.Parent.Type != Item {
+		if !isItemData(node.Parent.Data) {
 			r.cr(w)
 		}
-	case Table:
+	case *TableData:
 		if entering {
 			r.cr(w)
 			r.out(w, tableTag)
@@ -767,15 +775,15 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.out(w, tableCloseTag)
 			r.cr(w)
 		}
-	case TableCell:
+	case *TableCellData:
 		openTag := tdTag
 		closeTag := tdCloseTag
-		if node.IsHeader {
+		if nodeData.IsHeader {
 			openTag = thTag
 			closeTag = thCloseTag
 		}
 		if entering {
-			align := cellAlignment(node.Align)
+			align := cellAlignment(nodeData.Align)
 			if align != "" {
 				attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
 			}
@@ -787,7 +795,7 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.out(w, closeTag)
 			r.cr(w)
 		}
-	case TableHead:
+	case *TableHeadData:
 		if entering {
 			r.cr(w)
 			r.out(w, theadTag)
@@ -795,7 +803,7 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.out(w, theadCloseTag)
 			r.cr(w)
 		}
-	case TableBody:
+	case *TableBodyData:
 		if entering {
 			r.cr(w)
 			r.out(w, tbodyTag)
@@ -807,7 +815,7 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.out(w, tbodyCloseTag)
 			r.cr(w)
 		}
-	case TableRow:
+	case *TableRowData:
 		if entering {
 			r.cr(w)
 			r.out(w, trTag)
@@ -816,7 +824,8 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 			r.cr(w)
 		}
 	default:
-		panic("Unknown node type " + node.Type.String())
+		//panic("Unknown node type " + node.Type.String())
+		panic(fmt.Sprintf("Unknown node type %T", node.Data))
 	}
 	return GoToNext
 }
@@ -893,20 +902,20 @@ func (r *HTMLRenderer) writeTOC(w io.Writer, ast *Node) {
 	headingCount := 0
 
 	ast.Walk(func(node *Node, entering bool) WalkStatus {
-		if node.Type == Heading && !node.HeadingData.IsTitleblock {
+		if nodeData, ok := node.Data.(*HeadingData); ok && !nodeData.IsTitleblock {
 			inHeading = entering
 			if entering {
-				node.HeadingID = fmt.Sprintf("toc_%d", headingCount)
-				if node.Level == tocLevel {
+				nodeData.HeadingID = fmt.Sprintf("toc_%d", headingCount)
+				if nodeData.Level == tocLevel {
 					buf.WriteString("</li>\n\n<li>")
-				} else if node.Level < tocLevel {
-					for node.Level < tocLevel {
+				} else if nodeData.Level < tocLevel {
+					for nodeData.Level < tocLevel {
 						tocLevel--
 						buf.WriteString("</li>\n</ul>")
 					}
 					buf.WriteString("</li>\n\n<li>")
 				} else {
-					for node.Level > tocLevel {
+					for nodeData.Level > tocLevel {
 						tocLevel++
 						buf.WriteString("\n<ul>\n<li>")
 					}
