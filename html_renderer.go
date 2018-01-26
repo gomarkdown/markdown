@@ -206,13 +206,6 @@ func findHTMLTagPos(tag []byte, tagname string) (bool, int) {
 	return false, -1
 }
 
-func skipSpace(tag []byte, i int) int {
-	for i < len(tag) && isspace(tag[i]) {
-		i++
-	}
-	return i
-}
-
 func isRelativeLink(link []byte) (yes bool) {
 	// a tag begin with '#'
 	if link[0] == '#' {

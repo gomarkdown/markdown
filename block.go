@@ -1597,6 +1597,14 @@ func skipAlnum(data []byte, i int) int {
 	return i
 }
 
+func skipSpace(data []byte, i int) int {
+	n := len(data)
+	for i < n && isspace(data[i]) {
+		i++
+	}
+	return i
+}
+
 func backChar(data []byte, i int, c byte) int {
 	for i > 0 && data[i-1] == c {
 		i--
