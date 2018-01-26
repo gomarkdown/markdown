@@ -483,10 +483,7 @@ func (p *Parser) htmlComment(data []byte, doRender bool) int {
 		size := i + j
 		if doRender {
 			// trim trailing newlines
-			end := size
-			for end > 0 && data[end-1] == '\n' {
-				end--
-			}
+			end := backChar(data, size, '\n')
 			block := p.addBlock(&HTMLBlockData{}, data[:end])
 			finalizeHTMLBlock(block)
 		}
@@ -517,10 +514,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 			size := i + j
 			if doRender {
 				// trim newlines
-				end := size
-				for end > 0 && data[end-1] == '\n' {
-					end--
-				}
+				end := backChar(data, size, '\n')
 				finalizeHTMLBlock(p.addBlock(&HTMLBlockData{}, data[:end]))
 			}
 			return size
@@ -585,9 +579,7 @@ func (*Parser) isEmpty(data []byte) int {
 			return 0
 		}
 	}
-	if i < len(data) && data[i] == '\n' {
-		i++
-	}
+	i = skipCharN(data, i, '\n', 1)
 	return i
 }
 
@@ -820,9 +812,7 @@ func (p *Parser) table(data []byte) int {
 		}
 
 		// include the newline in data sent to tableRow
-		if i < len(data) && data[i] == '\n' {
-			i++
-		}
+		i = skipCharN(data, i, '\n', 1)
 		p.tableRow(data[rowStart:i], columns, false)
 	}
 
@@ -853,10 +843,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
 	}
 
 	// include the newline in the data sent to tableRow
-	j := i
-	if j < len(data) && data[j] == '\n' {
-		j++
-	}
+	j := skipCharN(data, i, '\n', 1)
 	header := data[:j]
 
 	// column count ignores pipes at beginning or end of line
@@ -944,10 +931,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
 
 	p.addBlock(&TableHeadData{}, nil)
 	p.tableRow(header, columns, true)
-	size = i
-	if size < len(data) && data[size] == '\n' {
-		size++
-	}
+	size = skipCharN(data, i, '\n', 1)
 	return
 }
 
@@ -1045,9 +1029,7 @@ func (p *Parser) quote(data []byte) int {
 			}
 			end++
 		}
-		if end < len(data) && data[end] == '\n' {
-			end++
-		}
+		end = skipCharN(data, end, '\n', 1)
 		if pre := p.quotePrefix(data[beg:]); pre > 0 {
 			// skip the prefix
 			beg += pre
@@ -1080,6 +1062,7 @@ func (p *Parser) code(data []byte) int {
 	i := 0
 	for i < len(data) {
 		beg := i
+
 		for i < len(data) && data[i] != '\n' {
 			i++
 		}
