@@ -1,18 +1,16 @@
-// package markdown is a markdown processor.
+// Package markdown implements markdown parser and HTML renderer.
 //
-// It translates plain text with simple formatting rules into an AST, which can
-// then be further processed to HTML (provided by Blackfriday itself) or other
-// formats (provided by the community).
+// It parses markdown into AST format which can be serialized to HTML
+// (using HTMLRenderer) or possibly other formats (using alternate renderers).
 //
-// The simplest way to invoke Blackfriday is to call the Run function. It will
-// take a text input and produce a text output in HTML (or other format).
+// The simplest way to connvert markdown text into HTML is to call
+// ToHTML(input, nil, nil) function with nil parser and renderer.
 //
-// A slightly more sophisticated way to use Blackfriday is to create a Markdown
-// processor and to call Parse, which returns a syntax tree for the input
-// document. You can leverage Blackfriday's parsing for content extraction from
-// markdown documents. You can assign a custom renderer and set various options
-// to the Markdown processor.
+// To have more control over parsing, create parser using
+// NewParserWithExtensions(extensions) and call ToHTML(input, parser, nil)
 //
-// If you're interested in calling Blackfriday from command line, see
-// https://github.com/russross/blackfriday-tool.
+// To have more control over rendering, create renderer using NewHTMLRenderer(params)
+// and call ToHTML(input, nil, renderer).
+//
+// For a cmd-line tool, use cmd/mdtohtml
 package markdown
