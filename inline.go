@@ -117,12 +117,8 @@ func emphasis(p *Parser, data []byte, offset int) (int, *Node) {
 func codeSpan(p *Parser, data []byte, offset int) (int, *Node) {
 	data = data[offset:]
 
-	nb := 0
-
 	// count the number of backticks in the delimiter
-	for nb < len(data) && data[nb] == '`' {
-		nb++
-	}
+	nb := skipChar(data, 0, '`')
 
 	// find the next delimiter
 	i, end := 0, 0
@@ -163,9 +159,7 @@ func codeSpan(p *Parser, data []byte, offset int) (int, *Node) {
 // newline preceded by two spaces becomes <br>
 func maybeLineBreak(p *Parser, data []byte, offset int) (int, *Node) {
 	origOffset := offset
-	for offset < len(data) && data[offset] == ' ' {
-		offset++
-	}
+	offset = skipChar(data, offset, ' ')
 
 	if offset < len(data) && data[offset] == '\n' {
 		if offset-origOffset >= 2 {

@@ -1063,12 +1063,8 @@ func (p *Parser) code(data []byte) int {
 	for i < len(data) {
 		beg := i
 
-		for i < len(data) && data[i] != '\n' {
-			i++
-		}
-		if i < len(data) && data[i] == '\n' {
-			i++
-		}
+		i = skipUntilChar(data, i, '\n')
+		i = skipCharN(data, i, '\n', 1)
 
 		blankline := p.isEmpty(data[beg:i]) > 0
 		if pre := p.codePrefix(data[beg:i]); pre > 0 {
@@ -1089,10 +1085,9 @@ func (p *Parser) code(data []byte) int {
 
 	// trim all the \n off the end of work
 	workbytes := work.Bytes()
-	eol := len(workbytes)
-	for eol > 0 && workbytes[eol-1] == '\n' {
-		eol--
-	}
+
+	eol := backChar(workbytes, len(workbytes), '\n')
+
 	if eol != len(workbytes) {
 		work.Truncate(eol)
 	}
