@@ -3,14 +3,20 @@
 // It parses markdown into AST format which can be serialized to HTML
 // (using HTMLRenderer) or possibly other formats (using alternate renderers).
 //
-// The simplest way to connvert markdown text into HTML is to call
-// ToHTML(input, nil, nil) function with nil parser and renderer.
 //
-// To have more control over parsing, create parser using
-// NewParserWithExtensions(extensions) and call ToHTML(input, parser, nil)
+// Convert markdown to HTML
 //
-// To have more control over rendering, create renderer using NewHTMLRenderer(params)
-// and call ToHTML(input, nil, renderer).
+//  md := []byte("## markdown document")
+//  html := ToHTML(md, nil, nil)
 //
-// For a cmd-line tool, use cmd/mdtohtml
+// Customizing parsing and HTML rendering
+//
+// md := []byte("markdown document")
+// extensions := CommonExtensions | AutoHeadingIDs
+// parser := NewParserWithExensions(extensions)
+// htmlParams := CommonHTMLFlags | HrefTargetBlank
+// renderer := NewHTMLRenderer(htmlParams)
+// html := ToHTML(md, parser, renderer)
+//
+// For a cmd-line tool see https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml
 package markdown

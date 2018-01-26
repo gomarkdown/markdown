@@ -1,5 +1,6 @@
 // Markdown to HTML cmd-line tool
 // Copyright © 2011 Russ Ross <russ@russross.com>.
+// Copyright © 2018 Krzysztof Kowalczyk https://blog.kowalczyk.info
 // Distributed under the Simplified BSD License.
 // See README.md for details.
 
@@ -14,22 +15,18 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown"
-	"github.com/russross/blackfriday"
 )
 
 const defaultTitle = ""
 
 func main() {
-	// parse command-line options
-	var page, toc, toconly, xhtml, latex, smartypants, latexdashes, fractions bool
+	var page, toc, xhtml, latex, smartypants, latexdashes, fractions bool
 	var css, cpuprofile string
 	var repeat int
 	flag.BoolVar(&page, "page", false,
 		"Generate a standalone HTML page (implies -latex=false)")
 	flag.BoolVar(&toc, "toc", false,
 		"Generate a table of contents (implies -latex=false)")
-	flag.BoolVar(&toconly, "toconly", false,
-		"Generate a table of contents only (implies -toc)")
 	flag.BoolVar(&xhtml, "xhtml", true,
 		"Use XHTML-style tags in HTML output")
 	//flag.BoolVar(&latex, "latex", false,
@@ -66,9 +63,6 @@ func main() {
 	}
 	if page {
 		latex = false
-	}
-	if toconly {
-		toc = true
 	}
 	if toc {
 		latex = false
@@ -133,14 +127,11 @@ func main() {
 		}
 		title := ""
 		if page {
-			htmlFlags |= blackfriday.HTML_COMPLETE_PAGE
+			htmlFlags |= markdown.CompletePage
 			title = getTitle(input)
 		}
-		if toconly {
-			htmlFlags |= blackfriday.HTML_OMIT_CONTENTS
-		}
 		if toc {
-			htmlFlags |= blackfriday.HTML_TOC
+			htmlFlags |= markdown.TOC
 		}
 		params := markdown.HTMLRendererParameters{
 			Flags: htmlFlags,
