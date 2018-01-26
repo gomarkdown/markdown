@@ -8,13 +8,15 @@ import (
 // NodeData represents data field of Node
 type NodeData interface{}
 
+// DocumentData represents top-level document node
 type DocumentData struct {
 }
 
+// BlockQuoteData represents data for block quote node
 type BlockQuoteData struct {
 }
 
-// ListData contains fields relevant to a List node
+// ListData represents data list node
 type ListData struct {
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
@@ -24,7 +26,7 @@ type ListData struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
-// ItemData contains fields relevant to a Item node
+// ItemData represents data for item node
 type ItemData struct {
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
@@ -34,6 +36,7 @@ type ItemData struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
+// ParagraphData represents data for paragraph node
 type ParagraphData struct {
 }
 
@@ -44,19 +47,23 @@ type HeadingData struct {
 	IsTitleblock bool   // Specifies whether it's a title block
 }
 
+// HorizontalRuleData represents data for horizontal rule node
 type HorizontalRuleData struct {
 }
 
+// EmphData represents data for emp node
 type EmphData struct {
 }
 
+// StrongData represents data for strong node
 type StrongData struct {
 }
 
+// DelData represents data for del node
 type DelData struct {
 }
 
-// LinkData contains fields relevant to a Link node type.
+// LinkData represents data for link node
 type LinkData struct {
 	Destination []byte // Destination is what goes into a href
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
@@ -64,14 +71,17 @@ type LinkData struct {
 	Footnote    *Node  // If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.
 }
 
+// ImageData represents data for image node
 type ImageData struct {
 	Destination []byte // Destination is what goes into a href
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
 }
 
+// TextData represents data for text node
 type TextData struct {
 }
 
+// HTMLBlockData represents data for html node
 type HTMLBlockData struct {
 }
 
@@ -84,33 +94,42 @@ type CodeBlockData struct {
 	FenceOffset int
 }
 
+// SoftbreakData represents data for softbreak node
+// Note: not used currently
 type SoftbreakData struct {
 }
 
+// HardbreakData represents data for hard break node
 type HardbreakData struct {
 }
 
+// CodeData represents data for code node
 type CodeData struct {
 }
 
+// HTMLSpanData represents data for html span node
 type HTMLSpanData struct {
 }
 
+// TableData represents data for table node
 type TableData struct {
 }
 
-// TableCellData contains fields relevant to a TableCell node type.
+// TableCellData contains fields relevant to a table cell node type.
 type TableCellData struct {
 	IsHeader bool           // This tells if it's under the header row
 	Align    CellAlignFlags // This holds the value for align attribute
 }
 
+// TableHeadData represents data for a table head node
 type TableHeadData struct {
 }
 
+// TableBodyData represents data for a tablef body node
 type TableBodyData struct {
 }
 
+// TableRowData represents data for a table row node
 type TableRowData struct {
 }
 
@@ -141,16 +160,13 @@ func NewNode(d NodeData) *Node {
 }
 
 func (n *Node) String() string {
-	/*
-		ellipsis := ""
-		snippet := n.Literal
-		if len(snippet) > 16 {
-			snippet = snippet[:16]
-			ellipsis = "..."
-		}
-		return fmt.Sprintf("%s: '%s%s'", n.Type, snippet, ellipsis)
-	*/
-	return "Node.String() NYI"
+	ellipsis := ""
+	snippet := n.Literal
+	if len(snippet) > 16 {
+		snippet = snippet[:16]
+		ellipsis = "..."
+	}
+	return fmt.Sprintf("%T: '%s%s'", n.Data, snippet, ellipsis)
 }
 
 // Unlink removes node 'n' from the tree.

@@ -686,15 +686,8 @@ func unescapeText(ob *bytes.Buffer, src []byte) {
 func entity(p *Parser, data []byte, offset int) (int, *Node) {
 	data = data[offset:]
 
-	end := 1
-
-	if end < len(data) && data[end] == '#' {
-		end++
-	}
-
-	for end < len(data) && isalnum(data[end]) {
-		end++
-	}
+	end := skipCharN(data, 1, '#', 1)
+	end = skipAlnum(data, end)
 
 	if end < len(data) && data[end] == ';' {
 		end++ // real entity
@@ -1183,7 +1176,7 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, *Nod
 			strong.AppendChild(em)
 			p.inline(em, data[:i])
 			return i + 3, strong
-		case (i+1 < len(data) && data[i+1] == c):
+		case i+1 < len(data) && data[i+1] == c:
 			// double symbol found, hand over to emph1
 			length, node := helperEmphasis(p, origData[offset-2:], c)
 			if length == 0 {
