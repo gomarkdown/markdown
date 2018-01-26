@@ -1,60 +1,15 @@
-Blackfriday [![Build Status](https://travis-ci.org/russross/blackfriday.svg?branch=master)](https://travis-ci.org/russross/blackfriday)
+Markdown [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
 ===========
 
-Blackfriday is a [Markdown][1] processor implemented in [Go][2]. It
-is paranoid about its input (so you can safely feed it user-supplied
-data), it is fast, it supports common extensions (tables, smart
-punctuation substitutions, etc.), and it is safe for all utf-8
-(unicode) input.
+This package is a [Markdown][1] parser and HTML renderer implemented in [Go][2].
 
-HTML output is currently supported, along with Smartypants
-extensions.
-
-It started as a translation from C of [Sundown][3].
-
+It's fast and supports common extensions.
 
 Installation
 ------------
 
-Blackfriday is compatible with any modern Go release. With Go 1.7 and git
-installed:
-
-    go get gopkg.in/russross/blackfriday.v2
-
-will download, compile, and install the package into your `$GOPATH`
-directory hierarchy. Alternatively, you can achieve the same if you
-import it into a project:
-
-    import "gopkg.in/russross/blackfriday.v2"
-
-and `go get` without parameters.
-
-
-Versions
---------
-
-Currently maintained and recommended version of Blackfriday is `v2`. It's being
-developed on its own branch: https://github.com/russross/blackfriday/v2. You
-should install and import it via [gopkg.in][6] at
-`gopkg.in/russross/blackfriday.v2`.
-
-Version 2 offers a number of improvements over v1:
-
-* Cleaned up API
-* A separate call to [`Parse`][4], which produces an abstract syntax tree for
-  the document
-* Latest bug fixes
-* Flexibility to easily add your own rendering extensions
-
-Potential drawbacks:
-
-* Our benchmarks show v2 to be slightly slower than v1. Currently in the
-  ballpark of around 15%.
-* API breakage. If you can't afford modifying your code to adhere to the new API
-  and don't care too much about the new features, v2 is probably not for you.
-* Several bug fixes are trailing behind and still need to be forward-ported to
-  v2. See issue [#348](https://github.com/russross/blackfriday/issues/348) for
-  tracking.
+To install the library:
+    go get github.com/gomarkdown/markdown
 
 Usage
 -----
@@ -63,65 +18,51 @@ For the most sensible markdown processing, it is as simple as getting your input
 into a byte slice and calling:
 
 ```go
-output := blackfriday.Run(input)
+output := markdown.ToHTML(input, nil, nil)
 ```
 
-Your input will be parsed and the output rendered with a set of most popular
-extensions enabled. If you want the most basic feature set, corresponding with
-the bare Markdown specification, use:
+This parser the input using most common parser extensions and renders with
+HTMLRenderer (also in most common configuration).
 
+To parse without any extensions:
 ```go
-output := blackfriday.Run(input, blackfriday.WithNoExtensions())
+parser := markdown.NewParserWithExtensions(markdown.NoExtensions)
+output := blackfriday.Run(input, parser, nil)
 ```
 
 ### Sanitize untrusted content
 
-Blackfriday itself does nothing to protect against malicious content. If you are
-dealing with user-supplied markdown, we recommend running Blackfriday's output
-through HTML sanitizer such as [Bluemonday][5].
+We don't protect against malicious content. When dealing with user-provided
+markdown, run renderer HTML through HTML sanitizer such as [Bluemonday][5].
 
 Here's an example of simple usage of Blackfriday together with Bluemonday:
 
 ```go
 import (
     "github.com/microcosm-cc/bluemonday"
-    "github.com/russross/blackfriday"
+    "github.com/gomarkdown/markdown"
 )
 
 // ...
-unsafe := blackfriday.Run(input)
-html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
+maybeUnsafeHTML := markdown.ToHTML(input, nil, nil)
+html := bluemonday.UGCPolicy().SanitizeBytes(maybeUnsafeHTML)
 ```
 
 ### Custom options
 
-If you want to customize the set of options, use `blackfriday.WithExtensions`,
-`blackfriday.WithRenderer` and `blackfriday.WithRefOverride`.
+Ways to customize parser:
+* use custom extensions by creating parser with `markdown.NewParserWithExtensions(extensions)`
+* over-ride `Parser.ReferenceOverride` function
 
-You can also check out `blackfriday-tool` for a more complete example
-of how to use it. Download and install it using:
+You can also check out [cmd/mdhtml(https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example
+of how to use it. You can install it with:
 
-    go get github.com/russross/blackfriday-tool
+    go get github.com/gomarkdown/markdown/cmd/mdtohtml
 
-This is a simple command-line tool that allows you to process a
-markdown file using a standalone program.  You can also browse the
-source directly on github if you are just looking for some example
-code:
-
-* <https://github.com/gomarkdown/markdown-tool>
-
-Note that if you have not already done so, installing
-`blackfriday-tool` will be sufficient to download and install
-blackfriday in addition to the tool itself. The tool binary will be
-installed in `$GOPATH/bin`.  This is a statically-linked binary that
-can be copied to wherever you need it without worrying about
-dependencies and library versions.
-
+This is a simple command-line tool to convert markdown files to HTML.
 
 Features
 --------
-
-All features of Sundown are supported, including:
 
 *   **Compatibility**. The Markdown v1.0.3 test suite passes with
     the `--tidy` option.  Without `--tidy`, the differences are
@@ -131,7 +72,7 @@ All features of Sundown are supported, including:
 *   **Common extensions**, including table support, fenced code
     blocks, autolinks, strikethroughs, non-strict emphasis, etc.
 
-*   **Safety**. Blackfriday is paranoid when parsing, making it safe
+*   **Safety**. Markdown is paranoid when parsing, making it safe
     to feed untrusted user input without fear of bad things
     happening. The test suite stress tests this and there are no
     known inputs that make it crash.  If you find one, please let me
@@ -139,19 +80,16 @@ All features of Sundown are supported, including:
 
     NOTE: "safety" in this context means *runtime safety only*. In order to
     protect yourself against JavaScript injection in untrusted content, see
-    [this example](https://github.com/russross/blackfriday#sanitize-untrusted-content).
+    [this example](https://github.com/gomarkdown/markdown#sanitize-untrusted-content).
 
-*   **Fast processing**. It is fast enough to render on-demand in
+*   **Fast**. It is fast enough to render on-demand in
     most web applications without having to cache the output.
 
 *   **Thread safety**. You can run multiple parsers in different
     goroutines without ill effect. There is no dependence on global
     shared state.
 
-*   **Minimal dependencies**. Blackfriday only depends on standard
-    library packages in Go. The source code is pretty
-    self-contained, so it is easy to add to any project, including
-    Google App Engine projects.
+*   **Minimal dependencies**. Only depends on standard library packages in Go.
 
 *   **Standards compliant**. Output successfully validates using the
     W3C validation tool for HTML 4.01 and XHTML 1.0 Transitional.
@@ -238,41 +176,32 @@ implements the following extensions:
     <sup>4</sup>&frasl;<sub>5</sub>.
 
 
-Other renderers
----------------
-
-Blackfriday is structured to allow alternative rendering engines. Here
-are a few of note:
-
-*   [github_flavored_markdown](https://godoc.org/github.com/shurcooL/github_flavored_markdown):
-    provides a GitHub Flavored Markdown renderer with fenced code block
-    highlighting, clickable heading anchor links.
-
-    It's not customizable, and its goal is to produce HTML output
-    equivalent to the [GitHub Markdown API endpoint](https://developer.github.com/v3/markdown/#render-a-markdown-document-in-raw-mode),
-    except the rendering is performed locally.
-
-*   [markdownfmt](https://github.com/shurcooL/markdownfmt): like gofmt,
-    but for markdown.
-
-*   [LaTeX output](https://github.com/Ambrevar/Blackfriday-LaTeX):
-    renders output as LaTeX.
-
-
 Todo
 ----
 
+*   port https://github.com/russross/blackfriday/issues/348
+*   port [LaTeX output](https://github.com/Ambrevar/Blackfriday-LaTeX):
+    renders output as LaTeX.
+*   port https://github.com/shurcooL/github_flavored_markdown to markdown
+*   port [markdownfmt](https://github.com/shurcooL/markdownfmt): like gofmt,
+    but for markdown.
 *   More unit testing
 *   Improve unicode support. It does not understand all unicode
     rules (about what constitutes a letter, a punctuation symbol,
     etc.), so it may fail to detect word boundaries correctly in
     some instances. It is safe on all utf-8 input.
 
+History
+-------
+
+markdown is a fork of v2 of github.com/russross/blackfriday that is:
+* active maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
+* cleaned up API to make it easier to use (IMHO)
 
 License
 -------
 
-[Blackfriday is distributed under the Simplified BSD License](LICENSE.txt)
+[markdown is distributed under the Simplified BSD License](LICENSE.txt)
 
 
    [1]: https://daringfireball.net/projects/markdown/ "Markdown"
