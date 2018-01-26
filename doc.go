@@ -11,12 +11,12 @@
 //
 // Customizing parsing and HTML rendering
 //
-// md := []byte("markdown document")
-// extensions := CommonExtensions | AutoHeadingIDs
-// parser := NewParserWithExensions(extensions)
-// htmlParams := CommonHTMLFlags | HrefTargetBlank
-// renderer := NewHTMLRenderer(htmlParams)
-// html := ToHTML(md, parser, renderer)
+//  md := []byte("markdown document")
+//  extensions := CommonExtensions | AutoHeadingIDs
+//  parser := NewParserWithExensions(extensions)
+//  htmlParams := CommonHTMLFlags | HrefTargetBlank
+//  renderer := NewHTMLRenderer(htmlParams)
+//  html := ToHTML(md, parser, renderer)
 //
 // For a cmd-line tool see https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml
 package markdown
