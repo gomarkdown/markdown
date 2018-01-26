@@ -46,9 +46,10 @@ func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, s
 func runMarkdown(input string, params TestParams) string {
 	params.HTMLRendererParameters.Flags = params.HTMLFlags
 	renderer := NewHTMLRenderer(params.HTMLRendererParameters)
-	return string(Run([]byte(input), WithRenderer(renderer),
+	d := ParseAndRender([]byte(input), renderer,
 		WithExtensions(params.extensions),
-		WithRefOverride(params.referenceOverride)))
+		WithRefOverride(params.referenceOverride))
+	return string(d)
 }
 
 // doTests runs full document tests using MarkdownCommon configuration.
