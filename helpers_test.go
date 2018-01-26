@@ -79,16 +79,6 @@ func doTestsParam(t *testing.T, tests []string, params TestParams) {
 				t.Errorf("\nInput   [%#v]\nExpected[%#v]\nActual  [%#v]",
 					*candidate, expected, actual)
 			}
-
-			// now test every substring to stress test bounds checking
-			if !testing.Short() {
-				for start := 0; start < len(input); start++ {
-					for end := start + 1; end <= len(input); end++ {
-						*candidate = input[start:end]
-						runMarkdown(*candidate, params)
-					}
-				}
-			}
 		}
 	})
 }
@@ -170,16 +160,6 @@ func doTestsReference(t *testing.T, files []string, flag Extensions) {
 			if actual != expected {
 				t.Errorf("\n    [%#v]\nExpected[%#v]\nActual  [%#v]",
 					basename+".text", expected, actual)
-			}
-
-			// now test every prefix of every input to check for
-			// bounds checking
-			if !testing.Short() {
-				start, max := 0, len(input)
-				for end := start + 1; end <= max; end++ {
-					*candidate = input[start:end]
-					runMarkdown(*candidate, params)
-				}
 			}
 		}
 	})
