@@ -26,7 +26,7 @@ type SPRenderer struct {
 }
 
 func wordBoundary(c byte) bool {
-	return c == 0 || isspace(c) || ispunct(c)
+	return c == 0 || isSpace(c) || isPunctuation(c)
 }
 
 func tolower(c byte) byte {
@@ -50,46 +50,46 @@ func smartQuoteHelper(out *bytes.Buffer, previousChar byte, nextChar byte, quote
 	case previousChar == 0 && nextChar == 0:
 		// context is not any help here, so toggle
 		*isOpen = !*isOpen
-	case isspace(previousChar) && nextChar == 0:
+	case isSpace(previousChar) && nextChar == 0:
 		// [ "] might be [ "<code>foo...]
 		*isOpen = true
-	case ispunct(previousChar) && nextChar == 0:
+	case isPunctuation(previousChar) && nextChar == 0:
 		// [!"] hmm... could be [Run!"] or [("<code>...]
 		*isOpen = false
 	case /* isnormal(previousChar) && */ nextChar == 0:
 		// [a"] is probably a close
 		*isOpen = false
-	case previousChar == 0 && isspace(nextChar):
+	case previousChar == 0 && isSpace(nextChar):
 		// [" ] might be [...foo</code>" ]
 		*isOpen = false
-	case isspace(previousChar) && isspace(nextChar):
+	case isSpace(previousChar) && isSpace(nextChar):
 		// [ " ] context is not any help here, so toggle
 		*isOpen = !*isOpen
-	case ispunct(previousChar) && isspace(nextChar):
+	case isPunctuation(previousChar) && isSpace(nextChar):
 		// [!" ] is probably a close
 		*isOpen = false
-	case /* isnormal(previousChar) && */ isspace(nextChar):
+	case /* isnormal(previousChar) && */ isSpace(nextChar):
 		// [a" ] this is one of the easy cases
 		*isOpen = false
-	case previousChar == 0 && ispunct(nextChar):
+	case previousChar == 0 && isPunctuation(nextChar):
 		// ["!] hmm... could be ["$1.95] or [</code>"!...]
 		*isOpen = false
-	case isspace(previousChar) && ispunct(nextChar):
+	case isSpace(previousChar) && isPunctuation(nextChar):
 		// [ "!] looks more like [ "$1.95]
 		*isOpen = true
-	case ispunct(previousChar) && ispunct(nextChar):
+	case isPunctuation(previousChar) && isPunctuation(nextChar):
 		// [!"!] context is not any help here, so toggle
 		*isOpen = !*isOpen
-	case /* isnormal(previousChar) && */ ispunct(nextChar):
+	case /* isnormal(previousChar) && */ isPunctuation(nextChar):
 		// [a"!] is probably a close
 		*isOpen = false
 	case previousChar == 0 /* && isnormal(nextChar) */ :
 		// ["a] is probably an open
 		*isOpen = true
-	case isspace(previousChar) /* && isnormal(nextChar) */ :
+	case isSpace(previousChar) /* && isnormal(nextChar) */ :
 		// [ "a] this is one of the easy cases
 		*isOpen = true
-	case ispunct(previousChar) /* && isnormal(nextChar) */ :
+	case isPunctuation(previousChar) /* && isnormal(nextChar) */ :
 		// [!"a] is probably an open
 		*isOpen = true
 	default:

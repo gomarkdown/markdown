@@ -678,18 +678,18 @@ func isFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 
 			// strip all whitespace at the beginning and the end
 			// of the {} block
-			for syn > 0 && isspace(data[syntaxStart]) {
+			for syn > 0 && isSpace(data[syntaxStart]) {
 				syntaxStart++
 				syn--
 			}
 
-			for syn > 0 && isspace(data[syntaxStart+syn-1]) {
+			for syn > 0 && isSpace(data[syntaxStart+syn-1]) {
 				syn--
 			}
 
 			i++
 		} else {
-			for i < len(data) && !isspace(data[i]) {
+			for i < len(data) && !isSpace(data[i]) {
 				syn++
 				i++
 			}
@@ -1589,7 +1589,7 @@ func skipUntilChar(data []byte, i int, c byte) int {
 
 func skipAlnum(data []byte, i int) int {
 	n := len(data)
-	for i < n && isalnum(data[i]) {
+	for i < n && isAlnum(data[i]) {
 		i++
 	}
 	return i
@@ -1597,7 +1597,7 @@ func skipAlnum(data []byte, i int) int {
 
 func skipSpace(data []byte, i int) int {
 	n := len(data)
-	for i < n && isspace(data[i]) {
+	for i < n && isSpace(data[i]) {
 		i++
 	}
 	return i
