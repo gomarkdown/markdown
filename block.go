@@ -463,10 +463,7 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	// the end of the block has been found
 	if doRender {
 		// trim newlines
-		end := i
-		for end > 0 && data[end-1] == '\n' {
-			end--
-		}
+		end := backChar(data, i, '\n')
 		finalizeHTMLBlock(p.addBlock(&HTMLBlockData{}, data[:end]))
 	}
 
@@ -530,14 +527,6 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 		}
 	}
 	return 0
-}
-
-func skipAlnum(data []byte, i int) int {
-	n := len(data)
-	for i < n && isalnum(data[i]) {
-		i++
-	}
-	return i
 }
 
 func (p *Parser) htmlFindTag(data []byte) (string, bool) {
@@ -1618,6 +1607,21 @@ func skipUntilChar(data []byte, i int, c byte) int {
 	n := len(data)
 	for i < n && data[i] != c {
 		i++
+	}
+	return i
+}
+
+func skipAlnum(data []byte, i int) int {
+	n := len(data)
+	for i < n && isalnum(data[i]) {
+		i++
+	}
+	return i
+}
+
+func backChar(data []byte, i int, c byte) int {
+	for i > 0 && data[i-1] == c {
+		i--
 	}
 	return i
 }
