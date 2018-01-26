@@ -15,18 +15,14 @@ import (
 	"unicode/utf8"
 )
 
-//
-// Markdown parsing and processing
-//
-
 // Version string of the package. Appears in the rendered document when
 // CompletePage flag is on.
 const Version = "2.0"
 
-// Extensions is a bitfield of enabled extensions.
+// Extensions is a bitmask of enabled Parser extensions.
 type Extensions int
 
-// Bitflags representing markdown parsing extensions.
+// Bit flags representing markdown parsing extensions.
 // Use | (or) to specify multiple extensions.
 const (
 	NoExtensions           Extensions = 0
@@ -46,9 +42,6 @@ const (
 	AutoHeadingIDs                                // Create the heading ID from the text
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
 	DefinitionLists                               // Render definition lists
-
-	CommonHTMLFlags HTMLFlags = UseXHTML | Smartypants |
-		SmartypantsFractions | SmartypantsDashes | SmartypantsLatexDashes
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -167,19 +160,42 @@ type Renderer interface {
 // for each character that triggers a response when parsing inline data.
 type inlineParser func(p *Parser, data []byte, offset int) (int, *Node)
 
+// ReferenceOverrideFunc is expected to be called with a reference string and
+// return either a valid Reference type that the reference string maps to or
+// nil. If overridden is false, the default reference logic will be executed.
+// See the documentation in Options for more details on use-case.
+type ReferenceOverrideFunc func(reference string) (ref *Reference, overridden bool)
+
 // Parser is a type that holds extensions and the runtime state used by
 // Parse, and the renderer. You can not use it directly, construct it with New.
 type Parser struct {
+
+	// ReferenceOverride is an optional function callback that is called every
+	// time a reference is resolved. It can be set before starting parsing.
+	//
+	// In Markdown, the link reference syntax can be made to resolve a link to
+	// a reference instead of an inline URL, in one of the following ways:
+	//
+	//  * [link text][refid]
+	//  * [refid][]
+	//
+	// Usually, the refid is defined at the bottom of the Markdown document. If
+	// this override function is provided, the refid is passed to the override
+	// function first, before consulting the defined refids at the bottom. If
+	// the override function indicates an override did not occur, the refids at
+	// the bottom will be used to fill in the link details.
+	ReferenceOverride ReferenceOverrideFunc
+
 	// after parsing, this is root of parsed ast
 	Doc *Node
 
-	referenceOverride ReferenceOverrideFunc
-	refs              map[string]*reference
-	inlineCallback    [256]inlineParser
-	extensions        Extensions
-	nesting           int
-	maxNesting        int
-	insideLink        bool
+	extensions Extensions
+
+	refs           map[string]*reference
+	inlineCallback [256]inlineParser
+	nesting        int
+	maxNesting     int
+	insideLink     bool
 
 	// Footnotes need to be ordered as well as available to quickly check for
 	// presence. If a ref is also a footnote, it's stored both in refs and here
@@ -192,9 +208,58 @@ type Parser struct {
 	allClosed            bool
 }
 
+// NewParser creates a markdown parser with CommonExtensions.
+func NewParser() *Parser {
+	return NewParserWithExtensions(CommonExtensions)
+}
+
+// NewParserWithExtensions creates a markdown parser with given extensions.
+// Before
+// for Run() to customize parser's behavior and the renderer.
+func NewParserWithExtensions(extension Extensions) *Parser {
+	p := Parser{
+		refs:       make(map[string]*reference),
+		maxNesting: 16,
+		insideLink: false,
+		Doc:        NewNode(&DocumentData{}),
+		extensions: extension,
+		allClosed:  true,
+	}
+	p.tip = p.Doc
+	p.oldTip = p.Doc
+	p.lastMatchedContainer = p.Doc
+
+	p.inlineCallback[' '] = maybeLineBreak
+	p.inlineCallback['*'] = emphasis
+	p.inlineCallback['_'] = emphasis
+	if p.extensions&Strikethrough != 0 {
+		p.inlineCallback['~'] = emphasis
+	}
+	p.inlineCallback['`'] = codeSpan
+	p.inlineCallback['\n'] = lineBreak
+	p.inlineCallback['['] = link
+	p.inlineCallback['<'] = leftAngle
+	p.inlineCallback['\\'] = escape
+	p.inlineCallback['&'] = entity
+	p.inlineCallback['!'] = maybeImage
+	p.inlineCallback['^'] = maybeInlineFootnote
+	if p.extensions&Autolink != 0 {
+		p.inlineCallback['h'] = maybeAutoLink
+		p.inlineCallback['m'] = maybeAutoLink
+		p.inlineCallback['f'] = maybeAutoLink
+		p.inlineCallback['H'] = maybeAutoLink
+		p.inlineCallback['M'] = maybeAutoLink
+		p.inlineCallback['F'] = maybeAutoLink
+	}
+	if p.extensions&Footnotes != 0 {
+		p.notes = make([]*reference, 0)
+	}
+	return &p
+}
+
 func (p *Parser) getRef(refid string) (ref *reference, found bool) {
-	if p.referenceOverride != nil {
-		r, overridden := p.referenceOverride(refid)
+	if p.ReferenceOverride != nil {
+		r, overridden := p.ReferenceOverride(refid)
 		if overridden {
 			if r == nil {
 				return nil, false
@@ -254,131 +319,25 @@ type Reference struct {
 	Text string
 }
 
-// ReferenceOverrideFunc is expected to be called with a reference string and
-// return either a valid Reference type that the reference string maps to or
-// nil. If overridden is false, the default reference logic will be executed.
-// See the documentation in Options for more details on use-case.
-type ReferenceOverrideFunc func(reference string) (ref *Reference, overridden bool)
-
-// NewParser creates a markdown parser. You can use the same With* functions as
-// for Run() to customize parser's behavior and the renderer.
-func NewParser(opts ...Option) *Parser {
-	var p Parser
-	for _, opt := range opts {
-		opt(&p)
-	}
-	p.refs = make(map[string]*reference)
-	p.maxNesting = 16
-	p.insideLink = false
-	docNode := NewNode(&DocumentData{})
-	p.Doc = docNode
-	p.tip = docNode
-	p.oldTip = docNode
-	p.lastMatchedContainer = docNode
-	p.allClosed = true
-
-	p.inlineCallback[' '] = maybeLineBreak
-	p.inlineCallback['*'] = emphasis
-	p.inlineCallback['_'] = emphasis
-	if p.extensions&Strikethrough != 0 {
-		p.inlineCallback['~'] = emphasis
-	}
-	p.inlineCallback['`'] = codeSpan
-	p.inlineCallback['\n'] = lineBreak
-	p.inlineCallback['['] = link
-	p.inlineCallback['<'] = leftAngle
-	p.inlineCallback['\\'] = escape
-	p.inlineCallback['&'] = entity
-	p.inlineCallback['!'] = maybeImage
-	p.inlineCallback['^'] = maybeInlineFootnote
-	if p.extensions&Autolink != 0 {
-		p.inlineCallback['h'] = maybeAutoLink
-		p.inlineCallback['m'] = maybeAutoLink
-		p.inlineCallback['f'] = maybeAutoLink
-		p.inlineCallback['H'] = maybeAutoLink
-		p.inlineCallback['M'] = maybeAutoLink
-		p.inlineCallback['F'] = maybeAutoLink
-	}
-	if p.extensions&Footnotes != 0 {
-		p.notes = make([]*reference, 0)
-	}
-	return &p
-}
-
-// Option customizes the Markdown processor's default behavior.
-type Option func(*Parser)
-
-// WithExtensions allows you to enable extensions
-func WithExtensions(e Extensions) Option {
-	return func(p *Parser) {
-		p.extensions = e
-	}
-}
-
-// WithNoExtensions turns off all extensions
-func WithNoExtensions() Option {
-	return func(p *Parser) {
-		p.extensions = NoExtensions
-	}
-}
-
-// WithRefOverride sets an optional function callback that is called every
-// time a reference is resolved.
+// ToHTML converts a markdown text in input and converts it to HTML.
 //
-// In Markdown, the link reference syntax can be made to resolve a link to
-// a reference instead of an inline URL, in one of the following ways:
+// You can optionally pass a parser and renderer, which allows to customize
+// a parser, a render or provide a renderer other than HTMLRenderer.
 //
-//  * [link text][refid]
-//  * [refid][]
-//
-// Usually, the refid is defined at the bottom of the Markdown document. If
-// this override function is provided, the refid is passed to the override
-// function first, before consulting the defined refids at the bottom. If
-// the override function indicates an override did not occur, the refids at
-// the bottom will be used to fill in the link details.
-func WithRefOverride(o ReferenceOverrideFunc) Option {
-	return func(p *Parser) {
-		p.referenceOverride = o
+// If you pass nil for both, we convert with CommonExtensions for
+// the parser and HTMLRenderer with CommonHTMLFlags.
+func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
+	if parser == nil {
+		parser = NewParserWithExtensions(CommonExtensions)
 	}
-}
-
-// ToHTML is the main entry point to Blackfriday. It parses and renders a
-// block of markdown-encoded text.
-//
-// The simplest invocation of Run takes one argument, input:
-//     output := Run(input)
-// This will parse the input with CommonExtensions enabled and render it with
-// the default HTMLRenderer (with CommonHTMLFlags).
-//
-// Variadic arguments opts can customize the default behavior. Since Markdown
-// type does not contain exported fields, you can not use it directly. Instead,
-// use the With* functions. For example, this will call the most basic
-// functionality, with no extensions:
-//     output := Run(input, WithNoExtensions())
-//
-// You can use any number of With* arguments, even contradicting ones. They
-// will be applied in order of appearance and the latter will override the
-// former:
-//     output := Run(input, WithNoExtensions(), WithExtensions(exts),
-//
-func ToHTML(input []byte, opts ...Option) []byte {
-	r := NewHTMLRenderer(HTMLRendererParameters{
-		Flags: CommonHTMLFlags,
-	})
-	optList := []Option{WithExtensions(CommonExtensions)}
-	optList = append(optList, opts...)
-	parser := NewParser(optList...)
+	if renderer == nil {
+		params := HTMLRendererParameters{
+			Flags: CommonHTMLFlags,
+		}
+		renderer = NewHTMLRenderer(params)
+	}
 	parser.Parse(input)
-	return parser.Render(r)
-}
-
-// ParseAndRender parsers input and renders it with a renderer
-func ParseAndRender(input []byte, r Renderer, opts ...Option) []byte {
-	optList := []Option{WithExtensions(CommonExtensions)}
-	optList = append(optList, opts...)
-	parser := NewParser(optList...)
-	parser.Parse(input)
-	return parser.Render(r)
+	return parser.Render(renderer)
 }
 
 // Render renders a parsed data in parser with a given renderer

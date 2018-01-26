@@ -46,6 +46,9 @@ const (
 	SmartypantsAngledQuotes                       // Enable angled double quotes (with Smartypants) for double quotes rendering
 	SmartypantsQuotesNBSP                         // Enable « French guillemets » (with Smartypants)
 	TOC                                           // Generate a table of contents
+
+	CommonHTMLFlags HTMLFlags = UseXHTML | Smartypants |
+		SmartypantsFractions | SmartypantsDashes | SmartypantsLatexDashes
 )
 
 var (

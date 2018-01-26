@@ -54,11 +54,7 @@ var (
 )
 
 func runMarkdown(d []byte) string {
-	htmlParams := markdown.HTMLRendererParameters{
-		Flags: markdown.HTMLFlagsNone,
-	}
-	renderer := markdown.NewHTMLRenderer(htmlParams)
-	html := markdown.Run(d, markdown.WithRenderer(renderer), markdown.WithExtensions(markdown.CommonExtensions))
+	html := markdown.ToHTML(d, nil, nil)
 	return string(html)
 }
 
