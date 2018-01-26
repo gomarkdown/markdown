@@ -202,22 +202,6 @@ func (n *Node) AppendChild(child *Node) {
 	}
 }
 
-// InsertBefore inserts 'sibling' immediately before 'n'.
-// It panics if either node is nil.
-func (n *Node) InsertBefore(sibling *Node) {
-	sibling.Unlink()
-	sibling.Prev = n.Prev
-	if sibling.Prev != nil {
-		sibling.Prev.Next = sibling
-	}
-	sibling.Next = n
-	n.Prev = sibling
-	sibling.Parent = n.Parent
-	if sibling.Prev == nil {
-		sibling.Parent.FirstChild = sibling
-	}
-}
-
 func (n *Node) isContainer() bool {
 	switch n.Data.(type) {
 	case *DocumentData, *BlockQuoteData, *ListData, *ItemData, *ParagraphData:
