@@ -1144,11 +1144,9 @@ func (p *Parser) code(data []byte) int {
 
 // returns unordered list item prefix
 func (p *Parser) uliPrefix(data []byte) int {
-	i := 0
 	// start with up to 3 spaces
-	for i < len(data) && i < 3 && data[i] == ' ' {
-		i++
-	}
+	i := skipCharN(data, 0, ' ', 3)
+
 	if i >= len(data)-1 {
 		return 0
 	}
@@ -1162,12 +1160,8 @@ func (p *Parser) uliPrefix(data []byte) int {
 
 // returns ordered list item prefix
 func (p *Parser) oliPrefix(data []byte) int {
-	i := 0
-
 	// start with up to 3 spaces
-	for i < 3 && i < len(data) && data[i] == ' ' {
-		i++
-	}
+	i := skipCharN(data, 0, ' ', 3)
 
 	// count the digits
 	start := i
@@ -1190,14 +1184,11 @@ func (p *Parser) dliPrefix(data []byte) int {
 	if len(data) < 2 {
 		return 0
 	}
-	i := 0
 	// need a ':' followed by a space or a tab
-	if data[i] != ':' || !(data[i+1] == ' ' || data[i+1] == '\t') {
+	if data[0] != ':' || !(data[1] == ' ' || data[1] == '\t') {
 		return 0
 	}
-	for i < len(data) && data[i] == ' ' {
-		i++
-	}
+	i := skipChar(data, 0, ' ')
 	return i + 2
 }
 
@@ -1614,6 +1605,16 @@ func skipChar(data []byte, i int, c byte) int {
 	n := len(data)
 	for i < n && data[i] == c {
 		i++
+	}
+	return i
+}
+
+// like skipChar but only skips up to max characters
+func skipCharN(data []byte, i int, c byte, max int) int {
+	n := len(data)
+	for i < n && max > 0 && data[i] == c {
+		i++
+		max--
 	}
 	return i
 }
