@@ -56,7 +56,7 @@ Ways to customize parser:
 * use custom extensions by creating parser with `markdown.NewParserWithExtensions(extensions)`
 * over-ride `Parser.ReferenceOverride` function
 
-You can also check out [cmd/mdhtml(https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example
+You can also check out [cmd/mdhtml](https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example
 of how to use it. You can install it with:
 
     go get github.com/gomarkdown/markdown/cmd/mdtohtml
