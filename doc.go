@@ -6,6 +6,8 @@
 //
 // Convert markdown to HTML
 //
+// The simplest way to convert markdown text to HTML
+//
 //  md := []byte("## markdown document")
 //  html := markdown.ToHTML(md, nil, nil)
 //
