@@ -1,9 +1,5 @@
-// Markdown Processor for Go
-// Available at https://github.com/gomarkdown/markdown
-//
 // Copyright © 2011 Russ Ross <russ@russross.com>.
 // Distributed under the Simplified BSD License.
-// See README.md for details.
 
 package markdown
 
@@ -15,16 +11,14 @@ import (
 // CompletePage flag is on.
 const Version = "2.0"
 
-// Renderer is the rendering interface. This is mostly of interest if you are
-// implementing a new rendering format.
+// Renderer is an interface for implementing custom renderers.
 //
-// Only an HTML implementation is provided in this repository, see the README
-// for external implementations.
+// This package provides HTMLRenderer for markdown => HTML conversion.
 type Renderer interface {
 	// RenderNode is the main rendering method. It will be called once for
 	// every leaf node and twice for every non-leaf node (first with
 	// entering=true, then with entering=false). The method should write its
-	// rendition of the node to the supplied writer w.
+	// rendition of the node to writer w.
 	RenderNode(w io.Writer, node *Node, entering bool) WalkStatus
 
 	// RenderHeader is a method that allows the renderer to produce some
@@ -50,7 +44,7 @@ type Renderer interface {
 // a parser, a render or provide a renderer other than HTMLRenderer.
 //
 // If you pass nil for both, we convert with CommonExtensions for
-// the parser and HTMLRenderer with CommonHTMLFlags.
+// the parser and HTMLRenderer with CommonHTMLFlags for renderer
 func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
 	if parser == nil {
 		parser = NewParserWithExtensions(CommonExtensions)

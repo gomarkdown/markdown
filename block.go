@@ -1,11 +1,5 @@
-//
-// Markdown Processor for Go
-// Available at https://github.com/gomarkdown/markdown
-//
 // Copyright © 2011 Russ Ross <russ@russross.com>.
 // Distributed under the Simplified BSD License.
-// See README.md for details.
-//
 
 // Parsing block-level elements.
 

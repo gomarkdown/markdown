@@ -1,17 +1,7 @@
-//
-// Markdown Processor for Go
-// Available at https://github.com/gomarkdown/markdown
-//
 // Copyright © 2011 Russ Ross <russ@russross.com>.
 // Distributed under the Simplified BSD License.
-// See README.md for details.
-//
 
-//
-//
-// HTML rendering backend
-//
-//
+// HTMLRenderer converts AST of parsed markdown document into HTML text
 
 package markdown
 
