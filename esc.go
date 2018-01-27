@@ -12,23 +12,25 @@ var htmlEscaper = [256][]byte{
 	'"': []byte("&quot;"),
 }
 
-func escapeHTML(w io.Writer, s []byte) {
+// EscapeHTML writes html-escaped d to w. It escapes &, <, > and " characters.
+func EscapeHTML(w io.Writer, d []byte) {
 	var start, end int
-	for end < len(s) {
-		escSeq := htmlEscaper[s[end]]
+	n := len(d)
+	for end < n {
+		escSeq := htmlEscaper[d[end]]
 		if escSeq != nil {
-			w.Write(s[start:end])
+			w.Write(d[start:end])
 			w.Write(escSeq)
 			start = end + 1
 		}
 		end++
 	}
-	if start < len(s) && end <= len(s) {
-		w.Write(s[start:end])
+	if start < n && end <= n {
+		w.Write(d[start:end])
 	}
 }
 
 func escLink(w io.Writer, text []byte) {
 	unesc := html.UnescapeString(string(text))
-	escapeHTML(w, []byte(unesc))
+	EscapeHTML(w, []byte(unesc))
 }

@@ -418,13 +418,13 @@ func (r *HTMLRenderer) outHRTag(w io.Writer) {
 func (r *HTMLRenderer) text(w io.Writer, node *Node, nodeData *TextData) {
 	if r.params.Flags&Smartypants != 0 {
 		var tmp bytes.Buffer
-		escapeHTML(&tmp, node.Literal)
+		EscapeHTML(&tmp, node.Literal)
 		r.sr.Process(w, tmp.Bytes())
 	} else {
 		if isLinkData(node.Parent.Data) {
 			escLink(w, node.Literal)
 		} else {
-			escapeHTML(w, node.Literal)
+			EscapeHTML(w, node.Literal)
 		}
 	}
 }
@@ -476,7 +476,7 @@ func (r *HTMLRenderer) linkEnter(w io.Writer, node *Node, nodeData *LinkData) {
 	if len(nodeData.Title) > 0 {
 		var titleBuff bytes.Buffer
 		titleBuff.WriteString("title=\"")
-		escapeHTML(&titleBuff, nodeData.Title)
+		EscapeHTML(&titleBuff, nodeData.Title)
 		titleBuff.WriteByte('"')
 		attrs = append(attrs, titleBuff.String())
 	}
@@ -523,7 +523,7 @@ func (r *HTMLRenderer) imageExit(w io.Writer, node *Node, nodeData *ImageData) {
 	if r.disableTags == 0 {
 		if nodeData.Title != nil {
 			r.outs(w, `" title="`)
-			escapeHTML(w, nodeData.Title)
+			EscapeHTML(w, nodeData.Title)
 		}
 		r.outs(w, `" />`)
 	}
@@ -571,7 +571,7 @@ func (r *HTMLRenderer) image(w io.Writer, node *Node, nodeData *ImageData, enter
 
 func (r *HTMLRenderer) code(w io.Writer, node *Node, nodeData *CodeData) {
 	r.outs(w, "<code>")
-	escapeHTML(w, node.Literal)
+	EscapeHTML(w, node.Literal)
 	r.outs(w, "</code>")
 }
 
@@ -740,7 +740,7 @@ func (r *HTMLRenderer) codeBlock(w io.Writer, node *Node, nodeData *CodeBlockDat
 	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
-	escapeHTML(w, node.Literal)
+	EscapeHTML(w, node.Literal)
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
 	if !isListItemData(node.Parent.Data) {
@@ -898,7 +898,7 @@ func (r *HTMLRenderer) writeDocumentHeader(w io.Writer) {
 	if r.params.Flags&Smartypants != 0 {
 		r.sr.Process(w, []byte(r.params.Title))
 	} else {
-		escapeHTML(w, []byte(r.params.Title))
+		EscapeHTML(w, []byte(r.params.Title))
 	}
 	io.WriteString(w, "</title>\n")
 	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"Markdown Processor for Go v")
@@ -911,14 +911,14 @@ func (r *HTMLRenderer) writeDocumentHeader(w io.Writer) {
 	io.WriteString(w, ">\n")
 	if r.params.CSS != "" {
 		io.WriteString(w, "  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
-		escapeHTML(w, []byte(r.params.CSS))
+		EscapeHTML(w, []byte(r.params.CSS))
 		io.WriteString(w, "\"")
 		io.WriteString(w, ending)
 		io.WriteString(w, ">\n")
 	}
 	if r.params.Icon != "" {
 		io.WriteString(w, "  <link rel=\"icon\" type=\"image/x-icon\" href=\"")
-		escapeHTML(w, []byte(r.params.Icon))
+		EscapeHTML(w, []byte(r.params.Icon))
 		io.WriteString(w, "\"")
 		io.WriteString(w, ending)
 		io.WriteString(w, ">\n")

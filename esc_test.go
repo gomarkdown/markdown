@@ -16,7 +16,7 @@ func TestEsc(t *testing.T) {
 	}
 	for i := 0; i < len(tests); i += 2 {
 		var b bytes.Buffer
-		escapeHTML(&b, []byte(tests[i]))
+		EscapeHTML(&b, []byte(tests[i]))
 		if !bytes.Equal(b.Bytes(), []byte(tests[i+1])) {
 			t.Errorf("\nInput   [%#v]\nExpected[%#v]\nActual  [%#v]",
 				tests[i], tests[i+1], b.String())
@@ -42,7 +42,7 @@ func BenchmarkEscapeHTML(b *testing.B) {
 	var buf bytes.Buffer
 	for n := 0; n < b.N; n++ {
 		for _, t := range tests {
-			escapeHTML(&buf, t)
+			EscapeHTML(&buf, t)
 			buf.Reset()
 		}
 	}
