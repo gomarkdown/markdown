@@ -63,6 +63,12 @@ const (
 	unquotedValue         = "[^\"'=<>`\\x00-\\x20]+"
 )
 
+// RenderNodeFunc allows reusing most of HTMLRenderer logic and replacing
+// rendering of some nodes. If it returns false, HTMLRenderer.RenderNode
+// will execute its logic. If it returns true, HTMLRenderer.RenderNode will
+// skip rendering this node and will return WalkStatus
+type RenderNodeFunc func(w io.Writer, node *Node, entering bool) (WalkStatus, bool)
+
 // HTMLRendererParameters is a collection of supplementary parameters tweaking
 // the behavior of various parts of HTML renderer.
 type HTMLRendererParameters struct {
@@ -85,6 +91,10 @@ type HTMLRendererParameters struct {
 	Icon  string // Optional icon file URL (used if CompletePage is set)
 
 	Flags HTMLFlags // Flags allow customizing this renderer's behavior
+
+	// if set, called at the start of RenderNode(). Allows replacing
+	// rendering of some nodes
+	RenderNodeHook RenderNodeFunc
 }
 
 // HTMLRenderer implements Renderer interface for HTML output.
@@ -786,6 +796,12 @@ func (r *HTMLRenderer) tableBody(w io.Writer, node *Node, nodeData *TableBodyDat
 // The typical behavior is to return GoToNext, which asks for the usual
 // traversal to the next node.
 func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkStatus {
+	if r.params.RenderNodeHook != nil {
+		status, didHandle := r.params.RenderNodeHook(w, node, entering)
+		if didHandle {
+			return status
+		}
+	}
 	switch nodeData := node.Data.(type) {
 	case *TextData:
 		r.text(w, node, nodeData)
@@ -800,8 +816,8 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 		r.outOneOf(w, entering, "<strong>", "</strong>")
 	case *DelData:
 		r.outOneOf(w, entering, "<del>", "</del>")
-	case *HTMLSpanData:
-		r.span(w, node, nodeData)
+	case *BlockQuoteData:
+		r.outOneOfCr(w, entering, "<blockquote>", "</blockquote>")
 	case *LinkData:
 		r.link(w, node, nodeData, entering)
 	case *ImageData:
@@ -811,12 +827,14 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 		r.image(w, node, nodeData, entering)
 	case *CodeData:
 		r.code(w, node, nodeData)
+	case *CodeBlockData:
+		r.codeBlock(w, node, nodeData)
 	case *DocumentData:
 		// do nothing
 	case *ParagraphData:
 		r.paragraph(w, node, nodeData, entering)
-	case *BlockQuoteData:
-		r.outOneOfCr(w, entering, "<blockquote>", "</blockquote>")
+	case *HTMLSpanData:
+		r.span(w, node, nodeData)
 	case *HTMLBlockData:
 		r.htmlBlock(w, node, nodeData)
 	case *HeadingData:
@@ -827,8 +845,7 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 		r.list(w, node, nodeData, entering)
 	case *ListItemData:
 		r.listItem(w, node, nodeData, entering)
-	case *CodeBlockData:
-		r.codeBlock(w, node, nodeData)
+
 	case *TableData:
 		r.outOneOfCr(w, entering, "<table>", "</table>")
 	case *TableCellData:
