@@ -333,8 +333,7 @@ func footnoteItem(prefix string, slug []byte) string {
 }
 
 func footnoteReturnLink(prefix, returnLink string, slug []byte) string {
-	const format = ` <a class="footnote-return" href="#fnref:%s%s">%s</a>`
-	return fmt.Sprintf(format, prefix, slug, returnLink)
+	return ` <a class="footnote-return" href="#fnref:` + prefix + string(slug) + `">` + returnLink + `</a>`
 }
 
 func itemOpenCR(node *Node) bool {
