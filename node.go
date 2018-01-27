@@ -137,11 +137,8 @@ type TableRowData struct {
 // It holds connections to the structurally neighboring nodes and, for certain
 // types of nodes, additional information that might be needed when rendering.
 type Node struct {
-	Parent     *Node // Points to the parent
-	FirstChild *Node // Points to the first child, if any
-	LastChild  *Node // Points to the last child, if any
-	Prev       *Node // Previous sibling; nil if it's the first child
-	Next       *Node // Next sibling; nil if it's the last child
+	Parent   *Node // Points to the parent
+	Children []*Node
 
 	Literal []byte // Text contents of the leaf nodes
 
@@ -169,49 +166,91 @@ func (n *Node) String() string {
 	return fmt.Sprintf("%T: '%s%s'", n.Data, snippet, ellipsis)
 }
 
-// Unlink removes node 'n' from the tree.
-// It panics if the node is nil.
-func (n *Node) Unlink() {
-	if n.Prev != nil {
-		n.Prev.Next = n.Next
-	} else if n.Parent != nil {
-		n.Parent.FirstChild = n.Next
+func removeNodeFromArray(a []*Node, node *Node) []*Node {
+	n := len(a)
+	for i := 0; i < n; i++ {
+		if a[i] == node {
+			return append(a[:i], a[i+1:]...)
+		}
 	}
-	if n.Next != nil {
-		n.Next.Prev = n.Prev
-	} else if n.Parent != nil {
-		n.Parent.LastChild = n.Prev
+	return a
+}
+
+func removeNodeFromTree(n *Node) {
+	if n.Parent == nil {
+		return
 	}
+	// important: don't clear n.Children if n has no parent
+	// we're called from AppendChild and that might happen on a node
+	// that accumulated Children but hasn't been inserted into the tree
+	n.Parent.Children = removeNodeFromArray(n.Parent.Children, n)
 	n.Parent = nil
-	n.Next = nil
-	n.Prev = nil
+	n.Children = nil
 }
 
 // AppendChild adds a node 'child' as a child of 'n'.
 // It panics if either node is nil.
 func (n *Node) AppendChild(child *Node) {
-	child.Unlink()
+	removeNodeFromTree(child)
 	child.Parent = n
-	if n.LastChild != nil {
-		n.LastChild.Next = child
-		child.Prev = n.LastChild
-		n.LastChild = child
-	} else {
-		n.FirstChild = child
-		n.LastChild = child
+	n.Children = append(n.Children, child)
+}
+
+// LastChild returns last child of this node
+func (n *Node) LastChild() *Node {
+	a := n.Children
+	if len(a) > 0 {
+		return a[len(a)-1]
 	}
+	return nil
+}
+
+// FirstChild returns first child of this node
+func (n *Node) FirstChild() *Node {
+	a := n.Children
+	if len(a) > 0 {
+		return a[0]
+	}
+	return nil
+}
+
+// Next returns next sibling of this node
+func (n *Node) Next() *Node {
+	if n.Parent == nil {
+		return nil
+	}
+	a := n.Parent.Children
+	len := len(a) - 1
+	for i := 0; i < len; i++ {
+		if a[i] == n {
+			return a[i+1]
+		}
+	}
+	return nil
+}
+
+// Prev returns previous sibling of this node
+func (n *Node) Prev() *Node {
+	if n.Parent == nil {
+		return nil
+	}
+	a := n.Parent.Children
+	len := len(a)
+	for i := 1; i < len; i++ {
+		if a[i] == n {
+			return a[i-1]
+		}
+	}
+	return nil
 }
 
 func (n *Node) isContainer() bool {
+	// list of non-containers is smaller so we check against that for speed
 	switch n.Data.(type) {
-	case *DocumentData, *BlockQuoteData, *ListData, *ListItemData, *ParagraphData:
-		return true
-	case *HeadingData, *EmphData, *StrongData, *DelData, *LinkData, *ImageData:
-		return true
-	case *TableData, *TableHeadData, *TableBodyData, *TableRowData, *TableCellData:
-		return true
-	default:
+	case *HorizontalRuleData, *TextData, *HTMLBlockData, *CodeBlockData, *SoftbreakData, *HardbreakData, *CodeData, *HTMLSpanData:
 		return false
+	default:
+		return true
 	}
 }
 
@@ -356,17 +395,17 @@ func (nw *nodeWalker) next() {
 		return
 	}
 	if nw.entering && nw.current.isContainer() {
-		if nw.current.FirstChild != nil {
-			nw.current = nw.current.FirstChild
+		if nw.current.FirstChild() != nil {
+			nw.current = nw.current.FirstChild()
 			nw.entering = true
 		} else {
 			nw.entering = false
 		}
-	} else if nw.current.Next == nil {
+	} else if nw.current.Next() == nil {
 		nw.current = nw.current.Parent
 		nw.entering = false
 	} else {
-		nw.current = nw.current.Next
+		nw.current = nw.current.Next()
 		nw.entering = true
 	}
 }
@@ -385,7 +424,7 @@ func dumpR(ast *Node, depth int) string {
 		content = ast.content
 	}
 	result := fmt.Sprintf("%s%T(%q)\n", indent, ast.Data, content)
-	for n := ast.FirstChild; n != nil; n = n.Next {
+	for _, n := range ast.Children {
 		result += dumpR(n, depth+1)
 	}
 	return result

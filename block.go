@@ -784,7 +784,7 @@ func (p *Parser) table(data []byte) int {
 	i, columns := p.tableHeader(data)
 	if i == 0 {
 		p.tip = table.Parent
-		table.Unlink()
+		removeNodeFromTree(table)
 		return 0
 	}
 
@@ -1183,7 +1183,7 @@ func endsWithBlankLine(block *Node) bool {
 		//}
 		switch block.Data.(type) {
 		case *ListData, *ListItemData:
-			block = block.LastChild
+			block = block.LastChild()
 		default:
 			return false
 		}
@@ -1193,24 +1193,26 @@ func endsWithBlankLine(block *Node) bool {
 
 func finalizeList(block *Node, listData *ListData) {
 	block.open = false
-	item := block.FirstChild
-	for item != nil {
+	items := block.Parent.Children
+	lastItemIdx := len(items) - 1
+	for i, item := range items {
+		isLastItem := i == lastItemIdx
 		// check for non-final list item ending with blank line:
-		if endsWithBlankLine(item) && item.Next != nil {
+		if endsWithBlankLine(item) && !isLastItem {
 			listData.Tight = false
 			break
 		}
 		// recurse into children of list item, to see if there are spaces
 		// between any of them:
-		subItem := item.FirstChild
-		for subItem != nil {
-			if endsWithBlankLine(subItem) && (item.Next != nil || subItem.Next != nil) {
+		subItems := item.Parent.Children
+		lastSubItemIdx := len(subItems) - 1
+		for i, subItem := range subItems {
+			isLastSubItem := i == lastSubItemIdx
+			if endsWithBlankLine(subItem) && (!isLastItem || !isLastSubItem) {
 				listData.Tight = false
 				break
 			}
-			subItem = subItem.Next
 		}
-		item = item.Next
 	}
 }
 

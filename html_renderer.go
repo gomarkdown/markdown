@@ -339,7 +339,7 @@ func footnoteReturnLink(prefix, returnLink string, slug []byte) string {
 }
 
 func itemOpenCR(node *Node) bool {
-	if node.Prev == nil {
+	if node.Prev() == nil {
 		return false
 	}
 	ld := node.Parent.Data.(*ListData)
@@ -533,13 +533,14 @@ func (r *HTMLRenderer) imageExit(w io.Writer, node *Node, nodeData *ImageData) {
 func (r *HTMLRenderer) paragraphEnter(w io.Writer, node *Node, nodeData *ParagraphData) {
 	// TODO: untangle this clusterfuck about when the newlines need
 	// to be added and when not.
-	if node.Prev != nil {
-		switch node.Prev.Data.(type) {
+	prev := node.Prev()
+	if prev != nil {
+		switch prev.Data.(type) {
 		case *HTMLBlockData, *ListData, *ParagraphData, *HeadingData, *CodeBlockData, *BlockQuoteData, *HorizontalRuleData:
 			r.cr(w)
 		}
 	}
-	if isBlockQuoteData(node.Parent.Data) && node.Prev == nil {
+	if isBlockQuoteData(node.Parent.Data) && prev == nil {
 		r.cr(w)
 	}
 	r.outs(w, "<p>")
@@ -547,7 +548,7 @@ func (r *HTMLRenderer) paragraphEnter(w io.Writer, node *Node, nodeData *Paragra
 
 func (r *HTMLRenderer) paragraphExit(w io.Writer, node *Node, nodeData *ParagraphData) {
 	r.outs(w, "</p>")
-	if !(isListItemData(node.Parent.Data) && node.Next == nil) {
+	if !(isListItemData(node.Parent.Data) && node.Next() == nil) {
 		r.cr(w)
 	}
 }
@@ -607,7 +608,7 @@ func (r *HTMLRenderer) headingEnter(w io.Writer, node *Node, nodeData *HeadingDa
 
 func (r *HTMLRenderer) headingExit(w io.Writer, node *Node, nodeData *HeadingData) {
 	r.outs(w, headingCloseTagFromLevel(nodeData.Level))
-	if !(isListItemData(node.Parent.Data) && node.Next == nil) {
+	if !(isListItemData(node.Parent.Data) && node.Next() == nil) {
 		r.cr(w)
 	}
 }
@@ -668,7 +669,7 @@ func (r *HTMLRenderer) listExit(w io.Writer, node *Node, nodeData *ListData) {
 	//if node.parent.Type != Item {
 	//	cr(w)
 	//}
-	if isListItemData(node.Parent.Data) && node.Next != nil {
+	if isListItemData(node.Parent.Data) && node.Next() != nil {
 		r.cr(w)
 	}
 	if isDocumentData(node.Parent.Data) || isBlockQuoteData(node.Parent.Data) {
@@ -766,7 +767,7 @@ func (r *HTMLRenderer) tableCell(w io.Writer, node *Node, nodeData *TableCellDat
 	if align != "" {
 		attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
 	}
-	if node.Prev == nil {
+	if node.Prev() == nil {
 		r.cr(w)
 	}
 	r.outTag(w, openTag, attrs)
@@ -777,7 +778,7 @@ func (r *HTMLRenderer) tableBody(w io.Writer, node *Node, nodeData *TableBodyDat
 		r.cr(w)
 		r.outs(w, "<tbody>")
 		// XXX: this is to adhere to a rather silly test. Should fix test.
-		if node.FirstChild == nil {
+		if node.FirstChild() == nil {
 			r.cr(w)
 		}
 	} else {

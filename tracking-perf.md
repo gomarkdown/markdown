@@ -126,3 +126,34 @@ BenchmarkReferenceTabs-8                                  100000             111
 BenchmarkReferenceTidyness-8                              200000              7628 ns/op            8256 B/op         48 allocs/op
 ok      github.com/gomarkdown/markdown  40.841s
 ```
+
+After Node refactor to have Children array:
+```
+BenchmarkEscapeHTML-8                                    2000000               901 ns/op               0 B/op          0 allocs/op
+BenchmarkSmartDoubleQuotes-8                              300000              3905 ns/op            6224 B/op         31 allocs/op
+BenchmarkReferenceAmps-8                                  100000             22216 ns/op           15560 B/op        157 allocs/op
+BenchmarkReferenceAutoLinks-8                             100000             20335 ns/op           14824 B/op        146 allocs/op
+BenchmarkReferenceBackslashEscapes-8                       20000             69174 ns/op           37392 B/op        316 allocs/op
+BenchmarkReferenceBlockquotesWithCodeBlocks-8             200000              8443 ns/op            7968 B/op         48 allocs/op
+BenchmarkReferenceCodeBlocks-8                            200000              9250 ns/op            9392 B/op         58 allocs/op
+BenchmarkReferenceCodeSpans-8                             200000              8515 ns/op            8432 B/op         54 allocs/op
+BenchmarkReferenceHardWrappedPara-8                       200000              5738 ns/op            6856 B/op         34 allocs/op
+BenchmarkReferenceHorizontalRules-8                       100000             20864 ns/op           13648 B/op         93 allocs/op
+BenchmarkReferenceInlineHTMLAdvances-8                    200000              6187 ns/op            7310 B/op         40 allocs/op
+BenchmarkReferenceInlineHTMLSimple-8                       50000             23793 ns/op           16128 B/op        114 allocs/op
+BenchmarkReferenceInlineHTMLComments-8                    200000              7060 ns/op            7840 B/op         44 allocs/op
+BenchmarkReferenceLinksInline-8                           100000             18432 ns/op           14496 B/op        153 allocs/op
+BenchmarkReferenceLinksReference-8                         20000             67666 ns/op           37136 B/op        502 allocs/op
+BenchmarkReferenceLinksShortcut-8                         100000             19324 ns/op           13984 B/op        162 allocs/op
+BenchmarkReferenceLiterQuotesInTitles-8                   200000              8998 ns/op            9320 B/op         83 allocs/op
+BenchmarkReferenceMarkdownBasics-8                         10000            160908 ns/op           88152 B/op        518 allocs/op
+BenchmarkReferenceMarkdownSyntax-8                          2000            707160 ns/op          303801 B/op       2044 allocs/op
+BenchmarkReferenceNestedBlockquotes-8                     200000              6740 ns/op            7248 B/op         45 allocs/op
+BenchmarkReferenceOrderedAndUnorderedLists-8               10000            115808 ns/op           55052 B/op        626 allocs/op
+BenchmarkReferenceStrongAndEm-8                           100000             10540 ns/op            9416 B/op         72 allocs/op
+BenchmarkReferenceTabs-8                                  100000             13171 ns/op           10968 B/op         77 allocs/op
+BenchmarkReferenceTidyness-8                              200000              8903 ns/op            8404 B/op         62 allocs/op
+PASS
+ok      github.com/gomarkdown/markdown  43.477s
+```
+It's slower (but opens up possibilities for further improvements).
