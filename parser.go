@@ -238,7 +238,7 @@ func (p *Parser) Render(renderer Renderer) []byte {
 	var buf bytes.Buffer
 	ast := p.Doc
 	renderer.RenderHeader(&buf, ast)
-	ast.Walk(func(node *Node, entering bool) WalkStatus {
+	ast.WalkFunc(func(node *Node, entering bool) WalkStatus {
 		return renderer.RenderNode(&buf, node, entering)
 	})
 	renderer.RenderFooter(&buf, ast)
@@ -257,7 +257,7 @@ func (p *Parser) Parse(input []byte) *Node {
 		p.finalize(p.tip)
 	}
 	// Walk the tree again and process inline markdown in each block
-	p.Doc.Walk(func(node *Node, entering bool) WalkStatus {
+	p.Doc.WalkFunc(func(node *Node, entering bool) WalkStatus {
 		switch node.Data.(type) {
 		case *ParagraphData, *HeadingData, *TableCellData:
 			p.inline(node, node.content)
@@ -302,7 +302,7 @@ func (p *Parser) parseRefsToAST() {
 	above := block.Parent
 	finalizeList(block, d)
 	p.tip = above
-	block.Walk(func(node *Node, entering bool) WalkStatus {
+	block.WalkFunc(func(node *Node, entering bool) WalkStatus {
 		switch node.Data.(type) {
 		case *ParagraphData, *HeadingData:
 			p.inline(node, node.content)

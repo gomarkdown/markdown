@@ -307,29 +307,29 @@ func appendLanguageAttr(attrs []string, info []byte) []string {
 	return append(attrs, fmt.Sprintf("class=\"language-%s\"", info[:endOfLang]))
 }
 
-func (r *HTMLRenderer) tag(w io.Writer, name []byte, attrs []string) {
-	w.Write(name)
+func (r *HTMLRenderer) tag(w io.Writer, name string, attrs []string) {
+	io.WriteString(w, name)
 	if len(attrs) > 0 {
 		w.Write(spaceBytes)
-		w.Write([]byte(strings.Join(attrs, " ")))
+		io.WriteString(w, strings.Join(attrs, " "))
 	}
 	w.Write(gtBytes)
 	r.lastOutputLen = 1
 }
 
-func footnoteRef(prefix string, node *LinkData) []byte {
+func footnoteRef(prefix string, node *LinkData) string {
 	urlFrag := prefix + string(slugify(node.Destination))
 	anchor := fmt.Sprintf(`<a rel="footnote" href="#fn:%s">%d</a>`, urlFrag, node.NoteID)
-	return []byte(fmt.Sprintf(`<sup class="footnote-ref" id="fnref:%s">%s</sup>`, urlFrag, anchor))
+	return fmt.Sprintf(`<sup class="footnote-ref" id="fnref:%s">%s</sup>`, urlFrag, anchor)
 }
 
-func footnoteItem(prefix string, slug []byte) []byte {
-	return []byte(fmt.Sprintf(`<li id="fn:%s%s">`, prefix, slug))
+func footnoteItem(prefix string, slug []byte) string {
+	return fmt.Sprintf(`<li id="fn:%s%s">`, prefix, slug)
 }
 
-func footnoteReturnLink(prefix, returnLink string, slug []byte) []byte {
+func footnoteReturnLink(prefix, returnLink string, slug []byte) string {
 	const format = ` <a class="footnote-return" href="#fnref:%s%s">%s</a>`
-	return []byte(fmt.Sprintf(format, prefix, slug, returnLink))
+	return fmt.Sprintf(format, prefix, slug, returnLink)
 }
 
 func itemOpenCR(node *Node) bool {
@@ -365,13 +365,20 @@ func cellAlignment(align CellAlignFlags) string {
 	}
 }
 
-func (r *HTMLRenderer) out(w io.Writer, text []byte) {
+func (r *HTMLRenderer) out(w io.Writer, d []byte) {
+	r.lastOutputLen = len(d)
 	if r.disableTags > 0 {
-		w.Write(htmlTagRe.ReplaceAll(text, []byte{}))
-	} else {
-		w.Write(text)
+		d = htmlTagRe.ReplaceAll(d, []byte{})
 	}
-	r.lastOutputLen = len(text)
+	w.Write(d)
+}
+
+func (r *HTMLRenderer) outs(w io.Writer, s string) {
+	r.lastOutputLen = len(s)
+	if r.disableTags > 0 {
+		s = htmlTagRe.ReplaceAllString(s, "")
+	}
+	io.WriteString(w, s)
 }
 
 func (r *HTMLRenderer) cr(w io.Writer) {
@@ -386,92 +393,405 @@ var (
 	spaceBytes = []byte{' '}
 )
 
-var (
-	brTag              = []byte("<br>")
-	brXHTMLTag         = []byte("<br />")
-	emTag              = []byte("<em>")
-	emCloseTag         = []byte("</em>")
-	strongTag          = []byte("<strong>")
-	strongCloseTag     = []byte("</strong>")
-	delTag             = []byte("<del>")
-	delCloseTag        = []byte("</del>")
-	ttTag              = []byte("<tt>")
-	ttCloseTag         = []byte("</tt>")
-	aTag               = []byte("<a")
-	aCloseTag          = []byte("</a>")
-	preTag             = []byte("<pre>")
-	preCloseTag        = []byte("</pre>")
-	codeTag            = []byte("<code>")
-	codeCloseTag       = []byte("</code>")
-	pTag               = []byte("<p>")
-	pCloseTag          = []byte("</p>")
-	blockquoteTag      = []byte("<blockquote>")
-	blockquoteCloseTag = []byte("</blockquote>")
-	hrTag              = []byte("<hr>")
-	hrXHTMLTag         = []byte("<hr />")
-	ulTag              = []byte("<ul>")
-	ulCloseTag         = []byte("</ul>")
-	olTag              = []byte("<ol>")
-	olCloseTag         = []byte("</ol>")
-	dlTag              = []byte("<dl>")
-	dlCloseTag         = []byte("</dl>")
-	liTag              = []byte("<li>")
-	liCloseTag         = []byte("</li>")
-	ddTag              = []byte("<dd>")
-	ddCloseTag         = []byte("</dd>")
-	dtTag              = []byte("<dt>")
-	dtCloseTag         = []byte("</dt>")
-	tableTag           = []byte("<table>")
-	tableCloseTag      = []byte("</table>")
-	tdTag              = []byte("<td")
-	tdCloseTag         = []byte("</td>")
-	thTag              = []byte("<th")
-	thCloseTag         = []byte("</th>")
-	theadTag           = []byte("<thead>")
-	theadCloseTag      = []byte("</thead>")
-	tbodyTag           = []byte("<tbody>")
-	tbodyCloseTag      = []byte("</tbody>")
-	trTag              = []byte("<tr>")
-	trCloseTag         = []byte("</tr>")
-	h1Tag              = []byte("<h1")
-	h1CloseTag         = []byte("</h1>")
-	h2Tag              = []byte("<h2")
-	h2CloseTag         = []byte("</h2>")
-	h3Tag              = []byte("<h3")
-	h3CloseTag         = []byte("</h3>")
-	h4Tag              = []byte("<h4")
-	h4CloseTag         = []byte("</h4>")
-	h5Tag              = []byte("<h5")
-	h5CloseTag         = []byte("</h5>")
-	h6Tag              = []byte("<h6")
-	h6CloseTag         = []byte("</h6>")
-
-	footnotesDivBytes      = []byte("\n<div class=\"footnotes\">\n\n")
-	footnotesCloseDivBytes = []byte("\n</div>\n")
-)
-
-func headingTagsFromLevel(level int) ([]byte, []byte) {
+func headingOpenTagFromLevel(level int) string {
 	switch level {
 	case 1:
-		return h1Tag, h1CloseTag
+		return "<h1"
 	case 2:
-		return h2Tag, h2CloseTag
+		return "<h2"
 	case 3:
-		return h3Tag, h3CloseTag
+		return "<h3"
 	case 4:
-		return h4Tag, h4CloseTag
+		return "<h4"
 	case 5:
-		return h5Tag, h5CloseTag
+		return "<h5"
 	default:
-		return h6Tag, h6CloseTag
+		return "<h6"
+	}
+}
+
+func headingCloseTagFromLevel(level int) string {
+	switch level {
+	case 1:
+		return "</h1>"
+	case 2:
+		return "</h2>"
+	case 3:
+		return "</h3>"
+	case 4:
+		return "</h4>"
+	case 5:
+		return "</h5>"
+	default:
+		return "</h6>"
 	}
 }
 
 func (r *HTMLRenderer) outHRTag(w io.Writer) {
 	if r.params.Flags&UseXHTML == 0 {
-		r.out(w, hrTag)
+		r.out(w, []byte("<hr>"))
 	} else {
-		r.out(w, hrXHTMLTag)
+		r.out(w, []byte("<hr />"))
+	}
+}
+
+func (r *HTMLRenderer) text(w io.Writer, node *Node, nodeData *TextData) {
+	if r.params.Flags&Smartypants != 0 {
+		var tmp bytes.Buffer
+		escapeHTML(&tmp, node.Literal)
+		r.sr.Process(w, tmp.Bytes())
+	} else {
+		if isLinkData(node.Parent.Data) {
+			escLink(w, node.Literal)
+		} else {
+			escapeHTML(w, node.Literal)
+		}
+	}
+}
+
+func (r *HTMLRenderer) hardBreak(w io.Writer, node *Node, nodeData *HardbreakData) {
+	s := "<br>"
+	if r.params.Flags&UseXHTML != 0 {
+		s = "<br />"
+	}
+	r.outs(w, s)
+	r.cr(w)
+}
+
+func (r *HTMLRenderer) openOrCloseTag(w io.Writer, isOpen bool, openTag string, closeTag string) {
+	if isOpen {
+		r.outs(w, openTag)
+	} else {
+		r.outs(w, closeTag)
+	}
+}
+
+func (r *HTMLRenderer) crOpenOrCloseTag(w io.Writer, isOpen bool, openTag string, closeTag string) {
+	if isOpen {
+		r.cr(w)
+		r.outs(w, openTag)
+	} else {
+		r.outs(w, closeTag)
+		r.cr(w)
+	}
+}
+
+func (r *HTMLRenderer) span(w io.Writer, node *Node, nodeData *HTMLSpanData) {
+	if r.params.Flags&SkipHTML != 0 {
+		return
+	}
+	r.out(w, node.Literal)
+}
+
+func (r *HTMLRenderer) link(w io.Writer, node *Node, nodeData *LinkData, entering bool) {
+	var attrs []string
+	// mark it but don't link it if it is not a safe link: no smartypants
+	dest := nodeData.Destination
+	if needSkipLink(r.params.Flags, dest) {
+		r.openOrCloseTag(w, entering, "<tt>", "</tt>")
+		return
+	}
+
+	if !entering {
+		if nodeData.NoteID == 0 {
+			r.out(w, []byte("</a>"))
+		}
+		return
+	}
+
+	// entering
+	dest = r.addAbsPrefix(dest)
+	var hrefBuf bytes.Buffer
+	hrefBuf.WriteString("href=\"")
+	escLink(&hrefBuf, dest)
+	hrefBuf.WriteByte('"')
+	attrs = append(attrs, hrefBuf.String())
+	if nodeData.NoteID != 0 {
+		r.outs(w, footnoteRef(r.params.FootnoteAnchorPrefix, nodeData))
+		return
+	}
+
+	attrs = appendLinkAttrs(attrs, r.params.Flags, dest)
+	if len(nodeData.Title) > 0 {
+		var titleBuff bytes.Buffer
+		titleBuff.WriteString("title=\"")
+		escapeHTML(&titleBuff, nodeData.Title)
+		titleBuff.WriteByte('"')
+		attrs = append(attrs, titleBuff.String())
+	}
+	r.tag(w, "<a", attrs)
+}
+
+func (r *HTMLRenderer) imageEnter(w io.Writer, node *Node, nodeData *ImageData) {
+	dest := nodeData.Destination
+	dest = r.addAbsPrefix(dest)
+	if r.disableTags == 0 {
+		//if options.safe && potentiallyUnsafe(dest) {
+		//out(w, `<img src="" alt="`)
+		//} else {
+		r.out(w, []byte(`<img src="`))
+		escLink(w, dest)
+		r.out(w, []byte(`" alt="`))
+		//}
+	}
+	r.disableTags++
+}
+
+func (r *HTMLRenderer) imageExit(w io.Writer, node *Node, nodeData *ImageData) {
+	r.disableTags--
+	if r.disableTags == 0 {
+		if nodeData.Title != nil {
+			r.out(w, []byte(`" title="`))
+			escapeHTML(w, nodeData.Title)
+		}
+		r.out(w, []byte(`" />`))
+	}
+}
+
+func (r *HTMLRenderer) paragraphEnter(w io.Writer, node *Node, nodeData *ParagraphData) {
+	// TODO: untangle this clusterfuck about when the newlines need
+	// to be added and when not.
+	if node.Prev != nil {
+		switch node.Prev.Data.(type) {
+		case *HTMLBlockData, *ListData, *ParagraphData, *HeadingData, *CodeBlockData, *BlockQuoteData, *HorizontalRuleData:
+			r.cr(w)
+		}
+	}
+	if isBlockQuoteData(node.Parent.Data) && node.Prev == nil {
+		r.cr(w)
+	}
+	r.out(w, []byte("<p>"))
+}
+
+func (r *HTMLRenderer) paragraphExit(w io.Writer, node *Node, nodeData *ParagraphData) {
+	r.out(w, []byte("</p>"))
+	if !(isItemData(node.Parent.Data) && node.Next == nil) {
+		r.cr(w)
+	}
+}
+
+func (r *HTMLRenderer) paragraph(w io.Writer, node *Node, nodeData *ParagraphData, entering bool) {
+	if skipParagraphTags(node) {
+		return
+	}
+	if entering {
+		r.paragraphEnter(w, node, nodeData)
+	} else {
+		r.paragraphExit(w, node, nodeData)
+	}
+}
+func (r *HTMLRenderer) image(w io.Writer, node *Node, nodeData *ImageData, entering bool) {
+	if entering {
+		r.imageEnter(w, node, nodeData)
+	} else {
+		r.imageExit(w, node, nodeData)
+	}
+}
+
+func (r *HTMLRenderer) code(w io.Writer, node *Node, nodeData *CodeData) {
+	r.outs(w, "<code>")
+	escapeHTML(w, node.Literal)
+	r.outs(w, "</code>")
+}
+
+func (r *HTMLRenderer) htmlBlock(w io.Writer, node *Node, nodeData *HTMLBlockData) {
+	if r.params.Flags&SkipHTML != 0 {
+		return
+	}
+	r.cr(w)
+	r.out(w, node.Literal)
+	r.cr(w)
+}
+
+func (r *HTMLRenderer) heading(w io.Writer, node *Node, nodeData *HeadingData, entering bool) {
+	if !entering {
+		closeTag := headingCloseTagFromLevel(nodeData.Level)
+		r.outs(w, closeTag)
+		if !(isItemData(node.Parent.Data) && node.Next == nil) {
+			r.cr(w)
+		}
+		return
+	}
+
+	// entering
+	var attrs []string
+	if nodeData.IsTitleblock {
+		attrs = append(attrs, `class="title"`)
+	}
+	if nodeData.HeadingID != "" {
+		id := r.ensureUniqueHeadingID(nodeData.HeadingID)
+		if r.params.HeadingIDPrefix != "" {
+			id = r.params.HeadingIDPrefix + id
+		}
+		if r.params.HeadingIDSuffix != "" {
+			id = id + r.params.HeadingIDSuffix
+		}
+		attrID := `id="` + id + `"`
+		attrs = append(attrs, attrID)
+	}
+	r.cr(w)
+	openTag := headingOpenTagFromLevel(nodeData.Level)
+	r.tag(w, openTag, attrs)
+}
+
+func (r *HTMLRenderer) horizontalRule(w io.Writer) {
+	r.cr(w)
+	r.outHRTag(w)
+	r.cr(w)
+}
+
+func (r *HTMLRenderer) listEnter(w io.Writer, node *Node, nodeData *ListData) {
+	// TODO: attrs don't seem to be set
+	var attrs []string
+
+	openTag := "<ul"
+	if nodeData.ListFlags&ListTypeOrdered != 0 {
+		openTag = "<ol"
+	}
+	if nodeData.ListFlags&ListTypeDefinition != 0 {
+		openTag = "<dl"
+	}
+
+	if nodeData.IsFootnotesList {
+		r.outs(w, "\n<div class=\"footnotes\">\n\n")
+		r.outHRTag(w)
+		r.cr(w)
+	}
+	r.cr(w)
+	if isItemData(node.Parent.Data) {
+		grand := node.Parent.Parent
+		if isListTight(grand.Data) {
+			r.cr(w)
+		}
+	}
+
+	r.tag(w, openTag, attrs)
+	r.cr(w)
+}
+
+func (r *HTMLRenderer) listExit(w io.Writer, node *Node, nodeData *ListData) {
+	closeTag := "</ul>"
+	if nodeData.ListFlags&ListTypeOrdered != 0 {
+		closeTag = "</ol>"
+	}
+	if nodeData.ListFlags&ListTypeDefinition != 0 {
+		closeTag = "</dl>"
+	}
+
+	r.outs(w, closeTag)
+	//cr(w)
+	//if node.parent.Type != Item {
+	//	cr(w)
+	//}
+	if isItemData(node.Parent.Data) && node.Next != nil {
+		r.cr(w)
+	}
+	if isDocumentData(node.Parent.Data) || isBlockQuoteData(node.Parent.Data) {
+		r.cr(w)
+	}
+	if nodeData.IsFootnotesList {
+		r.outs(w, "\n</div>\n")
+	}
+}
+
+func (r *HTMLRenderer) list(w io.Writer, node *Node, nodeData *ListData, entering bool) {
+	if entering {
+		r.listEnter(w, node, nodeData)
+	} else {
+		r.listExit(w, node, nodeData)
+	}
+}
+
+func (r *HTMLRenderer) item(w io.Writer, node *Node, nodeData *ItemData, entering bool) {
+	if entering {
+		openTag := "<li>"
+		if nodeData.ListFlags&ListTypeDefinition != 0 {
+			openTag = "<dd>"
+		}
+		if nodeData.ListFlags&ListTypeTerm != 0 {
+			openTag = "<dt>"
+		}
+		if itemOpenCR(node) {
+			r.cr(w)
+		}
+		if nodeData.RefLink != nil {
+			slug := slugify(nodeData.RefLink)
+			r.outs(w, footnoteItem(r.params.FootnoteAnchorPrefix, slug))
+			return
+		}
+		r.outs(w, openTag)
+	} else {
+		closeTag := "</li>"
+		if nodeData.ListFlags&ListTypeDefinition != 0 {
+			closeTag = "</dd>"
+		}
+		if nodeData.ListFlags&ListTypeTerm != 0 {
+			closeTag = "</dt>"
+		}
+		if nodeData.RefLink != nil {
+			slug := slugify(nodeData.RefLink)
+			if r.params.Flags&FootnoteReturnLinks != 0 {
+				r.outs(w, footnoteReturnLink(r.params.FootnoteAnchorPrefix, r.params.FootnoteReturnLinkContents, slug))
+			}
+		}
+		r.outs(w, closeTag)
+		r.cr(w)
+	}
+}
+
+func (r *HTMLRenderer) codeBlock(w io.Writer, node *Node, nodeData *CodeBlockData) {
+	var attrs []string
+	attrs = appendLanguageAttr(attrs, nodeData.Info)
+	r.cr(w)
+	r.outs(w, "<pre>")
+	r.tag(w, "<code", attrs)
+	escapeHTML(w, node.Literal)
+	r.outs(w, "</code>")
+	r.outs(w, "</pre>")
+	if !isItemData(node.Parent.Data) {
+		r.cr(w)
+	}
+}
+
+func (r *HTMLRenderer) tableCell(w io.Writer, node *Node, nodeData *TableCellData, entering bool) {
+	if !entering {
+		closeTag := "</td>"
+		if nodeData.IsHeader {
+			closeTag = "</th>"
+		}
+
+		r.outs(w, closeTag)
+		r.cr(w)
+		return
+	}
+
+	// entering
+	var attrs []string
+	openTag := "<td"
+	if nodeData.IsHeader {
+		openTag = "<th"
+	}
+	align := cellAlignment(nodeData.Align)
+	if align != "" {
+		attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
+	}
+	if node.Prev == nil {
+		r.cr(w)
+	}
+	r.tag(w, openTag, attrs)
+}
+
+func (r *HTMLRenderer) tableBody(w io.Writer, node *Node, nodeData *TableBodyData, entering bool) {
+	if entering {
+		r.cr(w)
+		r.outs(w, "<tbody>")
+		// XXX: this is to adhere to a rather silly test. Should fix test.
+		if node.FirstChild == nil {
+			r.cr(w)
+		}
+	} else {
+		r.outs(w, "</tbody>")
+		r.cr(w)
 	}
 }
 
@@ -486,328 +806,59 @@ func (r *HTMLRenderer) outHRTag(w io.Writer) {
 // The typical behavior is to return GoToNext, which asks for the usual
 // traversal to the next node.
 func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkStatus {
-	attrs := []string{}
 	switch nodeData := node.Data.(type) {
 	case *TextData:
-		if r.params.Flags&Smartypants != 0 {
-			var tmp bytes.Buffer
-			escapeHTML(&tmp, node.Literal)
-			r.sr.Process(w, tmp.Bytes())
-		} else {
-			if isLinkData(node.Parent.Data) {
-				escLink(w, node.Literal)
-			} else {
-				escapeHTML(w, node.Literal)
-			}
-		}
+		r.text(w, node, nodeData)
 	case *SoftbreakData:
 		r.cr(w)
 		// TODO: make it configurable via out(renderer.softbreak)
 	case *HardbreakData:
-		if r.params.Flags&UseXHTML == 0 {
-			r.out(w, brTag)
-		} else {
-			r.out(w, brXHTMLTag)
-		}
-		r.cr(w)
+		r.hardBreak(w, node, nodeData)
 	case *EmphData:
-		if entering {
-			r.out(w, emTag)
-		} else {
-			r.out(w, emCloseTag)
-		}
+		r.openOrCloseTag(w, entering, "<em>", "</em>")
 	case *StrongData:
-		if entering {
-			r.out(w, strongTag)
-		} else {
-			r.out(w, strongCloseTag)
-		}
+		r.openOrCloseTag(w, entering, "<strong>", "</strong>")
 	case *DelData:
-		if entering {
-			r.out(w, delTag)
-		} else {
-			r.out(w, delCloseTag)
-		}
+		r.openOrCloseTag(w, entering, "<del>", "</del>")
 	case *HTMLSpanData:
-		if r.params.Flags&SkipHTML != 0 {
-			break
-		}
-		r.out(w, node.Literal)
+		r.span(w, node, nodeData)
 	case *LinkData:
-		// mark it but don't link it if it is not a safe link: no smartypants
-		dest := nodeData.Destination
-		if needSkipLink(r.params.Flags, dest) {
-			if entering {
-				r.out(w, ttTag)
-			} else {
-				r.out(w, ttCloseTag)
-			}
-		} else {
-			if entering {
-				dest = r.addAbsPrefix(dest)
-				var hrefBuf bytes.Buffer
-				hrefBuf.WriteString("href=\"")
-				escLink(&hrefBuf, dest)
-				hrefBuf.WriteByte('"')
-				attrs = append(attrs, hrefBuf.String())
-				if nodeData.NoteID != 0 {
-					r.out(w, footnoteRef(r.params.FootnoteAnchorPrefix, nodeData))
-					break
-				}
-				attrs = appendLinkAttrs(attrs, r.params.Flags, dest)
-				if len(nodeData.Title) > 0 {
-					var titleBuff bytes.Buffer
-					titleBuff.WriteString("title=\"")
-					escapeHTML(&titleBuff, nodeData.Title)
-					titleBuff.WriteByte('"')
-					attrs = append(attrs, titleBuff.String())
-				}
-				r.tag(w, aTag, attrs)
-			} else {
-				if nodeData.NoteID != 0 {
-					break
-				}
-				r.out(w, aCloseTag)
-			}
-		}
+		r.link(w, node, nodeData, entering)
 	case *ImageData:
 		if r.params.Flags&SkipImages != 0 {
 			return SkipChildren
 		}
-		if entering {
-			dest := nodeData.Destination
-			dest = r.addAbsPrefix(dest)
-			if r.disableTags == 0 {
-				//if options.safe && potentiallyUnsafe(dest) {
-				//out(w, `<img src="" alt="`)
-				//} else {
-				r.out(w, []byte(`<img src="`))
-				escLink(w, dest)
-				r.out(w, []byte(`" alt="`))
-				//}
-			}
-			r.disableTags++
-		} else {
-			r.disableTags--
-			if r.disableTags == 0 {
-				if nodeData.Title != nil {
-					r.out(w, []byte(`" title="`))
-					escapeHTML(w, nodeData.Title)
-				}
-				r.out(w, []byte(`" />`))
-			}
-		}
+		r.image(w, node, nodeData, entering)
 	case *CodeData:
-		r.out(w, codeTag)
-		escapeHTML(w, node.Literal)
-		r.out(w, codeCloseTag)
+		r.code(w, node, nodeData)
 	case *DocumentData:
+		// do nothing
 	case *ParagraphData:
-		if skipParagraphTags(node) {
-			break
-		}
-		if entering {
-			// TODO: untangle this clusterfuck about when the newlines need
-			// to be added and when not.
-			if node.Prev != nil {
-				switch node.Prev.Data.(type) {
-				case *HTMLBlockData, *ListData, *ParagraphData, *HeadingData, *CodeBlockData, *BlockQuoteData, *HorizontalRuleData:
-					r.cr(w)
-				}
-			}
-			if isBlockQuoteData(node.Parent.Data) && node.Prev == nil {
-				r.cr(w)
-			}
-			r.out(w, pTag)
-		} else {
-			r.out(w, pCloseTag)
-			if !(isItemData(node.Parent.Data) && node.Next == nil) {
-				r.cr(w)
-			}
-		}
+		r.paragraph(w, node, nodeData, entering)
 	case *BlockQuoteData:
-		if entering {
-			r.cr(w)
-			r.out(w, blockquoteTag)
-		} else {
-			r.out(w, blockquoteCloseTag)
-			r.cr(w)
-		}
+		r.crOpenOrCloseTag(w, entering, "<blockquote>", "</blockquote>")
 	case *HTMLBlockData:
-		if r.params.Flags&SkipHTML != 0 {
-			break
-		}
-		r.cr(w)
-		r.out(w, node.Literal)
-		r.cr(w)
+		r.htmlBlock(w, node, nodeData)
 	case *HeadingData:
-		openTag, closeTag := headingTagsFromLevel(nodeData.Level)
-		if entering {
-			if nodeData.IsTitleblock {
-				attrs = append(attrs, `class="title"`)
-			}
-			if nodeData.HeadingID != "" {
-				id := r.ensureUniqueHeadingID(nodeData.HeadingID)
-				if r.params.HeadingIDPrefix != "" {
-					id = r.params.HeadingIDPrefix + id
-				}
-				if r.params.HeadingIDSuffix != "" {
-					id = id + r.params.HeadingIDSuffix
-				}
-				attrs = append(attrs, fmt.Sprintf(`id="%s"`, id))
-			}
-			r.cr(w)
-			r.tag(w, openTag, attrs)
-		} else {
-			r.out(w, closeTag)
-			if !(isItemData(node.Parent.Data) && node.Next == nil) {
-				r.cr(w)
-			}
-		}
+		r.heading(w, node, nodeData, entering)
 	case *HorizontalRuleData:
-		r.cr(w)
-		r.outHRTag(w)
-		r.cr(w)
+		r.horizontalRule(w)
 	case *ListData:
-		openTag := ulTag
-		closeTag := ulCloseTag
-		if nodeData.ListFlags&ListTypeOrdered != 0 {
-			openTag = olTag
-			closeTag = olCloseTag
-		}
-		if nodeData.ListFlags&ListTypeDefinition != 0 {
-			openTag = dlTag
-			closeTag = dlCloseTag
-		}
-		if entering {
-			if nodeData.IsFootnotesList {
-				r.out(w, footnotesDivBytes)
-				r.outHRTag(w)
-				r.cr(w)
-			}
-			r.cr(w)
-			if isItemData(node.Parent.Data) {
-				grand := node.Parent.Parent
-				if isListTight(grand.Data) {
-					r.cr(w)
-				}
-			}
-			r.tag(w, openTag[:len(openTag)-1], attrs)
-			r.cr(w)
-		} else {
-			r.out(w, closeTag)
-			//cr(w)
-			//if node.parent.Type != Item {
-			//	cr(w)
-			//}
-			if isItemData(node.Parent.Data) && node.Next != nil {
-				r.cr(w)
-			}
-			if isDocumentData(node.Parent.Data) || isBlockQuoteData(node.Parent.Data) {
-				r.cr(w)
-			}
-			if nodeData.IsFootnotesList {
-				r.out(w, footnotesCloseDivBytes)
-			}
-		}
+		r.list(w, node, nodeData, entering)
 	case *ItemData:
-		openTag := liTag
-		closeTag := liCloseTag
-		if nodeData.ListFlags&ListTypeDefinition != 0 {
-			openTag = ddTag
-			closeTag = ddCloseTag
-		}
-		if nodeData.ListFlags&ListTypeTerm != 0 {
-			openTag = dtTag
-			closeTag = dtCloseTag
-		}
-		if entering {
-			if itemOpenCR(node) {
-				r.cr(w)
-			}
-			if nodeData.RefLink != nil {
-				slug := slugify(nodeData.RefLink)
-				r.out(w, footnoteItem(r.params.FootnoteAnchorPrefix, slug))
-				break
-			}
-			r.out(w, openTag)
-		} else {
-			if nodeData.RefLink != nil {
-				slug := slugify(nodeData.RefLink)
-				if r.params.Flags&FootnoteReturnLinks != 0 {
-					r.out(w, footnoteReturnLink(r.params.FootnoteAnchorPrefix, r.params.FootnoteReturnLinkContents, slug))
-				}
-			}
-			r.out(w, closeTag)
-			r.cr(w)
-		}
+		r.item(w, node, nodeData, entering)
 	case *CodeBlockData:
-		attrs = appendLanguageAttr(attrs, nodeData.Info)
-		r.cr(w)
-		r.out(w, preTag)
-		r.tag(w, codeTag[:len(codeTag)-1], attrs)
-		escapeHTML(w, node.Literal)
-		r.out(w, codeCloseTag)
-		r.out(w, preCloseTag)
-		if !isItemData(node.Parent.Data) {
-			r.cr(w)
-		}
+		r.codeBlock(w, node, nodeData)
 	case *TableData:
-		if entering {
-			r.cr(w)
-			r.out(w, tableTag)
-		} else {
-			r.out(w, tableCloseTag)
-			r.cr(w)
-		}
+		r.crOpenOrCloseTag(w, entering, "<table>", "</table>")
 	case *TableCellData:
-		openTag := tdTag
-		closeTag := tdCloseTag
-		if nodeData.IsHeader {
-			openTag = thTag
-			closeTag = thCloseTag
-		}
-		if entering {
-			align := cellAlignment(nodeData.Align)
-			if align != "" {
-				attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
-			}
-			if node.Prev == nil {
-				r.cr(w)
-			}
-			r.tag(w, openTag, attrs)
-		} else {
-			r.out(w, closeTag)
-			r.cr(w)
-		}
+		r.tableCell(w, node, nodeData, entering)
 	case *TableHeadData:
-		if entering {
-			r.cr(w)
-			r.out(w, theadTag)
-		} else {
-			r.out(w, theadCloseTag)
-			r.cr(w)
-		}
+		r.crOpenOrCloseTag(w, entering, "<thead>", "</thead>")
 	case *TableBodyData:
-		if entering {
-			r.cr(w)
-			r.out(w, tbodyTag)
-			// XXX: this is to adhere to a rather silly test. Should fix test.
-			if node.FirstChild == nil {
-				r.cr(w)
-			}
-		} else {
-			r.out(w, tbodyCloseTag)
-			r.cr(w)
-		}
+		r.tableBody(w, node, nodeData, entering)
 	case *TableRowData:
-		if entering {
-			r.cr(w)
-			r.out(w, trTag)
-		} else {
-			r.out(w, trCloseTag)
-			r.cr(w)
-		}
+		r.crOpenOrCloseTag(w, entering, "<tr>", "</tr>")
 	default:
 		//panic("Unknown node type " + node.Type.String())
 		panic(fmt.Sprintf("Unknown node type %T", node.Data))
@@ -886,7 +937,7 @@ func (r *HTMLRenderer) writeTOC(w io.Writer, ast *Node) {
 	tocLevel := 0
 	headingCount := 0
 
-	ast.Walk(func(node *Node, entering bool) WalkStatus {
+	ast.WalkFunc(func(node *Node, entering bool) WalkStatus {
 		if nodeData, ok := node.Data.(*HeadingData); ok && !nodeData.IsTitleblock {
 			inHeading = entering
 			if entering {

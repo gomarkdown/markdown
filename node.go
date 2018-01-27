@@ -300,14 +300,24 @@ const (
 // NodeVisitor is a callback to be called when traversing the syntax tree.
 // Called twice for every node: once with entering=true when the branch is
 // first visited, then with entering=false after all the children are done.
-type NodeVisitor func(node *Node, entering bool) WalkStatus
+type NodeVisitor interface {
+	Visit(node *Node, entering bool) WalkStatus
+}
+
+// NodeVisitorFunc casts a function to match NodeVisitor interface
+type NodeVisitorFunc func(node *Node, entering bool) WalkStatus
+
+// Visit calls visitor function
+func (f NodeVisitorFunc) Visit(node *Node, entering bool) WalkStatus {
+	return f(node, entering)
+}
 
 // Walk is a convenience method that instantiates a walker and starts a
 // traversal of subtree rooted at n.
 func (n *Node) Walk(visitor NodeVisitor) {
 	w := newNodeWalker(n)
 	for w.current != nil {
-		status := visitor(w.current, w.entering)
+		status := visitor.Visit(w.current, w.entering)
 		switch status {
 		case GoToNext:
 			w.next()
@@ -318,6 +328,12 @@ func (n *Node) Walk(visitor NodeVisitor) {
 			return
 		}
 	}
+}
+
+// WalkFunc is like Walk but accepts just a callback function
+func (n *Node) WalkFunc(f NodeVisitorFunc) {
+	visitor := NodeVisitorFunc(f)
+	n.Walk(visitor)
 }
 
 type nodeWalker struct {
