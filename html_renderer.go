@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -309,27 +310,28 @@ func appendLanguageAttr(attrs []string, info []byte) []string {
 	if endOfLang < 0 {
 		endOfLang = len(info)
 	}
-	return append(attrs, fmt.Sprintf("class=\"language-%s\"", info[:endOfLang]))
+	s := `class="language-` + string(info[:endOfLang]) + `"`
+	return append(attrs, s)
 }
 
 func (r *HTMLRenderer) outTag(w io.Writer, name string, attrs []string) {
-	io.WriteString(w, name)
+	var s string
 	if len(attrs) > 0 {
-		io.WriteString(w, " ")
-		io.WriteString(w, strings.Join(attrs, " "))
+		s = " " + strings.Join(attrs, " ")
 	}
-	io.WriteString(w, ">")
+	io.WriteString(w, name+s+">")
 	r.lastOutputLen = 1
 }
 
 func footnoteRef(prefix string, node *LinkData) string {
 	urlFrag := prefix + string(slugify(node.Destination))
-	anchor := fmt.Sprintf(`<a rel="footnote" href="#fn:%s">%d</a>`, urlFrag, node.NoteID)
-	return fmt.Sprintf(`<sup class="footnote-ref" id="fnref:%s">%s</sup>`, urlFrag, anchor)
+	nStr := strconv.Itoa(node.NoteID)
+	anchor := `<a rel="footnote" href="#fn:` + urlFrag + `">` + nStr + `</a>`
+	return `<sup class="footnote-ref" id="fnref:` + urlFrag + `">` + anchor + `</sup>`
 }
 
 func footnoteItem(prefix string, slug []byte) string {
-	return fmt.Sprintf(`<li id="fn:%s%s">`, prefix, slug)
+	return `<li id="fn:` + prefix + string(slug) + `">`
 }
 
 func footnoteReturnLink(prefix, returnLink string, slug []byte) string {
