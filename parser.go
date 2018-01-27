@@ -288,7 +288,7 @@ func (p *Parser) parseRefsToAST() {
 		ref := p.notes[i]
 		p.addExistingChild(ref.footnote, 0)
 		block := ref.footnote
-		blockData := block.Data.(*ItemData)
+		blockData := block.Data.(*ListItemData)
 		blockData.ListFlags = flags | ListTypeOrdered
 		blockData.RefLink = ref.link
 		if ref.hasBlock {

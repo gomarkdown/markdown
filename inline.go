@@ -445,7 +445,7 @@ func link(p *Parser, data []byte, offset int) (int, *Node) {
 			}
 		}
 
-		footnoteNode = NewNode(&ItemData{})
+		footnoteNode = NewNode(&ListItemData{})
 		if t == linkInlineFootnote {
 			// create a new reference
 			noteID = len(p.notes) + 1

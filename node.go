@@ -26,8 +26,8 @@ type ListData struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
-// ItemData represents data for item node
-type ItemData struct {
+// ListItemData represents data for list item node
+type ListItemData struct {
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
 	BulletChar      byte   // '*', '+' or '-' in bullet lists
@@ -204,7 +204,7 @@ func (n *Node) AppendChild(child *Node) {
 
 func (n *Node) isContainer() bool {
 	switch n.Data.(type) {
-	case *DocumentData, *BlockQuoteData, *ListData, *ItemData, *ParagraphData:
+	case *DocumentData, *BlockQuoteData, *ListData, *ListItemData, *ParagraphData:
 		return true
 	case *HeadingData, *EmphData, *StrongData, *DelData, *LinkData, *ImageData:
 		return true
@@ -227,13 +227,13 @@ func isListTight(d NodeData) bool {
 	return false
 }
 
-func isItemData(d NodeData) bool {
-	_, ok := d.(*ItemData)
+func isListItemData(d NodeData) bool {
+	_, ok := d.(*ListItemData)
 	return ok
 }
 
-func isItemTerm(node *Node) bool {
-	data, ok := node.Data.(*ItemData)
+func isListItemTerm(node *Node) bool {
+	data, ok := node.Data.(*ListItemData)
 	return ok && data.ListFlags&ListTypeTerm != 0
 }
 
@@ -265,9 +265,9 @@ func isDocumentData(d NodeData) bool {
 func (n *Node) canContain(v NodeData) bool {
 	switch n.Data.(type) {
 	case *ListData:
-		return isItemData(v)
-	case *DocumentData, *BlockQuoteData, *ItemData:
-		return !isItemData(v)
+		return isListItemData(v)
+	case *DocumentData, *BlockQuoteData, *ListItemData:
+		return !isListItemData(v)
 	case *TableData:
 		switch v.(type) {
 		case *TableHeadData, *TableBodyData:

@@ -1182,7 +1182,7 @@ func endsWithBlankLine(block *Node) bool {
 		//return true
 		//}
 		switch block.Data.(type) {
-		case *ListData, *ItemData:
+		case *ListData, *ListItemData:
 			block = block.LastChild
 		default:
 			return false
@@ -1376,7 +1376,7 @@ gatherlines:
 
 	rawBytes := raw.Bytes()
 
-	d := &ItemData{
+	d := &ListItemData{
 		ListFlags:  *flags,
 		Tight:      false,
 		BulletChar: bulletChar,

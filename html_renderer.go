@@ -346,7 +346,7 @@ func skipParagraphTags(node *Node) bool {
 	if grandparent == nil || !isListData(grandparent.Data) {
 		return false
 	}
-	isParentTerm := isItemTerm(parent)
+	isParentTerm := isListItemTerm(parent)
 	grandparentListData := grandparent.Data.(*ListData)
 	tightOrTerm := grandparentListData.Tight || isParentTerm
 	return tightOrTerm
@@ -564,8 +564,8 @@ func (r *HTMLRenderer) paragraphEnter(w io.Writer, node *Node, nodeData *Paragra
 }
 
 func (r *HTMLRenderer) paragraphExit(w io.Writer, node *Node, nodeData *ParagraphData) {
-	r.out(w, []byte("</p>"))
-	if !(isItemData(node.Parent.Data) && node.Next == nil) {
+	r.outs(w, "</p>")
+	if !(isListItemData(node.Parent.Data) && node.Next == nil) {
 		r.cr(w)
 	}
 }
@@ -607,7 +607,7 @@ func (r *HTMLRenderer) heading(w io.Writer, node *Node, nodeData *HeadingData, e
 	if !entering {
 		closeTag := headingCloseTagFromLevel(nodeData.Level)
 		r.outs(w, closeTag)
-		if !(isItemData(node.Parent.Data) && node.Next == nil) {
+		if !(isListItemData(node.Parent.Data) && node.Next == nil) {
 			r.cr(w)
 		}
 		return
@@ -658,7 +658,7 @@ func (r *HTMLRenderer) listEnter(w io.Writer, node *Node, nodeData *ListData) {
 		r.cr(w)
 	}
 	r.cr(w)
-	if isItemData(node.Parent.Data) {
+	if isListItemData(node.Parent.Data) {
 		grand := node.Parent.Parent
 		if isListTight(grand.Data) {
 			r.cr(w)
@@ -683,7 +683,7 @@ func (r *HTMLRenderer) listExit(w io.Writer, node *Node, nodeData *ListData) {
 	//if node.parent.Type != Item {
 	//	cr(w)
 	//}
-	if isItemData(node.Parent.Data) && node.Next != nil {
+	if isListItemData(node.Parent.Data) && node.Next != nil {
 		r.cr(w)
 	}
 	if isDocumentData(node.Parent.Data) || isBlockQuoteData(node.Parent.Data) {
@@ -702,7 +702,7 @@ func (r *HTMLRenderer) list(w io.Writer, node *Node, nodeData *ListData, enterin
 	}
 }
 
-func (r *HTMLRenderer) item(w io.Writer, node *Node, nodeData *ItemData, entering bool) {
+func (r *HTMLRenderer) listItem(w io.Writer, node *Node, nodeData *ListItemData, entering bool) {
 	if entering {
 		openTag := "<li>"
 		if nodeData.ListFlags&ListTypeDefinition != 0 {
@@ -748,7 +748,7 @@ func (r *HTMLRenderer) codeBlock(w io.Writer, node *Node, nodeData *CodeBlockDat
 	escapeHTML(w, node.Literal)
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
-	if !isItemData(node.Parent.Data) {
+	if !isListItemData(node.Parent.Data) {
 		r.cr(w)
 	}
 }
@@ -845,8 +845,8 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *Node, entering bool) WalkSt
 		r.horizontalRule(w)
 	case *ListData:
 		r.list(w, node, nodeData, entering)
-	case *ItemData:
-		r.item(w, node, nodeData, entering)
+	case *ListItemData:
+		r.listItem(w, node, nodeData, entering)
 	case *CodeBlockData:
 		r.codeBlock(w, node, nodeData)
 	case *TableData:
