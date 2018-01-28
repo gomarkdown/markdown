@@ -35,7 +35,7 @@ type Renderer interface {
 }
 
 // Parse parsers a markdown document using provided parser or parser configured
-// with most common extensions if parser is nil.
+// with parser.CommonExtensions if parser is nil.
 //
 // It returns ast tree that can be converted to another format using a renderer.
 func Parse(markdown []byte, p *parser.Parser) ast.Node {
