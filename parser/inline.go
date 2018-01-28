@@ -1189,7 +1189,7 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, ast.
 }
 
 func newTextNode(d []byte) *ast.Text {
-	return &ast.Text{ast.LeafNode{Literal: d}}
+	return &ast.Text{ast.Leaf{Literal: d}}
 }
 
 func normalizeURI(s []byte) []byte {

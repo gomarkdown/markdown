@@ -170,7 +170,7 @@ func (p *Parser) finalize(block ast.Node) {
 }
 
 func (p *Parser) addChild(node ast.Node) ast.Node {
-	ast.PanicIfTreeNode(node)
+	ast.PanicIfContainer(node)
 	for !canNodeContain(p.tip, node) {
 		p.finalize(p.tip)
 	}
@@ -241,8 +241,8 @@ func (p *Parser) Parse(input []byte) ast.Node {
 	ast.WalkFunc(p.Doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		switch node.(type) {
 		case *ast.Paragraph, *ast.Heading, *ast.TableCell:
-			p.inline(node, node.AsTreeNode().Content)
-			node.AsTreeNode().Content = nil
+			p.inline(node, node.AsContainer().Content)
+			node.AsContainer().Content = nil
 		}
 		return ast.GoToNext
 	})
@@ -286,8 +286,8 @@ func (p *Parser) parseRefsToAST() {
 	ast.WalkFunc(block, func(node ast.Node, entering bool) ast.WalkStatus {
 		switch node.(type) {
 		case *ast.Paragraph, *ast.Heading:
-			p.inline(node, node.AsTreeNode().Content)
-			node.AsTreeNode().Content = nil
+			p.inline(node, node.AsContainer().Content)
+			node.AsContainer().Content = nil
 		}
 		return ast.GoToNext
 	})

@@ -811,7 +811,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			return status
 		}
 	}
-	ast.PanicIfTreeNode(node)
+	ast.PanicIfContainer(node)
 	switch node := node.(type) {
 	case *ast.Text:
 		r.text(w, node)

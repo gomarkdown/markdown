@@ -35,7 +35,8 @@ const (
 
 // Node defines an ast node
 type Node interface {
-	AsTreeNode() *TreeNode
+	AsContainer() *Container
+	AsLeaf() *Leaf
 	GetParent() Node
 	SetParent(newParent Node)
 	GetChildren() []Node
@@ -44,9 +45,8 @@ type Node interface {
 	LastChild() Node
 }
 
-// TreeNode is a common part of all nodes, used to represent tree and contain
-// data that all nodes have in common
-type TreeNode struct {
+// Container is a type of node that can contain children
+type Container struct {
 	Parent   Node
 	Children []Node
 
@@ -54,106 +54,113 @@ type TreeNode struct {
 	Content []byte // Markdown content of the block nodes
 }
 
-// AsTreeNode returns itself as *TreeNode
-func (n *TreeNode) AsTreeNode() *TreeNode {
-	res := n
-	//fmt.Printf("TreeNode.AsTreeNode() called. n: %p, res: %p %v\n", n, res, res)
-	return res
+// AsContainer returns itself as *Container
+func (c *Container) AsContainer() *Container {
+	return c
+}
+
+// AsLeaf returns nil
+func (c *Container) AsLeaf() *Leaf {
+	return nil
 }
 
 // GetParent returns parent
-func (n *TreeNode) GetParent() Node {
-	return n.Parent
+func (c *Container) GetParent() Node {
+	return c.Parent
 }
 
 // SetParent sets the parent
-func (n *TreeNode) SetParent(newParent Node) {
-	n.Parent = newParent
+func (c *Container) SetParent(newParent Node) {
+	c.Parent = newParent
 }
 
 // GetChildren returns children
-func (n *TreeNode) GetChildren() []Node {
-	return n.Children
+func (c *Container) GetChildren() []Node {
+	return c.Children
 }
 
 // SetChildren sets children
-func (n *TreeNode) SetChildren(newChildren []Node) {
-	n.Children = newChildren
+func (c *Container) SetChildren(newChildren []Node) {
+	c.Children = newChildren
 }
 
-// LeafNode is a common part of all nodes, used to represent tree and contain
-// data that all nodes have in common
-type LeafNode struct {
+// Leaf is a node that cannot have children
+type Leaf struct {
 	Parent Node
 
 	Literal []byte // Text contents of the leaf nodes
 	Content []byte // Markdown content of the block nodes
 }
 
-// AsTreeNode returns itself as *TreeNode
-func (n *LeafNode) AsTreeNode() *TreeNode {
+// AsContainer returns itself as *Container
+func (l *Leaf) AsContainer() *Container {
 	return nil
 }
 
+// AsLeaf returns itself as leaf
+func (l *Leaf) AsLeaf() *Leaf {
+	return l
+}
+
 // GetParent returns parent
-func (n *LeafNode) GetParent() Node {
-	return n.Parent
+func (l *Leaf) GetParent() Node {
+	return l.Parent
 }
 
 // SetParent sets the parent
-func (n *LeafNode) SetParent(newParent Node) {
-	n.Parent = newParent
+func (l *Leaf) SetParent(newParent Node) {
+	l.Parent = newParent
 }
 
 // GetChildren returns children
-func (n *LeafNode) GetChildren() []Node {
+func (l *Leaf) GetChildren() []Node {
 	return nil
 }
 
 // SetChildren sets children
-func (n *LeafNode) SetChildren(newChildren []Node) {
-	// do nothing, LeafNode has no children
+func (l *Leaf) SetChildren(newChildren []Node) {
+	// do nothing, Leaf has no children
 }
 
 // FirstChild returns children
-func (n *LeafNode) FirstChild() Node {
+func (l *Leaf) FirstChild() Node {
 	return nil
 }
 
 // LastChild returns children
-func (n *LeafNode) LastChild() Node {
+func (l *Leaf) LastChild() Node {
 	return nil
 }
 
-// PanicIfTreeNode will panic if node is *TreeNode
-func PanicIfTreeNode(node Node) {
-	if _, ok := node.(*TreeNode); ok {
-		panic(fmt.Sprintf("%v is TreeNode", node))
+// PanicIfContainer will panic if node is *Container
+func PanicIfContainer(node Node) {
+	if _, ok := node.(*Container); ok {
+		panic(fmt.Sprintf("%v is Container", node))
 	}
 }
 
 // AddChild adds child node to parent node
 func AddChild(parent Node, child Node) {
-	PanicIfTreeNode(parent)
-	PanicIfTreeNode(child)
-	pn := parent.AsTreeNode()
+	PanicIfContainer(parent)
+	PanicIfContainer(child)
+	pn := parent.AsContainer()
 	pn.Parent = parent
 	pn.Children = append(pn.Children, child)
 }
 
 // Document represents document
 type Document struct {
-	TreeNode
+	Container
 }
 
 // BlockQuote represents data for block quote node
 type BlockQuote struct {
-	TreeNode
+	Container
 }
 
 // List represents data list node
 type List struct {
-	TreeNode
+	Container
 
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
@@ -165,7 +172,7 @@ type List struct {
 
 // ListItem represents data for list item node
 type ListItem struct {
-	TreeNode
+	Container
 
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
@@ -177,12 +184,12 @@ type ListItem struct {
 
 // Paragraph represents data for paragraph node
 type Paragraph struct {
-	TreeNode
+	Container
 }
 
 // Heading contains fields relevant to a Heading node type.
 type Heading struct {
-	TreeNode
+	Container
 
 	Level        int    // This holds the heading level number
 	HeadingID    string // This might hold heading ID, if present
@@ -191,27 +198,27 @@ type Heading struct {
 
 // HorizontalRule represents data for horizontal rule node
 type HorizontalRule struct {
-	LeafNode
+	Leaf
 }
 
 // Emph represents data for emp node
 type Emph struct {
-	TreeNode
+	Container
 }
 
 // Strong represents data for strong node
 type Strong struct {
-	TreeNode
+	Container
 }
 
 // Del represents data for del node
 type Del struct {
-	TreeNode
+	Container
 }
 
 // Link represents data for link node
 type Link struct {
-	TreeNode
+	Container
 
 	Destination []byte // Destination is what goes into a href
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
@@ -221,7 +228,7 @@ type Link struct {
 
 // Image represents data for image node
 type Image struct {
-	TreeNode
+	Container
 
 	Destination []byte // Destination is what goes into a href
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
@@ -229,17 +236,17 @@ type Image struct {
 
 // Text represents data for text node
 type Text struct {
-	LeafNode
+	Leaf
 }
 
 // HTMLBlock represents data for html node
 type HTMLBlock struct {
-	LeafNode
+	Leaf
 }
 
 // CodeBlock contains fields relevant to a CodeBlock node type.
 type CodeBlock struct {
-	LeafNode
+	Leaf
 
 	IsFenced    bool   // Specifies whether it's a fenced code block or an indented one
 	Info        []byte // This holds the info string
@@ -251,32 +258,32 @@ type CodeBlock struct {
 // Softbreak represents data for softbreak node
 // Note: not used currently
 type Softbreak struct {
-	LeafNode
+	Leaf
 }
 
 // Hardbreak represents data for hard break node
 type Hardbreak struct {
-	LeafNode
+	Leaf
 }
 
 // Code represents data for code node
 type Code struct {
-	LeafNode
+	Leaf
 }
 
 // HTMLSpan represents data for html span node
 type HTMLSpan struct {
-	LeafNode
+	Leaf
 }
 
 // Table represents data for table node
 type Table struct {
-	TreeNode
+	Container
 }
 
 // TableCell contains fields relevant to a table cell node type.
 type TableCell struct {
-	TreeNode
+	Container
 
 	IsHeader bool           // This tells if it's under the header row
 	Align    CellAlignFlags // This holds the value for align attribute
@@ -284,17 +291,17 @@ type TableCell struct {
 
 // TableHead represents data for a table head node
 type TableHead struct {
-	TreeNode
+	Container
 }
 
 // TableBody represents data for a tablef body node
 type TableBody struct {
-	TreeNode
+	Container
 }
 
 // TableRow represents data for a table row node
 type TableRow struct {
-	TreeNode
+	Container
 }
 
 /*
@@ -345,11 +352,11 @@ func AppendChild(n Node, child Node) {
 }
 
 func isContainer(n Node) bool {
-	return n.AsTreeNode() != nil
+	return n.AsContainer() != nil
 }
 
 // LastChild returns last child of this node
-func (n *TreeNode) LastChild() Node {
+func (n *Container) LastChild() Node {
 	a := n.Children
 	if len(a) > 0 {
 		return a[len(a)-1]
@@ -358,7 +365,7 @@ func (n *TreeNode) LastChild() Node {
 }
 
 // FirstChild returns first child of this node
-func (n *TreeNode) FirstChild() Node {
+func (n *Container) FirstChild() Node {
 	a := n.Children
 	if len(a) > 0 {
 		return a[0]
@@ -367,7 +374,7 @@ func (n *TreeNode) FirstChild() Node {
 }
 
 // NextNode returns next sibling of this node
-// We can't make it part of TreeNode or LeafNode because we loose Node identity
+// We can't make it part of Container or Leaf because we loose Node identity
 func NextNode(n Node) Node {
 	parent := n.GetParent()
 	if parent == nil {
@@ -384,7 +391,7 @@ func NextNode(n Node) Node {
 }
 
 // PrevNode returns sibling node before n
-// We can't make it part of TreeNode or LeafNode because we loose Node identity
+// We can't make it part of Container or Leaf because we loose Node identity
 func PrevNode(n Node) Node {
 	parent := n.GetParent()
 	if parent == nil {
@@ -494,18 +501,28 @@ func dump(ast Node) {
 	fmt.Println(dumpString(ast))
 }
 
+func getContent(node Node) []byte {
+	if c := node.AsContainer(); c != nil {
+		if c.Literal != nil {
+			return c.Literal
+		}
+		return c.Content
+	}
+	return nil
+}
+
 func dumpR(ast Node, depth int) string {
 	if ast == nil {
 		return ""
 	}
 	indent := bytes.Repeat([]byte("\t"), depth)
-	content := ast.AsTreeNode().Literal
+	content := ast.AsContainer().Literal
 	if content == nil {
-		content = ast.AsTreeNode().Content
+		content = ast.AsContainer().Content
 	}
 	result := fmt.Sprintf("%s%T(%q)\n", indent, ast, content)
-	for _, n := range ast.GetChildren() {
-		result += dumpR(n, depth+1)
+	for _, child := range ast.GetChildren() {
+		result += dumpR(child, depth+1)
 	}
 	return result
 }

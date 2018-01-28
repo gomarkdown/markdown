@@ -455,7 +455,7 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	if doRender {
 		// trim newlines
 		end := backChar(data, i, '\n')
-		htmlBLock := &ast.HTMLBlock{ast.LeafNode{Content: data[:end]}}
+		htmlBLock := &ast.HTMLBlock{ast.Leaf{Content: data[:end]}}
 		p.addBlock(htmlBLock)
 		finalizeHTMLBlock(htmlBLock)
 	}
@@ -477,7 +477,7 @@ func (p *Parser) htmlComment(data []byte, doRender bool) int {
 		if doRender {
 			// trim trailing newlines
 			end := backChar(data, size, '\n')
-			htmlBLock := &ast.HTMLBlock{ast.LeafNode{Content: data[:end]}}
+			htmlBLock := &ast.HTMLBlock{ast.Leaf{Content: data[:end]}}
 			p.addBlock(htmlBLock)
 			finalizeHTMLBlock(htmlBLock)
 		}
@@ -509,7 +509,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 			if doRender {
 				// trim newlines
 				end := backChar(data, size, '\n')
-				htmlBlock := &ast.HTMLBlock{ast.LeafNode{Content: data[:end]}}
+				htmlBlock := &ast.HTMLBlock{ast.Leaf{Content: data[:end]}}
 				p.addBlock(htmlBlock)
 				finalizeHTMLBlock(htmlBlock)
 			}
