@@ -769,11 +769,6 @@ func slugify(in []byte) []byte {
 	return out[a : b+1]
 }
 
-func isTableRow(d ast.Node) bool {
-	_, ok := d.(*ast.TableRow)
-	return ok
-}
-
 func isListItem(d ast.Node) bool {
 	_, ok := d.(*ast.ListItem)
 	return ok

@@ -539,8 +539,12 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 			r.cr(w)
 		}
 	}
-	if isBlockQuote(para.Parent) && prev == nil {
-		r.cr(w)
+
+	if prev == nil {
+		_, isParentBlockQuote := para.Parent.(*ast.BlockQuote)
+		if isParentBlockQuote {
+			r.cr(w)
+		}
 	}
 	r.outs(w, "<p>")
 }
@@ -669,12 +673,15 @@ func (r *Renderer) listExit(w io.Writer, list *ast.List) {
 	//	cr(w)
 	//}
 	parent := list.Parent
-	if isListItem(parent) && ast.NextNode(list) != nil {
+	switch parent.(type) {
+	case *ast.ListItem:
+		if ast.NextNode(list) != nil {
+			r.cr(w)
+		}
+	case *ast.Document, *ast.BlockQuote:
 		r.cr(w)
 	}
-	if isDocument(parent) || isBlockQuote(parent) {
-		r.cr(w)
-	}
+
 	if list.IsFootnotesList {
 		r.outs(w, "\n</div>\n")
 	}
@@ -938,28 +945,28 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		if nodeData, ok := node.(*ast.Heading); ok && !nodeData.IsTitleblock {
 			inHeading = entering
-			if entering {
-				nodeData.HeadingID = fmt.Sprintf("toc_%d", headingCount)
-				if nodeData.Level == tocLevel {
-					buf.WriteString("</li>\n\n<li>")
-				} else if nodeData.Level < tocLevel {
-					for nodeData.Level < tocLevel {
-						tocLevel--
-						buf.WriteString("</li>\n</ul>")
-					}
-					buf.WriteString("</li>\n\n<li>")
-				} else {
-					for nodeData.Level > tocLevel {
-						tocLevel++
-						buf.WriteString("\n<ul>\n<li>")
-					}
-				}
-
-				fmt.Fprintf(&buf, `<a href="#toc_%d">`, headingCount)
-				headingCount++
-			} else {
+			if !entering {
 				buf.WriteString("</a>")
+				return ast.GoToNext
 			}
+			nodeData.HeadingID = fmt.Sprintf("toc_%d", headingCount)
+			if nodeData.Level == tocLevel {
+				buf.WriteString("</li>\n\n<li>")
+			} else if nodeData.Level < tocLevel {
+				for nodeData.Level < tocLevel {
+					tocLevel--
+					buf.WriteString("</li>\n</ul>")
+				}
+				buf.WriteString("</li>\n\n<li>")
+			} else {
+				for nodeData.Level > tocLevel {
+					tocLevel++
+					buf.WriteString("\n<ul>\n<li>")
+				}
+			}
+
+			fmt.Fprintf(&buf, `<a href="#toc_%d">`, headingCount)
+			headingCount++
 			return ast.GoToNext
 		}
 
@@ -1002,16 +1009,6 @@ func isListItem(node ast.Node) bool {
 func isListItemTerm(node ast.Node) bool {
 	data, ok := node.(*ast.ListItem)
 	return ok && data.ListFlags&ast.ListTypeTerm != 0
-}
-
-func isBlockQuote(d ast.Node) bool {
-	_, ok := d.(*ast.BlockQuote)
-	return ok
-}
-
-func isDocument(node ast.Node) bool {
-	_, ok := node.(*ast.Document)
-	return ok
 }
 
 // TODO: move to internal package
