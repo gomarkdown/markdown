@@ -871,11 +871,14 @@ var validUris = [][]byte{[]byte("http://"), []byte("https://"), []byte("ftp://")
 var validPaths = [][]byte{[]byte("/"), []byte("./"), []byte("../")}
 
 func isSafeLink(link []byte) bool {
+	nLink := len(link)
 	for _, path := range validPaths {
-		if len(link) >= len(path) && bytes.Equal(link[:len(path)], path) {
-			if len(link) == len(path) {
+		nPath := len(path)
+		linkPrefix := link[:nPath]
+		if nLink >= nPath && bytes.Equal(linkPrefix, path) {
+			if nLink == nPath {
 				return true
-			} else if isAlnum(link[len(path)]) {
+			} else if isAlnum(link[nPath]) {
 				return true
 			}
 		}
@@ -884,8 +887,12 @@ func isSafeLink(link []byte) bool {
 	for _, prefix := range validUris {
 		// TODO: handle unicode here
 		// case-insensitive prefix test
-		if len(link) > len(prefix) && bytes.Equal(bytes.ToLower(link[:len(prefix)]), prefix) && isAlnum(link[len(prefix)]) {
-			return true
+		nPrefix := len(prefix)
+		if nLink > nPrefix {
+			linkPrefix := bytes.ToLower(link[:nPrefix])
+			if bytes.Equal(linkPrefix, prefix) && isAlnum(link[nPrefix]) {
+				return true
+			}
 		}
 	}
 
