@@ -6,6 +6,7 @@ Configuring and customizing a renderer
 A renderer can be configured with multiple options:
 
 	import "github.com/gomarkdown/markdown/html"
+
 	flags := html.CommonFlags | html.CompletePage | html.HrefTargetBlank
 	opts := html.RenderOptions{
 		TItle: "A custom title",
@@ -18,8 +19,10 @@ by providing node render hook.
 This is most useful for rendering nodes that allow for design choices, like
 links or code blocks.
 
-	import "github.com/gomarkdown/markdown/html"
-	import "github.com/gomarkdown/markdown/ast"
+	import (
+		"github.com/gomarkdown/markdown/html"
+		"github.com/gomarkdown/markdown/ast"
+	)
 
 	// a very dummy render hook that will output "code_replacements" instead of
 	// <code>${content}</code> emitted by html.Renderer

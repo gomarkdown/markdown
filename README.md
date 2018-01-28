@@ -29,11 +29,14 @@ import (
     "github.com/gomarkdown/markdown/parser"
 )
 
-md := []byte("markdown text")
 extensions := html.CommonExtensions | html.AutoHeadingIDs
 parser := parser.NewWithExensions(extensions)
-htmlParams := html.CommonFlags | html.HrefTargetBlank
-renderer := html.NewRenderer(htmlParams)
+
+htmlFlags := html.CommonFlags | html.HrefTargetBlank
+opts := html.RendererOptions{Flags: htmlFlags}
+renderer := html.NewRenderer(opts)
+
+md := []byte("markdown text")
 html := markdown.ToHTML(md, parser, renderer)
 ```
 

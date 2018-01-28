@@ -13,8 +13,6 @@ import (
 )
 
 // Renderer is an interface for implementing custom renderers.
-//
-// This package provides Renderer for markdown => HTML conversion.
 type Renderer interface {
 	// RenderNode is the main rendering method. It will be called once for
 	// every leaf node and twice for every non-leaf node (first with
@@ -39,25 +37,26 @@ type Renderer interface {
 	RenderFooter(w io.Writer, ast *ast.Node)
 }
 
-// Render renders a parsed data in parser with a given renderer
-func Render(p *parser.Parser, renderer Renderer) []byte {
+// Render uses renderer to convert parsed markdown document into a different format.
+// For example to convert into HTML, use html.Renderer
+func Render(doc *ast.Node, renderer Renderer) []byte {
 	var buf bytes.Buffer
-	renderer.RenderHeader(&buf, p.Doc)
-	p.Doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
+	renderer.RenderHeader(&buf, doc)
+	doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
 		return renderer.RenderNode(&buf, node, entering)
 	})
-	renderer.RenderFooter(&buf, p.Doc)
+	renderer.RenderFooter(&buf, doc)
 	return buf.Bytes()
 }
 
-// ToHTML converts a markdown text in input and converts it to HTML.
+// ToHTML converts markdownDoc to HTML.
 //
-// You can optionally pass a parser and renderer, which allows to customize
-// a parser, a render or provide a renderer other than Renderer.
+// You can optionally pass a parser and renderer. This allows to customize
+// a parser, use a customized html render or use completely custom renderer.
 //
-// If you pass nil for both, we convert with CommonExtensions for
-// the parser and Renderer with CommonFlags for renderer
-func ToHTML(input []byte, p *parser.Parser, renderer Renderer) []byte {
+// If you pass nil for both, we use parser configured with parser.CommonExtensions
+// and html.Renderer configured with html.CommonFlags.
+func ToHTML(markdownDoc []byte, p *parser.Parser, renderer Renderer) []byte {
 	if p == nil {
 		p = parser.NewWithExtensions(parser.CommonExtensions)
 	}
@@ -67,6 +66,6 @@ func ToHTML(input []byte, p *parser.Parser, renderer Renderer) []byte {
 		}
 		renderer = html.NewRenderer(opts)
 	}
-	p.Parse(input)
-	return Render(p, renderer)
+	doc := p.Parse(markdownDoc)
+	return Render(doc, renderer)
 }
