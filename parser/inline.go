@@ -18,11 +18,8 @@ var (
 	htmlEntityRe = regexp.MustCompile(`&[a-z]{2,5};`)
 )
 
-// Functions to parse text within a block
-// Each function returns the number of chars taken care of
-// data is the complete block being rendered
-// offset is the number of valid chars before the current cursor
-
+// inline parses text within a block.
+// Each function returns the number of consumed chars.
 func (p *Parser) inline(currBlock ast.Node, data []byte) {
 	// handlers might call us recursively: enforce a maximum depth
 	if p.nesting >= p.maxNesting || len(data) == 0 {
@@ -30,27 +27,30 @@ func (p *Parser) inline(currBlock ast.Node, data []byte) {
 	}
 	p.nesting++
 	beg, end := 0, 0
-	for end < len(data) {
+
+	n := len(data)
+	for end < n {
 		handler := p.inlineCallback[data[end]]
-		if handler != nil {
-			if consumed, node := handler(p, data, end); consumed == 0 {
-				// No action from the callback.
-				end++
-			} else {
-				// Copy inactive chars into the output.
-				ast.AppendChild(currBlock, newTextNode(data[beg:end]))
-				if node != nil {
-					ast.AppendChild(currBlock, node)
-				}
-				// Skip past whatever the callback used.
-				beg = end + consumed
-				end = beg
-			}
-		} else {
+		if handler == nil {
 			end++
+			continue
 		}
+		consumed, node := handler(p, data, end)
+		if consumed == 0 {
+			// no action from the callback
+			end++
+			continue
+		}
+		// copy inactive chars into the output
+		ast.AppendChild(currBlock, newTextNode(data[beg:end]))
+		if node != nil {
+			ast.AppendChild(currBlock, node)
+		}
+		beg = end + consumed
+		end = beg
 	}
-	if beg < len(data) {
+
+	if beg < n {
 		if data[end-1] == '\n' {
 			end--
 		}
@@ -64,7 +64,8 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 	data = data[offset:]
 	c := data[0]
 
-	if len(data) > 2 && data[1] != c {
+	n := len(data)
+	if n > 2 && data[1] != c {
 		// whitespace cannot follow an opening emphasis;
 		// strikethrough only takes two characters '~~'
 		if c == '~' || isSpace(data[1]) {
@@ -78,7 +79,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return ret + 1, node
 	}
 
-	if len(data) > 3 && data[1] == c && data[2] != c {
+	if n > 3 && data[1] == c && data[2] != c {
 		if isSpace(data[2]) {
 			return 0, nil
 		}
@@ -90,7 +91,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return ret + 2, node
 	}
 
-	if len(data) > 4 && data[1] == c && data[2] == c && data[3] != c {
+	if n > 4 && data[1] == c && data[2] == c && data[3] != c {
 		if c == '~' || isSpace(data[3]) {
 			return 0, nil
 		}
