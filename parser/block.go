@@ -870,7 +870,8 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 	// each column header is of form: / *:?-+:? *|/ with # dashes + # colons >= 3
 	// and trailing | optional on last column
 	col := 0
-	for i < len(data) && data[i] != '\n' {
+	n := len(data)
+	for i < n && data[i] != '\n' {
 		dashes := 0
 
 		if data[i] == ':' {
@@ -878,19 +879,19 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 			columns[col] |= ast.TableAlignmentLeft
 			dashes++
 		}
-		for i < len(data) && data[i] == '-' {
+		for i < n && data[i] == '-' {
 			i++
 			dashes++
 		}
-		if i < len(data) && data[i] == ':' {
+		if i < n && data[i] == ':' {
 			i++
 			columns[col] |= ast.TableAlignmentRight
 			dashes++
 		}
-		for i < len(data) && data[i] == ' ' {
+		for i < n && data[i] == ' ' {
 			i++
 		}
-		if i == len(data) {
+		if i == n {
 			return
 		}
 		// end of column test is messy
@@ -903,7 +904,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 			// marker found, now skip past trailing whitespace
 			col++
 			i++
-			for i < len(data) && data[i] == ' ' {
+			for i < n && data[i] == ' ' {
 				i++
 			}
 
@@ -943,14 +944,15 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 		i++
 	}
 
-	for col = 0; col < len(columns) && i < len(data); col++ {
-		for i < len(data) && data[i] == ' ' {
+	n := len(data)
+	for col = 0; col < len(columns) && i < n; col++ {
+		for i < n && data[i] == ' ' {
 			i++
 		}
 
 		cellStart := i
 
-		for i < len(data) && (data[i] != '|' || isBackslashEscaped(data, i)) && data[i] != '\n' {
+		for i < n && (data[i] != '|' || isBackslashEscaped(data, i)) && data[i] != '\n' {
 			i++
 		}
 
@@ -959,7 +961,7 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 		// skip the end-of-cell marker, possibly taking us past end of buffer
 		i++
 
-		for cellEnd > cellStart && cellEnd-1 < len(data) && data[cellEnd-1] == ' ' {
+		for cellEnd > cellStart && cellEnd-1 < n && data[cellEnd-1] == ' ' {
 			cellEnd--
 		}
 
@@ -986,11 +988,12 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 // returns blockquote prefix length
 func (p *Parser) quotePrefix(data []byte) int {
 	i := 0
-	for i < 3 && i < len(data) && data[i] == ' ' {
+	n := len(data)
+	for i < 3 && i < n && data[i] == ' ' {
 		i++
 	}
-	if i < len(data) && data[i] == '>' {
-		if i+1 < len(data) && data[i+1] == ' ' {
+	if i < n && data[i] == '>' {
+		if i+1 < n && data[i+1] == ' ' {
 			return i + 2
 		}
 		return i + 1
@@ -1048,10 +1051,11 @@ func (p *Parser) quote(data []byte) int {
 
 // returns prefix length for block code
 func (p *Parser) codePrefix(data []byte) int {
-	if len(data) >= 1 && data[0] == '\t' {
+	n := len(data)
+	if n >= 1 && data[0] == '\t' {
 		return 1
 	}
-	if len(data) >= 4 && data[0] == ' ' && data[1] == ' ' && data[2] == ' ' && data[3] == ' ' {
+	if n >= 4 && data[3] == ' ' && data[2] == ' ' && data[1] == ' ' && data[0] == ' ' {
 		return 4
 	}
 	return 0
