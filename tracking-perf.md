@@ -157,3 +157,33 @@ PASS
 ok      github.com/gomarkdown/markdown  43.477s
 ```
 It's slower (but opens up possibilities for further improvements).
+
+After refactoring to make ast.Node a top-level thing.
+```
+BenchmarkEscapeHTML-8                                    2000000               829 ns/op               0 B/op          0 allocs/op
+BenchmarkSmartDoubleQuotes-8                              300000              3998 ns/op            6192 B/op         31 allocs/op
+BenchmarkReferenceAmps-8                                   50000             27389 ns/op           15480 B/op        153 allocs/op
+BenchmarkReferenceAutoLinks-8                              50000             23106 ns/op           14656 B/op        137 allocs/op
+BenchmarkReferenceBackslashEscapes-8                       10000            112435 ns/op           36696 B/op        315 allocs/op
+BenchmarkReferenceBlockquotesWithCodeBlocks-8             200000              9227 ns/op            7856 B/op         46 allocs/op
+BenchmarkReferenceCodeBlocks-8                            200000             10469 ns/op            9248 B/op         54 allocs/op
+BenchmarkReferenceCodeSpans-8                             200000             10522 ns/op            8368 B/op         54 allocs/op
+BenchmarkReferenceHardWrappedPara-8                       200000              6354 ns/op            6784 B/op         34 allocs/op
+BenchmarkReferenceHorizontalRules-8                        50000             32393 ns/op           13952 B/op         87 allocs/op
+BenchmarkReferenceInlineHTMLAdvances-8                    200000              6894 ns/op            7238 B/op         40 allocs/op
+BenchmarkReferenceInlineHTMLSimple-8                       50000             32942 ns/op           15864 B/op        110 allocs/op
+BenchmarkReferenceInlineHTMLComments-8                    200000              8181 ns/op            7776 B/op         44 allocs/op
+BenchmarkReferenceLinksInline-8                           100000             21679 ns/op           14400 B/op        148 allocs/op
+BenchmarkReferenceLinksReference-8                         20000             83928 ns/op           36688 B/op        473 allocs/op
+BenchmarkReferenceLinksShortcut-8                         100000             22053 ns/op           13872 B/op        153 allocs/op
+BenchmarkReferenceLiterQuotesInTitles-8                   100000             10784 ns/op            9296 B/op         81 allocs/op
+BenchmarkReferenceMarkdownBasics-8                          5000            237097 ns/op           87760 B/op        480 allocs/op
+BenchmarkReferenceMarkdownSyntax-8                          1000           1465402 ns/op          300769 B/op       1896 allocs/op
+BenchmarkReferenceNestedBlockquotes-8                     200000              7461 ns/op            7152 B/op         45 allocs/op
+BenchmarkReferenceOrderedAndUnorderedLists-8                5000            212256 ns/op           53724 B/op        553 allocs/op
+BenchmarkReferenceStrongAndEm-8                           100000             13018 ns/op            9264 B/op         72 allocs/op
+BenchmarkReferenceTabs-8                                  100000             15005 ns/op           10752 B/op         71 allocs/op
+BenchmarkReferenceTidyness-8                              200000             10308 ns/op            8292 B/op         58 allocs/op
+PASS
+ok      github.com/gomarkdown/markdown  42.176s
+```

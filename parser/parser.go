@@ -46,7 +46,7 @@ const (
 )
 
 // for each character that triggers a response when parsing inline data.
-type inlineParser func(p *Parser, data []byte, offset int) (int, *ast.Node)
+type inlineParser func(p *Parser, data []byte, offset int) (int, ast.Node)
 
 // ReferenceOverrideFunc is expected to be called with a reference string and
 // return either a valid Reference type that the reference string maps to or
@@ -75,7 +75,7 @@ type Parser struct {
 	ReferenceOverride ReferenceOverrideFunc
 
 	// after parsing, this is AST root of parsed markdown text
-	Doc *ast.Node
+	Doc ast.Node
 
 	extensions Extensions
 
@@ -90,9 +90,9 @@ type Parser struct {
 	// in notes. Slice is nil if footnotes not enabled.
 	notes []*reference
 
-	tip                  *ast.Node // = doc
-	oldTip               *ast.Node
-	lastMatchedContainer *ast.Node // = doc
+	tip                  ast.Node // = doc
+	oldTip               ast.Node
+	lastMatchedContainer ast.Node // = doc
 	allClosed            bool
 }
 
@@ -109,7 +109,7 @@ func NewWithExtensions(extension Extensions) *Parser {
 		refs:       make(map[string]*reference),
 		maxNesting: 16,
 		insideLink: false,
-		Doc:        ast.NewNode(&ast.DocumentData{}),
+		Doc:        &ast.Document{},
 		extensions: extension,
 		allClosed:  true,
 	}
@@ -165,41 +165,43 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 	return ref, found
 }
 
-func (p *Parser) finalize(block *ast.Node) {
-	above := block.Parent
-	p.tip = above
+func (p *Parser) finalize(block ast.Node) {
+	p.tip = block.GetParent()
 }
 
-func (p *Parser) addChild(d ast.NodeData, offset uint32) *ast.Node {
-	return p.addExistingChild(ast.NewNode(d), offset)
+func (p *Parser) addChild(n ast.Node, offset uint32) ast.Node {
+	return p.addExistingChild(n, offset)
 }
 
-func canNodeContain(n *ast.Node, v ast.NodeData) bool {
-	switch n.Data.(type) {
-	case *ast.ListData:
+func canNodeContain(n ast.Node, v ast.Node) bool {
+	switch n.(type) {
+	case *ast.List:
 		return isListItemData(v)
-	case *ast.DocumentData, *ast.BlockQuoteData, *ast.ListItemData:
+	case *ast.Document, *ast.BlockQuote, *ast.ListItem:
 		return !isListItemData(v)
-	case *ast.TableData:
+	case *ast.Table:
 		switch v.(type) {
-		case *ast.TableHeadData, *ast.TableBodyData:
+		case *ast.TableHead, *ast.TableBody:
 			return true
 		default:
 			return false
 		}
-	case *ast.TableHeadData, *ast.TableBodyData:
+	case *ast.TableHead, *ast.TableBody:
 		return isTableRowData(v)
-	case *ast.TableRowData:
+	case *ast.TableRow:
 		return isTableCellData(v)
 	}
 	return false
 }
 
-func (p *Parser) addExistingChild(node *ast.Node, offset uint32) *ast.Node {
-	for !canNodeContain(p.tip, node.Data) {
+func (p *Parser) addExistingChild(node ast.Node, offset uint32) ast.Node {
+	if _, ok := node.(*ast.TreeNode); ok {
+		panic(fmt.Sprintf("adding %v", node))
+	}
+	for !canNodeContain(p.tip, node) {
 		p.finalize(p.tip)
 	}
-	p.tip.AppendChild(node)
+	ast.AppendChild(p.tip, node)
 	p.tip = node
 	return node
 }
@@ -207,7 +209,7 @@ func (p *Parser) addExistingChild(node *ast.Node, offset uint32) *ast.Node {
 func (p *Parser) closeUnmatchedBlocks() {
 	if !p.allClosed {
 		for p.oldTip != p.lastMatchedContainer {
-			parent := p.oldTip.Parent
+			parent := p.oldTip.GetParent()
 			p.finalize(p.oldTip)
 			p.oldTip = parent
 		}
@@ -232,18 +234,18 @@ type Reference struct {
 // tree can then be rendered with a default or custom renderer, or
 // analyzed/transformed by the caller to whatever non-standard needs they have.
 // The return value is the root node of the syntax tree.
-func (p *Parser) Parse(input []byte) *ast.Node {
+func (p *Parser) Parse(input []byte) ast.Node {
 	p.block(input)
 	// Walk the tree and finish up some of unfinished blocks
 	for p.tip != nil {
 		p.finalize(p.tip)
 	}
 	// Walk the tree again and process inline markdown in each block
-	p.Doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
-		switch node.Data.(type) {
-		case *ast.ParagraphData, *ast.HeadingData, *ast.TableCellData:
-			p.inline(node, node.Content)
-			node.Content = nil
+	ast.WalkFunc(p.Doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		switch node.(type) {
+		case *ast.Paragraph, *ast.Heading, *ast.TableCell:
+			p.inline(node, node.AsTreeNode().Content)
+			node.AsTreeNode().Content = nil
 		}
 		return ast.GoToNext
 	})
@@ -256,7 +258,7 @@ func (p *Parser) parseRefsToAST() {
 		return
 	}
 	p.tip = p.Doc
-	d := &ast.ListData{
+	d := &ast.List{
 		IsFootnotesList: true,
 		ListFlags:       ast.ListTypeOrdered,
 	}
@@ -270,7 +272,7 @@ func (p *Parser) parseRefsToAST() {
 		ref := p.notes[i]
 		p.addExistingChild(ref.footnote, 0)
 		block := ref.footnote
-		blockData := block.Data.(*ast.ListItemData)
+		blockData := block.(*ast.ListItem)
 		blockData.ListFlags = flags | ast.ListTypeOrdered
 		blockData.RefLink = ref.link
 		if ref.hasBlock {
@@ -281,14 +283,14 @@ func (p *Parser) parseRefsToAST() {
 		}
 		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
-	above := block.Parent
+	above := block.GetParent()
 	finalizeList(block, d)
 	p.tip = above
-	block.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
-		switch node.Data.(type) {
-		case *ast.ParagraphData, *ast.HeadingData:
-			p.inline(node, node.Content)
-			node.Content = nil
+	ast.WalkFunc(block, func(node ast.Node, entering bool) ast.WalkStatus {
+		switch node.(type) {
+		case *ast.Paragraph, *ast.Heading:
+			p.inline(node, node.AsTreeNode().Content)
+			node.AsTreeNode().Content = nil
 		}
 		return ast.GoToNext
 	})
@@ -365,7 +367,7 @@ type reference struct {
 	title    []byte
 	noteID   int // 0 if not a footnote ref
 	hasBlock bool
-	footnote *ast.Node // a link to the Item node within a list of footnotes
+	footnote ast.Node // a link to the Item node within a list of footnotes
 
 	text []byte // only gets populated by refOverride feature with Reference.Text
 }
@@ -770,17 +772,17 @@ func slugify(in []byte) []byte {
 	return out[a : b+1]
 }
 
-func isTableRowData(d ast.NodeData) bool {
-	_, ok := d.(*ast.TableRowData)
+func isTableRowData(d ast.Node) bool {
+	_, ok := d.(*ast.TableRow)
 	return ok
 }
 
-func isTableCellData(d ast.NodeData) bool {
-	_, ok := d.(*ast.TableCellData)
+func isTableCellData(d ast.Node) bool {
+	_, ok := d.(*ast.TableCell)
 	return ok
 }
 
-func isListItemData(d ast.NodeData) bool {
-	_, ok := d.(*ast.ListItemData)
+func isListItemData(d ast.Node) bool {
+	_, ok := d.(*ast.ListItem)
 	return ok
 }

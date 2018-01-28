@@ -9,7 +9,7 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
-func renderHookEmpty(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool) {
+func renderHookEmpty(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
 	return ast.GoToNext, true
 }
 
@@ -32,8 +32,8 @@ func TestRenderNodeHookEmpty(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
-func renderHookCodeBlock(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool) {
-	_, ok := node.Data.(*ast.CodeBlockData)
+func renderHookCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+	_, ok := node.(*ast.CodeBlock)
 	if !ok {
 		return ast.GoToNext, false
 	}

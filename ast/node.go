@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 )
 
 // ListType contains bitwise or'ed flags for list and list item objects.
@@ -33,19 +34,79 @@ const (
 	TableAlignmentCenter = (TableAlignmentLeft | TableAlignmentRight)
 )
 
-// NodeData represents data field of Node
-type NodeData interface{}
-
-// DocumentData represents top-level document node
-type DocumentData struct {
+// Node defines an ast node
+type Node interface {
+	AsTreeNode() *TreeNode
+	GetParent() Node
+	GetChildren() []Node
+	FirstChild() Node
+	LastChild() Node
 }
 
-// BlockQuoteData represents data for block quote node
-type BlockQuoteData struct {
+// TreeNode is a common part of all nodes, used to represent tree and contain
+// data that all nodes have in common
+type TreeNode struct {
+	Parent   Node
+	Children []Node
+
+	Literal []byte // Text contents of the leaf nodes
+	Content []byte // Markdown content of the block nodes
 }
 
-// ListData represents data list node
-type ListData struct {
+// AsTreeNode returns itself as *TreeNode
+func (n *TreeNode) AsTreeNode() *TreeNode {
+	res := n
+	//fmt.Printf("TreeNode.AsTreeNode() called. n: %p, res: %p %v\n", n, res, res)
+	return res
+}
+
+// GetParent returns parent
+func (n *TreeNode) GetParent() Node {
+	return n.Parent
+}
+
+// GetChildren returns children
+func (n *TreeNode) GetChildren() []Node {
+	return n.Children
+}
+
+// PanicIfTreeNode will panic if node is *TreeNode
+func PanicIfTreeNode(node Node) {
+	if _, ok := node.(*TreeNode); ok {
+		panic(fmt.Sprintf("%v is TreeNode", node))
+	}
+}
+
+// AddChild adds child node to parent node
+func AddChild(parent Node, child Node) {
+	PanicIfTreeNode(parent)
+	PanicIfTreeNode(child)
+	pn := parent.AsTreeNode()
+	pn.Parent = parent
+	pn.Children = append(pn.Children, child)
+}
+
+func isNilNode(i Node) bool {
+	if i == nil {
+		return true
+	}
+	return reflect.ValueOf(i).IsNil()
+}
+
+// Document represents document
+type Document struct {
+	TreeNode
+}
+
+// BlockQuote represents data for block quote node
+type BlockQuote struct {
+	TreeNode
+}
+
+// List represents data list node
+type List struct {
+	TreeNode
+
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
 	BulletChar      byte   // '*', '+' or '-' in bullet lists
@@ -54,8 +115,10 @@ type ListData struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
-// ListItemData represents data for list item node
-type ListItemData struct {
+// ListItem represents data for list item node
+type ListItem struct {
+	TreeNode
+
 	ListFlags       ListType
 	Tight           bool   // Skip <p>s around list item data if true
 	BulletChar      byte   // '*', '+' or '-' in bullet lists
@@ -64,57 +127,72 @@ type ListItemData struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
-// ParagraphData represents data for paragraph node
-type ParagraphData struct {
+// Paragraph represents data for paragraph node
+type Paragraph struct {
+	TreeNode
 }
 
-// HeadingData contains fields relevant to a Heading node type.
-type HeadingData struct {
+// Heading contains fields relevant to a Heading node type.
+type Heading struct {
+	TreeNode
+
 	Level        int    // This holds the heading level number
 	HeadingID    string // This might hold heading ID, if present
 	IsTitleblock bool   // Specifies whether it's a title block
 }
 
-// HorizontalRuleData represents data for horizontal rule node
-type HorizontalRuleData struct {
+// HorizontalRule represents data for horizontal rule node
+type HorizontalRule struct {
+	TreeNode
 }
 
-// EmphData represents data for emp node
-type EmphData struct {
+// Emph represents data for emp node
+type Emph struct {
+	TreeNode
 }
 
-// StrongData represents data for strong node
-type StrongData struct {
+// Strong represents data for strong node
+type Strong struct {
+	TreeNode
 }
 
-// DelData represents data for del node
-type DelData struct {
+// Del represents data for del node
+type Del struct {
+	TreeNode
 }
 
-// LinkData represents data for link node
-type LinkData struct {
+// Link represents data for link node
+type Link struct {
+	TreeNode
+
 	Destination []byte // Destination is what goes into a href
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
 	NoteID      int    // NoteID contains a serial number of a footnote, zero if it's not a footnote
-	Footnote    *Node  // If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.
+	Footnote    Node   // If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.
 }
 
-// ImageData represents data for image node
-type ImageData struct {
+// Image represents data for image node
+type Image struct {
+	TreeNode
+
 	Destination []byte // Destination is what goes into a href
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
 }
 
-// TextData represents data for text node
-type TextData struct {
+// Text represents data for text node
+type Text struct {
+	TreeNode
 }
 
-// HTMLBlockData represents data for html node
-type HTMLBlockData struct {
+// HTMLBlock represents data for html node
+type HTMLBlock struct {
+	TreeNode
 }
 
-// CodeBlockData contains fields relevant to a CodeBlock node type.
-type CodeBlockData struct {
+// CodeBlock contains fields relevant to a CodeBlock node type.
+type CodeBlock struct {
+	TreeNode
+
 	IsFenced    bool   // Specifies whether it's a fenced code block or an indented one
 	Info        []byte // This holds the info string
 	FenceChar   byte
@@ -122,66 +200,56 @@ type CodeBlockData struct {
 	FenceOffset int
 }
 
-// SoftbreakData represents data for softbreak node
+// Softbreak represents data for softbreak node
 // Note: not used currently
-type SoftbreakData struct {
+type Softbreak struct {
+	TreeNode
 }
 
-// HardbreakData represents data for hard break node
-type HardbreakData struct {
+// Hardbreak represents data for hard break node
+type Hardbreak struct {
+	TreeNode
 }
 
-// CodeData represents data for code node
-type CodeData struct {
+// Code represents data for code node
+type Code struct {
+	TreeNode
 }
 
-// HTMLSpanData represents data for html span node
-type HTMLSpanData struct {
+// HTMLSpan represents data for html span node
+type HTMLSpan struct {
+	TreeNode
 }
 
-// TableData represents data for table node
-type TableData struct {
+// Table represents data for table node
+type Table struct {
+	TreeNode
 }
 
-// TableCellData contains fields relevant to a table cell node type.
-type TableCellData struct {
+// TableCell contains fields relevant to a table cell node type.
+type TableCell struct {
+	TreeNode
+
 	IsHeader bool           // This tells if it's under the header row
 	Align    CellAlignFlags // This holds the value for align attribute
 }
 
-// TableHeadData represents data for a table head node
-type TableHeadData struct {
+// TableHead represents data for a table head node
+type TableHead struct {
+	TreeNode
 }
 
-// TableBodyData represents data for a tablef body node
-type TableBodyData struct {
+// TableBody represents data for a tablef body node
+type TableBody struct {
+	TreeNode
 }
 
-// TableRowData represents data for a table row node
-type TableRowData struct {
+// TableRow represents data for a table row node
+type TableRow struct {
+	TreeNode
 }
 
-// Node is a single element in the abstract syntax tree of the parsed document.
-// It holds connections to the structurally neighboring nodes and, for certain
-// types of nodes, additional information that might be needed when rendering.
-type Node struct {
-	Parent   *Node // Points to the parent
-	Children []*Node
-
-	Literal []byte // Text contents of the leaf nodes
-
-	Data NodeData
-
-	Content []byte // Markdown content of the block nodes
-}
-
-// NewNode allocates a node of a specified type.
-func NewNode(d NodeData) *Node {
-	return &Node{
-		Data: d,
-	}
-}
-
+/*
 func (n *Node) String() string {
 	ellipsis := ""
 	snippet := n.Literal
@@ -191,8 +259,9 @@ func (n *Node) String() string {
 	}
 	return fmt.Sprintf("%T: '%s%s'", n.Data, snippet, ellipsis)
 }
+*/
 
-func removeNodeFromArray(a []*Node, node *Node) []*Node {
+func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {
 		if a[i] == node {
@@ -203,28 +272,32 @@ func removeNodeFromArray(a []*Node, node *Node) []*Node {
 }
 
 // RemoveFromTree removes this node from tree
-func (n *Node) RemoveFromTree() {
-	if n.Parent == nil {
+func RemoveFromTree(n Node) {
+	nt := n.AsTreeNode()
+	if nt.Parent == nil {
 		return
 	}
 	// important: don't clear n.Children if n has no parent
 	// we're called from AppendChild and that might happen on a node
 	// that accumulated Children but hasn't been inserted into the tree
-	n.Parent.Children = removeNodeFromArray(n.Parent.Children, n)
-	n.Parent = nil
-	n.Children = nil
+	p := nt.Parent.AsTreeNode()
+	p.Children = removeNodeFromArray(p.Children, n)
+	nt.Parent = nil
+	nt.Children = nil
 }
 
 // AppendChild adds a node 'child' as a child of 'n'.
 // It panics if either node is nil.
-func (n *Node) AppendChild(child *Node) {
-	child.RemoveFromTree()
-	child.Parent = n
-	n.Children = append(n.Children, child)
+func AppendChild(n Node, child Node) {
+	childTN := child.AsTreeNode()
+	RemoveFromTree(child)
+	childTN.Parent = n
+	nTN := n.AsTreeNode()
+	nTN.Children = append(nTN.Children, child)
 }
 
 // LastChild returns last child of this node
-func (n *Node) LastChild() *Node {
+func (n *TreeNode) LastChild() Node {
 	a := n.Children
 	if len(a) > 0 {
 		return a[len(a)-1]
@@ -233,7 +306,7 @@ func (n *Node) LastChild() *Node {
 }
 
 // FirstChild returns first child of this node
-func (n *Node) FirstChild() *Node {
+func (n *TreeNode) FirstChild() Node {
 	a := n.Children
 	if len(a) > 0 {
 		return a[0]
@@ -241,12 +314,12 @@ func (n *Node) FirstChild() *Node {
 	return nil
 }
 
-// Next returns next sibling of this node
-func (n *Node) Next() *Node {
-	if n.Parent == nil {
+// NextNode returns next sibling of this node
+func NextNode(n Node) Node {
+	if isNilNode(n.GetParent()) {
 		return nil
 	}
-	a := n.Parent.Children
+	a := n.GetParent().AsTreeNode().Children
 	len := len(a) - 1
 	for i := 0; i < len; i++ {
 		if a[i] == n {
@@ -256,12 +329,12 @@ func (n *Node) Next() *Node {
 	return nil
 }
 
-// Prev returns previous sibling of this node
-func (n *Node) Prev() *Node {
-	if n.Parent == nil {
+// PrevNode returns sibling node before n
+func PrevNode(n Node) Node {
+	if isNilNode(n.GetParent()) {
 		return nil
 	}
-	a := n.Parent.Children
+	a := n.GetParent().AsTreeNode().Children
 	len := len(a)
 	for i := 1; i < len; i++ {
 		if a[i] == n {
@@ -271,10 +344,10 @@ func (n *Node) Prev() *Node {
 	return nil
 }
 
-func (n *Node) isContainer() bool {
+func isContainer(n Node) bool {
 	// list of non-containers is smaller so we check against that for speed
-	switch n.Data.(type) {
-	case *HorizontalRuleData, *TextData, *HTMLBlockData, *CodeBlockData, *SoftbreakData, *HardbreakData, *CodeData, *HTMLSpanData:
+	switch n.(type) {
+	case *HorizontalRule, *Text, *HTMLBlock, *CodeBlock, *Softbreak, *Hardbreak, *Code, *HTMLSpan:
 		return false
 	default:
 		return true
@@ -299,20 +372,20 @@ const (
 // Called twice for every node: once with entering=true when the branch is
 // first visited, then with entering=false after all the children are done.
 type NodeVisitor interface {
-	Visit(node *Node, entering bool) WalkStatus
+	Visit(node Node, entering bool) WalkStatus
 }
 
 // NodeVisitorFunc casts a function to match NodeVisitor interface
-type NodeVisitorFunc func(node *Node, entering bool) WalkStatus
+type NodeVisitorFunc func(node Node, entering bool) WalkStatus
 
 // Visit calls visitor function
-func (f NodeVisitorFunc) Visit(node *Node, entering bool) WalkStatus {
+func (f NodeVisitorFunc) Visit(node Node, entering bool) WalkStatus {
 	return f(node, entering)
 }
 
 // Walk is a convenience method that instantiates a walker and starts a
 // traversal of subtree rooted at n.
-func (n *Node) Walk(visitor NodeVisitor) {
+func Walk(n Node, visitor NodeVisitor) {
 	w := newNodeWalker(n)
 	for w.current != nil {
 		status := visitor.Visit(w.current, w.entering)
@@ -329,18 +402,18 @@ func (n *Node) Walk(visitor NodeVisitor) {
 }
 
 // WalkFunc is like Walk but accepts just a callback function
-func (n *Node) WalkFunc(f NodeVisitorFunc) {
+func WalkFunc(n Node, f NodeVisitorFunc) {
 	visitor := NodeVisitorFunc(f)
-	n.Walk(visitor)
+	Walk(n, visitor)
 }
 
 type nodeWalker struct {
-	current  *Node
-	root     *Node
+	current  Node
+	root     Node
 	entering bool
 }
 
-func newNodeWalker(root *Node) *nodeWalker {
+func newNodeWalker(root Node) *nodeWalker {
 	return &nodeWalker{
 		current:  root,
 		root:     root,
@@ -349,46 +422,46 @@ func newNodeWalker(root *Node) *nodeWalker {
 }
 
 func (nw *nodeWalker) next() {
-	if (!nw.current.isContainer() || !nw.entering) && nw.current == nw.root {
+	if (!isContainer(nw.current) || !nw.entering) && nw.current == nw.root {
 		nw.current = nil
 		return
 	}
-	if nw.entering && nw.current.isContainer() {
+	if nw.entering && isContainer(nw.current) {
 		if nw.current.FirstChild() != nil {
 			nw.current = nw.current.FirstChild()
 			nw.entering = true
 		} else {
 			nw.entering = false
 		}
-	} else if nw.current.Next() == nil {
-		nw.current = nw.current.Parent
+	} else if NextNode(nw.current) == nil {
+		nw.current = nw.current.GetParent()
 		nw.entering = false
 	} else {
-		nw.current = nw.current.Next()
+		nw.current = NextNode(nw.current)
 		nw.entering = true
 	}
 }
 
-func dump(ast *Node) {
+func dump(ast Node) {
 	fmt.Println(dumpString(ast))
 }
 
-func dumpR(ast *Node, depth int) string {
+func dumpR(ast Node, depth int) string {
 	if ast == nil {
 		return ""
 	}
 	indent := bytes.Repeat([]byte("\t"), depth)
-	content := ast.Literal
+	content := ast.AsTreeNode().Literal
 	if content == nil {
-		content = ast.Content
+		content = ast.AsTreeNode().Content
 	}
-	result := fmt.Sprintf("%s%T(%q)\n", indent, ast.Data, content)
-	for _, n := range ast.Children {
+	result := fmt.Sprintf("%s%T(%q)\n", indent, ast, content)
+	for _, n := range ast.GetChildren() {
 		result += dumpR(n, depth+1)
 	}
 	return result
 }
 
-func dumpString(ast *Node) string {
+func dumpString(ast Node) string {
 	return dumpR(ast, 0)
 }

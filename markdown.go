@@ -15,7 +15,7 @@ type Renderer interface {
 	// every leaf node and twice for every non-leaf node (first with
 	// entering=true, then with entering=false). The method should write its
 	// rendition of the node to writer w.
-	RenderNode(w io.Writer, node *ast.Node, entering bool) ast.WalkStatus
+	RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus
 
 	// RenderHeader is a method that allows the renderer to produce some
 	// content preceding the main body of the output document. The header is
@@ -28,18 +28,18 @@ type Renderer interface {
 	//
 	// The output should be written to the supplied writer w. If your
 	// implementation has no header to write, supply an empty implementation.
-	RenderHeader(w io.Writer, ast *ast.Node)
+	RenderHeader(w io.Writer, ast ast.Node)
 
 	// RenderFooter is a symmetric counterpart of RenderHeader.
-	RenderFooter(w io.Writer, ast *ast.Node)
+	RenderFooter(w io.Writer, ast ast.Node)
 }
 
 // Render uses renderer to convert parsed markdown document into a different format.
 // For example to convert into HTML, use html.Renderer
-func Render(doc *ast.Node, renderer Renderer) []byte {
+func Render(doc ast.Node, renderer Renderer) []byte {
 	var buf bytes.Buffer
 	renderer.RenderHeader(&buf, doc)
-	doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		return renderer.RenderNode(&buf, node, entering)
 	})
 	renderer.RenderFooter(&buf, doc)

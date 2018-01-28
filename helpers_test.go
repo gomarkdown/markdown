@@ -22,7 +22,7 @@ func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, s
 	// the integration server. When developing, though, crash dump is often
 	// preferable, so recovery can be easily turned off with doRecover = false.
 	var candidate string
-	const doRecover = true
+	const doRecover = false
 	if doRecover {
 		defer func() {
 			if err := recover(); err != nil {
