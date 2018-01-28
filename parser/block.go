@@ -253,7 +253,7 @@ func (p *Parser) block(data []byte) {
 func (p *Parser) addBlock(n ast.Node, content []byte) ast.Node {
 	p.closeUnmatchedBlocks()
 	container := p.addChild(n, 0)
-	container.AsTreeNode().Content = content
+	container.SetContent(content)
 	return container
 }
 
@@ -455,14 +455,15 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	if doRender {
 		// trim newlines
 		end := backChar(data, i, '\n')
-		finalizeHTMLBlock(p.addBlock(&ast.HTMLBlock{}, data[:end]))
+		htmlBlock := &ast.HTMLBlock{}
+		p.addBlock(htmlBlock, data[:end])
+		finalizeHTMLBlock(htmlBlock)
 	}
 
 	return i
 }
 
-func finalizeHTMLBlock(blockNode ast.Node) {
-	block := blockNode.AsTreeNode()
+func finalizeHTMLBlock(block *ast.HTMLBlock) {
 	block.Literal = block.Content
 	block.Content = nil
 }
@@ -476,8 +477,9 @@ func (p *Parser) htmlComment(data []byte, doRender bool) int {
 		if doRender {
 			// trim trailing newlines
 			end := backChar(data, size, '\n')
-			block := p.addBlock(&ast.HTMLBlock{}, data[:end])
-			finalizeHTMLBlock(block)
+			htmlBLock := &ast.HTMLBlock{}
+			p.addBlock(htmlBLock, data[:end])
+			finalizeHTMLBlock(htmlBLock)
 		}
 		return size
 	}
@@ -507,7 +509,9 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 			if doRender {
 				// trim newlines
 				end := backChar(data, size, '\n')
-				finalizeHTMLBlock(p.addBlock(&ast.HTMLBlock{}, data[:end]))
+				htmlBlock := &ast.HTMLBlock{}
+				p.addBlock(htmlBlock, data[:end])
+				finalizeHTMLBlock(htmlBlock)
 			}
 			return size
 		}
@@ -742,11 +746,11 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 
 	if doRender {
-		d := &ast.CodeBlock{
+		codeBlock := &ast.CodeBlock{
 			IsFenced: true,
 		}
-		block := p.addBlock(d, work.Bytes()) // TODO: get rid of temp buffer
-		finalizeCodeBlock(block, d)
+		p.addBlock(codeBlock, work.Bytes()) // TODO: get rid of temp buffer
+		finalizeCodeBlock(codeBlock)
 	}
 
 	return beg
@@ -766,18 +770,18 @@ func unescapeString(str []byte) []byte {
 	return str
 }
 
-func finalizeCodeBlock(blockNode ast.Node, code *ast.CodeBlock) {
-	block := blockNode.AsTreeNode()
+func finalizeCodeBlock(code *ast.CodeBlock) {
+	c := code.Content
 	if code.IsFenced {
-		newlinePos := bytes.IndexByte(block.Content, '\n')
-		firstLine := block.Content[:newlinePos]
-		rest := block.Content[newlinePos+1:]
+		newlinePos := bytes.IndexByte(c, '\n')
+		firstLine := c[:newlinePos]
+		rest := c[newlinePos+1:]
 		code.Info = unescapeString(bytes.Trim(firstLine, "\n"))
-		block.Literal = rest
+		code.Literal = rest
 	} else {
-		block.Literal = block.Content
+		code.Literal = c
 	}
-	block.Content = nil
+	code.Content = nil
 }
 
 func (p *Parser) table(data []byte) int {
@@ -1087,11 +1091,11 @@ func (p *Parser) code(data []byte) int {
 
 	work.WriteByte('\n')
 
-	d := &ast.CodeBlock{
+	codeBlock := &ast.CodeBlock{
 		IsFenced: false,
 	}
-	block := p.addBlock(d, work.Bytes()) // TODO: get rid of temp buffer
-	finalizeCodeBlock(block, d)
+	p.addBlock(codeBlock, work.Bytes()) // TODO: get rid of temp buffer
+	finalizeCodeBlock(codeBlock)
 
 	return i
 }

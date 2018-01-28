@@ -37,9 +37,12 @@ const (
 type Node interface {
 	AsTreeNode() *TreeNode
 	GetParent() Node
+	SetParent(newParent Node)
 	GetChildren() []Node
+	SetChildren(newChildren []Node)
 	FirstChild() Node
 	LastChild() Node
+	SetContent(c []byte)
 }
 
 // TreeNode is a common part of all nodes, used to represent tree and contain
@@ -64,9 +67,73 @@ func (n *TreeNode) GetParent() Node {
 	return n.Parent
 }
 
+// SetParent sets the parent
+func (n *TreeNode) SetParent(newParent Node) {
+	n.Parent = newParent
+}
+
 // GetChildren returns children
 func (n *TreeNode) GetChildren() []Node {
 	return n.Children
+}
+
+// SetChildren sets children
+func (n *TreeNode) SetChildren(newChildren []Node) {
+	n.Children = newChildren
+}
+
+// SetContent sets content of the node
+func (n *TreeNode) SetContent(c []byte) {
+	n.Content = c
+}
+
+// LeafNode is a common part of all nodes, used to represent tree and contain
+// data that all nodes have in common
+type LeafNode struct {
+	Parent Node
+
+	Literal []byte // Text contents of the leaf nodes
+	Content []byte // Markdown content of the block nodes
+}
+
+// AsTreeNode returns itself as *TreeNode
+func (n *LeafNode) AsTreeNode() *TreeNode {
+	return nil
+}
+
+// GetParent returns parent
+func (n *LeafNode) GetParent() Node {
+	return n.Parent
+}
+
+// SetParent sets the parent
+func (n *LeafNode) SetParent(newParent Node) {
+	n.Parent = newParent
+}
+
+// GetChildren returns children
+func (n *LeafNode) GetChildren() []Node {
+	return nil
+}
+
+// SetChildren sets children
+func (n *LeafNode) SetChildren(newChildren []Node) {
+	// do nothing, LeafNode has no children
+}
+
+// FirstChild returns children
+func (n *LeafNode) FirstChild() Node {
+	return nil
+}
+
+// LastChild returns children
+func (n *LeafNode) LastChild() Node {
+	return nil
+}
+
+// SetContent sets content of the node
+func (n *LeafNode) SetContent(c []byte) {
+	n.Content = c
 }
 
 // PanicIfTreeNode will panic if node is *TreeNode
@@ -135,7 +202,7 @@ type Heading struct {
 
 // HorizontalRule represents data for horizontal rule node
 type HorizontalRule struct {
-	TreeNode
+	LeafNode
 }
 
 // Emph represents data for emp node
@@ -173,17 +240,17 @@ type Image struct {
 
 // Text represents data for text node
 type Text struct {
-	TreeNode
+	LeafNode
 }
 
 // HTMLBlock represents data for html node
 type HTMLBlock struct {
-	TreeNode
+	LeafNode
 }
 
 // CodeBlock contains fields relevant to a CodeBlock node type.
 type CodeBlock struct {
-	TreeNode
+	LeafNode
 
 	IsFenced    bool   // Specifies whether it's a fenced code block or an indented one
 	Info        []byte // This holds the info string
@@ -195,22 +262,22 @@ type CodeBlock struct {
 // Softbreak represents data for softbreak node
 // Note: not used currently
 type Softbreak struct {
-	TreeNode
+	LeafNode
 }
 
 // Hardbreak represents data for hard break node
 type Hardbreak struct {
-	TreeNode
+	LeafNode
 }
 
 // Code represents data for code node
 type Code struct {
-	TreeNode
+	LeafNode
 }
 
 // HTMLSpan represents data for html span node
 type HTMLSpan struct {
-	TreeNode
+	LeafNode
 }
 
 // Table represents data for table node
@@ -265,27 +332,29 @@ func removeNodeFromArray(a []Node, node Node) []Node {
 
 // RemoveFromTree removes this node from tree
 func RemoveFromTree(n Node) {
-	nt := n.AsTreeNode()
-	if nt.Parent == nil {
+	if n.GetParent() == nil {
 		return
 	}
 	// important: don't clear n.Children if n has no parent
 	// we're called from AppendChild and that might happen on a node
 	// that accumulated Children but hasn't been inserted into the tree
-	p := nt.Parent.AsTreeNode()
-	p.Children = removeNodeFromArray(p.Children, n)
-	nt.Parent = nil
-	nt.Children = nil
+	p := n.GetParent()
+	newChildren := removeNodeFromArray(p.GetChildren(), n)
+	p.SetChildren(newChildren)
+	n.SetChildren(nil)
 }
 
 // AppendChild adds a node 'child' as a child of 'n'.
 // It panics if either node is nil.
 func AppendChild(n Node, child Node) {
-	childTN := child.AsTreeNode()
 	RemoveFromTree(child)
-	childTN.Parent = n
-	nTN := n.AsTreeNode()
-	nTN.Children = append(nTN.Children, child)
+	child.SetParent(n)
+	newChildren := append(n.GetChildren(), child)
+	n.SetChildren(newChildren)
+}
+
+func isContainer(n Node) bool {
+	return n.AsTreeNode() != nil
 }
 
 // LastChild returns last child of this node
@@ -334,16 +403,6 @@ func PrevNode(n Node) Node {
 		}
 	}
 	return nil
-}
-
-func isContainer(n Node) bool {
-	// list of non-containers is smaller so we check against that for speed
-	switch n.(type) {
-	case *HorizontalRule, *Text, *HTMLBlock, *CodeBlock, *Softbreak, *Hardbreak, *Code, *HTMLSpan:
-		return false
-	default:
-		return true
-	}
 }
 
 // WalkStatus allows NodeVisitor to have some control over the tree traversal.
