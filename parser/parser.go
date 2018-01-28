@@ -195,9 +195,7 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 }
 
 func (p *Parser) addExistingChild(node ast.Node, offset uint32) ast.Node {
-	if _, ok := node.(*ast.TreeNode); ok {
-		panic(fmt.Sprintf("adding %v", node))
-	}
+	ast.PanicIfTreeNode(node)
 	for !canNodeContain(p.tip, node) {
 		p.finalize(p.tip)
 	}
@@ -258,11 +256,11 @@ func (p *Parser) parseRefsToAST() {
 		return
 	}
 	p.tip = p.Doc
-	d := &ast.List{
+	listBlock := &ast.List{
 		IsFootnotesList: true,
 		ListFlags:       ast.ListTypeOrdered,
 	}
-	block := p.addBlock(d, nil)
+	block := p.addBlock(listBlock)
 	flags := ast.ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is
 	// because the body of the loop will append nested footnotes to p.notes and
@@ -284,7 +282,7 @@ func (p *Parser) parseRefsToAST() {
 		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
 	above := block.GetParent()
-	finalizeList(block, d)
+	finalizeList(block, listBlock)
 	p.tip = above
 	ast.WalkFunc(block, func(node ast.Node, entering bool) ast.WalkStatus {
 		switch node.(type) {

@@ -42,7 +42,6 @@ type Node interface {
 	SetChildren(newChildren []Node)
 	FirstChild() Node
 	LastChild() Node
-	SetContent(c []byte)
 }
 
 // TreeNode is a common part of all nodes, used to represent tree and contain
@@ -80,11 +79,6 @@ func (n *TreeNode) GetChildren() []Node {
 // SetChildren sets children
 func (n *TreeNode) SetChildren(newChildren []Node) {
 	n.Children = newChildren
-}
-
-// SetContent sets content of the node
-func (n *TreeNode) SetContent(c []byte) {
-	n.Content = c
 }
 
 // LeafNode is a common part of all nodes, used to represent tree and contain
@@ -129,11 +123,6 @@ func (n *LeafNode) FirstChild() Node {
 // LastChild returns children
 func (n *LeafNode) LastChild() Node {
 	return nil
-}
-
-// SetContent sets content of the node
-func (n *LeafNode) SetContent(c []byte) {
-	n.Content = c
 }
 
 // PanicIfTreeNode will panic if node is *TreeNode
@@ -327,7 +316,7 @@ func removeNodeFromArray(a []Node, node Node) []Node {
 			return append(a[:i], a[i+1:]...)
 		}
 	}
-	return a
+	return nil
 }
 
 // RemoveFromTree removes this node from tree
@@ -338,10 +327,12 @@ func RemoveFromTree(n Node) {
 	// important: don't clear n.Children if n has no parent
 	// we're called from AppendChild and that might happen on a node
 	// that accumulated Children but hasn't been inserted into the tree
+	n.SetChildren(nil)
 	p := n.GetParent()
 	newChildren := removeNodeFromArray(p.GetChildren(), n)
-	p.SetChildren(newChildren)
-	n.SetChildren(nil)
+	if newChildren != nil {
+		p.SetChildren(newChildren)
+	}
 }
 
 // AppendChild adds a node 'child' as a child of 'n'.
