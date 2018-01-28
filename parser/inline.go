@@ -602,29 +602,29 @@ func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
 	if size := p.inlineHTMLComment(data); size > 0 {
 		end = size
 	}
-	if end > 2 {
-		if altype != notAutolink {
-			var uLink bytes.Buffer
-			unescapeText(&uLink, data[1:end+1-2])
-			if uLink.Len() > 0 {
-				link := uLink.Bytes()
-				node := &ast.Link{
-					Destination: link,
-				}
-				if altype == emailAutolink {
-					node.Destination = append([]byte("mailto:"), link...)
-				}
-				ast.AppendChild(node, newTextNode(stripMailto(link)))
-				return end, node
-			}
-		} else {
-			htmlTag := &ast.HTMLSpan{}
-			htmlTag.Literal = data[:end]
-			return end, htmlTag
-		}
+	if end <= 2 {
+		return end, nil
+	}
+	if altype == notAutolink {
+		htmlTag := &ast.HTMLSpan{}
+		htmlTag.Literal = data[:end]
+		return end, htmlTag
 	}
 
-	return end, nil
+	var uLink bytes.Buffer
+	unescapeText(&uLink, data[1:end+1-2])
+	if uLink.Len() <= 0 {
+		return end, nil
+	}
+	link := uLink.Bytes()
+	node := &ast.Link{
+		Destination: link,
+	}
+	if altype == emailAutolink {
+		node.Destination = append([]byte("mailto:"), link...)
+	}
+	ast.AppendChild(node, newTextNode(stripMailto(link)))
+	return end, node
 }
 
 // '\\' backslash escape
