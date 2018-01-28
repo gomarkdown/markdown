@@ -66,15 +66,12 @@ func Render(doc ast.Node, renderer Renderer) []byte {
 // If you pass nil for both, we use parser configured with parser.CommonExtensions
 // and html.Renderer configured with html.CommonFlags.
 func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
-	if p == nil {
-		p = parser.NewWithExtensions(parser.CommonExtensions)
-	}
+	doc := Parse(markdown, p)
 	if renderer == nil {
 		opts := html.RendererOptions{
 			Flags: html.CommonFlags,
 		}
 		renderer = html.NewRenderer(opts)
 	}
-	doc := p.Parse(markdown)
 	return Render(doc, renderer)
 }
