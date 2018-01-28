@@ -47,11 +47,11 @@ func TestRenderNodeHookCode(t *testing.T) {
 		"a\n```go\ncode\n```\nb",
 		"<p>a</p>\ncode_replacement\n<p>b</p>\n",
 	}
-	htmlParams := html.RendererOptions{
+	opts := html.RendererOptions{
 		RenderNodeHook: renderHookCodeBlock,
 	}
 	params := TestParams{
-		RendererOptions: htmlParams,
+		RendererOptions: opts,
 		extensions:      parser.CommonExtensions,
 	}
 	doTestsParam(t, tests, params)
