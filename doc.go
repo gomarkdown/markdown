@@ -1,7 +1,7 @@
 // Package markdown implements markdown parser and HTML renderer.
 //
 // It parses markdown into AST format which can be serialized to HTML
-// (using HTMLRenderer) or possibly other formats (using alternate renderers).
+// (using Renderer) or possibly other formats (using alternate renderers).
 //
 //
 // Convert markdown to HTML
@@ -19,7 +19,7 @@
 //  extensions := markdown.CommonExtensions | markdown.AutoHeadingIDs
 //  parser := markdown.NewParserWithExensions(extensions)
 //  htmlParams := markdown.CommonHTMLFlags | markdown.HrefTargetBlank
-//  renderer := markdown.NewHTMLRenderer(htmlParams)
+//  renderer := markdown.NewRenderer(htmlParams)
 //  html := markdown.ToHTML(md, parser, renderer)
 //
 // For a cmd-line tool see https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml

@@ -98,7 +98,7 @@ BenchmarkReferenceTidyness-8                    	  200000	      7152 ns/op	    8
 ok  	github.com/gomarkdown/markdown	40.809s
 ```
 
-After refactoring HTMLRenderer:
+After refactoring Renderer:
 ```
 BenchmarkEscapeHTML-8                                    2000000               883 ns/op               0 B/op          0 allocs/op
 BenchmarkSmartDoubleQuotes-8                              300000              3717 ns/op            6208 B/op         29 allocs/op

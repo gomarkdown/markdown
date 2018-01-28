@@ -139,7 +139,7 @@ func main() {
 			Title: title,
 			CSS:   css,
 		}
-		renderer = htmlrenderer.NewHTMLRenderer(params)
+		renderer = htmlrenderer.NewRenderer(params)
 	}
 
 	// parse and render

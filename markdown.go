@@ -12,7 +12,7 @@ import (
 
 // Renderer is an interface for implementing custom renderers.
 //
-// This package provides HTMLRenderer for markdown => HTML conversion.
+// This package provides Renderer for markdown => HTML conversion.
 type Renderer interface {
 	// RenderNode is the main rendering method. It will be called once for
 	// every leaf node and twice for every non-leaf node (first with
@@ -40,10 +40,10 @@ type Renderer interface {
 // ToHTML converts a markdown text in input and converts it to HTML.
 //
 // You can optionally pass a parser and renderer, which allows to customize
-// a parser, a render or provide a renderer other than HTMLRenderer.
+// a parser, a render or provide a renderer other than Renderer.
 //
 // If you pass nil for both, we convert with CommonExtensions for
-// the parser and HTMLRenderer with CommonFlags for renderer
+// the parser and Renderer with CommonFlags for renderer
 func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
 	if parser == nil {
 		parser = NewParserWithExtensions(CommonExtensions)
@@ -52,7 +52,7 @@ func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
 		params := htmlrenderer.RendererOptions{
 			Flags: htmlrenderer.CommonFlags,
 		}
-		renderer = htmlrenderer.NewHTMLRenderer(params)
+		renderer = htmlrenderer.NewRenderer(params)
 	}
 	parser.Parse(input)
 	return parser.Render(renderer)

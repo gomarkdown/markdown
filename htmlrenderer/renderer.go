@@ -1,7 +1,7 @@
 // Copyright © 2011 Russ Ross <russ@russross.com>.
 // Distributed under the Simplified BSD License.
 
-// HTMLRenderer converts AST of parsed markdown document into HTML text
+// Renderer converts AST of parsed markdown document into HTML text
 
 package htmlrenderer
 
@@ -66,9 +66,9 @@ const (
 	unquotedValue         = "[^\"'=<>`\\x00-\\x20]+"
 )
 
-// RenderNodeFunc allows reusing most of HTMLRenderer logic and replacing
-// rendering of some nodes. If it returns false, HTMLRenderer.RenderNode
-// will execute its logic. If it returns true, HTMLRenderer.RenderNode will
+// RenderNodeFunc allows reusing most of Renderer logic and replacing
+// rendering of some nodes. If it returns false, Renderer.RenderNode
+// will execute its logic. If it returns true, Renderer.RenderNode will
 // skip rendering this node and will return WalkStatus
 type RenderNodeFunc func(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool)
 
@@ -100,10 +100,10 @@ type RendererOptions struct {
 	RenderNodeHook RenderNodeFunc
 }
 
-// HTMLRenderer implements Renderer interface for HTML output.
+// Renderer implements Renderer interface for HTML output.
 //
-// Do not create this directly, instead use the NewHTMLRenderer function.
-type HTMLRenderer struct {
+// Do not create this directly, instead use the NewRenderer function.
+type Renderer struct {
 	params RendererOptions
 
 	closeTag string // how to end singleton tags: either " />" or ">"
@@ -117,9 +117,9 @@ type HTMLRenderer struct {
 	sr *SPRenderer
 }
 
-// NewHTMLRenderer creates and configures an HTMLRenderer object, which
+// NewRenderer creates and configures an Renderer object, which
 // satisfies the Renderer interface.
-func NewHTMLRenderer(params RendererOptions) *HTMLRenderer {
+func NewRenderer(params RendererOptions) *Renderer {
 	// configure the rendering engine
 	closeTag := ">"
 	if params.Flags&UseXHTML != 0 {
@@ -130,7 +130,7 @@ func NewHTMLRenderer(params RendererOptions) *HTMLRenderer {
 		params.FootnoteReturnLinkContents = `<sup>[return]</sup>`
 	}
 
-	return &HTMLRenderer{
+	return &Renderer{
 		params: params,
 
 		closeTag:   closeTag,
@@ -233,7 +233,7 @@ func isRelativeLink(link []byte) (yes bool) {
 	return false
 }
 
-func (r *HTMLRenderer) ensureUniqueHeadingID(id string) string {
+func (r *Renderer) ensureUniqueHeadingID(id string) string {
 	for count, found := r.headingIDs[id]; found; count, found = r.headingIDs[id] {
 		tmp := fmt.Sprintf("%s-%d", id, count+1)
 
@@ -252,7 +252,7 @@ func (r *HTMLRenderer) ensureUniqueHeadingID(id string) string {
 	return id
 }
 
-func (r *HTMLRenderer) addAbsPrefix(link []byte) []byte {
+func (r *Renderer) addAbsPrefix(link []byte) []byte {
 	if r.params.AbsolutePrefix != "" && isRelativeLink(link) && link[0] != '.' {
 		newDest := r.params.AbsolutePrefix
 		if link[0] != '/' {
@@ -316,7 +316,7 @@ func appendLanguageAttr(attrs []string, info []byte) []string {
 	return append(attrs, s)
 }
 
-func (r *HTMLRenderer) outTag(w io.Writer, name string, attrs []string) {
+func (r *Renderer) outTag(w io.Writer, name string, attrs []string) {
 	var s string
 	if len(attrs) > 0 {
 		s = " " + strings.Join(attrs, " ")
@@ -374,7 +374,7 @@ func cellAlignment(align ast.CellAlignFlags) string {
 	}
 }
 
-func (r *HTMLRenderer) out(w io.Writer, d []byte) {
+func (r *Renderer) out(w io.Writer, d []byte) {
 	r.lastOutputLen = len(d)
 	if r.disableTags > 0 {
 		d = htmlTagRe.ReplaceAll(d, []byte{})
@@ -382,7 +382,7 @@ func (r *HTMLRenderer) out(w io.Writer, d []byte) {
 	w.Write(d)
 }
 
-func (r *HTMLRenderer) outs(w io.Writer, s string) {
+func (r *Renderer) outs(w io.Writer, s string) {
 	r.lastOutputLen = len(s)
 	if r.disableTags > 0 {
 		s = htmlTagRe.ReplaceAllString(s, "")
@@ -390,7 +390,7 @@ func (r *HTMLRenderer) outs(w io.Writer, s string) {
 	io.WriteString(w, s)
 }
 
-func (r *HTMLRenderer) cr(w io.Writer) {
+func (r *Renderer) cr(w io.Writer) {
 	if r.lastOutputLen > 0 {
 		r.outs(w, "\n")
 	}
@@ -415,11 +415,11 @@ func headingCloseTagFromLevel(level int) string {
 	return closeHTags[level-1]
 }
 
-func (r *HTMLRenderer) outHRTag(w io.Writer) {
+func (r *Renderer) outHRTag(w io.Writer) {
 	r.outOneOf(w, r.params.Flags&UseXHTML == 0, "<hr>", "<hr />")
 }
 
-func (r *HTMLRenderer) text(w io.Writer, node *ast.Node, nodeData *ast.TextData) {
+func (r *Renderer) text(w io.Writer, node *ast.Node, nodeData *ast.TextData) {
 	if r.params.Flags&Smartypants != 0 {
 		var tmp bytes.Buffer
 		EscapeHTML(&tmp, node.Literal)
@@ -433,12 +433,12 @@ func (r *HTMLRenderer) text(w io.Writer, node *ast.Node, nodeData *ast.TextData)
 	}
 }
 
-func (r *HTMLRenderer) hardBreak(w io.Writer, node *ast.Node, nodeData *ast.HardbreakData) {
+func (r *Renderer) hardBreak(w io.Writer, node *ast.Node, nodeData *ast.HardbreakData) {
 	r.outOneOf(w, r.params.Flags&UseXHTML == 0, "<br>", "<br />")
 	r.cr(w)
 }
 
-func (r *HTMLRenderer) outOneOf(w io.Writer, outFirst bool, first string, second string) {
+func (r *Renderer) outOneOf(w io.Writer, outFirst bool, first string, second string) {
 	if outFirst {
 		r.outs(w, first)
 	} else {
@@ -446,7 +446,7 @@ func (r *HTMLRenderer) outOneOf(w io.Writer, outFirst bool, first string, second
 	}
 }
 
-func (r *HTMLRenderer) outOneOfCr(w io.Writer, outFirst bool, first string, second string) {
+func (r *Renderer) outOneOfCr(w io.Writer, outFirst bool, first string, second string) {
 	if outFirst {
 		r.cr(w)
 		r.outs(w, first)
@@ -456,13 +456,13 @@ func (r *HTMLRenderer) outOneOfCr(w io.Writer, outFirst bool, first string, seco
 	}
 }
 
-func (r *HTMLRenderer) span(w io.Writer, node *ast.Node, nodeData *ast.HTMLSpanData) {
+func (r *Renderer) span(w io.Writer, node *ast.Node, nodeData *ast.HTMLSpanData) {
 	if r.params.Flags&SkipHTML == 0 {
 		r.out(w, node.Literal)
 	}
 }
 
-func (r *HTMLRenderer) linkEnter(w io.Writer, node *ast.Node, nodeData *ast.LinkData) {
+func (r *Renderer) linkEnter(w io.Writer, node *ast.Node, nodeData *ast.LinkData) {
 	var attrs []string
 	dest := nodeData.Destination
 	dest = r.addAbsPrefix(dest)
@@ -487,13 +487,13 @@ func (r *HTMLRenderer) linkEnter(w io.Writer, node *ast.Node, nodeData *ast.Link
 	r.outTag(w, "<a", attrs)
 }
 
-func (r *HTMLRenderer) linkExit(w io.Writer, node *ast.Node, nodeData *ast.LinkData) {
+func (r *Renderer) linkExit(w io.Writer, node *ast.Node, nodeData *ast.LinkData) {
 	if nodeData.NoteID == 0 {
 		r.outs(w, "</a>")
 	}
 }
 
-func (r *HTMLRenderer) link(w io.Writer, node *ast.Node, nodeData *ast.LinkData, entering bool) {
+func (r *Renderer) link(w io.Writer, node *ast.Node, nodeData *ast.LinkData, entering bool) {
 	// mark it but don't link it if it is not a safe link: no smartypants
 	if needSkipLink(r.params.Flags, nodeData.Destination) {
 		r.outOneOf(w, entering, "<tt>", "</tt>")
@@ -507,7 +507,7 @@ func (r *HTMLRenderer) link(w io.Writer, node *ast.Node, nodeData *ast.LinkData,
 	}
 }
 
-func (r *HTMLRenderer) imageEnter(w io.Writer, node *ast.Node, nodeData *ast.ImageData) {
+func (r *Renderer) imageEnter(w io.Writer, node *ast.Node, nodeData *ast.ImageData) {
 	dest := nodeData.Destination
 	dest = r.addAbsPrefix(dest)
 	if r.disableTags == 0 {
@@ -522,7 +522,7 @@ func (r *HTMLRenderer) imageEnter(w io.Writer, node *ast.Node, nodeData *ast.Ima
 	r.disableTags++
 }
 
-func (r *HTMLRenderer) imageExit(w io.Writer, node *ast.Node, nodeData *ast.ImageData) {
+func (r *Renderer) imageExit(w io.Writer, node *ast.Node, nodeData *ast.ImageData) {
 	r.disableTags--
 	if r.disableTags == 0 {
 		if nodeData.Title != nil {
@@ -533,7 +533,7 @@ func (r *HTMLRenderer) imageExit(w io.Writer, node *ast.Node, nodeData *ast.Imag
 	}
 }
 
-func (r *HTMLRenderer) paragraphEnter(w io.Writer, node *ast.Node, nodeData *ast.ParagraphData) {
+func (r *Renderer) paragraphEnter(w io.Writer, node *ast.Node, nodeData *ast.ParagraphData) {
 	// TODO: untangle this clusterfuck about when the newlines need
 	// to be added and when not.
 	prev := node.Prev()
@@ -549,14 +549,14 @@ func (r *HTMLRenderer) paragraphEnter(w io.Writer, node *ast.Node, nodeData *ast
 	r.outs(w, "<p>")
 }
 
-func (r *HTMLRenderer) paragraphExit(w io.Writer, node *ast.Node, nodeData *ast.ParagraphData) {
+func (r *Renderer) paragraphExit(w io.Writer, node *ast.Node, nodeData *ast.ParagraphData) {
 	r.outs(w, "</p>")
 	if !(isListItemData(node.Parent.Data) && node.Next() == nil) {
 		r.cr(w)
 	}
 }
 
-func (r *HTMLRenderer) paragraph(w io.Writer, node *ast.Node, nodeData *ast.ParagraphData, entering bool) {
+func (r *Renderer) paragraph(w io.Writer, node *ast.Node, nodeData *ast.ParagraphData, entering bool) {
 	if skipParagraphTags(node) {
 		return
 	}
@@ -566,7 +566,7 @@ func (r *HTMLRenderer) paragraph(w io.Writer, node *ast.Node, nodeData *ast.Para
 		r.paragraphExit(w, node, nodeData)
 	}
 }
-func (r *HTMLRenderer) image(w io.Writer, node *ast.Node, nodeData *ast.ImageData, entering bool) {
+func (r *Renderer) image(w io.Writer, node *ast.Node, nodeData *ast.ImageData, entering bool) {
 	if entering {
 		r.imageEnter(w, node, nodeData)
 	} else {
@@ -574,13 +574,13 @@ func (r *HTMLRenderer) image(w io.Writer, node *ast.Node, nodeData *ast.ImageDat
 	}
 }
 
-func (r *HTMLRenderer) code(w io.Writer, node *ast.Node, nodeData *ast.CodeData) {
+func (r *Renderer) code(w io.Writer, node *ast.Node, nodeData *ast.CodeData) {
 	r.outs(w, "<code>")
 	EscapeHTML(w, node.Literal)
 	r.outs(w, "</code>")
 }
 
-func (r *HTMLRenderer) htmlBlock(w io.Writer, node *ast.Node, nodeData *ast.HTMLBlockData) {
+func (r *Renderer) htmlBlock(w io.Writer, node *ast.Node, nodeData *ast.HTMLBlockData) {
 	if r.params.Flags&SkipHTML != 0 {
 		return
 	}
@@ -589,7 +589,7 @@ func (r *HTMLRenderer) htmlBlock(w io.Writer, node *ast.Node, nodeData *ast.HTML
 	r.cr(w)
 }
 
-func (r *HTMLRenderer) headingEnter(w io.Writer, node *ast.Node, nodeData *ast.HeadingData) {
+func (r *Renderer) headingEnter(w io.Writer, node *ast.Node, nodeData *ast.HeadingData) {
 	var attrs []string
 	if nodeData.IsTitleblock {
 		attrs = append(attrs, `class="title"`)
@@ -609,14 +609,14 @@ func (r *HTMLRenderer) headingEnter(w io.Writer, node *ast.Node, nodeData *ast.H
 	r.outTag(w, headingOpenTagFromLevel(nodeData.Level), attrs)
 }
 
-func (r *HTMLRenderer) headingExit(w io.Writer, node *ast.Node, nodeData *ast.HeadingData) {
+func (r *Renderer) headingExit(w io.Writer, node *ast.Node, nodeData *ast.HeadingData) {
 	r.outs(w, headingCloseTagFromLevel(nodeData.Level))
 	if !(isListItemData(node.Parent.Data) && node.Next() == nil) {
 		r.cr(w)
 	}
 }
 
-func (r *HTMLRenderer) heading(w io.Writer, node *ast.Node, nodeData *ast.HeadingData, entering bool) {
+func (r *Renderer) heading(w io.Writer, node *ast.Node, nodeData *ast.HeadingData, entering bool) {
 	if entering {
 		r.headingEnter(w, node, nodeData)
 	} else {
@@ -624,13 +624,13 @@ func (r *HTMLRenderer) heading(w io.Writer, node *ast.Node, nodeData *ast.Headin
 	}
 }
 
-func (r *HTMLRenderer) horizontalRule(w io.Writer) {
+func (r *Renderer) horizontalRule(w io.Writer) {
 	r.cr(w)
 	r.outHRTag(w)
 	r.cr(w)
 }
 
-func (r *HTMLRenderer) listEnter(w io.Writer, node *ast.Node, nodeData *ast.ListData) {
+func (r *Renderer) listEnter(w io.Writer, node *ast.Node, nodeData *ast.ListData) {
 	// TODO: attrs don't seem to be set
 	var attrs []string
 
@@ -658,7 +658,7 @@ func (r *HTMLRenderer) listEnter(w io.Writer, node *ast.Node, nodeData *ast.List
 	r.cr(w)
 }
 
-func (r *HTMLRenderer) listExit(w io.Writer, node *ast.Node, nodeData *ast.ListData) {
+func (r *Renderer) listExit(w io.Writer, node *ast.Node, nodeData *ast.ListData) {
 	closeTag := "</ul>"
 	if nodeData.ListFlags&ast.ListTypeOrdered != 0 {
 		closeTag = "</ol>"
@@ -683,7 +683,7 @@ func (r *HTMLRenderer) listExit(w io.Writer, node *ast.Node, nodeData *ast.ListD
 	}
 }
 
-func (r *HTMLRenderer) list(w io.Writer, node *ast.Node, nodeData *ast.ListData, entering bool) {
+func (r *Renderer) list(w io.Writer, node *ast.Node, nodeData *ast.ListData, entering bool) {
 	if entering {
 		r.listEnter(w, node, nodeData)
 	} else {
@@ -691,7 +691,7 @@ func (r *HTMLRenderer) list(w io.Writer, node *ast.Node, nodeData *ast.ListData,
 	}
 }
 
-func (r *HTMLRenderer) listItemEnter(w io.Writer, node *ast.Node, nodeData *ast.ListItemData) {
+func (r *Renderer) listItemEnter(w io.Writer, node *ast.Node, nodeData *ast.ListItemData) {
 	if itemOpenCR(node) {
 		r.cr(w)
 	}
@@ -711,7 +711,7 @@ func (r *HTMLRenderer) listItemEnter(w io.Writer, node *ast.Node, nodeData *ast.
 	r.outs(w, openTag)
 }
 
-func (r *HTMLRenderer) listItemExit(w io.Writer, node *ast.Node, nodeData *ast.ListItemData) {
+func (r *Renderer) listItemExit(w io.Writer, node *ast.Node, nodeData *ast.ListItemData) {
 	if nodeData.RefLink != nil && r.params.Flags&FootnoteReturnLinks != 0 {
 		slug := slugify(nodeData.RefLink)
 		prefix := r.params.FootnoteAnchorPrefix
@@ -731,7 +731,7 @@ func (r *HTMLRenderer) listItemExit(w io.Writer, node *ast.Node, nodeData *ast.L
 	r.cr(w)
 }
 
-func (r *HTMLRenderer) listItem(w io.Writer, node *ast.Node, nodeData *ast.ListItemData, entering bool) {
+func (r *Renderer) listItem(w io.Writer, node *ast.Node, nodeData *ast.ListItemData, entering bool) {
 	if entering {
 		r.listItemEnter(w, node, nodeData)
 	} else {
@@ -739,7 +739,7 @@ func (r *HTMLRenderer) listItem(w io.Writer, node *ast.Node, nodeData *ast.ListI
 	}
 }
 
-func (r *HTMLRenderer) codeBlock(w io.Writer, node *ast.Node, nodeData *ast.CodeBlockData) {
+func (r *Renderer) codeBlock(w io.Writer, node *ast.Node, nodeData *ast.CodeBlockData) {
 	var attrs []string
 	attrs = appendLanguageAttr(attrs, nodeData.Info)
 	r.cr(w)
@@ -753,7 +753,7 @@ func (r *HTMLRenderer) codeBlock(w io.Writer, node *ast.Node, nodeData *ast.Code
 	}
 }
 
-func (r *HTMLRenderer) tableCell(w io.Writer, node *ast.Node, nodeData *ast.TableCellData, entering bool) {
+func (r *Renderer) tableCell(w io.Writer, node *ast.Node, nodeData *ast.TableCellData, entering bool) {
 	if !entering {
 		r.outOneOf(w, nodeData.IsHeader, "</th>", "</td>")
 		r.cr(w)
@@ -776,7 +776,7 @@ func (r *HTMLRenderer) tableCell(w io.Writer, node *ast.Node, nodeData *ast.Tabl
 	r.outTag(w, openTag, attrs)
 }
 
-func (r *HTMLRenderer) tableBody(w io.Writer, node *ast.Node, nodeData *ast.TableBodyData, entering bool) {
+func (r *Renderer) tableBody(w io.Writer, node *ast.Node, nodeData *ast.TableBodyData, entering bool) {
 	if entering {
 		r.cr(w)
 		r.outs(w, "<tbody>")
@@ -800,7 +800,7 @@ func (r *HTMLRenderer) tableBody(w io.Writer, node *ast.Node, nodeData *ast.Tabl
 // can ask the walker to skip a subtree of this node by returning SkipChildren.
 // The typical behavior is to return GoToNext, which asks for the usual
 // traversal to the next node.
-func (r *HTMLRenderer) RenderNode(w io.Writer, node *ast.Node, entering bool) ast.WalkStatus {
+func (r *Renderer) RenderNode(w io.Writer, node *ast.Node, entering bool) ast.WalkStatus {
 	if r.params.RenderNodeHook != nil {
 		status, didHandle := r.params.RenderNodeHook(w, node, entering)
 		if didHandle {
@@ -868,7 +868,7 @@ func (r *HTMLRenderer) RenderNode(w io.Writer, node *ast.Node, entering bool) as
 }
 
 // RenderHeader writes HTML document preamble and TOC if requested.
-func (r *HTMLRenderer) RenderHeader(w io.Writer, ast *ast.Node) {
+func (r *Renderer) RenderHeader(w io.Writer, ast *ast.Node) {
 	r.writeDocumentHeader(w)
 	if r.params.Flags&TOC != 0 {
 		r.writeTOC(w, ast)
@@ -876,14 +876,14 @@ func (r *HTMLRenderer) RenderHeader(w io.Writer, ast *ast.Node) {
 }
 
 // RenderFooter writes HTML document footer.
-func (r *HTMLRenderer) RenderFooter(w io.Writer, ast *ast.Node) {
+func (r *Renderer) RenderFooter(w io.Writer, ast *ast.Node) {
 	if r.params.Flags&CompletePage == 0 {
 		return
 	}
 	io.WriteString(w, "\n</body>\n</html>\n")
 }
 
-func (r *HTMLRenderer) writeDocumentHeader(w io.Writer) {
+func (r *Renderer) writeDocumentHeader(w io.Writer) {
 	if r.params.Flags&CompletePage == 0 {
 		return
 	}
@@ -930,7 +930,7 @@ func (r *HTMLRenderer) writeDocumentHeader(w io.Writer) {
 	io.WriteString(w, "<body>\n\n")
 }
 
-func (r *HTMLRenderer) writeTOC(w io.Writer, doc *ast.Node) {
+func (r *Renderer) writeTOC(w io.Writer, doc *ast.Node) {
 	buf := bytes.Buffer{}
 
 	inHeading := false

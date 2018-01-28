@@ -31,7 +31,7 @@ md := []byte("markdown text")
 extensions := CommonExtensions | AutoHeadingIDs
 parser := NewParserWithExensions(extensions)
 htmlParams := htmlrenderer.CommonFlags | htmlrenderer.HrefTargetBlank
-renderer := NewHTMLRenderer(htmlParams)
+renderer := NewRenderer(htmlParams)
 html := ToHTML(md, parser, renderer)
 ```
 

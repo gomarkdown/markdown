@@ -41,7 +41,7 @@ func runMarkdown(input string, params TestParams) string {
 	params.RendererOptions.Flags = params.HTMLFlags
 	parser := NewParserWithExtensions(params.extensions)
 	parser.ReferenceOverride = params.referenceOverride
-	renderer := htmlrenderer.NewHTMLRenderer(params.RendererOptions)
+	renderer := htmlrenderer.NewRenderer(params.RendererOptions)
 
 	d := ToHTML([]byte(input), parser, renderer)
 	return string(d)
