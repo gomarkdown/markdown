@@ -7,11 +7,8 @@ import (
 	"io"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/htmlrenderer"
 )
-
-// Version string of the package. Appears in the rendered document when
-// CompletePage flag is on.
-const Version = "2.0"
 
 // Renderer is an interface for implementing custom renderers.
 //
@@ -52,10 +49,10 @@ func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
 		parser = NewParserWithExtensions(CommonExtensions)
 	}
 	if renderer == nil {
-		params := HTMLRendererParameters{
-			Flags: CommonHTMLFlags,
+		params := htmlrenderer.HTMLRendererParameters{
+			Flags: htmlrenderer.CommonHTMLFlags,
 		}
-		renderer = NewHTMLRenderer(params)
+		renderer = htmlrenderer.NewHTMLRenderer(params)
 	}
 	parser.Parse(input)
 	return parser.Render(renderer)

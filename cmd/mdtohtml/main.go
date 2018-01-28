@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/htmlrenderer"
 )
 
 const defaultTitle = ""
@@ -44,7 +45,7 @@ func main() {
 	flag.IntVar(&repeat, "repeat", 1,
 		"Process the input multiple times (for benchmarking)")
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Markdown Processor v"+markdown.Version+
+		fmt.Fprintf(os.Stderr, "Markdown Processor "+
 			"\nAvailable at http://github.com/gomarkdown/markdown/cmd/mdtohtml\n\n"+
 			"Copyright © 2011 Russ Ross <russ@russross.com>\n"+
 			"Copyright © 2018 Krzysztof Kowalczyk <https://blog.kowalczyk.info>\n"+
@@ -112,33 +113,33 @@ func main() {
 		//renderer = markdown.LatexRenderer(0)
 	} else {
 		// render the data into HTML
-		var htmlFlags markdown.HTMLFlags
+		var htmlFlags htmlrenderer.HTMLFlags
 		if xhtml {
-			htmlFlags |= markdown.UseXHTML
+			htmlFlags |= htmlrenderer.UseXHTML
 		}
 		if smartypants {
-			htmlFlags |= markdown.Smartypants
+			htmlFlags |= htmlrenderer.Smartypants
 		}
 		if fractions {
-			htmlFlags |= markdown.SmartypantsFractions
+			htmlFlags |= htmlrenderer.SmartypantsFractions
 		}
 		if latexdashes {
-			htmlFlags |= markdown.SmartypantsLatexDashes
+			htmlFlags |= htmlrenderer.SmartypantsLatexDashes
 		}
 		title := ""
 		if page {
-			htmlFlags |= markdown.CompletePage
+			htmlFlags |= htmlrenderer.CompletePage
 			title = getTitle(input)
 		}
 		if toc {
-			htmlFlags |= markdown.TOC
+			htmlFlags |= htmlrenderer.TOC
 		}
-		params := markdown.HTMLRendererParameters{
+		params := htmlrenderer.HTMLRendererParameters{
 			Flags: htmlFlags,
 			Title: title,
 			CSS:   css,
 		}
-		renderer = markdown.NewHTMLRenderer(params)
+		renderer = htmlrenderer.NewHTMLRenderer(params)
 	}
 
 	// parse and render

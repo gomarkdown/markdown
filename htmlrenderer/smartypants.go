@@ -3,7 +3,7 @@
 
 // SmartyPants rendering
 
-package markdown
+package htmlrenderer
 
 import (
 	"bytes"

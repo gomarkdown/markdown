@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/htmlrenderer"
 )
 
 func renderHookEmpty(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool) {
@@ -21,7 +22,7 @@ func TestRenderNodeHookEmpty(t *testing.T) {
 		"",
 	}
 
-	htmlParams := HTMLRendererParameters{
+	htmlParams := htmlrenderer.HTMLRendererParameters{
 		RenderNodeHook: renderHookEmpty,
 	}
 	params := TestParams{
@@ -45,7 +46,7 @@ func TestRenderNodeHookCode(t *testing.T) {
 		"a\n```go\ncode\n```\nb",
 		"<p>a</p>\ncode_replacement\n<p>b</p>\n",
 	}
-	htmlParams := HTMLRendererParameters{
+	htmlParams := htmlrenderer.HTMLRendererParameters{
 		RenderNodeHook: renderHookCodeBlock,
 	}
 	params := TestParams{

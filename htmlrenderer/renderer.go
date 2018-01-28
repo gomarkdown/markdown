@@ -3,7 +3,7 @@
 
 // HTMLRenderer converts AST of parsed markdown document into HTML text
 
-package markdown
+package htmlrenderer
 
 import (
 	"bytes"
@@ -15,6 +15,10 @@ import (
 
 	"github.com/gomarkdown/markdown/ast"
 )
+
+// Version string of the package. Appears in the rendered document when
+// CompletePage flag is on.
+const Version = "1.0"
 
 // HTMLFlags control optional behavior of HTML renderer.
 type HTMLFlags int
@@ -905,8 +909,7 @@ func (r *HTMLRenderer) writeDocumentHeader(w io.Writer) {
 		EscapeHTML(w, []byte(r.params.Title))
 	}
 	io.WriteString(w, "</title>\n")
-	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"Markdown Processor for Go v")
-	io.WriteString(w, Version)
+	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"github.com/gomarkdown/markdown markdown processor for Go")
 	io.WriteString(w, "\"")
 	io.WriteString(w, ending)
 	io.WriteString(w, ">\n")
@@ -1020,4 +1023,101 @@ func isBlockQuoteData(d ast.NodeData) bool {
 func isDocumentData(d ast.NodeData) bool {
 	_, ok := d.(*ast.DocumentData)
 	return ok
+}
+
+// TODO: move to internal package
+func skipSpace(data []byte, i int) int {
+	n := len(data)
+	for i < n && isSpace(data[i]) {
+		i++
+	}
+	return i
+}
+
+// TODO: move to internal package
+var validUris = [][]byte{[]byte("http://"), []byte("https://"), []byte("ftp://"), []byte("mailto://")}
+var validPaths = [][]byte{[]byte("/"), []byte("./"), []byte("../")}
+
+func isSafeLink(link []byte) bool {
+	for _, path := range validPaths {
+		if len(link) >= len(path) && bytes.Equal(link[:len(path)], path) {
+			if len(link) == len(path) {
+				return true
+			} else if isAlnum(link[len(path)]) {
+				return true
+			}
+		}
+	}
+
+	for _, prefix := range validUris {
+		// TODO: handle unicode here
+		// case-insensitive prefix test
+		if len(link) > len(prefix) && bytes.Equal(bytes.ToLower(link[:len(prefix)]), prefix) && isAlnum(link[len(prefix)]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// TODO: move to internal package
+// Create a url-safe slug for fragments
+func slugify(in []byte) []byte {
+	if len(in) == 0 {
+		return in
+	}
+	out := make([]byte, 0, len(in))
+	sym := false
+
+	for _, ch := range in {
+		if isAlnum(ch) {
+			sym = false
+			out = append(out, ch)
+		} else if sym {
+			continue
+		} else {
+			out = append(out, '-')
+			sym = true
+		}
+	}
+	var a, b int
+	var ch byte
+	for a, ch = range out {
+		if ch != '-' {
+			break
+		}
+	}
+	for b = len(out) - 1; b > 0; b-- {
+		if out[b] != '-' {
+			break
+		}
+	}
+	return out[a : b+1]
+}
+
+// TODO: move to internal package
+// isAlnum returns true if c is a digit or letter
+// TODO: check when this is looking for ASCII alnum and when it should use unicode
+func isAlnum(c byte) bool {
+	return (c >= '0' && c <= '9') || isLetter(c)
+}
+
+// isSpace returns true if c is a white-space charactr
+func isSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'
+}
+
+// isLetter returns true if c is ascii letter
+func isLetter(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
+// isPunctuation returns true if c is a punctuation symbol.
+func isPunctuation(c byte) bool {
+	for _, r := range []byte("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~") {
+		if c == r {
+			return true
+		}
+	}
+	return false
 }

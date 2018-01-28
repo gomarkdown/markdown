@@ -8,6 +8,8 @@ package markdown
 import (
 	"strings"
 	"testing"
+
+	"github.com/gomarkdown/markdown/htmlrenderer"
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
@@ -243,14 +245,14 @@ func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 			"<h1 id=\"PRE:someid:POST\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
 
-	parameters := HTMLRendererParameters{
+	parameters := htmlrenderer.HTMLRendererParameters{
 		HeadingIDPrefix: "PRE:",
 		HeadingIDSuffix: ":POST",
 	}
 
 	doTestsParam(t, tests, TestParams{
 		extensions:             HeadingIDs,
-		HTMLFlags:              UseXHTML,
+		HTMLFlags:              htmlrenderer.UseXHTML,
 		HTMLRendererParameters: parameters,
 	})
 }
@@ -357,14 +359,14 @@ func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 		"<h1 id=\"PRE:header:POST\">Header</h1>\n\n<h1 id=\"PRE:header-1:POST\">Header 1</h1>\n\n<h1 id=\"PRE:header-1-1:POST\">Header</h1>\n\n<h1 id=\"PRE:header-1-2:POST\">Header</h1>\n",
 	}
 
-	parameters := HTMLRendererParameters{
+	parameters := htmlrenderer.HTMLRendererParameters{
 		HeadingIDPrefix: "PRE:",
 		HeadingIDSuffix: ":POST",
 	}
 
 	doTestsParam(t, tests, TestParams{
 		extensions:             AutoHeadingIDs,
-		HTMLFlags:              UseXHTML,
+		HTMLFlags:              htmlrenderer.UseXHTML,
 		HTMLRendererParameters: parameters,
 	})
 }
@@ -1618,7 +1620,7 @@ func TestTOC(t *testing.T) {
 		"",
 	}
 	doTestsParam(t, tests, TestParams{
-		HTMLFlags: UseXHTML | TOC,
+		HTMLFlags: htmlrenderer.UseXHTML | htmlrenderer.TOC,
 	})
 }
 
@@ -1630,7 +1632,7 @@ func TestCompletePage(t *testing.T) {
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title></title>
-  <meta name="GENERATOR" content="Markdown Processor for Go v2.0" />
+  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go" />
   <meta charset="utf-8" />
 </head>
 <body>
@@ -1641,7 +1643,7 @@ func TestCompletePage(t *testing.T) {
 </html>
 `,
 	}
-	doTestsParam(t, tests, TestParams{HTMLFlags: UseXHTML | CompletePage})
+	doTestsParam(t, tests, TestParams{HTMLFlags: htmlrenderer.UseXHTML | htmlrenderer.CompletePage})
 }
 
 func TestSpaceHeadings(t *testing.T) {

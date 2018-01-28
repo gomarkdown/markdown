@@ -790,3 +790,8 @@ func isTableCellData(d ast.NodeData) bool {
 	_, ok := d.(*ast.TableCellData)
 	return ok
 }
+
+func isListItemData(d ast.NodeData) bool {
+	_, ok := d.(*ast.ListItemData)
+	return ok
+}
