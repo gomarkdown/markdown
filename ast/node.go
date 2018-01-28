@@ -367,6 +367,7 @@ func (n *TreeNode) FirstChild() Node {
 }
 
 // NextNode returns next sibling of this node
+// We can't make it part of TreeNode or LeafNode because we loose Node identity
 func NextNode(n Node) Node {
 	parent := n.GetParent()
 	if parent == nil {
@@ -383,6 +384,7 @@ func NextNode(n Node) Node {
 }
 
 // PrevNode returns sibling node before n
+// We can't make it part of TreeNode or LeafNode because we loose Node identity
 func PrevNode(n Node) Node {
 	parent := n.GetParent()
 	if parent == nil {

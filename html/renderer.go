@@ -982,20 +982,20 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 	r.lastOutputLen = buf.Len()
 }
 
-func isList(n ast.Node) bool {
-	_, ok := n.(*ast.List)
+func isList(node ast.Node) bool {
+	_, ok := node.(*ast.List)
 	return ok
 }
 
-func isListTight(d ast.Node) bool {
-	if list, ok := d.(*ast.List); ok {
+func isListTight(node ast.Node) bool {
+	if list, ok := node.(*ast.List); ok {
 		return list.Tight
 	}
 	return false
 }
 
-func isListItem(d ast.Node) bool {
-	_, ok := d.(*ast.ListItem)
+func isListItem(node ast.Node) bool {
+	_, ok := node.(*ast.ListItem)
 	return ok
 }
 
@@ -1009,8 +1009,8 @@ func isBlockQuote(d ast.Node) bool {
 	return ok
 }
 
-func isDocument(d ast.Node) bool {
-	_, ok := d.(*ast.Document)
+func isDocument(node ast.Node) bool {
+	_, ok := node.(*ast.Document)
 	return ok
 }
 
