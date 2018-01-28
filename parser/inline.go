@@ -633,18 +633,19 @@ var escapeChars = []byte("\\`*_{}[]()#+-.!:|&<>~")
 func escape(p *Parser, data []byte, offset int) (int, ast.Node) {
 	data = data[offset:]
 
-	if len(data) > 1 {
-		if p.extensions&BackslashLineBreak != 0 && data[1] == '\n' {
-			return 2, &ast.Hardbreak{}
-		}
-		if bytes.IndexByte(escapeChars, data[1]) < 0 {
-			return 0, nil
-		}
-
-		return 2, newTextNode(data[1:2])
+	if len(data) <= 1 {
+		return 2, nil
 	}
 
-	return 2, nil
+	if p.extensions&BackslashLineBreak != 0 && data[1] == '\n' {
+		return 2, &ast.Hardbreak{}
+	}
+
+	if bytes.IndexByte(escapeChars, data[1]) < 0 {
+		return 0, nil
+	}
+
+	return 2, newTextNode(data[1:2])
 }
 
 func unescapeText(ob *bytes.Buffer, src []byte) {
@@ -974,12 +975,12 @@ func isMailtoAutoLink(data []byte) int {
 	nb := 0
 
 	// address is assumed to be: [-@._a-zA-Z0-9]+ with exactly one '@'
-	for i := 0; i < len(data); i++ {
-		if isAlnum(data[i]) {
+	for i, c := range data {
+		if isAlnum(c) {
 			continue
 		}
 
-		switch data[i] {
+		switch c {
 		case '@':
 			nb++
 
