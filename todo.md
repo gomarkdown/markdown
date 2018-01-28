@@ -6,6 +6,10 @@
 
 [x] simplify oliPrefix()
 
+[ ] figure out expandTabs and parser.TabSizeEight. Are those used?
+
+[ ] add Options { Extensions: } for NewParser to allow for more customization in the future?
+
 [ ] speed: Node is probably too fat
 
 [ ] speed: Node could be allocated from a slice and pointers could be replaces with int32 integers. Node would have to keep track of the allocator or we can change the api to pass both Parser (which is allocator of nodes) and Node (which would be a typedef for int)

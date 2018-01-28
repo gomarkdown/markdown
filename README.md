@@ -1,21 +1,17 @@
 Markdown Parser and HTML Renderer for Go [![GoDoc](https://godoc.org/github.com/gomarkdown/markdown?status.svg)](https://godoc.org/github.com/gomarkdown/markdown) [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
 ===========
 
-Package `github.com/gomarkdown/markdown` is a [Markdown](https://daringfireball.net/projects/markdown/) parser and HTML renderer implemented in Go.
+Package `github.com/gomarkdown/markdown` is a Go library for parsing [Markdown](https://daringfireball.net/projects/markdown/) documents and rendering them to HTML.
 
 It's fast and supports common extensions.
 
-Installation
-------------
-
-To install the library:
+## Installation
 
     go get -u github.com/gomarkdown/markdown
 
 API Docs: https://godoc.org/github.com/gomarkdown/markdown
 
-Usage
------
+## Usage
 
 To convert markdown text to HTML using reasonable defaults:
 
@@ -27,15 +23,21 @@ output := markdown.ToHTML(md, nil, nil)
 To customize both parser and HTML renderer:
 
 ```go
+import (
+    "github.com/gomarkdown/markdown"
+    "github.com/gomarkdown/markdown/html"
+    "github.com/gomarkdown/markdown/parser"
+)
+
 md := []byte("markdown text")
-extensions := CommonExtensions | AutoHeadingIDs
-parser := NewParserWithExensions(extensions)
+extensions := html.CommonExtensions | html.AutoHeadingIDs
+parser := parser.NewWithExensions(extensions)
 htmlParams := html.CommonFlags | html.HrefTargetBlank
-renderer := NewRenderer(htmlParams)
-html := ToHTML(md, parser, renderer)
+renderer := html.NewRenderer(htmlParams)
+html := markdown.ToHTML(md, parser, renderer)
 ```
 
-### Sanitize untrusted content
+## Sanitize untrusted content
 
 We don't protect against malicious content. When dealing with user-provided
 markdown, run renderer HTML through HTML sanitizer such as [Bluemonday](https://github.com/microcosm-cc/bluemonday).
@@ -49,15 +51,15 @@ import (
 )
 
 // ...
-maybeUnsafeHTML := markdown.ToHTML(input, nil, nil)
+maybeUnsafeHTML := markdown.ToHTML(md, nil, nil)
 html := bluemonday.UGCPolicy().SanitizeBytes(maybeUnsafeHTML)
 ```
 
-### Customizing parser and renderer
+## Customizing parser and renderer
 
 Ways to customize parser:
-* use custom extensions by creating parser with `markdown.NewParserWithExtensions(extensions)`
-* over-ride `Parser.ReferenceOverride` function
+* use custom extensions by creating parser with `parser.NewWithExtensions(extensions)`
+* over-ride `parser.Parser.ReferenceOverride` function
 
 You can also check out [cmd/mdhtml](https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example of how to use it.
 
@@ -67,8 +69,7 @@ You can install it with:
 
 This is a simple command-line tool to convert markdown files to HTML.
 
-Features
---------
+## Features
 
 *   **Compatibility**. The Markdown v1.0.3 test suite passes with
     the `--tidy` option.  Without `--tidy`, the differences are
@@ -101,8 +102,7 @@ Features
     W3C validation tool for HTML 4.01 and XHTML 1.0 Transitional.
 
 
-Extensions
-----------
+## Extensions
 
 In addition to the standard markdown syntax, this package
 implements the following extensions:
@@ -182,8 +182,7 @@ implements the following extensions:
     <sup>4</sup>&frasl;<sub>5</sub>.
 
 
-Todo
-----
+## Todo
 
 *   port https://github.com/russross/blackfriday/issues/348
 *   port [LaTeX output](https://github.com/Ambrevar/Blackfriday-LaTeX):
@@ -197,17 +196,15 @@ Todo
     etc.), so it may fail to detect word boundaries correctly in
     some instances. It is safe on all utf-8 input.
 
-History
--------
+## History
 
-markdown is a fork of v2 of github.com/russross/blackfriday that is:
+markdown is a fork of v2 of https://github.com/russross/blackfriday that is:
 
 * actively maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
-* cleaned up API to make it easier to use (IMHO)
+* refactored API (split into ast/parser/html sub-packages)
 
 Blackfriday itself was based on C implementation [sundown](https://github.com/vmg/sundown) which in turn was based on [libsoldout](http://fossil.instinctive.eu/libsoldout/home).
 
-License
--------
+## License
 
-[markdown is distributed under the Simplified BSD License](LICENSE.txt)
+[Simplified BSD License](LICENSE.txt)

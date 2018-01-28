@@ -32,7 +32,7 @@ const (
 	Titleblock                                    // Titleblock ala pandoc
 	AutoHeadingIDs                                // Create the heading ID from the text
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
-	DefinitionLists                               // Render definition lists
+	DefinitionLists                               // Parse definition lists
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -96,15 +96,15 @@ type Parser struct {
 	allClosed            bool
 }
 
-// NewParser creates a markdown parser with CommonExtensions.
-func NewParser() *Parser {
-	return NewParserWithExtensions(CommonExtensions)
+// New creates a markdown parser with CommonExtensions.
+func New() *Parser {
+	return NewWithExtensions(CommonExtensions)
 }
 
-// NewParserWithExtensions creates a markdown parser with given extensions.
+// NewWithExtensions creates a markdown parser with given extensions.
 // Before
 // for Run() to customize parser's behavior and the renderer.
-func NewParserWithExtensions(extension Extensions) *Parser {
+func NewWithExtensions(extension Extensions) *Parser {
 	p := Parser{
 		refs:       make(map[string]*reference),
 		maxNesting: 16,
@@ -658,6 +658,7 @@ func isAlnum(c byte) bool {
 	return (c >= '0' && c <= '9') || isLetter(c)
 }
 
+// TODO: this is not used
 // Replace tab characters with spaces, aligning to the next TAB_SIZE column.
 // always ends output with a newline
 func expandTabs(out *bytes.Buffer, line []byte, tabSize int) {

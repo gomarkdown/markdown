@@ -59,7 +59,7 @@ func Render(p *parser.Parser, renderer Renderer) []byte {
 // the parser and Renderer with CommonFlags for renderer
 func ToHTML(input []byte, p *parser.Parser, renderer Renderer) []byte {
 	if p == nil {
-		p = parser.NewParserWithExtensions(parser.CommonExtensions)
+		p = parser.NewWithExtensions(parser.CommonExtensions)
 	}
 	if renderer == nil {
 		opts := html.RendererOptions{

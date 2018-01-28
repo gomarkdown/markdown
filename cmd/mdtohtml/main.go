@@ -146,7 +146,7 @@ func main() {
 	// parse and render
 	var output []byte
 	for i := 0; i < repeat; i++ {
-		parser := parser.NewParserWithExtensions(extensions)
+		parser := parser.NewWithExtensions(extensions)
 		output = markdown.ToHTML(input, parser, renderer)
 	}
 
