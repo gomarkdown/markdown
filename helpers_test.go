@@ -18,7 +18,7 @@ type TestParams struct {
 	extensions        Extensions
 	referenceOverride ReferenceOverrideFunc
 	htmlrenderer.HTMLFlags
-	htmlrenderer.HTMLRendererParameters
+	htmlrenderer.RendererOptions
 }
 
 func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, suite func(candidate *string)) {
@@ -38,10 +38,10 @@ func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, s
 }
 
 func runMarkdown(input string, params TestParams) string {
-	params.HTMLRendererParameters.Flags = params.HTMLFlags
+	params.RendererOptions.Flags = params.HTMLFlags
 	parser := NewParserWithExtensions(params.extensions)
 	parser.ReferenceOverride = params.referenceOverride
-	renderer := htmlrenderer.NewHTMLRenderer(params.HTMLRendererParameters)
+	renderer := htmlrenderer.NewHTMLRenderer(params.RendererOptions)
 
 	d := ToHTML([]byte(input), parser, renderer)
 	return string(d)
@@ -51,8 +51,8 @@ func runMarkdown(input string, params TestParams) string {
 func doTests(t *testing.T, tests []string) {
 	doTestsParam(t, tests, TestParams{
 		extensions: CommonExtensions,
-		HTMLRendererParameters: htmlrenderer.HTMLRendererParameters{
-			Flags: htmlrenderer.CommonHTMLFlags,
+		RendererOptions: htmlrenderer.RendererOptions{
+			Flags: htmlrenderer.CommonFlags,
 		},
 	})
 }
@@ -87,14 +87,14 @@ func doLinkTestsInline(t *testing.T, tests []string) {
 	doTestsInline(t, tests)
 
 	prefix := "http://localhost"
-	params := htmlrenderer.HTMLRendererParameters{AbsolutePrefix: prefix}
+	params := htmlrenderer.RendererOptions{AbsolutePrefix: prefix}
 	transformTests := transformLinks(tests, prefix)
 	doTestsInlineParam(t, transformTests, TestParams{
-		HTMLRendererParameters: params,
+		RendererOptions: params,
 	})
 	doTestsInlineParam(t, transformTests, TestParams{
-		HTMLFlags:              htmlrenderer.UseXHTML,
-		HTMLRendererParameters: params,
+		HTMLFlags:       htmlrenderer.UseXHTML,
+		RendererOptions: params,
 	})
 }
 
@@ -104,11 +104,11 @@ func doSafeTestsInline(t *testing.T, tests []string) {
 	// All the links in this test should not have the prefix appended, so
 	// just rerun it with different parameters and the same expectations.
 	prefix := "http://localhost"
-	params := htmlrenderer.HTMLRendererParameters{AbsolutePrefix: prefix}
+	params := htmlrenderer.RendererOptions{AbsolutePrefix: prefix}
 	transformTests := transformLinks(tests, prefix)
 	doTestsInlineParam(t, transformTests, TestParams{
-		HTMLFlags:              htmlrenderer.Safelink,
-		HTMLRendererParameters: params,
+		HTMLFlags:       htmlrenderer.Safelink,
+		RendererOptions: params,
 	})
 }
 

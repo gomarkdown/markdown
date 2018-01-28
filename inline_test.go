@@ -956,15 +956,15 @@ func TestFootnotesWithParameters(t *testing.T) {
 		tests[i] = test
 	}
 
-	params := htmlrenderer.HTMLRendererParameters{
+	params := htmlrenderer.RendererOptions{
 		FootnoteAnchorPrefix:       prefix,
 		FootnoteReturnLinkContents: returnText,
 	}
 
 	doTestsInlineParam(t, tests, TestParams{
-		extensions:             Footnotes,
-		HTMLFlags:              htmlrenderer.FootnoteReturnLinks,
-		HTMLRendererParameters: params,
+		extensions:      Footnotes,
+		HTMLFlags:       htmlrenderer.FootnoteReturnLinks,
+		RendererOptions: params,
 	})
 }
 

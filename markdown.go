@@ -43,14 +43,14 @@ type Renderer interface {
 // a parser, a render or provide a renderer other than HTMLRenderer.
 //
 // If you pass nil for both, we convert with CommonExtensions for
-// the parser and HTMLRenderer with CommonHTMLFlags for renderer
+// the parser and HTMLRenderer with CommonFlags for renderer
 func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
 	if parser == nil {
 		parser = NewParserWithExtensions(CommonExtensions)
 	}
 	if renderer == nil {
-		params := htmlrenderer.HTMLRendererParameters{
-			Flags: htmlrenderer.CommonHTMLFlags,
+		params := htmlrenderer.RendererOptions{
+			Flags: htmlrenderer.CommonFlags,
 		}
 		renderer = htmlrenderer.NewHTMLRenderer(params)
 	}

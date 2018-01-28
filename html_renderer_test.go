@@ -22,11 +22,11 @@ func TestRenderNodeHookEmpty(t *testing.T) {
 		"",
 	}
 
-	htmlParams := htmlrenderer.HTMLRendererParameters{
+	htmlParams := htmlrenderer.RendererOptions{
 		RenderNodeHook: renderHookEmpty,
 	}
 	params := TestParams{
-		HTMLRendererParameters: htmlParams,
+		RendererOptions: htmlParams,
 	}
 	doTestsParam(t, tests, params)
 }
@@ -46,12 +46,12 @@ func TestRenderNodeHookCode(t *testing.T) {
 		"a\n```go\ncode\n```\nb",
 		"<p>a</p>\ncode_replacement\n<p>b</p>\n",
 	}
-	htmlParams := htmlrenderer.HTMLRendererParameters{
+	htmlParams := htmlrenderer.RendererOptions{
 		RenderNodeHook: renderHookCodeBlock,
 	}
 	params := TestParams{
-		HTMLRendererParameters: htmlParams,
-		extensions:             CommonExtensions,
+		RendererOptions: htmlParams,
+		extensions:      CommonExtensions,
 	}
 	doTestsParam(t, tests, params)
 }

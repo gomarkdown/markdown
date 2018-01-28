@@ -245,15 +245,15 @@ func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 			"<h1 id=\"PRE:someid:POST\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
 
-	parameters := htmlrenderer.HTMLRendererParameters{
+	parameters := htmlrenderer.RendererOptions{
 		HeadingIDPrefix: "PRE:",
 		HeadingIDSuffix: ":POST",
 	}
 
 	doTestsParam(t, tests, TestParams{
-		extensions:             HeadingIDs,
-		HTMLFlags:              htmlrenderer.UseXHTML,
-		HTMLRendererParameters: parameters,
+		extensions:      HeadingIDs,
+		HTMLFlags:       htmlrenderer.UseXHTML,
+		RendererOptions: parameters,
 	})
 }
 
@@ -359,15 +359,15 @@ func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 		"<h1 id=\"PRE:header:POST\">Header</h1>\n\n<h1 id=\"PRE:header-1:POST\">Header 1</h1>\n\n<h1 id=\"PRE:header-1-1:POST\">Header</h1>\n\n<h1 id=\"PRE:header-1-2:POST\">Header</h1>\n",
 	}
 
-	parameters := htmlrenderer.HTMLRendererParameters{
+	parameters := htmlrenderer.RendererOptions{
 		HeadingIDPrefix: "PRE:",
 		HeadingIDSuffix: ":POST",
 	}
 
 	doTestsParam(t, tests, TestParams{
-		extensions:             AutoHeadingIDs,
-		HTMLFlags:              htmlrenderer.UseXHTML,
-		HTMLRendererParameters: parameters,
+		extensions:      AutoHeadingIDs,
+		HTMLFlags:       htmlrenderer.UseXHTML,
+		RendererOptions: parameters,
 	})
 }
 

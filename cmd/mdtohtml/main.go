@@ -134,7 +134,7 @@ func main() {
 		if toc {
 			htmlFlags |= htmlrenderer.TOC
 		}
-		params := htmlrenderer.HTMLRendererParameters{
+		params := htmlrenderer.RendererOptions{
 			Flags: htmlFlags,
 			Title: title,
 			CSS:   css,

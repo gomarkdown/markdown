@@ -30,7 +30,7 @@ To customize both parser and HTML renderer:
 md := []byte("markdown text")
 extensions := CommonExtensions | AutoHeadingIDs
 parser := NewParserWithExensions(extensions)
-htmlParams := CommonHTMLFlags | HrefTargetBlank
+htmlParams := htmlrenderer.CommonFlags | htmlrenderer.HrefTargetBlank
 renderer := NewHTMLRenderer(htmlParams)
 html := ToHTML(md, parser, renderer)
 ```

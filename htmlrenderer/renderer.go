@@ -16,10 +16,6 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// Version string of the package. Appears in the rendered document when
-// CompletePage flag is on.
-const Version = "1.0"
-
 // HTMLFlags control optional behavior of HTML renderer.
 type HTMLFlags int
 
@@ -44,7 +40,7 @@ const (
 	SmartypantsQuotesNBSP                         // Enable « French guillemets » (with Smartypants)
 	TOC                                           // Generate a table of contents
 
-	CommonHTMLFlags HTMLFlags = Smartypants | SmartypantsFractions | SmartypantsDashes | SmartypantsLatexDashes
+	CommonFlags HTMLFlags = Smartypants | SmartypantsFractions | SmartypantsDashes | SmartypantsLatexDashes
 )
 
 var (
@@ -76,9 +72,9 @@ const (
 // skip rendering this node and will return WalkStatus
 type RenderNodeFunc func(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool)
 
-// HTMLRendererParameters is a collection of supplementary parameters tweaking
+// RendererOptions is a collection of supplementary parameters tweaking
 // the behavior of various parts of HTML renderer.
-type HTMLRendererParameters struct {
+type RendererOptions struct {
 	// Prepend this text to each relative URL.
 	AbsolutePrefix string
 	// Add this text to each footnote anchor, to ensure uniqueness.
@@ -108,7 +104,7 @@ type HTMLRendererParameters struct {
 //
 // Do not create this directly, instead use the NewHTMLRenderer function.
 type HTMLRenderer struct {
-	params HTMLRendererParameters
+	params RendererOptions
 
 	closeTag string // how to end singleton tags: either " />" or ">"
 
@@ -123,7 +119,7 @@ type HTMLRenderer struct {
 
 // NewHTMLRenderer creates and configures an HTMLRenderer object, which
 // satisfies the Renderer interface.
-func NewHTMLRenderer(params HTMLRendererParameters) *HTMLRenderer {
+func NewHTMLRenderer(params RendererOptions) *HTMLRenderer {
 	// configure the rendering engine
 	closeTag := ">"
 	if params.Flags&UseXHTML != 0 {
