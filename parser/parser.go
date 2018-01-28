@@ -255,11 +255,11 @@ func (p *Parser) parseRefsToAST() {
 		return
 	}
 	p.tip = p.Doc
-	listBlock := &ast.List{
+	list := &ast.List{
 		IsFootnotesList: true,
 		ListFlags:       ast.ListTypeOrdered,
 	}
-	block := p.addBlock(listBlock)
+	block := p.addBlock(list)
 	flags := ast.ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is
 	// because the body of the loop will append nested footnotes to p.notes and
@@ -280,9 +280,10 @@ func (p *Parser) parseRefsToAST() {
 		}
 		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
-	above := block.GetParent()
-	finalizeList(block, listBlock)
+	above := list.Parent
+	finalizeList(list)
 	p.tip = above
+
 	ast.WalkFunc(block, func(node ast.Node, entering bool) ast.WalkStatus {
 		switch node.(type) {
 		case *ast.Paragraph, *ast.Heading:

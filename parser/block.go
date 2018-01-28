@@ -1184,7 +1184,7 @@ func (p *Parser) list(data []byte, flags ast.ListType) int {
 	}
 
 	above := block.GetParent()
-	finalizeList(block, list)
+	finalizeList(list)
 	p.tip = above
 	return i
 }
@@ -1207,14 +1207,14 @@ func endsWithBlankLine(block ast.Node) bool {
 	return false
 }
 
-func finalizeList(block ast.Node, listData *ast.List) {
-	items := block.GetParent().GetChildren()
+func finalizeList(list *ast.List) {
+	items := list.Parent.GetChildren()
 	lastItemIdx := len(items) - 1
 	for i, item := range items {
 		isLastItem := i == lastItemIdx
 		// check for non-final list item ending with blank line:
-		if endsWithBlankLine(item) && !isLastItem {
-			listData.Tight = false
+		if !isLastItem && endsWithBlankLine(item) {
+			list.Tight = false
 			break
 		}
 		// recurse into children of list item, to see if there are spaces
@@ -1223,8 +1223,8 @@ func finalizeList(block ast.Node, listData *ast.List) {
 		lastSubItemIdx := len(subItems) - 1
 		for i, subItem := range subItems {
 			isLastSubItem := i == lastSubItemIdx
-			if endsWithBlankLine(subItem) && (!isLastItem || !isLastSubItem) {
-				listData.Tight = false
+			if (!isLastItem || !isLastSubItem) && endsWithBlankLine(subItem) {
+				list.Tight = false
 				break
 			}
 		}
