@@ -464,13 +464,15 @@ func newNodeWalker(root Node) *nodeWalker {
 }
 
 func (nw *nodeWalker) next() {
-	if (!isContainer(nw.current) || !nw.entering) && nw.current == nw.root {
+	isCont := isContainer(nw.current)
+	if (!isCont || !nw.entering) && nw.current == nw.root {
 		nw.current = nil
 		return
 	}
-	if nw.entering && isContainer(nw.current) {
-		if nw.current.FirstChild() != nil {
-			nw.current = nw.current.FirstChild()
+	if nw.entering && isCont {
+		firstChild := nw.current.FirstChild()
+		if firstChild != nil {
+			nw.current = firstChild
 			nw.entering = true
 		} else {
 			nw.entering = false
