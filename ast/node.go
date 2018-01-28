@@ -1,8 +1,36 @@
-package markdown
+package ast
 
 import (
 	"bytes"
 	"fmt"
+)
+
+// ListType contains bitwise or'ed flags for list and list item objects.
+type ListType int
+
+// These are the possible flag values for the ListItem renderer.
+// Multiple flag values may be ORed together.
+// These are mostly of interest if you are writing a new output format.
+const (
+	ListTypeOrdered ListType = 1 << iota
+	ListTypeDefinition
+	ListTypeTerm
+
+	ListItemContainsBlock
+	ListItemBeginningOfList // TODO: figure out if this is of any use now
+	ListItemEndOfList
+)
+
+// CellAlignFlags holds a type of alignment in a table cell.
+type CellAlignFlags int
+
+// These are the possible flag values for the table cell renderer.
+// Only a single one of these values will be used; they are not ORed together.
+// These are mostly of interest if you are writing a new output format.
+const (
+	TableAlignmentLeft CellAlignFlags = 1 << iota
+	TableAlignmentRight
+	TableAlignmentCenter = (TableAlignmentLeft | TableAlignmentRight)
 )
 
 // NodeData represents data field of Node
@@ -144,15 +172,15 @@ type Node struct {
 
 	Data NodeData
 
-	content []byte // Markdown content of the block nodes
-	open    bool   // Specifies an open block node that has not been finished to process yet
+	Content []byte // Markdown content of the block nodes
+	Open    bool   // Specifies an open block node that has not been finished to process yet
 }
 
 // NewNode allocates a node of a specified type.
 func NewNode(d NodeData) *Node {
 	return &Node{
 		Data: d,
-		open: true,
+		Open: true,
 	}
 }
 
@@ -176,7 +204,8 @@ func removeNodeFromArray(a []*Node, node *Node) []*Node {
 	return a
 }
 
-func removeNodeFromTree(n *Node) {
+// RemoveFromTree removes this node from tree
+func (n *Node) RemoveFromTree() {
 	if n.Parent == nil {
 		return
 	}
@@ -191,7 +220,7 @@ func removeNodeFromTree(n *Node) {
 // AppendChild adds a node 'child' as a child of 'n'.
 // It panics if either node is nil.
 func (n *Node) AppendChild(child *Node) {
-	removeNodeFromTree(child)
+	child.RemoveFromTree()
 	child.Parent = n
 	n.Children = append(n.Children, child)
 }
@@ -252,74 +281,6 @@ func (n *Node) isContainer() bool {
 	default:
 		return true
 	}
-}
-
-func isListData(d NodeData) bool {
-	_, ok := d.(*ListData)
-	return ok
-}
-
-func isListTight(d NodeData) bool {
-	if listData, ok := d.(*ListData); ok {
-		return listData.Tight
-	}
-	return false
-}
-
-func isListItemData(d NodeData) bool {
-	_, ok := d.(*ListItemData)
-	return ok
-}
-
-func isListItemTerm(node *Node) bool {
-	data, ok := node.Data.(*ListItemData)
-	return ok && data.ListFlags&ListTypeTerm != 0
-}
-
-func isLinkData(d NodeData) bool {
-	_, ok := d.(*LinkData)
-	return ok
-}
-
-func isTableRowData(d NodeData) bool {
-	_, ok := d.(*TableRowData)
-	return ok
-}
-
-func isTableCellData(d NodeData) bool {
-	_, ok := d.(*TableCellData)
-	return ok
-}
-
-func isBlockQuoteData(d NodeData) bool {
-	_, ok := d.(*BlockQuoteData)
-	return ok
-}
-
-func isDocumentData(d NodeData) bool {
-	_, ok := d.(*DocumentData)
-	return ok
-}
-
-func (n *Node) canContain(v NodeData) bool {
-	switch n.Data.(type) {
-	case *ListData:
-		return isListItemData(v)
-	case *DocumentData, *BlockQuoteData, *ListItemData:
-		return !isListItemData(v)
-	case *TableData:
-		switch v.(type) {
-		case *TableHeadData, *TableBodyData:
-			return true
-		default:
-			return false
-		}
-	case *TableHeadData, *TableBodyData:
-		return isTableRowData(v)
-	case *TableRowData:
-		return isTableCellData(v)
-	}
-	return false
 }
 
 // WalkStatus allows NodeVisitor to have some control over the tree traversal.
@@ -421,7 +382,7 @@ func dumpR(ast *Node, depth int) string {
 	indent := bytes.Repeat([]byte("\t"), depth)
 	content := ast.Literal
 	if content == nil {
-		content = ast.content
+		content = ast.Content
 	}
 	result := fmt.Sprintf("%s%T(%q)\n", indent, ast.Data, content)
 	for _, n := range ast.Children {

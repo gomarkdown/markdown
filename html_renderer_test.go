@@ -3,10 +3,12 @@ package markdown
 import (
 	"io"
 	"testing"
+
+	"github.com/gomarkdown/markdown/ast"
 )
 
-func renderHookEmpty(w io.Writer, node *Node, entering bool) (WalkStatus, bool) {
-	return GoToNext, true
+func renderHookEmpty(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool) {
+	return ast.GoToNext, true
 }
 
 func TestRenderNodeHookEmpty(t *testing.T) {
@@ -28,13 +30,13 @@ func TestRenderNodeHookEmpty(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
-func renderHookCodeBlock(w io.Writer, node *Node, entering bool) (WalkStatus, bool) {
-	_, ok := node.Data.(*CodeBlockData)
+func renderHookCodeBlock(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool) {
+	_, ok := node.Data.(*ast.CodeBlockData)
 	if !ok {
-		return GoToNext, false
+		return ast.GoToNext, false
 	}
 	io.WriteString(w, "code_replacement")
-	return GoToNext, true
+	return ast.GoToNext, true
 }
 
 func TestRenderNodeHookCode(t *testing.T) {

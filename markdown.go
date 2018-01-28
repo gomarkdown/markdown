@@ -5,6 +5,8 @@ package markdown
 
 import (
 	"io"
+
+	"github.com/gomarkdown/markdown/ast"
 )
 
 // Version string of the package. Appears in the rendered document when
@@ -19,7 +21,7 @@ type Renderer interface {
 	// every leaf node and twice for every non-leaf node (first with
 	// entering=true, then with entering=false). The method should write its
 	// rendition of the node to writer w.
-	RenderNode(w io.Writer, node *Node, entering bool) WalkStatus
+	RenderNode(w io.Writer, node *ast.Node, entering bool) ast.WalkStatus
 
 	// RenderHeader is a method that allows the renderer to produce some
 	// content preceding the main body of the output document. The header is
@@ -32,10 +34,10 @@ type Renderer interface {
 	//
 	// The output should be written to the supplied writer w. If your
 	// implementation has no header to write, supply an empty implementation.
-	RenderHeader(w io.Writer, ast *Node)
+	RenderHeader(w io.Writer, ast *ast.Node)
 
 	// RenderFooter is a symmetric counterpart of RenderHeader.
-	RenderFooter(w io.Writer, ast *Node)
+	RenderFooter(w io.Writer, ast *ast.Node)
 }
 
 // ToHTML converts a markdown text in input and converts it to HTML.

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/gomarkdown/markdown/ast"
 )
 
 // Extensions is a bitmask of enabled Parser extensions.
@@ -37,34 +39,6 @@ const (
 		BackslashLineBreak | DefinitionLists
 )
 
-// ListType contains bitwise or'ed flags for list and list item objects.
-type ListType int
-
-// These are the possible flag values for the ListItem renderer.
-// Multiple flag values may be ORed together.
-// These are mostly of interest if you are writing a new output format.
-const (
-	ListTypeOrdered ListType = 1 << iota
-	ListTypeDefinition
-	ListTypeTerm
-
-	ListItemContainsBlock
-	ListItemBeginningOfList // TODO: figure out if this is of any use now
-	ListItemEndOfList
-)
-
-// CellAlignFlags holds a type of alignment in a table cell.
-type CellAlignFlags int
-
-// These are the possible flag values for the table cell renderer.
-// Only a single one of these values will be used; they are not ORed together.
-// These are mostly of interest if you are writing a new output format.
-const (
-	TableAlignmentLeft CellAlignFlags = 1 << iota
-	TableAlignmentRight
-	TableAlignmentCenter = (TableAlignmentLeft | TableAlignmentRight)
-)
-
 // The size of a tab stop.
 const (
 	TabSizeDefault = 4
@@ -72,7 +46,7 @@ const (
 )
 
 // for each character that triggers a response when parsing inline data.
-type inlineParser func(p *Parser, data []byte, offset int) (int, *Node)
+type inlineParser func(p *Parser, data []byte, offset int) (int, *ast.Node)
 
 // ReferenceOverrideFunc is expected to be called with a reference string and
 // return either a valid Reference type that the reference string maps to or
@@ -101,7 +75,7 @@ type Parser struct {
 	ReferenceOverride ReferenceOverrideFunc
 
 	// after parsing, this is AST root of parsed markdown text
-	Doc *Node
+	Doc *ast.Node
 
 	extensions Extensions
 
@@ -116,9 +90,9 @@ type Parser struct {
 	// in notes. Slice is nil if footnotes not enabled.
 	notes []*reference
 
-	tip                  *Node // = doc
-	oldTip               *Node
-	lastMatchedContainer *Node // = doc
+	tip                  *ast.Node // = doc
+	oldTip               *ast.Node
+	lastMatchedContainer *ast.Node // = doc
 	allClosed            bool
 }
 
@@ -135,7 +109,7 @@ func NewParserWithExtensions(extension Extensions) *Parser {
 		refs:       make(map[string]*reference),
 		maxNesting: 16,
 		insideLink: false,
-		Doc:        NewNode(&DocumentData{}),
+		Doc:        ast.NewNode(&ast.DocumentData{}),
 		extensions: extension,
 		allClosed:  true,
 	}
@@ -191,18 +165,39 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 	return ref, found
 }
 
-func (p *Parser) finalize(block *Node) {
+func (p *Parser) finalize(block *ast.Node) {
 	above := block.Parent
-	block.open = false
+	block.Open = false
 	p.tip = above
 }
 
-func (p *Parser) addChild(d NodeData, offset uint32) *Node {
-	return p.addExistingChild(NewNode(d), offset)
+func (p *Parser) addChild(d ast.NodeData, offset uint32) *ast.Node {
+	return p.addExistingChild(ast.NewNode(d), offset)
 }
 
-func (p *Parser) addExistingChild(node *Node, offset uint32) *Node {
-	for !p.tip.canContain(node.Data) {
+func canNodeContain(n *ast.Node, v ast.NodeData) bool {
+	switch n.Data.(type) {
+	case *ast.ListData:
+		return isListItemData(v)
+	case *ast.DocumentData, *ast.BlockQuoteData, *ast.ListItemData:
+		return !isListItemData(v)
+	case *ast.TableData:
+		switch v.(type) {
+		case *ast.TableHeadData, *ast.TableBodyData:
+			return true
+		default:
+			return false
+		}
+	case *ast.TableHeadData, *ast.TableBodyData:
+		return isTableRowData(v)
+	case *ast.TableRowData:
+		return isTableCellData(v)
+	}
+	return false
+}
+
+func (p *Parser) addExistingChild(node *ast.Node, offset uint32) *ast.Node {
+	for !canNodeContain(p.tip, node.Data) {
 		p.finalize(p.tip)
 	}
 	p.tip.AppendChild(node)
@@ -236,12 +231,11 @@ type Reference struct {
 // Render renders a parsed data in parser with a given renderer
 func (p *Parser) Render(renderer Renderer) []byte {
 	var buf bytes.Buffer
-	ast := p.Doc
-	renderer.RenderHeader(&buf, ast)
-	ast.WalkFunc(func(node *Node, entering bool) WalkStatus {
+	renderer.RenderHeader(&buf, p.Doc)
+	p.Doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
 		return renderer.RenderNode(&buf, node, entering)
 	})
-	renderer.RenderFooter(&buf, ast)
+	renderer.RenderFooter(&buf, p.Doc)
 	return buf.Bytes()
 }
 
@@ -250,20 +244,20 @@ func (p *Parser) Render(renderer Renderer) []byte {
 // tree can then be rendered with a default or custom renderer, or
 // analyzed/transformed by the caller to whatever non-standard needs they have.
 // The return value is the root node of the syntax tree.
-func (p *Parser) Parse(input []byte) *Node {
+func (p *Parser) Parse(input []byte) *ast.Node {
 	p.block(input)
 	// Walk the tree and finish up some of unfinished blocks
 	for p.tip != nil {
 		p.finalize(p.tip)
 	}
 	// Walk the tree again and process inline markdown in each block
-	p.Doc.WalkFunc(func(node *Node, entering bool) WalkStatus {
+	p.Doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
 		switch node.Data.(type) {
-		case *ParagraphData, *HeadingData, *TableCellData:
-			p.inline(node, node.content)
-			node.content = nil
+		case *ast.ParagraphData, *ast.HeadingData, *ast.TableCellData:
+			p.inline(node, node.Content)
+			node.Content = nil
 		}
-		return GoToNext
+		return ast.GoToNext
 	})
 	p.parseRefsToAST()
 	return p.Doc
@@ -274,12 +268,12 @@ func (p *Parser) parseRefsToAST() {
 		return
 	}
 	p.tip = p.Doc
-	d := &ListData{
+	d := &ast.ListData{
 		IsFootnotesList: true,
-		ListFlags:       ListTypeOrdered,
+		ListFlags:       ast.ListTypeOrdered,
 	}
 	block := p.addBlock(d, nil)
-	flags := ListItemBeginningOfList
+	flags := ast.ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is
 	// because the body of the loop will append nested footnotes to p.notes and
 	// we need to process those late additions. Range form would only walk over
@@ -288,27 +282,27 @@ func (p *Parser) parseRefsToAST() {
 		ref := p.notes[i]
 		p.addExistingChild(ref.footnote, 0)
 		block := ref.footnote
-		blockData := block.Data.(*ListItemData)
-		blockData.ListFlags = flags | ListTypeOrdered
+		blockData := block.Data.(*ast.ListItemData)
+		blockData.ListFlags = flags | ast.ListTypeOrdered
 		blockData.RefLink = ref.link
 		if ref.hasBlock {
-			flags |= ListItemContainsBlock
+			flags |= ast.ListItemContainsBlock
 			p.block(ref.title)
 		} else {
 			p.inline(block, ref.title)
 		}
-		flags &^= ListItemBeginningOfList | ListItemContainsBlock
+		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
 	above := block.Parent
 	finalizeList(block, d)
 	p.tip = above
-	block.WalkFunc(func(node *Node, entering bool) WalkStatus {
+	block.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
 		switch node.Data.(type) {
-		case *ParagraphData, *HeadingData:
-			p.inline(node, node.content)
-			node.content = nil
+		case *ast.ParagraphData, *ast.HeadingData:
+			p.inline(node, node.Content)
+			node.Content = nil
 		}
-		return GoToNext
+		return ast.GoToNext
 	})
 }
 
@@ -383,7 +377,7 @@ type reference struct {
 	title    []byte
 	noteID   int // 0 if not a footnote ref
 	hasBlock bool
-	footnote *Node // a link to the Item node within a list of footnotes
+	footnote *ast.Node // a link to the Item node within a list of footnotes
 
 	text []byte // only gets populated by refOverride feature with Reference.Text
 }
@@ -785,4 +779,14 @@ func slugify(in []byte) []byte {
 		}
 	}
 	return out[a : b+1]
+}
+
+func isTableRowData(d ast.NodeData) bool {
+	_, ok := d.(*ast.TableRowData)
+	return ok
+}
+
+func isTableCellData(d ast.NodeData) bool {
+	_, ok := d.(*ast.TableCellData)
+	return ok
 }

@@ -10,6 +10,8 @@ import (
 	"html"
 	"regexp"
 	"unicode"
+
+	"github.com/gomarkdown/markdown/ast"
 )
 
 const (
@@ -180,7 +182,7 @@ func (p *Parser) block(data []byte) {
 		// or
 		// ______
 		if p.isHRule(data) {
-			p.addBlock(&HorizontalRuleData{}, nil)
+			p.addBlock(&ast.HorizontalRuleData{}, nil)
 			i := skipUntilChar(data, 0, '\n')
 			data = data[i:]
 			continue
@@ -224,7 +226,7 @@ func (p *Parser) block(data []byte) {
 		// 1. Item 1
 		// 2. Item 2
 		if p.oliPrefix(data) > 0 {
-			data = data[p.list(data, ListTypeOrdered):]
+			data = data[p.list(data, ast.ListTypeOrdered):]
 			continue
 		}
 
@@ -238,7 +240,7 @@ func (p *Parser) block(data []byte) {
 		// :   Definition c
 		if p.extensions&DefinitionLists != 0 {
 			if p.dliPrefix(data) > 0 {
-				data = data[p.list(data, ListTypeDefinition):]
+				data = data[p.list(data, ast.ListTypeDefinition):]
 				continue
 			}
 		}
@@ -251,10 +253,10 @@ func (p *Parser) block(data []byte) {
 	p.nesting--
 }
 
-func (p *Parser) addBlock(d NodeData, content []byte) *Node {
+func (p *Parser) addBlock(d ast.NodeData, content []byte) *ast.Node {
 	p.closeUnmatchedBlocks()
 	container := p.addChild(d, 0)
-	container.content = content
+	container.Content = content
 	return container
 }
 
@@ -308,7 +310,7 @@ func (p *Parser) prefixHeading(data []byte) int {
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
 			id = SanitizeAnchorName(string(data[i:end]))
 		}
-		d := &HeadingData{
+		d := &ast.HeadingData{
 			HeadingID: id,
 			Level:     level,
 		}
@@ -358,7 +360,7 @@ func (p *Parser) titleBlock(data []byte, doRender bool) int {
 	consumed := len(data)
 	data = bytes.TrimPrefix(data, []byte("% "))
 	data = bytes.Replace(data, []byte("\n% "), []byte("\n"), -1)
-	d := &HeadingData{
+	d := &ast.HeadingData{
 		Level:        1,
 		IsTitleblock: true,
 	}
@@ -456,15 +458,15 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	if doRender {
 		// trim newlines
 		end := backChar(data, i, '\n')
-		finalizeHTMLBlock(p.addBlock(&HTMLBlockData{}, data[:end]))
+		finalizeHTMLBlock(p.addBlock(&ast.HTMLBlockData{}, data[:end]))
 	}
 
 	return i
 }
 
-func finalizeHTMLBlock(block *Node) {
-	block.Literal = block.content
-	block.content = nil
+func finalizeHTMLBlock(block *ast.Node) {
+	block.Literal = block.Content
+	block.Content = nil
 }
 
 // HTML comment, lax form
@@ -476,7 +478,7 @@ func (p *Parser) htmlComment(data []byte, doRender bool) int {
 		if doRender {
 			// trim trailing newlines
 			end := backChar(data, size, '\n')
-			block := p.addBlock(&HTMLBlockData{}, data[:end])
+			block := p.addBlock(&ast.HTMLBlockData{}, data[:end])
 			finalizeHTMLBlock(block)
 		}
 		return size
@@ -507,7 +509,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 			if doRender {
 				// trim newlines
 				end := backChar(data, size, '\n')
-				finalizeHTMLBlock(p.addBlock(&HTMLBlockData{}, data[:end]))
+				finalizeHTMLBlock(p.addBlock(&ast.HTMLBlockData{}, data[:end]))
 			}
 			return size
 		}
@@ -742,7 +744,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 
 	if doRender {
-		d := &CodeBlockData{
+		d := &ast.CodeBlockData{
 			IsFenced: true,
 		}
 		block := p.addBlock(d, work.Bytes()) // TODO: get rid of temp buffer
@@ -766,29 +768,29 @@ func unescapeString(str []byte) []byte {
 	return str
 }
 
-func finalizeCodeBlock(block *Node, code *CodeBlockData) {
+func finalizeCodeBlock(block *ast.Node, code *ast.CodeBlockData) {
 	if code.IsFenced {
-		newlinePos := bytes.IndexByte(block.content, '\n')
-		firstLine := block.content[:newlinePos]
-		rest := block.content[newlinePos+1:]
+		newlinePos := bytes.IndexByte(block.Content, '\n')
+		firstLine := block.Content[:newlinePos]
+		rest := block.Content[newlinePos+1:]
 		code.Info = unescapeString(bytes.Trim(firstLine, "\n"))
 		block.Literal = rest
 	} else {
-		block.Literal = block.content
+		block.Literal = block.Content
 	}
-	block.content = nil
+	block.Content = nil
 }
 
 func (p *Parser) table(data []byte) int {
-	table := p.addBlock(&TableData{}, nil)
+	table := p.addBlock(&ast.TableData{}, nil)
 	i, columns := p.tableHeader(data)
 	if i == 0 {
 		p.tip = table.Parent
-		removeNodeFromTree(table)
+		table.RemoveFromTree()
 		return 0
 	}
 
-	p.addBlock(&TableBodyData{}, nil)
+	p.addBlock(&ast.TableBodyData{}, nil)
 
 	for i < len(data) {
 		pipes, rowStart := 0, i
@@ -820,7 +822,7 @@ func isBackslashEscaped(data []byte, i int) bool {
 	return backslashes&1 == 1
 }
 
-func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
+func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags) {
 	i := 0
 	colCount := 1
 	for i = 0; i < len(data) && data[i] != '\n'; i++ {
@@ -846,7 +848,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
 		colCount--
 	}
 
-	columns = make([]CellAlignFlags, colCount)
+	columns = make([]ast.CellAlignFlags, colCount)
 
 	// move on to the header underline
 	i++
@@ -867,7 +869,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
 
 		if data[i] == ':' {
 			i++
-			columns[col] |= TableAlignmentLeft
+			columns[col] |= ast.TableAlignmentLeft
 			dashes++
 		}
 		for i < len(data) && data[i] == '-' {
@@ -876,7 +878,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
 		}
 		if i < len(data) && data[i] == ':' {
 			i++
-			columns[col] |= TableAlignmentRight
+			columns[col] |= ast.TableAlignmentRight
 			dashes++
 		}
 		for i < len(data) && data[i] == ' ' {
@@ -921,14 +923,14 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []CellAlignFlags) {
 		return
 	}
 
-	p.addBlock(&TableHeadData{}, nil)
+	p.addBlock(&ast.TableHeadData{}, nil)
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
 	return
 }
 
-func (p *Parser) tableRow(data []byte, columns []CellAlignFlags, header bool) {
-	p.addBlock(&TableRowData{}, nil)
+func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool) {
+	p.addBlock(&ast.TableRowData{}, nil)
 	i, col := 0, 0
 
 	if data[i] == '|' && !isBackslashEscaped(data, i) {
@@ -955,7 +957,7 @@ func (p *Parser) tableRow(data []byte, columns []CellAlignFlags, header bool) {
 			cellEnd--
 		}
 
-		d := &TableCellData{
+		d := &ast.TableCellData{
 			IsHeader: header,
 			Align:    columns[col],
 		}
@@ -964,7 +966,7 @@ func (p *Parser) tableRow(data []byte, columns []CellAlignFlags, header bool) {
 
 	// pad it out with empty columns to get the right number
 	for ; col < len(columns); col++ {
-		d := &TableCellData{
+		d := &ast.TableCellData{
 			IsHeader: header,
 			Align:    columns[col],
 		}
@@ -1003,7 +1005,7 @@ func (p *Parser) terminateBlockquote(data []byte, beg, end int) bool {
 
 // parse a blockquote fragment
 func (p *Parser) quote(data []byte) int {
-	block := p.addBlock(&BlockQuoteData{}, nil)
+	block := p.addBlock(&ast.BlockQuoteData{}, nil)
 	var raw bytes.Buffer
 	beg, end := 0, 0
 	for beg < len(data) {
@@ -1086,7 +1088,7 @@ func (p *Parser) code(data []byte) int {
 
 	work.WriteByte('\n')
 
-	d := &CodeBlockData{
+	d := &ast.CodeBlockData{
 		IsFenced: false,
 	}
 	block := p.addBlock(d, work.Bytes()) // TODO: get rid of temp buffer
@@ -1146,10 +1148,10 @@ func (p *Parser) dliPrefix(data []byte) int {
 }
 
 // parse ordered or unordered list block
-func (p *Parser) list(data []byte, flags ListType) int {
+func (p *Parser) list(data []byte, flags ast.ListType) int {
 	i := 0
-	flags |= ListItemBeginningOfList
-	d := &ListData{
+	flags |= ast.ListItemBeginningOfList
+	d := &ast.ListData{
 		ListFlags: flags,
 		Tight:     true,
 	}
@@ -1157,14 +1159,14 @@ func (p *Parser) list(data []byte, flags ListType) int {
 
 	for i < len(data) {
 		skip := p.listItem(data[i:], &flags)
-		if flags&ListItemContainsBlock != 0 {
+		if flags&ast.ListItemContainsBlock != 0 {
 			d.Tight = false
 		}
 		i += skip
-		if skip == 0 || flags&ListItemEndOfList != 0 {
+		if skip == 0 || flags&ast.ListItemEndOfList != 0 {
 			break
 		}
-		flags &= ^ListItemBeginningOfList
+		flags &= ^ast.ListItemBeginningOfList
 	}
 
 	above := block.Parent
@@ -1175,14 +1177,14 @@ func (p *Parser) list(data []byte, flags ListType) int {
 
 // Returns true if block ends with a blank line, descending if needed
 // into lists and sublists.
-func endsWithBlankLine(block *Node) bool {
+func endsWithBlankLine(block *ast.Node) bool {
 	// TODO: figure this out. Always false now.
 	for block != nil {
 		//if block.lastLineBlank {
 		//return true
 		//}
 		switch block.Data.(type) {
-		case *ListData, *ListItemData:
+		case *ast.ListData, *ast.ListItemData:
 			block = block.LastChild()
 		default:
 			return false
@@ -1191,8 +1193,8 @@ func endsWithBlankLine(block *Node) bool {
 	return false
 }
 
-func finalizeList(block *Node, listData *ListData) {
-	block.open = false
+func finalizeList(block *ast.Node, listData *ast.ListData) {
+	block.Open = false
 	items := block.Parent.Children
 	lastItemIdx := len(items) - 1
 	for i, item := range items {
@@ -1218,7 +1220,7 @@ func finalizeList(block *Node, listData *ListData) {
 
 // Parse a single list item.
 // Assumes initial prefix is already removed if this is a sublist.
-func (p *Parser) listItem(data []byte, flags *ListType) int {
+func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 	// keep track of the indentation of the first line
 	itemIndent := 0
 	if data[0] == '\t' {
@@ -1240,13 +1242,13 @@ func (p *Parser) listItem(data []byte, flags *ListType) int {
 		i = p.dliPrefix(data)
 		// reset definition term flag
 		if i > 0 {
-			*flags &= ^ListTypeTerm
+			*flags &= ^ast.ListTypeTerm
 		}
 	}
 	if i == 0 {
 		// if in definition list, set term flag and continue
-		if *flags&ListTypeDefinition != 0 {
-			*flags |= ListTypeTerm
+		if *flags&ast.ListTypeDefinition != 0 {
+			*flags |= ast.ListTypeTerm
 		} else {
 			return 0
 		}
@@ -1312,7 +1314,7 @@ gatherlines:
 			p.dliPrefix(chunk) > 0:
 
 			if containsBlankLine {
-				*flags |= ListItemContainsBlock
+				*flags |= ast.ListItemContainsBlock
 			}
 
 			// to be a nested list, it must be indented more
@@ -1331,16 +1333,16 @@ gatherlines:
 			// if the heading is not indented, it is not nested in the list
 			// and thus ends the list
 			if containsBlankLine && indent < 4 {
-				*flags |= ListItemEndOfList
+				*flags |= ast.ListItemEndOfList
 				break gatherlines
 			}
-			*flags |= ListItemContainsBlock
+			*flags |= ast.ListItemContainsBlock
 
 		// anything following an empty line is only part
 		// of this item if it is indented 4 spaces
 		// (regardless of the indentation of the beginning of the item)
 		case containsBlankLine && indent < 4:
-			if *flags&ListTypeDefinition != 0 && i < len(data)-1 {
+			if *flags&ast.ListTypeDefinition != 0 && i < len(data)-1 {
 				// is the next item still a part of this list?
 				next := i
 				for next < len(data) && data[next] != '\n' {
@@ -1350,17 +1352,17 @@ gatherlines:
 					next++
 				}
 				if i < len(data)-1 && data[i] != ':' && data[next] != ':' {
-					*flags |= ListItemEndOfList
+					*flags |= ast.ListItemEndOfList
 				}
 			} else {
-				*flags |= ListItemEndOfList
+				*flags |= ast.ListItemEndOfList
 			}
 			break gatherlines
 
 		// a blank line means this should be parsed as a block
 		case containsBlankLine:
 			raw.WriteByte('\n')
-			*flags |= ListItemContainsBlock
+			*flags |= ast.ListItemContainsBlock
 		}
 
 		// if this line was preceded by one or more blanks,
@@ -1378,7 +1380,7 @@ gatherlines:
 
 	rawBytes := raw.Bytes()
 
-	d := &ListItemData{
+	d := &ast.ListItemData{
 		ListFlags:  *flags,
 		Tight:      false,
 		BulletChar: bulletChar,
@@ -1387,7 +1389,7 @@ gatherlines:
 	p.addBlock(d, nil)
 
 	// render the contents of the list item
-	if *flags&ListItemContainsBlock != 0 && *flags&ListTypeTerm == 0 {
+	if *flags&ast.ListItemContainsBlock != 0 && *flags&ast.ListTypeTerm == 0 {
 		// intermediate render of block item, except for definition term
 		if sublist > 0 {
 			p.block(rawBytes[:sublist])
@@ -1398,12 +1400,12 @@ gatherlines:
 	} else {
 		// intermediate render of inline item
 		if sublist > 0 {
-			child := p.addChild(&ParagraphData{}, 0)
-			child.content = rawBytes[:sublist]
+			child := p.addChild(&ast.ParagraphData{}, 0)
+			child.Content = rawBytes[:sublist]
 			p.block(rawBytes[sublist:])
 		} else {
-			child := p.addChild(&ParagraphData{}, 0)
-			child.content = rawBytes
+			child := p.addChild(&ast.ParagraphData{}, 0)
+			child.Content = rawBytes
 		}
 	}
 	return line
@@ -1429,7 +1431,7 @@ func (p *Parser) renderParagraph(data []byte) {
 		end--
 	}
 
-	p.addBlock(&ParagraphData{}, data[beg:end])
+	p.addBlock(&ast.ParagraphData{}, data[beg:end])
 }
 
 func (p *Parser) paragraph(data []byte) int {
@@ -1461,7 +1463,7 @@ func (p *Parser) paragraph(data []byte) int {
 			// did this blank line followed by a definition list item?
 			if p.extensions&DefinitionLists != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
-					return p.list(data[prev:], ListTypeDefinition)
+					return p.list(data[prev:], ast.ListTypeDefinition)
 				}
 			}
 
@@ -1489,7 +1491,7 @@ func (p *Parser) paragraph(data []byte) int {
 					id = SanitizeAnchorName(string(data[prev:eol]))
 				}
 
-				d := &HeadingData{
+				d := &ast.HeadingData{
 					Level:     level,
 					HeadingID: id,
 				}
@@ -1526,7 +1528,7 @@ func (p *Parser) paragraph(data []byte) int {
 		// if there's a definition list item, prev line is a definition term
 		if p.extensions&DefinitionLists != 0 {
 			if p.dliPrefix(current) != 0 {
-				ret := p.list(data[prev:], ListTypeDefinition)
+				ret := p.list(data[prev:], ast.ListTypeDefinition)
 				return ret
 			}
 		}
