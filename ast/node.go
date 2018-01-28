@@ -3,7 +3,6 @@ package ast
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 )
 
 // ListType contains bitwise or'ed flags for list and list item objects.
@@ -84,13 +83,6 @@ func AddChild(parent Node, child Node) {
 	pn := parent.AsTreeNode()
 	pn.Parent = parent
 	pn.Children = append(pn.Children, child)
-}
-
-func isNilNode(i Node) bool {
-	if i == nil {
-		return true
-	}
-	return reflect.ValueOf(i).IsNil()
 }
 
 // Document represents document
@@ -316,7 +308,7 @@ func (n *TreeNode) FirstChild() Node {
 
 // NextNode returns next sibling of this node
 func NextNode(n Node) Node {
-	if isNilNode(n.GetParent()) {
+	if n.GetParent() == nil {
 		return nil
 	}
 	a := n.GetParent().AsTreeNode().Children
@@ -331,7 +323,7 @@ func NextNode(n Node) Node {
 
 // PrevNode returns sibling node before n
 func PrevNode(n Node) Node {
-	if isNilNode(n.GetParent()) {
+	if n.GetParent() == nil {
 		return nil
 	}
 	a := n.GetParent().AsTreeNode().Children
