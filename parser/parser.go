@@ -176,9 +176,9 @@ func (p *Parser) addChild(n ast.Node, offset uint32) ast.Node {
 func canNodeContain(n ast.Node, v ast.Node) bool {
 	switch n.(type) {
 	case *ast.List:
-		return isListItemData(v)
+		return isListItem(v)
 	case *ast.Document, *ast.BlockQuote, *ast.ListItem:
-		return !isListItemData(v)
+		return !isListItem(v)
 	case *ast.Table:
 		switch v.(type) {
 		case *ast.TableHead, *ast.TableBody:
@@ -187,9 +187,11 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 			return false
 		}
 	case *ast.TableHead, *ast.TableBody:
-		return isTableRowData(v)
+		_, ok := v.(*ast.TableRow)
+		return ok
 	case *ast.TableRow:
-		return isTableCellData(v)
+		_, ok := v.(*ast.TableCell)
+		return ok
 	}
 	return false
 }
@@ -770,17 +772,12 @@ func slugify(in []byte) []byte {
 	return out[a : b+1]
 }
 
-func isTableRowData(d ast.Node) bool {
+func isTableRow(d ast.Node) bool {
 	_, ok := d.(*ast.TableRow)
 	return ok
 }
 
-func isTableCellData(d ast.Node) bool {
-	_, ok := d.(*ast.TableCell)
-	return ok
-}
-
-func isListItemData(d ast.Node) bool {
+func isListItem(d ast.Node) bool {
 	_, ok := d.(*ast.ListItem)
 	return ok
 }

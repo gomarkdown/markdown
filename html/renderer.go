@@ -346,7 +346,7 @@ func itemOpenCR(node ast.Node) bool {
 func skipParagraphTags(node ast.Node) bool {
 	parent := node.GetParent()
 	grandparent := parent.GetParent()
-	if grandparent == nil || !isListData(grandparent) {
+	if grandparent == nil || !isList(grandparent) {
 		return false
 	}
 	isParentTerm := isListItemTerm(parent)
@@ -420,7 +420,8 @@ func (r *Renderer) text(w io.Writer, node *ast.Text) {
 		EscapeHTML(&tmp, node.Literal)
 		r.sr.Process(w, tmp.Bytes())
 	} else {
-		if isLinkData(node.GetParent()) {
+		_, parentIsLink := node.Parent.(*ast.Link)
+		if parentIsLink {
 			escLink(w, node.Literal)
 		} else {
 			EscapeHTML(w, node.Literal)
@@ -538,7 +539,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, nodeData *ast.Paragraph) {
 			r.cr(w)
 		}
 	}
-	if isBlockQuoteData(nodeData.Parent) && prev == nil {
+	if isBlockQuote(nodeData.Parent) && prev == nil {
 		r.cr(w)
 	}
 	r.outs(w, "<p>")
@@ -546,7 +547,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, nodeData *ast.Paragraph) {
 
 func (r *Renderer) paragraphExit(w io.Writer, node *ast.Paragraph) {
 	r.outs(w, "</p>")
-	if !(isListItemData(node.Parent) && ast.NextNode(node) == nil) {
+	if !(isListItem(node.Parent) && ast.NextNode(node) == nil) {
 		r.cr(w)
 	}
 }
@@ -606,7 +607,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 
 func (r *Renderer) headingExit(w io.Writer, nodeData *ast.Heading) {
 	r.outs(w, headingCloseTagFromLevel(nodeData.Level))
-	if !(isListItemData(nodeData.Parent) && ast.NextNode(nodeData) == nil) {
+	if !(isListItem(nodeData.Parent) && ast.NextNode(nodeData) == nil) {
 		r.cr(w)
 	}
 }
@@ -635,7 +636,7 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 		r.cr(w)
 	}
 	r.cr(w)
-	if isListItemData(nodeData.Parent) {
+	if isListItem(nodeData.Parent) {
 		grand := nodeData.Parent.GetParent()
 		if isListTight(grand) {
 			r.cr(w)
@@ -667,10 +668,10 @@ func (r *Renderer) listExit(w io.Writer, node *ast.List) {
 	//if node.parent.Type != Item {
 	//	cr(w)
 	//}
-	if isListItemData(node.Parent) && ast.NextNode(node) != nil {
+	if isListItem(node.Parent) && ast.NextNode(node) != nil {
 		r.cr(w)
 	}
-	if isDocumentData(node.Parent) || isBlockQuoteData(node.Parent) {
+	if isDocument(node.Parent) || isBlockQuote(node.Parent) {
 		r.cr(w)
 	}
 	if node.IsFootnotesList {
@@ -743,7 +744,7 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 	EscapeHTML(w, node.Literal)
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
-	if !isListItemData(node.Parent) {
+	if !isListItem(node.Parent) {
 		r.cr(w)
 	}
 }
@@ -980,19 +981,19 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 	r.lastOutputLen = buf.Len()
 }
 
-func isListData(n ast.Node) bool {
+func isList(n ast.Node) bool {
 	_, ok := n.(*ast.List)
 	return ok
 }
 
 func isListTight(d ast.Node) bool {
-	if listData, ok := d.(*ast.List); ok {
-		return listData.Tight
+	if list, ok := d.(*ast.List); ok {
+		return list.Tight
 	}
 	return false
 }
 
-func isListItemData(d ast.Node) bool {
+func isListItem(d ast.Node) bool {
 	_, ok := d.(*ast.ListItem)
 	return ok
 }
@@ -1002,17 +1003,12 @@ func isListItemTerm(node ast.Node) bool {
 	return ok && data.ListFlags&ast.ListTypeTerm != 0
 }
 
-func isLinkData(d ast.Node) bool {
-	_, ok := d.(*ast.Link)
-	return ok
-}
-
-func isBlockQuoteData(d ast.Node) bool {
+func isBlockQuote(d ast.Node) bool {
 	_, ok := d.(*ast.BlockQuote)
 	return ok
 }
 
-func isDocumentData(d ast.Node) bool {
+func isDocument(d ast.Node) bool {
 	_, ok := d.(*ast.Document)
 	return ok
 }
