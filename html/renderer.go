@@ -312,11 +312,11 @@ func appendLanguageAttr(attrs []string, info []byte) []string {
 }
 
 func (r *Renderer) outTag(w io.Writer, name string, attrs []string) {
-	var s string
+	s := name
 	if len(attrs) > 0 {
-		s = " " + strings.Join(attrs, " ")
+		s += " " + strings.Join(attrs, " ")
 	}
-	io.WriteString(w, name+s+">")
+	io.WriteString(w, s+">")
 	r.lastOutputLen = 1
 }
 
@@ -335,11 +335,11 @@ func footnoteReturnLink(prefix, returnLink string, slug []byte) string {
 	return ` <a class="footnote-return" href="#fnref:` + prefix + string(slug) + `">` + returnLink + `</a>`
 }
 
-func itemOpenCR(node ast.Node) bool {
-	if ast.PrevNode(node) == nil {
+func listItemOpenCR(listItem *ast.ListItem) bool {
+	if ast.PrevNode(listItem) == nil {
 		return false
 	}
-	ld := node.GetParent().(*ast.List)
+	ld := listItem.Parent.(*ast.List)
 	return !ld.Tight && ld.ListFlags&ast.ListTypeDefinition == 0
 }
 
@@ -696,7 +696,7 @@ func (r *Renderer) list(w io.Writer, list *ast.List, entering bool) {
 }
 
 func (r *Renderer) listItemEnter(w io.Writer, listItem *ast.ListItem) {
-	if itemOpenCR(listItem) {
+	if listItemOpenCR(listItem) {
 		r.cr(w)
 	}
 	if listItem.RefLink != nil {
