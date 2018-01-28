@@ -1,8 +1,3 @@
-// Copyright © 2011 Russ Ross <russ@russross.com>.
-// Distributed under the Simplified BSD License.
-
-// Parsing block-level elements.
-
 package parser
 
 import (
@@ -13,6 +8,8 @@ import (
 
 	"github.com/gomarkdown/markdown/ast"
 )
+
+// Parsing block-level elements.
 
 const (
 	charEntity = "&(?:#x[a-f0-9]{1,8}|#[0-9]{1,8}|[a-z][a-z0-9]{1,31});"

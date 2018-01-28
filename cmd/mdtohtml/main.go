@@ -1,9 +1,3 @@
-// Markdown to HTML cmd-line tool
-// Copyright © 2011 Russ Ross <russ@russross.com>.
-// Copyright © 2018 Krzysztof Kowalczyk https://blog.kowalczyk.info
-// Distributed under the Simplified BSD License.
-// See README.md for details.
-
 package main
 
 import (

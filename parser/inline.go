@@ -1,8 +1,3 @@
-// Copyright © 2011 Russ Ross <russ@russross.com>.
-// Distributed under the Simplified BSD License.
-
-// Parsing of inline elements
-
 package parser
 
 import (
@@ -12,6 +7,8 @@ import (
 
 	"github.com/gomarkdown/markdown/ast"
 )
+
+// Parsing of inline elements
 
 var (
 	urlRe    = `((https?|ftp):\/\/|\/)[-A-Za-z0-9+&@#\/%?=~_|!:,.;\(\)]+`

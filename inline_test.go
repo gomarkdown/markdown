@@ -1,8 +1,3 @@
-// Copyright © 2011 Russ Ross <russ@russross.com>.
-// Distributed under the Simplified BSD License.
-
-// Unit tests for inline parsing
-
 package markdown
 
 import (

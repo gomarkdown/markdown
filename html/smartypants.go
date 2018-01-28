@@ -1,14 +1,11 @@
-// Copyright © 2011 Russ Ross <russ@russross.com>.
-// Distributed under the Simplified BSD License.
-
-// SmartyPants rendering
-
 package html
 
 import (
 	"bytes"
 	"io"
 )
+
+// SmartyPants rendering
 
 // SPRenderer is a struct containing state of a Smartypants renderer.
 type SPRenderer struct {

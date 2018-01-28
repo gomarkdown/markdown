@@ -1,8 +1,3 @@
-// Copyright © 2011 Russ Ross <russ@russross.com>.
-// Distributed under the Simplified BSD License.
-
-// Markdown 1.0.3 reference tests
-
 package markdown
 
 import (
@@ -13,8 +8,7 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
-// Note: the expensive test is "Markdown Documentation - Syntax", which takes ~7 secs
-// This limits gains from parallization of tests
+// Markdown 1.0.3 reference tests
 
 func TestReference(t *testing.T) {
 	t.Parallel()
