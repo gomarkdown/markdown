@@ -104,7 +104,7 @@ type RendererOptions struct {
 //
 // Do not create this directly, instead use the NewRenderer function.
 type Renderer struct {
-	params RendererOptions
+	opts RendererOptions
 
 	closeTag string // how to end singleton tags: either " />" or ">"
 
@@ -119,24 +119,24 @@ type Renderer struct {
 
 // NewRenderer creates and configures an Renderer object, which
 // satisfies the Renderer interface.
-func NewRenderer(params RendererOptions) *Renderer {
+func NewRenderer(opts RendererOptions) *Renderer {
 	// configure the rendering engine
 	closeTag := ">"
-	if params.Flags&UseXHTML != 0 {
+	if opts.Flags&UseXHTML != 0 {
 		closeTag = " />"
 	}
 
-	if params.FootnoteReturnLinkContents == "" {
-		params.FootnoteReturnLinkContents = `<sup>[return]</sup>`
+	if opts.FootnoteReturnLinkContents == "" {
+		opts.FootnoteReturnLinkContents = `<sup>[return]</sup>`
 	}
 
 	return &Renderer{
-		params: params,
+		opts: opts,
 
 		closeTag:   closeTag,
 		headingIDs: make(map[string]int),
 
-		sr: NewSmartypantsRenderer(params.Flags),
+		sr: NewSmartypantsRenderer(opts.Flags),
 	}
 }
 
@@ -253,8 +253,8 @@ func (r *Renderer) ensureUniqueHeadingID(id string) string {
 }
 
 func (r *Renderer) addAbsPrefix(link []byte) []byte {
-	if r.params.AbsolutePrefix != "" && isRelativeLink(link) && link[0] != '.' {
-		newDest := r.params.AbsolutePrefix
+	if r.opts.AbsolutePrefix != "" && isRelativeLink(link) && link[0] != '.' {
+		newDest := r.opts.AbsolutePrefix
 		if link[0] != '/' {
 			newDest += "/"
 		}
@@ -416,11 +416,11 @@ func headingCloseTagFromLevel(level int) string {
 }
 
 func (r *Renderer) outHRTag(w io.Writer) {
-	r.outOneOf(w, r.params.Flags&UseXHTML == 0, "<hr>", "<hr />")
+	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, "<hr>", "<hr />")
 }
 
 func (r *Renderer) text(w io.Writer, node *ast.Node, nodeData *ast.TextData) {
-	if r.params.Flags&Smartypants != 0 {
+	if r.opts.Flags&Smartypants != 0 {
 		var tmp bytes.Buffer
 		EscapeHTML(&tmp, node.Literal)
 		r.sr.Process(w, tmp.Bytes())
@@ -434,7 +434,7 @@ func (r *Renderer) text(w io.Writer, node *ast.Node, nodeData *ast.TextData) {
 }
 
 func (r *Renderer) hardBreak(w io.Writer, node *ast.Node, nodeData *ast.HardbreakData) {
-	r.outOneOf(w, r.params.Flags&UseXHTML == 0, "<br>", "<br />")
+	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, "<br>", "<br />")
 	r.cr(w)
 }
 
@@ -457,7 +457,7 @@ func (r *Renderer) outOneOfCr(w io.Writer, outFirst bool, first string, second s
 }
 
 func (r *Renderer) span(w io.Writer, node *ast.Node, nodeData *ast.HTMLSpanData) {
-	if r.params.Flags&SkipHTML == 0 {
+	if r.opts.Flags&SkipHTML == 0 {
 		r.out(w, node.Literal)
 	}
 }
@@ -472,11 +472,11 @@ func (r *Renderer) linkEnter(w io.Writer, node *ast.Node, nodeData *ast.LinkData
 	hrefBuf.WriteByte('"')
 	attrs = append(attrs, hrefBuf.String())
 	if nodeData.NoteID != 0 {
-		r.outs(w, footnoteRef(r.params.FootnoteAnchorPrefix, nodeData))
+		r.outs(w, footnoteRef(r.opts.FootnoteAnchorPrefix, nodeData))
 		return
 	}
 
-	attrs = appendLinkAttrs(attrs, r.params.Flags, dest)
+	attrs = appendLinkAttrs(attrs, r.opts.Flags, dest)
 	if len(nodeData.Title) > 0 {
 		var titleBuff bytes.Buffer
 		titleBuff.WriteString("title=\"")
@@ -495,7 +495,7 @@ func (r *Renderer) linkExit(w io.Writer, node *ast.Node, nodeData *ast.LinkData)
 
 func (r *Renderer) link(w io.Writer, node *ast.Node, nodeData *ast.LinkData, entering bool) {
 	// mark it but don't link it if it is not a safe link: no smartypants
-	if needSkipLink(r.params.Flags, nodeData.Destination) {
+	if needSkipLink(r.opts.Flags, nodeData.Destination) {
 		r.outOneOf(w, entering, "<tt>", "</tt>")
 		return
 	}
@@ -581,7 +581,7 @@ func (r *Renderer) code(w io.Writer, node *ast.Node, nodeData *ast.CodeData) {
 }
 
 func (r *Renderer) htmlBlock(w io.Writer, node *ast.Node, nodeData *ast.HTMLBlockData) {
-	if r.params.Flags&SkipHTML != 0 {
+	if r.opts.Flags&SkipHTML != 0 {
 		return
 	}
 	r.cr(w)
@@ -596,11 +596,11 @@ func (r *Renderer) headingEnter(w io.Writer, node *ast.Node, nodeData *ast.Headi
 	}
 	if nodeData.HeadingID != "" {
 		id := r.ensureUniqueHeadingID(nodeData.HeadingID)
-		if r.params.HeadingIDPrefix != "" {
-			id = r.params.HeadingIDPrefix + id
+		if r.opts.HeadingIDPrefix != "" {
+			id = r.opts.HeadingIDPrefix + id
 		}
-		if r.params.HeadingIDSuffix != "" {
-			id = id + r.params.HeadingIDSuffix
+		if r.opts.HeadingIDSuffix != "" {
+			id = id + r.opts.HeadingIDSuffix
 		}
 		attrID := `id="` + id + `"`
 		attrs = append(attrs, attrID)
@@ -697,7 +697,7 @@ func (r *Renderer) listItemEnter(w io.Writer, node *ast.Node, nodeData *ast.List
 	}
 	if nodeData.RefLink != nil {
 		slug := slugify(nodeData.RefLink)
-		r.outs(w, footnoteItem(r.params.FootnoteAnchorPrefix, slug))
+		r.outs(w, footnoteItem(r.opts.FootnoteAnchorPrefix, slug))
 		return
 	}
 
@@ -712,10 +712,10 @@ func (r *Renderer) listItemEnter(w io.Writer, node *ast.Node, nodeData *ast.List
 }
 
 func (r *Renderer) listItemExit(w io.Writer, node *ast.Node, nodeData *ast.ListItemData) {
-	if nodeData.RefLink != nil && r.params.Flags&FootnoteReturnLinks != 0 {
+	if nodeData.RefLink != nil && r.opts.Flags&FootnoteReturnLinks != 0 {
 		slug := slugify(nodeData.RefLink)
-		prefix := r.params.FootnoteAnchorPrefix
-		link := r.params.FootnoteReturnLinkContents
+		prefix := r.opts.FootnoteAnchorPrefix
+		link := r.opts.FootnoteReturnLinkContents
 		s := footnoteReturnLink(prefix, link, slug)
 		r.outs(w, s)
 	}
@@ -801,8 +801,8 @@ func (r *Renderer) tableBody(w io.Writer, node *ast.Node, nodeData *ast.TableBod
 // The typical behavior is to return GoToNext, which asks for the usual
 // traversal to the next node.
 func (r *Renderer) RenderNode(w io.Writer, node *ast.Node, entering bool) ast.WalkStatus {
-	if r.params.RenderNodeHook != nil {
-		status, didHandle := r.params.RenderNodeHook(w, node, entering)
+	if r.opts.RenderNodeHook != nil {
+		status, didHandle := r.opts.RenderNodeHook(w, node, entering)
 		if didHandle {
 			return status
 		}
@@ -826,7 +826,7 @@ func (r *Renderer) RenderNode(w io.Writer, node *ast.Node, entering bool) ast.Wa
 	case *ast.LinkData:
 		r.link(w, node, nodeData, entering)
 	case *ast.ImageData:
-		if r.params.Flags&SkipImages != 0 {
+		if r.opts.Flags&SkipImages != 0 {
 			return ast.SkipChildren
 		}
 		r.image(w, node, nodeData, entering)
@@ -870,25 +870,25 @@ func (r *Renderer) RenderNode(w io.Writer, node *ast.Node, entering bool) ast.Wa
 // RenderHeader writes HTML document preamble and TOC if requested.
 func (r *Renderer) RenderHeader(w io.Writer, ast *ast.Node) {
 	r.writeDocumentHeader(w)
-	if r.params.Flags&TOC != 0 {
+	if r.opts.Flags&TOC != 0 {
 		r.writeTOC(w, ast)
 	}
 }
 
 // RenderFooter writes HTML document footer.
 func (r *Renderer) RenderFooter(w io.Writer, ast *ast.Node) {
-	if r.params.Flags&CompletePage == 0 {
+	if r.opts.Flags&CompletePage == 0 {
 		return
 	}
 	io.WriteString(w, "\n</body>\n</html>\n")
 }
 
 func (r *Renderer) writeDocumentHeader(w io.Writer) {
-	if r.params.Flags&CompletePage == 0 {
+	if r.opts.Flags&CompletePage == 0 {
 		return
 	}
 	ending := ""
-	if r.params.Flags&UseXHTML != 0 {
+	if r.opts.Flags&UseXHTML != 0 {
 		io.WriteString(w, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" ")
 		io.WriteString(w, "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n")
 		io.WriteString(w, "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n")
@@ -899,10 +899,10 @@ func (r *Renderer) writeDocumentHeader(w io.Writer) {
 	}
 	io.WriteString(w, "<head>\n")
 	io.WriteString(w, "  <title>")
-	if r.params.Flags&Smartypants != 0 {
-		r.sr.Process(w, []byte(r.params.Title))
+	if r.opts.Flags&Smartypants != 0 {
+		r.sr.Process(w, []byte(r.opts.Title))
 	} else {
-		EscapeHTML(w, []byte(r.params.Title))
+		EscapeHTML(w, []byte(r.opts.Title))
 	}
 	io.WriteString(w, "</title>\n")
 	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"github.com/gomarkdown/markdown markdown processor for Go")
@@ -912,16 +912,16 @@ func (r *Renderer) writeDocumentHeader(w io.Writer) {
 	io.WriteString(w, "  <meta charset=\"utf-8\"")
 	io.WriteString(w, ending)
 	io.WriteString(w, ">\n")
-	if r.params.CSS != "" {
+	if r.opts.CSS != "" {
 		io.WriteString(w, "  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
-		EscapeHTML(w, []byte(r.params.CSS))
+		EscapeHTML(w, []byte(r.opts.CSS))
 		io.WriteString(w, "\"")
 		io.WriteString(w, ending)
 		io.WriteString(w, ">\n")
 	}
-	if r.params.Icon != "" {
+	if r.opts.Icon != "" {
 		io.WriteString(w, "  <link rel=\"icon\" type=\"image/x-icon\" href=\"")
-		EscapeHTML(w, []byte(r.params.Icon))
+		EscapeHTML(w, []byte(r.opts.Icon))
 		io.WriteString(w, "\"")
 		io.WriteString(w, ending)
 		io.WriteString(w, ">\n")
