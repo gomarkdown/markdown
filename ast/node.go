@@ -173,14 +173,12 @@ type Node struct {
 	Data NodeData
 
 	Content []byte // Markdown content of the block nodes
-	Open    bool   // Specifies an open block node that has not been finished to process yet
 }
 
 // NewNode allocates a node of a specified type.
 func NewNode(d NodeData) *Node {
 	return &Node{
 		Data: d,
-		Open: true,
 	}
 }
 

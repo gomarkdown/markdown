@@ -1191,7 +1191,6 @@ func endsWithBlankLine(block *ast.Node) bool {
 }
 
 func finalizeList(block *ast.Node, listData *ast.ListData) {
-	block.Open = false
 	items := block.Parent.Children
 	lastItemIdx := len(items) - 1
 	for i, item := range items {

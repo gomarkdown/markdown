@@ -167,7 +167,6 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 
 func (p *Parser) finalize(block *ast.Node) {
 	above := block.Parent
-	block.Open = false
 	p.tip = above
 }
 
