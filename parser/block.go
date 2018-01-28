@@ -3,7 +3,7 @@
 
 // Parsing block-level elements.
 
-package markdown
+package parser
 
 import (
 	"bytes"
@@ -606,10 +606,10 @@ func (*Parser) isHRule(data []byte) bool {
 	return n >= 3
 }
 
-// isFenceLine checks if there's a fence line (e.g., ``` or ``` go) at the beginning of data,
+// IsFenceLine checks if there's a fence line (e.g., ``` or ``` go) at the beginning of data,
 // and returns the end index if so, or 0 otherwise. It also returns the marker found.
 // If syntax is not nil, it gets set to the syntax specified in the fence line.
-func isFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker string) {
+func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker string) {
 	i, size := 0, 0
 
 	// skip up to three spaces
@@ -709,7 +709,7 @@ func isFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 // If doRender is true, a final newline is mandatory to recognize the fenced code block.
 func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	var syntax string
-	beg, marker := isFenceLine(data, &syntax, "")
+	beg, marker := IsFenceLine(data, &syntax, "")
 	if beg == 0 || beg >= len(data) {
 		return 0
 	}
@@ -722,7 +722,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		// safe to assume beg < len(data)
 
 		// check for the end of the code block
-		fenceEnd, _ := isFenceLine(data[beg:], nil, marker)
+		fenceEnd, _ := IsFenceLine(data[beg:], nil, marker)
 		if fenceEnd != 0 {
 			beg += fenceEnd
 			break

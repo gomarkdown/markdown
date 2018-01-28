@@ -3,7 +3,7 @@
 
 // Parsing of inline elements
 
-package markdown
+package parser
 
 import (
 	"bytes"

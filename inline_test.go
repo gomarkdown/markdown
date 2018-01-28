@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 func TestEmphasis(t *testing.T) {
@@ -94,16 +95,16 @@ func TestReferenceOverride(t *testing.T) {
 		"<p>test <a href=\"http://www.ref5.com/\" title=\"Reference 5\">Moo</a></p>\n",
 	}
 	doTestsInlineParam(t, tests, TestParams{
-		referenceOverride: func(reference string) (rv *Reference, overridden bool) {
+		referenceOverride: func(reference string) (rv *parser.Reference, overridden bool) {
 			switch reference {
 			case "ref1":
 				// just an overridden reference exists without definition
-				return &Reference{
+				return &parser.Reference{
 					Link:  "http://www.ref1.com/",
 					Title: "Reference 1"}, true
 			case "ref2":
 				// overridden exists and reference defined
-				return &Reference{
+				return &parser.Reference{
 					Link:  "http://www.overridden.com/",
 					Title: "Reference Overridden"}, true
 			case "ref3":
@@ -113,11 +114,11 @@ func TestReferenceOverride(t *testing.T) {
 				// overridden missing and defined
 				return nil, true
 			case "!(*http.ServeMux).ServeHTTP":
-				return &Reference{
+				return &parser.Reference{
 					Link:  "http://localhost:6060/pkg/net/http/#ServeMux.ServeHTTP",
 					Title: "ServeHTTP docs"}, true
 			case "ref5":
-				return &Reference{
+				return &parser.Reference{
 					Link:  "http://www.ref5.com/",
 					Title: "Reference 5",
 					Text:  "Moo",
@@ -344,7 +345,7 @@ func TestLineBreak(t *testing.T) {
 		"<p>this has an<br />\nextra space</p>\n",
 	}
 	doTestsInlineParam(t, tests, TestParams{
-		extensions: BackslashLineBreak})
+		extensions: parser.BackslashLineBreak})
 }
 
 func TestInlineLink(t *testing.T) {
@@ -935,7 +936,7 @@ what happens here
 
 func TestFootnotes(t *testing.T) {
 	doTestsInlineParam(t, footnoteTests, TestParams{
-		extensions: Footnotes,
+		extensions: parser.Footnotes,
 	})
 }
 
@@ -962,7 +963,7 @@ func TestFootnotesWithParameters(t *testing.T) {
 	}
 
 	doTestsInlineParam(t, tests, TestParams{
-		extensions:      Footnotes,
+		extensions:      parser.Footnotes,
 		Flags:           html.FootnoteReturnLinks,
 		RendererOptions: params,
 	})
@@ -992,7 +993,7 @@ func TestNestedFootnotes(t *testing.T) {
 </div>
 `,
 	}
-	doTestsInlineParam(t, tests, TestParams{extensions: Footnotes})
+	doTestsInlineParam(t, tests, TestParams{extensions: parser.Footnotes})
 }
 
 func TestInlineComments(t *testing.T) {
@@ -1180,7 +1181,7 @@ func TestSkipHTML(t *testing.T) {
 
 func BenchmarkSmartDoubleQuotes(b *testing.B) {
 	params := TestParams{Flags: html.Smartypants}
-	params.extensions |= Autolink | Strikethrough
+	params.extensions |= parser.Autolink | parser.Strikethrough
 	params.Flags |= html.UseXHTML
 
 	for i := 0; i < b.N; i++ {

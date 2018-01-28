@@ -1,4 +1,4 @@
-package markdown
+package parser
 
 // Callback functions for inline parsing. One such function is defined
 import (
@@ -226,17 +226,6 @@ type Reference struct {
 	// Text is the optional text to override the ref with if the syntax used was
 	// [refid][]
 	Text string
-}
-
-// Render renders a parsed data in parser with a given renderer
-func (p *Parser) Render(renderer Renderer) []byte {
-	var buf bytes.Buffer
-	renderer.RenderHeader(&buf, p.Doc)
-	p.Doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
-		return renderer.RenderNode(&buf, node, entering)
-	})
-	renderer.RenderFooter(&buf, p.Doc)
-	return buf.Bytes()
 }
 
 // Parse is an entry point to the parsing part of Blackfriday. It takes an

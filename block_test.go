@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
@@ -140,7 +141,7 @@ func TestPrefixHeaderSpaceExtension(t *testing.T) {
 		"<ul>\n<li><p>List</p>\n\n<ul>\n<li><p>Nested list</p>\n\n" +
 			"<h1>Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
-	doTestsBlock(t, tests, SpaceHeadings)
+	doTestsBlock(t, tests, parser.SpaceHeadings)
 }
 
 func TestPrefixHeaderIdExtension(t *testing.T) {
@@ -201,7 +202,7 @@ func TestPrefixHeaderIdExtension(t *testing.T) {
 		"<ul>\n<li><p>List</p>\n\n<ul>\n<li><p>Nested list</p>\n\n" +
 			"<h1 id=\"someid\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
-	doTestsBlock(t, tests, HeadingIDs)
+	doTestsBlock(t, tests, parser.HeadingIDs)
 }
 
 func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
@@ -251,7 +252,7 @@ func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 	}
 
 	doTestsParam(t, tests, TestParams{
-		extensions:      HeadingIDs,
+		extensions:      parser.HeadingIDs,
 		Flags:           html.UseXHTML,
 		RendererOptions: parameters,
 	})
@@ -306,7 +307,7 @@ func TestPrefixAutoHeaderIdExtension(t *testing.T) {
 		"# Header\n\n# Header 1\n\n# Header\n\n# Header",
 		"<h1 id=\"header\">Header</h1>\n\n<h1 id=\"header-1\">Header 1</h1>\n\n<h1 id=\"header-1-1\">Header</h1>\n\n<h1 id=\"header-1-2\">Header</h1>\n",
 	}
-	doTestsBlock(t, tests, AutoHeadingIDs)
+	doTestsBlock(t, tests, parser.AutoHeadingIDs)
 }
 
 func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
@@ -365,7 +366,7 @@ func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 	}
 
 	doTestsParam(t, tests, TestParams{
-		extensions:      AutoHeadingIDs,
+		extensions:      parser.AutoHeadingIDs,
 		Flags:           html.UseXHTML,
 		RendererOptions: parameters,
 	})
@@ -377,7 +378,7 @@ func TestPrefixMultipleHeaderExtensions(t *testing.T) {
 		"# Header\n\n# Header {#header}\n\n# Header 1",
 		"<h1 id=\"header\">Header</h1>\n\n<h1 id=\"header-1\">Header</h1>\n\n<h1 id=\"header-1-1\">Header 1</h1>\n",
 	}
-	doTestsBlock(t, tests, AutoHeadingIDs|HeadingIDs)
+	doTestsBlock(t, tests, parser.AutoHeadingIDs|parser.HeadingIDs)
 }
 
 func TestUnderlineHeaders(t *testing.T) {
@@ -479,7 +480,7 @@ func TestUnderlineHeadersAutoIDs(t *testing.T) {
 		"Header 1\n========\n\nHeader 1\n========\n",
 		"<h1 id=\"header-1\">Header 1</h1>\n\n<h1 id=\"header-1-1\">Header 1</h1>\n",
 	}
-	doTestsBlock(t, tests, AutoHeadingIDs)
+	doTestsBlock(t, tests, parser.AutoHeadingIDs)
 }
 
 func TestHorizontalRule(t *testing.T) {
@@ -857,7 +858,7 @@ func TestDefinitionList(t *testing.T) {
 			"</dl>\n" +
 			"\n<p>Text 2</p>\n",
 	}
-	doTestsBlock(t, tests, DefinitionLists)
+	doTestsBlock(t, tests, parser.DefinitionLists)
 }
 
 func TestPreformattedHtml(t *testing.T) {
@@ -935,7 +936,7 @@ func TestPreformattedHtmlLax(t *testing.T) {
 		"Paragraph\n\n<div>\nHow about here? >&<\n</div>\n\nAnd here?\n",
 		"<p>Paragraph</p>\n\n<div>\nHow about here? >&<\n</div>\n\n<p>And here?</p>\n",
 	}
-	doTestsBlock(t, tests, LaxHTMLBlocks)
+	doTestsBlock(t, tests, parser.LaxHTMLBlocks)
 }
 
 func TestFencedCodeBlock(t *testing.T) {
@@ -1028,7 +1029,7 @@ func TestFencedCodeBlock(t *testing.T) {
 		"```\n[]:()\n[]:)\n[]:(\n[]:x\n[]:testing\n[:testing\n\n[]:\nlinebreak\n[]()\n\n[]:\n[]()\n```",
 		"<pre><code>[]:()\n[]:)\n[]:(\n[]:x\n[]:testing\n[:testing\n\n[]:\nlinebreak\n[]()\n\n[]:\n[]()\n</code></pre>\n",
 	}
-	doTestsBlock(t, tests, FencedCode)
+	doTestsBlock(t, tests, parser.FencedCode)
 }
 
 func TestFencedCodeInsideBlockquotes(t *testing.T) {
@@ -1141,7 +1142,7 @@ okay
 	tests = append(tests, forms[0], want)
 	tests = append(tests, forms[1], want)
 
-	doTestsBlock(t, tests, FencedCode)
+	doTestsBlock(t, tests, parser.FencedCode)
 }
 
 func TestTable(t *testing.T) {
@@ -1189,7 +1190,7 @@ func TestTable(t *testing.T) {
 		"a|b\\|c|d\n---|---|---\nf|g\\|h|i\n",
 		"<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b|c</th>\n<th>d</th>\n</tr>\n</thead>\n\n<tbody>\n<tr>\n<td>f</td>\n<td>g|h</td>\n<td>i</td>\n</tr>\n</tbody>\n</table>\n",
 	}
-	doTestsBlock(t, tests, Tables)
+	doTestsBlock(t, tests, parser.Tables)
 }
 
 func TestUnorderedListWith_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
@@ -1301,7 +1302,7 @@ func TestUnorderedListWith_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 		"* List\n\n    * sublist\n\n    normal text\n\n    * another sublist\n",
 		"<ul>\n<li><p>List</p>\n\n<ul>\n<li>sublist</li>\n</ul>\n\n<p>normal text</p>\n\n<ul>\n<li>another sublist</li>\n</ul></li>\n</ul>\n",
 	}
-	doTestsBlock(t, tests, NoEmptyLineBeforeBlock)
+	doTestsBlock(t, tests, parser.NoEmptyLineBeforeBlock)
 }
 
 func TestOrderedList_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
@@ -1398,7 +1399,7 @@ func TestOrderedList_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 		"1. numbers\n1. are ignored\n",
 		"<ol>\n<li>numbers</li>\n<li>are ignored</li>\n</ol>\n",
 	}
-	doTestsBlock(t, tests, NoEmptyLineBeforeBlock)
+	doTestsBlock(t, tests, parser.NoEmptyLineBeforeBlock)
 }
 
 func TestFencedCodeBlock_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
@@ -1470,7 +1471,7 @@ func TestFencedCodeBlock_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 		"    ``` oz\nleading spaces\n    ```\n",
 		"<pre><code>``` oz\n</code></pre>\n\n<p>leading spaces</p>\n\n<pre><code>```\n</code></pre>\n",
 	}
-	doTestsBlock(t, tests, FencedCode|NoEmptyLineBeforeBlock)
+	doTestsBlock(t, tests, parser.FencedCode|parser.NoEmptyLineBeforeBlock)
 }
 
 func TestTitleBlock_EXTENSION_TITLEBLOCK(t *testing.T) {
@@ -1485,7 +1486,7 @@ func TestTitleBlock_EXTENSION_TITLEBLOCK(t *testing.T) {
 			"Yep, more here too" +
 			"</h1>\n",
 	}
-	doTestsBlock(t, tests, Titleblock)
+	doTestsBlock(t, tests, parser.Titleblock)
 }
 
 func TestBlockComments(t *testing.T) {
@@ -1654,7 +1655,7 @@ func TestSpaceHeadings(t *testing.T) {
 		"###### hdr",
 		"<h6>hdr</h6>\n",
 	}
-	doTestsParam(t, tests, TestParams{extensions: SpaceHeadings})
+	doTestsParam(t, tests, TestParams{extensions: parser.SpaceHeadings})
 }
 
 func TestIsFenceLine(t *testing.T) {
@@ -1706,7 +1707,7 @@ func TestIsFenceLine(t *testing.T) {
 		if test.syntaxRequested {
 			syntax = new(string)
 		}
-		end, marker := isFenceLine(test.data, syntax, "```")
+		end, marker := parser.IsFenceLine(test.data, syntax, "```")
 		if got, want := end, test.wantEnd; got != want {
 			t.Errorf("got end %v, want %v", got, want)
 		}
@@ -1756,7 +1757,7 @@ func TestSanitizedAnchorName(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		if got := SanitizeAnchorName(test.text); got != test.want {
+		if got := parser.SanitizeAnchorName(test.text); got != test.want {
 			t.Errorf("SanitizedAnchorName(%q):\ngot %q\nwant %q", test.text, got, test.want)
 		}
 	}

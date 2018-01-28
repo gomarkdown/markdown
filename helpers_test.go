@@ -12,11 +12,12 @@ import (
 	"testing"
 
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 type TestParams struct {
-	extensions        Extensions
-	referenceOverride ReferenceOverrideFunc
+	extensions        parser.Extensions
+	referenceOverride parser.ReferenceOverrideFunc
 	html.Flags
 	html.RendererOptions
 }
@@ -39,7 +40,7 @@ func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, s
 
 func runMarkdown(input string, params TestParams) string {
 	params.RendererOptions.Flags = params.Flags
-	parser := NewParserWithExtensions(params.extensions)
+	parser := parser.NewParserWithExtensions(params.extensions)
 	parser.ReferenceOverride = params.referenceOverride
 	renderer := html.NewRenderer(params.RendererOptions)
 
@@ -50,14 +51,14 @@ func runMarkdown(input string, params TestParams) string {
 // doTests runs full document tests using MarkdownCommon configuration.
 func doTests(t *testing.T, tests []string) {
 	doTestsParam(t, tests, TestParams{
-		extensions: CommonExtensions,
+		extensions: parser.CommonExtensions,
 		RendererOptions: html.RendererOptions{
 			Flags: html.CommonFlags,
 		},
 	})
 }
 
-func doTestsBlock(t *testing.T, tests []string, extensions Extensions) {
+func doTestsBlock(t *testing.T, tests []string, extensions parser.Extensions) {
 	doTestsParam(t, tests, TestParams{
 		extensions: extensions,
 		Flags:      html.UseXHTML,
@@ -113,7 +114,7 @@ func doSafeTestsInline(t *testing.T, tests []string) {
 }
 
 func doTestsInlineParam(t *testing.T, tests []string, params TestParams) {
-	params.extensions |= Autolink | Strikethrough
+	params.extensions |= parser.Autolink | parser.Strikethrough
 	params.Flags |= html.UseXHTML
 	doTestsParam(t, tests, params)
 }
@@ -132,7 +133,7 @@ func transformLinks(tests []string, prefix string) []string {
 	return newTests
 }
 
-func doTestsReference(t *testing.T, files []string, flag Extensions) {
+func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
 	params := TestParams{extensions: flag}
 	execRecoverableTestSuite(t, files, params, func(candidate *string) {
 		for _, basename := range files {

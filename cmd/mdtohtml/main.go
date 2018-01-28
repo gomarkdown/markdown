@@ -16,6 +16,7 @@ import (
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 const defaultTitle = ""
@@ -100,12 +101,12 @@ func main() {
 	}
 
 	// set up options
-	var extensions = markdown.NoIntraEmphasis |
-		markdown.Tables |
-		markdown.FencedCode |
-		markdown.Autolink |
-		markdown.Strikethrough |
-		markdown.SpaceHeadings
+	var extensions = parser.NoIntraEmphasis |
+		parser.Tables |
+		parser.FencedCode |
+		parser.Autolink |
+		parser.Strikethrough |
+		parser.SpaceHeadings
 
 	var renderer markdown.Renderer
 	if latex {
@@ -145,7 +146,7 @@ func main() {
 	// parse and render
 	var output []byte
 	for i := 0; i < repeat; i++ {
-		parser := markdown.NewParserWithExtensions(extensions)
+		parser := parser.NewParserWithExtensions(extensions)
 		output = markdown.ToHTML(input, parser, renderer)
 	}
 

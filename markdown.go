@@ -4,10 +4,12 @@
 package markdown
 
 import (
+	"bytes"
 	"io"
 
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // Renderer is an interface for implementing custom renderers.
@@ -37,6 +39,17 @@ type Renderer interface {
 	RenderFooter(w io.Writer, ast *ast.Node)
 }
 
+// Render renders a parsed data in parser with a given renderer
+func Render(p *parser.Parser, renderer Renderer) []byte {
+	var buf bytes.Buffer
+	renderer.RenderHeader(&buf, p.Doc)
+	p.Doc.WalkFunc(func(node *ast.Node, entering bool) ast.WalkStatus {
+		return renderer.RenderNode(&buf, node, entering)
+	})
+	renderer.RenderFooter(&buf, p.Doc)
+	return buf.Bytes()
+}
+
 // ToHTML converts a markdown text in input and converts it to HTML.
 //
 // You can optionally pass a parser and renderer, which allows to customize
@@ -44,16 +57,16 @@ type Renderer interface {
 //
 // If you pass nil for both, we convert with CommonExtensions for
 // the parser and Renderer with CommonFlags for renderer
-func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
-	if parser == nil {
-		parser = NewParserWithExtensions(CommonExtensions)
+func ToHTML(input []byte, p *parser.Parser, renderer Renderer) []byte {
+	if p == nil {
+		p = parser.NewParserWithExtensions(parser.CommonExtensions)
 	}
 	if renderer == nil {
-		params := html.RendererOptions{
+		opts := html.RendererOptions{
 			Flags: html.CommonFlags,
 		}
-		renderer = html.NewRenderer(params)
+		renderer = html.NewRenderer(opts)
 	}
-	parser.Parse(input)
-	return parser.Render(renderer)
+	p.Parse(input)
+	return Render(p, renderer)
 }

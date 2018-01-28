@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // Note: the expensive test is "Markdown Documentation - Syntax", which takes ~7 secs
@@ -69,7 +71,7 @@ func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 		"Tabs",
 		"Tidyness",
 	}
-	doTestsReference(t, files, NoEmptyLineBeforeBlock)
+	doTestsReference(t, files, parser.NoEmptyLineBeforeBlock)
 }
 
 // benchResultAnchor is an anchor variable to store the result of a benchmarked
@@ -77,7 +79,7 @@ func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 var benchResultAnchor string
 
 func benchFile(b *testing.B, basename string) {
-	params := TestParams{extensions: CommonExtensions}
+	params := TestParams{extensions: parser.CommonExtensions}
 	filename := filepath.Join("testdata", basename+".text")
 	inputBytes, err := ioutil.ReadFile(filename)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 func renderHookEmpty(w io.Writer, node *ast.Node, entering bool) (ast.WalkStatus, bool) {
@@ -51,7 +52,7 @@ func TestRenderNodeHookCode(t *testing.T) {
 	}
 	params := TestParams{
 		RendererOptions: htmlParams,
-		extensions:      CommonExtensions,
+		extensions:      parser.CommonExtensions,
 	}
 	doTestsParam(t, tests, params)
 }
