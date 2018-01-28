@@ -513,34 +513,34 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	}
 
 	// call the relevant rendering function
-	var linkNode ast.Node
 	switch t {
 	case linkNormal:
-		linkNode = &ast.Link{
+		link := &ast.Link{
 			Destination: normalizeURI(uLink),
 			Title:       title,
 		}
 		if len(altContent) > 0 {
-			ast.AppendChild(linkNode, newTextNode(altContent))
+			ast.AppendChild(link, newTextNode(altContent))
 		} else {
 			// links cannot contain other links, so turn off link parsing
 			// temporarily and recurse
 			insideLink := p.insideLink
 			p.insideLink = true
-			p.inline(linkNode, data[1:txtE])
+			p.inline(link, data[1:txtE])
 			p.insideLink = insideLink
 		}
+		return i, link
 
 	case linkImg:
-		linkNode = &ast.Image{
+		image := &ast.Image{
 			Destination: uLink,
 			Title:       title,
 		}
-		ast.AppendChild(linkNode, newTextNode(data[1:txtE]))
-		i++
+		ast.AppendChild(image, newTextNode(data[1:txtE]))
+		return i + 1, image
 
 	case linkInlineFootnote, linkDeferredFootnote:
-		linkNode = &ast.Link{
+		link := &ast.Link{
 			Destination: link,
 			Title:       title,
 			NoteID:      noteID,
@@ -549,12 +549,11 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		if t == linkInlineFootnote {
 			i++
 		}
+		return i, link
 
 	default:
 		return 0, nil
 	}
-
-	return i, linkNode
 }
 
 func (p *Parser) inlineHTMLComment(data []byte) int {
