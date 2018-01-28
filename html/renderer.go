@@ -343,8 +343,8 @@ func itemOpenCR(node ast.Node) bool {
 	return !ld.Tight && ld.ListFlags&ast.ListTypeDefinition == 0
 }
 
-func skipParagraphTags(node ast.Node) bool {
-	parent := node.GetParent()
+func skipParagraphTags(para *ast.Paragraph) bool {
+	parent := para.Parent
 	grandparent := parent.GetParent()
 	if grandparent == nil || !isList(grandparent) {
 		return false
@@ -414,17 +414,17 @@ func (r *Renderer) outHRTag(w io.Writer) {
 	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, "<hr>", "<hr />")
 }
 
-func (r *Renderer) text(w io.Writer, node *ast.Text) {
+func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	if r.opts.Flags&Smartypants != 0 {
 		var tmp bytes.Buffer
-		EscapeHTML(&tmp, node.Literal)
+		EscapeHTML(&tmp, text.Literal)
 		r.sr.Process(w, tmp.Bytes())
 	} else {
-		_, parentIsLink := node.Parent.(*ast.Link)
+		_, parentIsLink := text.Parent.(*ast.Link)
 		if parentIsLink {
-			escLink(w, node.Literal)
+			escLink(w, text.Literal)
 		} else {
-			EscapeHTML(w, node.Literal)
+			EscapeHTML(w, text.Literal)
 		}
 	}
 }
@@ -452,59 +452,59 @@ func (r *Renderer) outOneOfCr(w io.Writer, outFirst bool, first string, second s
 	}
 }
 
-func (r *Renderer) span(w io.Writer, node *ast.HTMLSpan) {
+func (r *Renderer) span(w io.Writer, span *ast.HTMLSpan) {
 	if r.opts.Flags&SkipHTML == 0 {
-		r.out(w, node.Literal)
+		r.out(w, span.Literal)
 	}
 }
 
-func (r *Renderer) linkEnter(w io.Writer, nodeData *ast.Link) {
+func (r *Renderer) linkEnter(w io.Writer, link *ast.Link) {
 	var attrs []string
-	dest := nodeData.Destination
+	dest := link.Destination
 	dest = r.addAbsPrefix(dest)
 	var hrefBuf bytes.Buffer
 	hrefBuf.WriteString("href=\"")
 	escLink(&hrefBuf, dest)
 	hrefBuf.WriteByte('"')
 	attrs = append(attrs, hrefBuf.String())
-	if nodeData.NoteID != 0 {
-		r.outs(w, footnoteRef(r.opts.FootnoteAnchorPrefix, nodeData))
+	if link.NoteID != 0 {
+		r.outs(w, footnoteRef(r.opts.FootnoteAnchorPrefix, link))
 		return
 	}
 
 	attrs = appendLinkAttrs(attrs, r.opts.Flags, dest)
-	if len(nodeData.Title) > 0 {
+	if len(link.Title) > 0 {
 		var titleBuff bytes.Buffer
 		titleBuff.WriteString("title=\"")
-		EscapeHTML(&titleBuff, nodeData.Title)
+		EscapeHTML(&titleBuff, link.Title)
 		titleBuff.WriteByte('"')
 		attrs = append(attrs, titleBuff.String())
 	}
 	r.outTag(w, "<a", attrs)
 }
 
-func (r *Renderer) linkExit(w io.Writer, nodeData *ast.Link) {
-	if nodeData.NoteID == 0 {
+func (r *Renderer) linkExit(w io.Writer, link *ast.Link) {
+	if link.NoteID == 0 {
 		r.outs(w, "</a>")
 	}
 }
 
-func (r *Renderer) link(w io.Writer, nodeData *ast.Link, entering bool) {
+func (r *Renderer) link(w io.Writer, link *ast.Link, entering bool) {
 	// mark it but don't link it if it is not a safe link: no smartypants
-	if needSkipLink(r.opts.Flags, nodeData.Destination) {
+	if needSkipLink(r.opts.Flags, link.Destination) {
 		r.outOneOf(w, entering, "<tt>", "</tt>")
 		return
 	}
 
 	if entering {
-		r.linkEnter(w, nodeData)
+		r.linkEnter(w, link)
 	} else {
-		r.linkExit(w, nodeData)
+		r.linkExit(w, link)
 	}
 }
 
-func (r *Renderer) imageEnter(w io.Writer, nodeData *ast.Image) {
-	dest := nodeData.Destination
+func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
+	dest := image.Destination
 	dest = r.addAbsPrefix(dest)
 	if r.disableTags == 0 {
 		//if options.safe && potentiallyUnsafe(dest) {
@@ -518,48 +518,48 @@ func (r *Renderer) imageEnter(w io.Writer, nodeData *ast.Image) {
 	r.disableTags++
 }
 
-func (r *Renderer) imageExit(w io.Writer, nodeData *ast.Image) {
+func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {
 	r.disableTags--
 	if r.disableTags == 0 {
-		if nodeData.Title != nil {
+		if image.Title != nil {
 			r.outs(w, `" title="`)
-			EscapeHTML(w, nodeData.Title)
+			EscapeHTML(w, image.Title)
 		}
 		r.outs(w, `" />`)
 	}
 }
 
-func (r *Renderer) paragraphEnter(w io.Writer, nodeData *ast.Paragraph) {
+func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	// TODO: untangle this clusterfuck about when the newlines need
 	// to be added and when not.
-	prev := ast.PrevNode(nodeData)
+	prev := ast.PrevNode(para)
 	if prev != nil {
 		switch prev.(type) {
 		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CodeBlock, *ast.BlockQuote, *ast.HorizontalRule:
 			r.cr(w)
 		}
 	}
-	if isBlockQuote(nodeData.Parent) && prev == nil {
+	if isBlockQuote(para.Parent) && prev == nil {
 		r.cr(w)
 	}
 	r.outs(w, "<p>")
 }
 
-func (r *Renderer) paragraphExit(w io.Writer, node *ast.Paragraph) {
+func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
 	r.outs(w, "</p>")
-	if !(isListItem(node.Parent) && ast.NextNode(node) == nil) {
+	if !(isListItem(para.Parent) && ast.NextNode(para) == nil) {
 		r.cr(w)
 	}
 }
 
-func (r *Renderer) paragraph(w io.Writer, node *ast.Paragraph, entering bool) {
-	if skipParagraphTags(node) {
+func (r *Renderer) paragraph(w io.Writer, para *ast.Paragraph, entering bool) {
+	if skipParagraphTags(para) {
 		return
 	}
 	if entering {
-		r.paragraphEnter(w, node)
+		r.paragraphEnter(w, para)
 	} else {
-		r.paragraphExit(w, node)
+		r.paragraphExit(w, para)
 	}
 }
 func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
@@ -605,9 +605,9 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 	r.outTag(w, headingOpenTagFromLevel(nodeData.Level), attrs)
 }
 
-func (r *Renderer) headingExit(w io.Writer, nodeData *ast.Heading) {
-	r.outs(w, headingCloseTagFromLevel(nodeData.Level))
-	if !(isListItem(nodeData.Parent) && ast.NextNode(nodeData) == nil) {
+func (r *Renderer) headingExit(w io.Writer, heading *ast.Heading) {
+	r.outs(w, headingCloseTagFromLevel(heading.Level))
+	if !(isListItem(heading.Parent) && ast.NextNode(heading) == nil) {
 		r.cr(w)
 	}
 }
@@ -654,12 +654,12 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 	r.cr(w)
 }
 
-func (r *Renderer) listExit(w io.Writer, node *ast.List) {
+func (r *Renderer) listExit(w io.Writer, list *ast.List) {
 	closeTag := "</ul>"
-	if node.ListFlags&ast.ListTypeOrdered != 0 {
+	if list.ListFlags&ast.ListTypeOrdered != 0 {
 		closeTag = "</ol>"
 	}
-	if node.ListFlags&ast.ListTypeDefinition != 0 {
+	if list.ListFlags&ast.ListTypeDefinition != 0 {
 		closeTag = "</dl>"
 	}
 	r.outs(w, closeTag)
@@ -668,48 +668,49 @@ func (r *Renderer) listExit(w io.Writer, node *ast.List) {
 	//if node.parent.Type != Item {
 	//	cr(w)
 	//}
-	if isListItem(node.Parent) && ast.NextNode(node) != nil {
+	parent := list.Parent
+	if isListItem(parent) && ast.NextNode(list) != nil {
 		r.cr(w)
 	}
-	if isDocument(node.Parent) || isBlockQuote(node.Parent) {
+	if isDocument(parent) || isBlockQuote(parent) {
 		r.cr(w)
 	}
-	if node.IsFootnotesList {
+	if list.IsFootnotesList {
 		r.outs(w, "\n</div>\n")
 	}
 }
 
-func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
+func (r *Renderer) list(w io.Writer, list *ast.List, entering bool) {
 	if entering {
-		r.listEnter(w, node)
+		r.listEnter(w, list)
 	} else {
-		r.listExit(w, node)
+		r.listExit(w, list)
 	}
 }
 
-func (r *Renderer) listItemEnter(w io.Writer, node *ast.ListItem) {
-	if itemOpenCR(node) {
+func (r *Renderer) listItemEnter(w io.Writer, listItem *ast.ListItem) {
+	if itemOpenCR(listItem) {
 		r.cr(w)
 	}
-	if node.RefLink != nil {
-		slug := slugify(node.RefLink)
+	if listItem.RefLink != nil {
+		slug := slugify(listItem.RefLink)
 		r.outs(w, footnoteItem(r.opts.FootnoteAnchorPrefix, slug))
 		return
 	}
 
 	openTag := "<li>"
-	if node.ListFlags&ast.ListTypeDefinition != 0 {
+	if listItem.ListFlags&ast.ListTypeDefinition != 0 {
 		openTag = "<dd>"
 	}
-	if node.ListFlags&ast.ListTypeTerm != 0 {
+	if listItem.ListFlags&ast.ListTypeTerm != 0 {
 		openTag = "<dt>"
 	}
 	r.outs(w, openTag)
 }
 
-func (r *Renderer) listItemExit(w io.Writer, nodeData *ast.ListItem) {
-	if nodeData.RefLink != nil && r.opts.Flags&FootnoteReturnLinks != 0 {
-		slug := slugify(nodeData.RefLink)
+func (r *Renderer) listItemExit(w io.Writer, listItem *ast.ListItem) {
+	if listItem.RefLink != nil && r.opts.Flags&FootnoteReturnLinks != 0 {
+		slug := slugify(listItem.RefLink)
 		prefix := r.opts.FootnoteAnchorPrefix
 		link := r.opts.FootnoteReturnLinkContents
 		s := footnoteReturnLink(prefix, link, slug)
@@ -717,41 +718,41 @@ func (r *Renderer) listItemExit(w io.Writer, nodeData *ast.ListItem) {
 	}
 
 	closeTag := "</li>"
-	if nodeData.ListFlags&ast.ListTypeDefinition != 0 {
+	if listItem.ListFlags&ast.ListTypeDefinition != 0 {
 		closeTag = "</dd>"
 	}
-	if nodeData.ListFlags&ast.ListTypeTerm != 0 {
+	if listItem.ListFlags&ast.ListTypeTerm != 0 {
 		closeTag = "</dt>"
 	}
 	r.outs(w, closeTag)
 	r.cr(w)
 }
 
-func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
+func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) {
 	if entering {
-		r.listItemEnter(w, node)
+		r.listItemEnter(w, listItem)
 	} else {
-		r.listItemExit(w, node)
+		r.listItemExit(w, listItem)
 	}
 }
 
-func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
+func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	var attrs []string
-	attrs = appendLanguageAttr(attrs, node.Info)
+	attrs = appendLanguageAttr(attrs, codeBlock.Info)
 	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
-	EscapeHTML(w, node.Literal)
+	EscapeHTML(w, codeBlock.Literal)
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
-	if !isListItem(node.Parent) {
+	if !isListItem(codeBlock.Parent) {
 		r.cr(w)
 	}
 }
 
-func (r *Renderer) tableCell(w io.Writer, node *ast.TableCell, entering bool) {
+func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
 	if !entering {
-		r.outOneOf(w, node.IsHeader, "</th>", "</td>")
+		r.outOneOf(w, tableCell.IsHeader, "</th>", "</td>")
 		r.cr(w)
 		return
 	}
@@ -759,14 +760,14 @@ func (r *Renderer) tableCell(w io.Writer, node *ast.TableCell, entering bool) {
 	// entering
 	var attrs []string
 	openTag := "<td"
-	if node.IsHeader {
+	if tableCell.IsHeader {
 		openTag = "<th"
 	}
-	align := cellAlignment(node.Align)
+	align := cellAlignment(tableCell.Align)
 	if align != "" {
 		attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
 	}
-	if ast.PrevNode(node) == nil {
+	if ast.PrevNode(tableCell) == nil {
 		r.cr(w)
 	}
 	r.outTag(w, openTag, attrs)

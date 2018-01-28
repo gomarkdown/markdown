@@ -368,10 +368,11 @@ func (n *TreeNode) FirstChild() Node {
 
 // NextNode returns next sibling of this node
 func NextNode(n Node) Node {
-	if n.GetParent() == nil {
+	parent := n.GetParent()
+	if parent == nil {
 		return nil
 	}
-	a := n.GetParent().AsTreeNode().Children
+	a := parent.GetChildren()
 	len := len(a) - 1
 	for i := 0; i < len; i++ {
 		if a[i] == n {
@@ -383,10 +384,11 @@ func NextNode(n Node) Node {
 
 // PrevNode returns sibling node before n
 func PrevNode(n Node) Node {
-	if n.GetParent() == nil {
+	parent := n.GetParent()
+	if parent == nil {
 		return nil
 	}
-	a := n.GetParent().AsTreeNode().Children
+	a := parent.GetChildren()
 	len := len(a)
 	for i := 1; i < len; i++ {
 		if a[i] == n {
