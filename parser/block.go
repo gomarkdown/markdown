@@ -252,7 +252,7 @@ func (p *Parser) block(data []byte) {
 
 func (p *Parser) addBlock(n ast.Node) ast.Node {
 	p.closeUnmatchedBlocks()
-	return p.addChild(n, 0)
+	return p.addChild(n)
 }
 
 func (p *Parser) isPrefixHeading(data []byte) bool {
@@ -787,10 +787,11 @@ func finalizeCodeBlock(code *ast.CodeBlock) {
 }
 
 func (p *Parser) table(data []byte) int {
-	table := p.addBlock(&ast.Table{})
+	table := &ast.Table{}
+	p.addBlock(table)
 	i, columns := p.tableHeader(data)
 	if i == 0 {
-		p.tip = table.GetParent()
+		p.tip = table.Parent
 		ast.RemoveFromTree(table)
 		return 0
 	}
@@ -1406,12 +1407,15 @@ gatherlines:
 		}
 	} else {
 		// intermediate render of inline item
-		child := p.addChild(&ast.Paragraph{}, 0)
+		para := &ast.Paragraph{}
 		if sublist > 0 {
-			child.AsTreeNode().Content = rawBytes[:sublist]
-			p.block(rawBytes[sublist:])
+			para.Content = rawBytes[:sublist]
 		} else {
-			child.AsTreeNode().Content = rawBytes
+			para.Content = rawBytes
+		}
+		p.addChild(para)
+		if sublist > 0 {
+			p.block(rawBytes[sublist:])
 		}
 	}
 	return line

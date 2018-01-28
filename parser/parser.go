@@ -169,8 +169,14 @@ func (p *Parser) finalize(block ast.Node) {
 	p.tip = block.GetParent()
 }
 
-func (p *Parser) addChild(n ast.Node, offset uint32) ast.Node {
-	return p.addExistingChild(n, offset)
+func (p *Parser) addChild(node ast.Node) ast.Node {
+	ast.PanicIfTreeNode(node)
+	for !canNodeContain(p.tip, node) {
+		p.finalize(p.tip)
+	}
+	ast.AppendChild(p.tip, node)
+	p.tip = node
+	return node
 }
 
 func canNodeContain(n ast.Node, v ast.Node) bool {
@@ -196,25 +202,16 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	return false
 }
 
-func (p *Parser) addExistingChild(node ast.Node, offset uint32) ast.Node {
-	ast.PanicIfTreeNode(node)
-	for !canNodeContain(p.tip, node) {
-		p.finalize(p.tip)
-	}
-	ast.AppendChild(p.tip, node)
-	p.tip = node
-	return node
-}
-
 func (p *Parser) closeUnmatchedBlocks() {
-	if !p.allClosed {
-		for p.oldTip != p.lastMatchedContainer {
-			parent := p.oldTip.GetParent()
-			p.finalize(p.oldTip)
-			p.oldTip = parent
-		}
-		p.allClosed = true
+	if p.allClosed {
+		return
 	}
+	for p.oldTip != p.lastMatchedContainer {
+		parent := p.oldTip.GetParent()
+		p.finalize(p.oldTip)
+		p.oldTip = parent
+	}
+	p.allClosed = true
 }
 
 // Reference represents the details of a link.
@@ -270,7 +267,7 @@ func (p *Parser) parseRefsToAST() {
 	// the fixed initial set.
 	for i := 0; i < len(p.notes); i++ {
 		ref := p.notes[i]
-		p.addExistingChild(ref.footnote, 0)
+		p.addChild(ref.footnote)
 		block := ref.footnote
 		blockData := block.(*ast.ListItem)
 		blockData.ListFlags = flags | ast.ListTypeOrdered
