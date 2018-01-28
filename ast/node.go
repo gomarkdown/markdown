@@ -41,8 +41,6 @@ type Node interface {
 	SetParent(newParent Node)
 	GetChildren() []Node
 	SetChildren(newChildren []Node)
-	FirstChild() Node
-	LastChild() Node
 }
 
 // Container is a type of node that can contain children
@@ -120,16 +118,6 @@ func (l *Leaf) GetChildren() []Node {
 // SetChildren sets children
 func (l *Leaf) SetChildren(newChildren []Node) {
 	// do nothing, Leaf has no children
-}
-
-// FirstChild returns children
-func (l *Leaf) FirstChild() Node {
-	return nil
-}
-
-// LastChild returns children
-func (l *Leaf) LastChild() Node {
-	return nil
 }
 
 // PanicIfContainer will panic if node is *Container
@@ -351,13 +339,16 @@ func AppendChild(n Node, child Node) {
 	n.SetChildren(newChildren)
 }
 
-func isContainer(n Node) bool {
+// IsContainer returns true if n is a container node (i.e. can have children,
+// as opposed to leaf node)
+func IsContainer(n Node) bool {
 	return n.AsContainer() != nil
 }
 
 // LastChild returns last child of this node
-func (n *Container) LastChild() Node {
-	a := n.Children
+// It's implemented as stand-alone function to keep Node interface small
+func LastChild(n Node) Node {
+	a := n.GetChildren()
 	if len(a) > 0 {
 		return a[len(a)-1]
 	}
@@ -365,8 +356,9 @@ func (n *Container) LastChild() Node {
 }
 
 // FirstChild returns first child of this node
-func (n *Container) FirstChild() Node {
-	a := n.Children
+// It's implemented as stand-alone function to keep Node interface small
+func FirstChild(n Node) Node {
+	a := n.GetChildren()
 	if len(a) > 0 {
 		return a[0]
 	}
@@ -431,70 +423,44 @@ type NodeVisitor interface {
 // NodeVisitorFunc casts a function to match NodeVisitor interface
 type NodeVisitorFunc func(node Node, entering bool) WalkStatus
 
+// Walk traverses tree recursively
+func Walk(n Node, visitor NodeVisitor) WalkStatus {
+	isContainer := IsContainer(n)
+	status := visitor.Visit(n, true) // entering
+	if status == Terminate {
+		// even if terminating, close container node
+		if isContainer {
+			visitor.Visit(n, false)
+		}
+		return status
+	}
+	if isContainer && status != SkipChildren {
+		children := n.GetChildren()
+		for _, n := range children {
+			status = Walk(n, visitor)
+			if status == Terminate {
+				return status
+			}
+		}
+	}
+	if isContainer {
+		status = visitor.Visit(n, false) // exiting
+		if status == Terminate {
+			return status
+		}
+	}
+	return GoToNext
+}
+
 // Visit calls visitor function
 func (f NodeVisitorFunc) Visit(node Node, entering bool) WalkStatus {
 	return f(node, entering)
-}
-
-// Walk is a convenience method that instantiates a walker and starts a
-// traversal of subtree rooted at n.
-func Walk(n Node, visitor NodeVisitor) {
-	w := newNodeWalker(n)
-	for w.current != nil {
-		status := visitor.Visit(w.current, w.entering)
-		switch status {
-		case GoToNext:
-			w.next()
-		case SkipChildren:
-			w.entering = false
-			w.next()
-		case Terminate:
-			return
-		}
-	}
 }
 
 // WalkFunc is like Walk but accepts just a callback function
 func WalkFunc(n Node, f NodeVisitorFunc) {
 	visitor := NodeVisitorFunc(f)
 	Walk(n, visitor)
-}
-
-type nodeWalker struct {
-	current  Node
-	root     Node
-	entering bool
-}
-
-func newNodeWalker(root Node) *nodeWalker {
-	return &nodeWalker{
-		current:  root,
-		root:     root,
-		entering: true,
-	}
-}
-
-func (nw *nodeWalker) next() {
-	isCont := isContainer(nw.current)
-	if (!isCont || !nw.entering) && nw.current == nw.root {
-		nw.current = nil
-		return
-	}
-	if nw.entering && isCont {
-		firstChild := nw.current.FirstChild()
-		if firstChild != nil {
-			nw.current = firstChild
-			nw.entering = true
-		} else {
-			nw.entering = false
-		}
-	} else if NextNode(nw.current) == nil {
-		nw.current = nw.current.GetParent()
-		nw.entering = false
-	} else {
-		nw.current = NextNode(nw.current)
-		nw.entering = true
-	}
 }
 
 func dump(ast Node) {

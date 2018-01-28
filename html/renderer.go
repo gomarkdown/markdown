@@ -785,7 +785,7 @@ func (r *Renderer) tableBody(w io.Writer, node *ast.TableBody, entering bool) {
 		r.cr(w)
 		r.outs(w, "<tbody>")
 		// XXX: this is to adhere to a rather silly test. Should fix test.
-		if node.FirstChild() == nil {
+		if ast.FirstChild(node) == nil {
 			r.cr(w)
 		}
 	} else {

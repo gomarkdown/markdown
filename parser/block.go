@@ -1165,16 +1165,16 @@ func (p *Parser) dliPrefix(data []byte) int {
 func (p *Parser) list(data []byte, flags ast.ListType) int {
 	i := 0
 	flags |= ast.ListItemBeginningOfList
-	d := &ast.List{
+	list := &ast.List{
 		ListFlags: flags,
 		Tight:     true,
 	}
-	block := p.addBlock(d)
+	block := p.addBlock(list)
 
 	for i < len(data) {
 		skip := p.listItem(data[i:], &flags)
 		if flags&ast.ListItemContainsBlock != 0 {
-			d.Tight = false
+			list.Tight = false
 		}
 		i += skip
 		if skip == 0 || flags&ast.ListItemEndOfList != 0 {
@@ -1184,7 +1184,7 @@ func (p *Parser) list(data []byte, flags ast.ListType) int {
 	}
 
 	above := block.GetParent()
-	finalizeList(block, d)
+	finalizeList(block, list)
 	p.tip = above
 	return i
 }
@@ -1199,7 +1199,7 @@ func endsWithBlankLine(block ast.Node) bool {
 		//}
 		switch block.(type) {
 		case *ast.List, *ast.ListItem:
-			block = block.LastChild()
+			block = ast.LastChild(block)
 		default:
 			return false
 		}
