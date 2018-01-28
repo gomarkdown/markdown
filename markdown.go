@@ -34,8 +34,20 @@ type Renderer interface {
 	RenderFooter(w io.Writer, ast ast.Node)
 }
 
+// Parse parsers a markdown document using provided parser or parser configured
+// with most common extensions if parser is nil.
+//
+// It returns ast tree that can be converted to another format using a renderer.
+func Parse(markdown []byte, p *parser.Parser) ast.Node {
+	if p == nil {
+		p = parser.New()
+	}
+	return p.Parse(markdown)
+}
+
 // Render uses renderer to convert parsed markdown document into a different format.
-// For example to convert into HTML, use html.Renderer
+//
+// To convert to HTML, use html.Renderer
 func Render(doc ast.Node, renderer Renderer) []byte {
 	var buf bytes.Buffer
 	renderer.RenderHeader(&buf, doc)
@@ -53,7 +65,7 @@ func Render(doc ast.Node, renderer Renderer) []byte {
 //
 // If you pass nil for both, we use parser configured with parser.CommonExtensions
 // and html.Renderer configured with html.CommonFlags.
-func ToHTML(markdownDoc []byte, p *parser.Parser, renderer Renderer) []byte {
+func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
 	if p == nil {
 		p = parser.NewWithExtensions(parser.CommonExtensions)
 	}
@@ -63,6 +75,6 @@ func ToHTML(markdownDoc []byte, p *parser.Parser, renderer Renderer) []byte {
 		}
 		renderer = html.NewRenderer(opts)
 	}
-	doc := p.Parse(markdownDoc)
+	doc := p.Parse(markdown)
 	return Render(doc, renderer)
 }
