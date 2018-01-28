@@ -614,13 +614,14 @@ func (*Parser) isHRule(data []byte) bool {
 func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker string) {
 	i, size := 0, 0
 
+	n := len(data)
 	// skip up to three spaces
-	for i < len(data) && i < 3 && data[i] == ' ' {
+	for i < n && i < 3 && data[i] == ' ' {
 		i++
 	}
 
 	// check for the marker characters: ~ or `
-	if i >= len(data) {
+	if i >= n {
 		return 0, ""
 	}
 	if data[i] != '~' && data[i] != '`' {
@@ -630,7 +631,7 @@ func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 	c := data[i]
 
 	// the whole line must be the same char or whitespace
-	for i < len(data) && data[i] == c {
+	for i < n && data[i] == c {
 		size++
 		i++
 	}
@@ -652,8 +653,8 @@ func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 		syn := 0
 		i = skipChar(data, i, ' ')
 
-		if i >= len(data) {
-			if i == len(data) {
+		if i >= n {
+			if i == n {
 				return i, marker
 			}
 			return 0, ""
@@ -665,12 +666,12 @@ func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 			i++
 			syntaxStart++
 
-			for i < len(data) && data[i] != '}' && data[i] != '\n' {
+			for i < n && data[i] != '}' && data[i] != '\n' {
 				syn++
 				i++
 			}
 
-			if i >= len(data) || data[i] != '}' {
+			if i >= n || data[i] != '}' {
 				return 0, ""
 			}
 
@@ -687,7 +688,7 @@ func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 
 			i++
 		} else {
-			for i < len(data) && !isSpace(data[i]) {
+			for i < n && !isSpace(data[i]) {
 				syn++
 				i++
 			}
@@ -697,8 +698,8 @@ func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 	}
 
 	i = skipChar(data, i, ' ')
-	if i >= len(data) || data[i] != '\n' {
-		if i == len(data) {
+	if i >= n || data[i] != '\n' {
+		if i == n {
 			return i, marker
 		}
 		return 0, ""
@@ -717,7 +718,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 
 	var work bytes.Buffer
-	work.Write([]byte(syntax))
+	work.WriteString(syntax)
 	work.WriteByte('\n')
 
 	for {
