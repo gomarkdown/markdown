@@ -64,13 +64,18 @@ Ways to customize parser:
 * use custom extensions by creating parser with `parser.NewWithExtensions(extensions)`
 * over-ride `parser.Parser.ReferenceOverride` function
 
-You can also check out [cmd/mdhtml](https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml) for more complete example of how to use it.
+## mdtohtml command-line tool
+
+https://github.com/gomarkdown/mdtohtml is a command-line markdown to html
+converter built using this library.
+
+You can also use it as an example of how to use the library.
 
 You can install it with:
 
-    go get -u github.com/gomarkdown/markdown/cmd/mdtohtml
+    go get -u github.com/gomarkdown/mdtohtml
 
-This is a simple command-line tool to convert markdown files to HTML.
+To run: `mdtohtml input-file [output-file]`
 
 ## Features
 
