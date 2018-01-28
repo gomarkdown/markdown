@@ -1,4 +1,4 @@
-package htmlrenderer
+package html
 
 import (
 	"html"

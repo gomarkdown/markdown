@@ -18,7 +18,7 @@
 //  md := []byte("markdown document")
 //  extensions := markdown.CommonExtensions | markdown.AutoHeadingIDs
 //  parser := markdown.NewParserWithExensions(extensions)
-//  htmlParams := markdown.CommonHTMLFlags | markdown.HrefTargetBlank
+//  htmlParams := html.CommonFlags | html.HrefTargetBlank
 //  renderer := markdown.NewRenderer(htmlParams)
 //  html := markdown.ToHTML(md, parser, renderer)
 //

@@ -3,7 +3,7 @@
 
 // Renderer converts AST of parsed markdown document into HTML text
 
-package htmlrenderer
+package html
 
 import (
 	"bytes"
@@ -16,31 +16,31 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// HTMLFlags control optional behavior of HTML renderer.
-type HTMLFlags int
+// Flags control optional behavior of HTML renderer.
+type Flags int
 
 // HTML renderer configuration options.
 const (
-	HTMLFlagsNone           HTMLFlags = 0
-	SkipHTML                HTMLFlags = 1 << iota // Skip preformatted HTML blocks
-	SkipImages                                    // Skip embedded images
-	SkipLinks                                     // Skip all links
-	Safelink                                      // Only link to trusted protocols
-	NofollowLinks                                 // Only link with rel="nofollow"
-	NoreferrerLinks                               // Only link with rel="noreferrer"
-	HrefTargetBlank                               // Add a blank target
-	CompletePage                                  // Generate a complete HTML page
-	UseXHTML                                      // Generate XHTML output instead of HTML
-	FootnoteReturnLinks                           // Generate a link at the end of a footnote to return to the source
-	Smartypants                                   // Enable smart punctuation substitutions
-	SmartypantsFractions                          // Enable smart fractions (with Smartypants)
-	SmartypantsDashes                             // Enable smart dashes (with Smartypants)
-	SmartypantsLatexDashes                        // Enable LaTeX-style dashes (with Smartypants)
-	SmartypantsAngledQuotes                       // Enable angled double quotes (with Smartypants) for double quotes rendering
-	SmartypantsQuotesNBSP                         // Enable « French guillemets » (with Smartypants)
-	TOC                                           // Generate a table of contents
+	FlagsNone               Flags = 0
+	SkipHTML                Flags = 1 << iota // Skip preformatted HTML blocks
+	SkipImages                                // Skip embedded images
+	SkipLinks                                 // Skip all links
+	Safelink                                  // Only link to trusted protocols
+	NofollowLinks                             // Only link with rel="nofollow"
+	NoreferrerLinks                           // Only link with rel="noreferrer"
+	HrefTargetBlank                           // Add a blank target
+	CompletePage                              // Generate a complete HTML page
+	UseXHTML                                  // Generate XHTML output instead of HTML
+	FootnoteReturnLinks                       // Generate a link at the end of a footnote to return to the source
+	Smartypants                               // Enable smart punctuation substitutions
+	SmartypantsFractions                      // Enable smart fractions (with Smartypants)
+	SmartypantsDashes                         // Enable smart dashes (with Smartypants)
+	SmartypantsLatexDashes                    // Enable LaTeX-style dashes (with Smartypants)
+	SmartypantsAngledQuotes                   // Enable angled double quotes (with Smartypants) for double quotes rendering
+	SmartypantsQuotesNBSP                     // Enable « French guillemets » (with Smartypants)
+	TOC                                       // Generate a table of contents
 
-	CommonFlags HTMLFlags = Smartypants | SmartypantsFractions | SmartypantsDashes | SmartypantsLatexDashes
+	CommonFlags Flags = Smartypants | SmartypantsFractions | SmartypantsDashes | SmartypantsLatexDashes
 )
 
 var (
@@ -93,7 +93,7 @@ type RendererOptions struct {
 	CSS   string // Optional CSS file URL (used if CompletePage is set)
 	Icon  string // Optional icon file URL (used if CompletePage is set)
 
-	Flags HTMLFlags // Flags allow customizing this renderer's behavior
+	Flags Flags // Flags allow customizing this renderer's behavior
 
 	// if set, called at the start of RenderNode(). Allows replacing
 	// rendering of some nodes
@@ -264,7 +264,7 @@ func (r *Renderer) addAbsPrefix(link []byte) []byte {
 	return link
 }
 
-func appendLinkAttrs(attrs []string, flags HTMLFlags, link []byte) []string {
+func appendLinkAttrs(attrs []string, flags Flags, link []byte) []string {
 	if isRelativeLink(link) {
 		return attrs
 	}
@@ -289,7 +289,7 @@ func isMailto(link []byte) bool {
 	return bytes.HasPrefix(link, []byte("mailto:"))
 }
 
-func needSkipLink(flags HTMLFlags, dest []byte) bool {
+func needSkipLink(flags Flags, dest []byte) bool {
 	if flags&SkipLinks != 0 {
 		return true
 	}

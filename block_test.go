@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gomarkdown/markdown/htmlrenderer"
+	"github.com/gomarkdown/markdown/html"
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
@@ -245,14 +245,14 @@ func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 			"<h1 id=\"PRE:someid:POST\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
 
-	parameters := htmlrenderer.RendererOptions{
+	parameters := html.RendererOptions{
 		HeadingIDPrefix: "PRE:",
 		HeadingIDSuffix: ":POST",
 	}
 
 	doTestsParam(t, tests, TestParams{
 		extensions:      HeadingIDs,
-		HTMLFlags:       htmlrenderer.UseXHTML,
+		Flags:           html.UseXHTML,
 		RendererOptions: parameters,
 	})
 }
@@ -359,14 +359,14 @@ func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 		"<h1 id=\"PRE:header:POST\">Header</h1>\n\n<h1 id=\"PRE:header-1:POST\">Header 1</h1>\n\n<h1 id=\"PRE:header-1-1:POST\">Header</h1>\n\n<h1 id=\"PRE:header-1-2:POST\">Header</h1>\n",
 	}
 
-	parameters := htmlrenderer.RendererOptions{
+	parameters := html.RendererOptions{
 		HeadingIDPrefix: "PRE:",
 		HeadingIDSuffix: ":POST",
 	}
 
 	doTestsParam(t, tests, TestParams{
 		extensions:      AutoHeadingIDs,
-		HTMLFlags:       htmlrenderer.UseXHTML,
+		Flags:           html.UseXHTML,
 		RendererOptions: parameters,
 	})
 }
@@ -1620,7 +1620,7 @@ func TestTOC(t *testing.T) {
 		"",
 	}
 	doTestsParam(t, tests, TestParams{
-		HTMLFlags: htmlrenderer.UseXHTML | htmlrenderer.TOC,
+		Flags: html.UseXHTML | html.TOC,
 	})
 }
 
@@ -1643,7 +1643,7 @@ func TestCompletePage(t *testing.T) {
 </html>
 `,
 	}
-	doTestsParam(t, tests, TestParams{HTMLFlags: htmlrenderer.UseXHTML | htmlrenderer.CompletePage})
+	doTestsParam(t, tests, TestParams{Flags: html.UseXHTML | html.CompletePage})
 }
 
 func TestSpaceHeadings(t *testing.T) {

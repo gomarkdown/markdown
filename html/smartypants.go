@@ -3,7 +3,7 @@
 
 // SmartyPants rendering
 
-package htmlrenderer
+package html
 
 import (
 	"bytes"
@@ -373,7 +373,7 @@ func (r *SPRenderer) smartLeftAngle(out *bytes.Buffer, previousChar byte, text [
 type smartCallback func(out *bytes.Buffer, previousChar byte, text []byte) int
 
 // NewSmartypantsRenderer constructs a Smartypants renderer object.
-func NewSmartypantsRenderer(flags HTMLFlags) *SPRenderer {
+func NewSmartypantsRenderer(flags Flags) *SPRenderer {
 	var (
 		r SPRenderer
 

@@ -11,14 +11,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/gomarkdown/markdown/htmlrenderer"
+	"github.com/gomarkdown/markdown/html"
 )
 
 type TestParams struct {
 	extensions        Extensions
 	referenceOverride ReferenceOverrideFunc
-	htmlrenderer.HTMLFlags
-	htmlrenderer.RendererOptions
+	html.Flags
+	html.RendererOptions
 }
 
 func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, suite func(candidate *string)) {
@@ -38,10 +38,10 @@ func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, s
 }
 
 func runMarkdown(input string, params TestParams) string {
-	params.RendererOptions.Flags = params.HTMLFlags
+	params.RendererOptions.Flags = params.Flags
 	parser := NewParserWithExtensions(params.extensions)
 	parser.ReferenceOverride = params.referenceOverride
-	renderer := htmlrenderer.NewRenderer(params.RendererOptions)
+	renderer := html.NewRenderer(params.RendererOptions)
 
 	d := ToHTML([]byte(input), parser, renderer)
 	return string(d)
@@ -51,8 +51,8 @@ func runMarkdown(input string, params TestParams) string {
 func doTests(t *testing.T, tests []string) {
 	doTestsParam(t, tests, TestParams{
 		extensions: CommonExtensions,
-		RendererOptions: htmlrenderer.RendererOptions{
-			Flags: htmlrenderer.CommonFlags,
+		RendererOptions: html.RendererOptions{
+			Flags: html.CommonFlags,
 		},
 	})
 }
@@ -60,7 +60,7 @@ func doTests(t *testing.T, tests []string) {
 func doTestsBlock(t *testing.T, tests []string, extensions Extensions) {
 	doTestsParam(t, tests, TestParams{
 		extensions: extensions,
-		HTMLFlags:  htmlrenderer.UseXHTML,
+		Flags:      html.UseXHTML,
 	})
 }
 
@@ -87,34 +87,34 @@ func doLinkTestsInline(t *testing.T, tests []string) {
 	doTestsInline(t, tests)
 
 	prefix := "http://localhost"
-	params := htmlrenderer.RendererOptions{AbsolutePrefix: prefix}
+	params := html.RendererOptions{AbsolutePrefix: prefix}
 	transformTests := transformLinks(tests, prefix)
 	doTestsInlineParam(t, transformTests, TestParams{
 		RendererOptions: params,
 	})
 	doTestsInlineParam(t, transformTests, TestParams{
-		HTMLFlags:       htmlrenderer.UseXHTML,
+		Flags:           html.UseXHTML,
 		RendererOptions: params,
 	})
 }
 
 func doSafeTestsInline(t *testing.T, tests []string) {
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Safelink})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Safelink})
 
 	// All the links in this test should not have the prefix appended, so
 	// just rerun it with different parameters and the same expectations.
 	prefix := "http://localhost"
-	params := htmlrenderer.RendererOptions{AbsolutePrefix: prefix}
+	params := html.RendererOptions{AbsolutePrefix: prefix}
 	transformTests := transformLinks(tests, prefix)
 	doTestsInlineParam(t, transformTests, TestParams{
-		HTMLFlags:       htmlrenderer.Safelink,
+		Flags:           html.Safelink,
 		RendererOptions: params,
 	})
 }
 
 func doTestsInlineParam(t *testing.T, tests []string, params TestParams) {
 	params.extensions |= Autolink | Strikethrough
-	params.HTMLFlags |= htmlrenderer.UseXHTML
+	params.Flags |= html.UseXHTML
 	doTestsParam(t, tests, params)
 }
 

@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/htmlrenderer"
+	"github.com/gomarkdown/markdown/html"
 )
 
 const defaultTitle = ""
@@ -113,33 +113,33 @@ func main() {
 		//renderer = markdown.LatexRenderer(0)
 	} else {
 		// render the data into HTML
-		var htmlFlags htmlrenderer.HTMLFlags
+		var htmlFlags html.Flags
 		if xhtml {
-			htmlFlags |= htmlrenderer.UseXHTML
+			htmlFlags |= html.UseXHTML
 		}
 		if smartypants {
-			htmlFlags |= htmlrenderer.Smartypants
+			htmlFlags |= html.Smartypants
 		}
 		if fractions {
-			htmlFlags |= htmlrenderer.SmartypantsFractions
+			htmlFlags |= html.SmartypantsFractions
 		}
 		if latexdashes {
-			htmlFlags |= htmlrenderer.SmartypantsLatexDashes
+			htmlFlags |= html.SmartypantsLatexDashes
 		}
 		title := ""
 		if page {
-			htmlFlags |= htmlrenderer.CompletePage
+			htmlFlags |= html.CompletePage
 			title = getTitle(input)
 		}
 		if toc {
-			htmlFlags |= htmlrenderer.TOC
+			htmlFlags |= html.TOC
 		}
-		params := htmlrenderer.RendererOptions{
+		params := html.RendererOptions{
 			Flags: htmlFlags,
 			Title: title,
 			CSS:   css,
 		}
-		renderer = htmlrenderer.NewRenderer(params)
+		renderer = html.NewRenderer(params)
 	}
 
 	// parse and render

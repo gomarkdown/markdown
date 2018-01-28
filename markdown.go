@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/gomarkdown/markdown/ast"
-	"github.com/gomarkdown/markdown/htmlrenderer"
+	"github.com/gomarkdown/markdown/html"
 )
 
 // Renderer is an interface for implementing custom renderers.
@@ -49,10 +49,10 @@ func ToHTML(input []byte, parser *Parser, renderer Renderer) []byte {
 		parser = NewParserWithExtensions(CommonExtensions)
 	}
 	if renderer == nil {
-		params := htmlrenderer.RendererOptions{
-			Flags: htmlrenderer.CommonFlags,
+		params := html.RendererOptions{
+			Flags: html.CommonFlags,
 		}
-		renderer = htmlrenderer.NewRenderer(params)
+		renderer = html.NewRenderer(params)
 	}
 	parser.Parse(input)
 	return parser.Render(renderer)

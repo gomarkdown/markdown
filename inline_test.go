@@ -11,7 +11,7 @@ import (
 
 	"strings"
 
-	"github.com/gomarkdown/markdown/htmlrenderer"
+	"github.com/gomarkdown/markdown/html"
 )
 
 func TestEmphasis(t *testing.T) {
@@ -485,7 +485,7 @@ func TestRelAttrLink(t *testing.T) {
 		"<p><a href=\"../bar\">foo</a></p>\n",
 	}
 	doTestsInlineParam(t, nofollowTests, TestParams{
-		HTMLFlags: htmlrenderer.Safelink | htmlrenderer.NofollowLinks,
+		Flags: html.Safelink | html.NofollowLinks,
 	})
 
 	var noreferrerTests = []string{
@@ -496,7 +496,7 @@ func TestRelAttrLink(t *testing.T) {
 		"<p><a href=\"/bar/\">foo</a></p>\n",
 	}
 	doTestsInlineParam(t, noreferrerTests, TestParams{
-		HTMLFlags: htmlrenderer.Safelink | htmlrenderer.NoreferrerLinks,
+		Flags: html.Safelink | html.NoreferrerLinks,
 	})
 
 	var nofollownoreferrerTests = []string{
@@ -507,7 +507,7 @@ func TestRelAttrLink(t *testing.T) {
 		"<p><a href=\"/bar/\">foo</a></p>\n",
 	}
 	doTestsInlineParam(t, nofollownoreferrerTests, TestParams{
-		HTMLFlags: htmlrenderer.Safelink | htmlrenderer.NofollowLinks | htmlrenderer.NoreferrerLinks,
+		Flags: html.Safelink | html.NofollowLinks | html.NoreferrerLinks,
 	})
 }
 
@@ -536,7 +536,7 @@ func TestHrefTargetBlank(t *testing.T) {
 		"<p><a href=\"http://example.com\" target=\"_blank\">foo</a></p>\n",
 	}
 	doTestsInlineParam(t, tests, TestParams{
-		HTMLFlags: htmlrenderer.Safelink | htmlrenderer.HrefTargetBlank,
+		Flags: html.Safelink | html.HrefTargetBlank,
 	})
 }
 
@@ -956,14 +956,14 @@ func TestFootnotesWithParameters(t *testing.T) {
 		tests[i] = test
 	}
 
-	params := htmlrenderer.RendererOptions{
+	params := html.RendererOptions{
 		FootnoteAnchorPrefix:       prefix,
 		FootnoteReturnLinkContents: returnText,
 	}
 
 	doTestsInlineParam(t, tests, TestParams{
 		extensions:      Footnotes,
-		HTMLFlags:       htmlrenderer.FootnoteReturnLinks,
+		Flags:           html.FootnoteReturnLinks,
 		RendererOptions: params,
 	})
 }
@@ -1022,7 +1022,7 @@ func TestInlineComments(t *testing.T) {
 		"blahblah\n<!--- foo -->\nrhubarb\n",
 		"<p>blahblah\n<!--- foo -->\nrhubarb</p>\n",
 	}
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsDashes})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants | html.SmartypantsDashes})
 }
 
 func TestSmartDoubleQuotes(t *testing.T) {
@@ -1035,7 +1035,7 @@ func TestSmartDoubleQuotes(t *testing.T) {
 		"two pair of \"some\" quoted \"text\".\n",
 		"<p>two pair of &ldquo;some&rdquo; quoted &ldquo;text&rdquo;.</p>\n"}
 
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants})
 }
 
 func TestSmartDoubleQuotesNBSP(t *testing.T) {
@@ -1048,7 +1048,7 @@ func TestSmartDoubleQuotesNBSP(t *testing.T) {
 		"two pair of \"some\" quoted \"text\".\n",
 		"<p>two pair of &ldquo;&nbsp;some&nbsp;&rdquo; quoted &ldquo;&nbsp;text&nbsp;&rdquo;.</p>\n"}
 
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsQuotesNBSP})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants | html.SmartypantsQuotesNBSP})
 }
 
 func TestSmartAngledDoubleQuotes(t *testing.T) {
@@ -1061,7 +1061,7 @@ func TestSmartAngledDoubleQuotes(t *testing.T) {
 		"two pair of \"some\" quoted \"text\".\n",
 		"<p>two pair of &laquo;some&raquo; quoted &laquo;text&raquo;.</p>\n"}
 
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsAngledQuotes})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants | html.SmartypantsAngledQuotes})
 }
 
 func TestSmartAngledDoubleQuotesNBSP(t *testing.T) {
@@ -1074,7 +1074,7 @@ func TestSmartAngledDoubleQuotesNBSP(t *testing.T) {
 		"two pair of \"some\" quoted \"text\".\n",
 		"<p>two pair of &laquo;&nbsp;some&nbsp;&raquo; quoted &laquo;&nbsp;text&nbsp;&raquo;.</p>\n"}
 
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsAngledQuotes | htmlrenderer.SmartypantsQuotesNBSP})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants | html.SmartypantsAngledQuotes | html.SmartypantsQuotesNBSP})
 }
 
 func TestSmartFractions(t *testing.T) {
@@ -1085,7 +1085,7 @@ func TestSmartFractions(t *testing.T) {
 		"1/2/2015, 1/4/2015, 3/4/2015; 2015/1/2, 2015/1/4, 2015/3/4.\n",
 		"<p>1/2/2015, 1/4/2015, 3/4/2015; 2015/1/2, 2015/1/4, 2015/3/4.</p>\n"}
 
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants})
 
 	tests = []string{
 		"1/2, 2/3, 81/100 and 1000000/1048576.\n",
@@ -1093,7 +1093,7 @@ func TestSmartFractions(t *testing.T) {
 		"1/2/2015, 1/4/2015, 3/4/2015; 2015/1/2, 2015/1/4, 2015/3/4.\n",
 		"<p>1/2/2015, 1/4/2015, 3/4/2015; 2015/1/2, 2015/1/4, 2015/3/4.</p>\n"}
 
-	doTestsInlineParam(t, tests, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsFractions})
+	doTestsInlineParam(t, tests, TestParams{Flags: html.Smartypants | html.SmartypantsFractions})
 }
 
 func TestDisableSmartDashes(t *testing.T) {
@@ -1113,7 +1113,7 @@ func TestDisableSmartDashes(t *testing.T) {
 		"<p>foo &mdash; bar</p>\n",
 		"foo --- bar\n",
 		"<p>foo &mdash;&ndash; bar</p>\n",
-	}, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsDashes})
+	}, TestParams{Flags: html.Smartypants | html.SmartypantsDashes})
 	doTestsInlineParam(t, []string{
 		"foo - bar\n",
 		"<p>foo - bar</p>\n",
@@ -1121,7 +1121,7 @@ func TestDisableSmartDashes(t *testing.T) {
 		"<p>foo &ndash; bar</p>\n",
 		"foo --- bar\n",
 		"<p>foo &mdash; bar</p>\n",
-	}, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsLatexDashes | htmlrenderer.SmartypantsDashes})
+	}, TestParams{Flags: html.Smartypants | html.SmartypantsLatexDashes | html.SmartypantsDashes})
 	doTestsInlineParam(t, []string{
 		"foo - bar\n",
 		"<p>foo - bar</p>\n",
@@ -1129,7 +1129,7 @@ func TestDisableSmartDashes(t *testing.T) {
 		"<p>foo -- bar</p>\n",
 		"foo --- bar\n",
 		"<p>foo --- bar</p>\n",
-	}, TestParams{HTMLFlags: htmlrenderer.Smartypants | htmlrenderer.SmartypantsLatexDashes})
+	}, TestParams{Flags: html.Smartypants | html.SmartypantsLatexDashes})
 }
 
 func TestSkipLinks(t *testing.T) {
@@ -1141,7 +1141,7 @@ func TestSkipLinks(t *testing.T) {
 		"[foo](mailto://bar/)\n",
 		"<p><tt>foo</tt></p>\n",
 	}, TestParams{
-		HTMLFlags: htmlrenderer.SkipLinks,
+		Flags: html.SkipLinks,
 	})
 }
 
@@ -1151,7 +1151,7 @@ func TestSkipImages(t *testing.T) {
 		"![foo](/bar/)\n",
 		"<p></p>\n",
 	}, TestParams{
-		HTMLFlags: htmlrenderer.SkipImages,
+		Flags: html.SkipImages,
 	})
 }
 
@@ -1164,7 +1164,7 @@ func TestUseXHTML(t *testing.T) {
 	doTestsParam(t, []string{
 		"---",
 		"<hr />\n",
-	}, TestParams{HTMLFlags: htmlrenderer.UseXHTML})
+	}, TestParams{Flags: html.UseXHTML})
 }
 
 func TestSkipHTML(t *testing.T) {
@@ -1175,13 +1175,13 @@ func TestSkipHTML(t *testing.T) {
 
 		"text <em>inline html</em> more text",
 		"<p>text inline html more text</p>\n",
-	}, TestParams{HTMLFlags: htmlrenderer.SkipHTML})
+	}, TestParams{Flags: html.SkipHTML})
 }
 
 func BenchmarkSmartDoubleQuotes(b *testing.B) {
-	params := TestParams{HTMLFlags: htmlrenderer.Smartypants}
+	params := TestParams{Flags: html.Smartypants}
 	params.extensions |= Autolink | Strikethrough
-	params.HTMLFlags |= htmlrenderer.UseXHTML
+	params.Flags |= html.UseXHTML
 
 	for i := 0; i < b.N; i++ {
 		runMarkdown("this should be normal \"quoted\" text.\n", params)
