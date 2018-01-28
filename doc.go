@@ -15,17 +15,21 @@ Customizing parsing and HTML rendering
 
 You can customize parser and HTML renderer:
 
-	extensions := html.CommonExtensions | html.AutoHeadingIDs
-	parser := parser.NewWithExensions(extensions)
+	import (
+		"github.com/gomarkdown/markdown/parser"
+		"github.com/gomarkdown/markdown/renderer"
+		"github.com/gomarkdown/markdown"
+	)
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+	p := parser.NewWithExensions(extensions)
 
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank
 	opts := html.RendererOptions{Flags: htmlFlags}
 	renderer := html.NewRenderer(opts)
 
 	md := []byte("markdown text")
-	html := markdown.ToHTML(md, parser, renderer)
+	html := markdown.ToHTML(md, p, renderer)
 
-For a cmd-line tool see https://github.com/gomarkdown/markdown/tree/master/cmd/mdtohtml
-package markdown.
+For a cmd-line tool see https://github.com/gomarkdown/mdtohtml
 */
 package markdown
