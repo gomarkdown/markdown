@@ -20,24 +20,87 @@ md := []byte("## markdown document")
 output := markdown.ToHTML(md, nil, nil)
 ```
 
-To customize both parser and HTML renderer:
+
+## Customizing parsera
+
+Markdown format is loosely specified and there are multiple extensions invented after original specification was created.
+
+The parser supports several [extensions](https://godoc.org/github.com/gomarkdown/markdown/parser#Extensions).
+
+Default parser uses most common `parser.CommonExtensions` but you can easily use parser with custom extension:
 
 ```go
 import (
     "github.com/gomarkdown/markdown"
-    "github.com/gomarkdown/markdown/html"
     "github.com/gomarkdown/markdown/parser"
 )
 
 extensions := html.CommonExtensions | html.AutoHeadingIDs
 parser := parser.NewWithExensions(extensions)
 
+md := []byte("markdown text")
+html := markdown.ToHTML(md, parser, nil)
+```
+
+## Customizing HTML renderer
+
+Similarly, HTML renderer can be configured with different [options](https://godoc.org/github.com/gomarkdown/markdown/html#RendererOptions)
+
+Here's how to use a custom renderer:
+
+```go
+import (
+    "github.com/gomarkdown/markdown"
+    "github.com/gomarkdown/markdown/html"
+)
+
 htmlFlags := html.CommonFlags | html.HrefTargetBlank
 opts := html.RendererOptions{Flags: htmlFlags}
 renderer := html.NewRenderer(opts)
 
 md := []byte("markdown text")
-html := markdown.ToHTML(md, parser, renderer)
+html := markdown.ToHTML(md, nil, renderer)
+```
+
+HTML renderer also supports reusing most of the logic and overriding rendering of only specifc nodes.
+
+You can provide [RenderNodeFunc](https://godoc.org/github.com/gomarkdown/markdown/html#RenderNodeFunc) in [RendererOptions](https://godoc.org/github.com/gomarkdown/markdown/html#RendererOptions).
+
+The function is called for each node in AST, you can implement custom rendering logic and tell HTML renderer to skip rendering this node.
+
+Here's the simplest example that drops all code blocks from the output:
+
+```go
+import (
+    "github.com/gomarkdown/markdown"
+    "github.com/gomarkdown/markdown/ast"
+    "github.com/gomarkdown/markdown/html"
+)
+
+// return (ast.GoToNext, true) to tell html renderer to skip rendering this node
+// (because you've rendered it)
+func renderHookDropCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+    // skip all nodes that are not CodeBlock nodes
+	if _, ok := node.(*ast.CodeBlock); !ok {
+		return ast.GoToNext, false
+    }
+    // custom rendering logic for ast.CodeBlock. By doing nothing it won't be
+    // present in the output
+	return ast.GoToNext, true
+}
+
+opts := html.RendererOptions{
+    Flags: html.CommonFlags,
+    RenderNodeHook: renderHookDropCodeBlock,
+}
+renderer := html.NewRenderer(opts)
+md := `test
+```
+code block will be dropped from output
+```
+text`
+
+html := markdown.ToHTML([]byte(s), nil, renderer)
 ```
 
 ## Sanitize untrusted content
@@ -57,12 +120,6 @@ import (
 maybeUnsafeHTML := markdown.ToHTML(md, nil, nil)
 html := bluemonday.UGCPolicy().SanitizeBytes(maybeUnsafeHTML)
 ```
-
-## Customizing parser and renderer
-
-Ways to customize parser:
-* use custom extensions by creating parser with `parser.NewWithExtensions(extensions)`
-* over-ride `parser.Parser.ReferenceOverride` function
 
 ## mdtohtml command-line tool
 
