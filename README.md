@@ -94,12 +94,7 @@ opts := html.RendererOptions{
     RenderNodeHook: renderHookDropCodeBlock,
 }
 renderer := html.NewRenderer(opts)
-md := `test
-```
-code block will be dropped from output
-```
-text`
-
+md := "test\n```\nthis code block will be dropped from output\n```\ntext"
 html := markdown.ToHTML([]byte(s), nil, renderer)
 ```
 
