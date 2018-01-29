@@ -1,7 +1,7 @@
 Markdown Parser and HTML Renderer for Go [![GoDoc](https://godoc.org/github.com/gomarkdown/markdown?status.svg)](https://godoc.org/github.com/gomarkdown/markdown) [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown)
 ===========
 
-Package `github.com/gomarkdown/markdown` is a Go library for parsing [Markdown](https://daringfireball.net/projects/markdown/) documents and rendering them to HTML.
+Package `github.com/gomarkdown/markdown` is a very fast Go library for parsing [Markdown](https://daringfireball.net/projects/markdown/) documents and rendering them to HTML.
 
 It's fast and supports common extensions.
 
