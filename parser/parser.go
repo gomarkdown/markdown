@@ -229,11 +229,12 @@ type Reference struct {
 	Text string
 }
 
-// Parse is an entry point to the parsing part of Blackfriday. It takes an
-// input markdown document and produces a syntax tree for its contents. This
-// tree can then be rendered with a default or custom renderer, or
-// analyzed/transformed by the caller to whatever non-standard needs they have.
-// The return value is the root node of the syntax tree.
+// Parse generates AST (abstract syntax tree) representing markdown document.
+//
+// The result is a root of the tree whose underlying type is *ast.Document
+//
+// You can then convert AST to html using html.Renderer, to some other format
+// using a custom renderer or transform the tree.
 func (p *Parser) Parse(input []byte) ast.Node {
 	p.block(input)
 	// Walk the tree and finish up some of unfinished blocks
