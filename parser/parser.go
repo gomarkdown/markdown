@@ -100,13 +100,15 @@ type Parser struct {
 }
 
 // New creates a markdown parser with CommonExtensions.
+//
+// You can then call `doc := p.Parse(markdown)` to parse markdown document
+// and `markdown.Render(doc, renderer)` to convert it to another format with
+// a renderer.
 func New() *Parser {
 	return NewWithExtensions(CommonExtensions)
 }
 
 // NewWithExtensions creates a markdown parser with given extensions.
-// Before
-// for Run() to customize parser's behavior and the renderer.
 func NewWithExtensions(extension Extensions) *Parser {
 	p := Parser{
 		refs:       make(map[string]*reference),
