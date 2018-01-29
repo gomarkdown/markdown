@@ -66,9 +66,9 @@ var (
 	}
 )
 
-// SanitizeAnchorName returns a sanitized anchor name for the given text.
+// sanitizeAnchorName returns a sanitized anchor name for the given text.
 // Taken from https://github.com/shurcooL/sanitized_anchor_name/blob/master/main.go#L14:1
-func SanitizeAnchorName(text string) string {
+func sanitizeAnchorName(text string) string {
 	var anchorName []rune
 	var futureDash = false
 	for _, r := range text {
@@ -303,7 +303,7 @@ func (p *Parser) prefixHeading(data []byte) int {
 	}
 	if end > i {
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			id = SanitizeAnchorName(string(data[i:end]))
+			id = sanitizeAnchorName(string(data[i:end]))
 		}
 		block := &ast.Heading{
 			HeadingID: id,
@@ -608,10 +608,10 @@ func (*Parser) isHRule(data []byte) bool {
 	return n >= 3
 }
 
-// IsFenceLine checks if there's a fence line (e.g., ``` or ``` go) at the beginning of data,
+// sFenceLine checks if there's a fence line (e.g., ``` or ``` go) at the beginning of data,
 // and returns the end index if so, or 0 otherwise. It also returns the marker found.
 // If syntax is not nil, it gets set to the syntax specified in the fence line.
-func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker string) {
+func sFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker string) {
 	i, size := 0, 0
 
 	n := len(data)
@@ -712,7 +712,7 @@ func IsFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 // If doRender is true, a final newline is mandatory to recognize the fenced code block.
 func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	var syntax string
-	beg, marker := IsFenceLine(data, &syntax, "")
+	beg, marker := sFenceLine(data, &syntax, "")
 	if beg == 0 || beg >= len(data) {
 		return 0
 	}
@@ -725,7 +725,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		// safe to assume beg < len(data)
 
 		// check for the end of the code block
-		fenceEnd, _ := IsFenceLine(data[beg:], nil, marker)
+		fenceEnd, _ := sFenceLine(data[beg:], nil, marker)
 		if fenceEnd != 0 {
 			beg += fenceEnd
 			break
@@ -1455,9 +1455,9 @@ func (p *Parser) paragraph(data []byte) int {
 	// line: index of 1st char of current line
 	// i: index of cursor/end of current line
 	var prev, line, i int
-	tabSize := TabSizeDefault
+	tabSize := tabSizeDefault
 	if p.extensions&TabSizeEight != 0 {
-		tabSize = TabSizeDouble
+		tabSize = tabSizeDouble
 	}
 	// keep going until we find something to mark the end of the paragraph
 	for i < len(data) {
@@ -1504,7 +1504,7 @@ func (p *Parser) paragraph(data []byte) int {
 
 				id := ""
 				if p.extensions&AutoHeadingIDs != 0 {
-					id = SanitizeAnchorName(string(data[prev:eol]))
+					id = sanitizeAnchorName(string(data[prev:eol]))
 				}
 
 				block := &ast.Heading{

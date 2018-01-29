@@ -1,3 +1,6 @@
+/*
+Package parser implements parser for markdown document generating AST (abstract syntax tree).
+*/
 package parser
 
 // Callback functions for inline parsing. One such function is defined
@@ -10,7 +13,7 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// Extensions is a bitmask of enabled Parser extensions.
+// Extensions is a bitmask of enabled parser extensions.
 type Extensions int
 
 // Bit flags representing markdown parsing extensions.
@@ -41,8 +44,8 @@ const (
 
 // The size of a tab stop.
 const (
-	TabSizeDefault = 4
-	TabSizeDouble  = 8
+	tabSizeDefault = 4
+	tabSizeDouble  = 8
 )
 
 // for each character that triggers a response when parsing inline data.
