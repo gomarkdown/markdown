@@ -21,7 +21,7 @@ output := markdown.ToHTML(md, nil, nil)
 ```
 
 
-## Customizing parsera
+## Customizing markdown parser
 
 Markdown format is loosely specified and there are multiple extensions invented after original specification was created.
 
