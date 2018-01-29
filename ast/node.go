@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -461,38 +460,4 @@ func (f NodeVisitorFunc) Visit(node Node, entering bool) WalkStatus {
 func WalkFunc(n Node, f NodeVisitorFunc) {
 	visitor := NodeVisitorFunc(f)
 	Walk(n, visitor)
-}
-
-func dump(ast Node) {
-	fmt.Println(dumpString(ast))
-}
-
-func getContent(node Node) []byte {
-	if c := node.AsContainer(); c != nil {
-		if c.Literal != nil {
-			return c.Literal
-		}
-		return c.Content
-	}
-	return nil
-}
-
-func dumpR(ast Node, depth int) string {
-	if ast == nil {
-		return ""
-	}
-	indent := bytes.Repeat([]byte("\t"), depth)
-	content := ast.AsContainer().Literal
-	if content == nil {
-		content = ast.AsContainer().Content
-	}
-	result := fmt.Sprintf("%s%T(%q)\n", indent, ast, content)
-	for _, child := range ast.GetChildren() {
-		result += dumpR(child, depth+1)
-	}
-	return result
-}
-
-func dumpString(ast Node) string {
-	return dumpR(ast, 0)
 }
