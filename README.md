@@ -9,7 +9,11 @@ It's fast and supports common extensions.
 
     go get -u github.com/gomarkdown/markdown
 
-API Docs: https://godoc.org/github.com/gomarkdown/markdown
+API Docs:
+* https://godoc.org/github.com/gomarkdown/markdown : top level package
+* https://godoc.org/github.com/gomarkdown/markdown/ast : defines abstract syntax tree of parsed markdown document
+* https://godoc.org/github.com/gomarkdown/markdown/parser : parser
+* https://godoc.org/github.com/gomarkdown/markdown/html : html renderer
 
 ## Usage
 
