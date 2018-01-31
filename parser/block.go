@@ -1364,7 +1364,7 @@ gatherlines:
 				for next < len(data)-1 && data[next] == '\n' {
 					next++
 				}
-				if i < len(data)-1 && data[i] != ':' && data[next] != ':' {
+				if i < len(data)-1 && data[i] != ':' && next < len(data)-1 && data[next] != ':' {
 					*flags |= ast.ListItemEndOfList
 				}
 			} else {

@@ -499,7 +499,7 @@ func scanLinkRef(p *Parser, data []byte, i int) (linkOffset, linkEnd, titleOffse
 		i++
 	}
 	linkEnd = i
-	if data[linkOffset] == '<' && data[linkEnd-1] == '>' {
+	if linkEnd < len(data) && data[linkOffset] == '<' && data[linkEnd-1] == '>' {
 		linkOffset++
 		linkEnd--
 	}
