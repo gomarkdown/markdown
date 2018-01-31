@@ -1548,7 +1548,7 @@ func (p *Parser) paragraph(data []byte) int {
 		if p.extensions&DefinitionLists != 0 {
 			if p.dliPrefix(current) != 0 {
 				ret := p.list(data[prev:], ast.ListTypeDefinition)
-				return ret
+				return ret + prev
 			}
 		}
 
