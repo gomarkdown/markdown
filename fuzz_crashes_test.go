@@ -42,7 +42,6 @@ func TestInfinite1(t *testing.T) {
 	}
 }
 
-// TODO: this enters infinite loop
 /*
 program hanged (timeout 10 seconds)
 
