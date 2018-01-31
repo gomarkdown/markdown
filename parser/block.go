@@ -1221,8 +1221,8 @@ func finalizeList(list *ast.List) {
 		// between any of them:
 		subItems := item.GetParent().GetChildren()
 		lastSubItemIdx := len(subItems) - 1
-		for i, subItem := range subItems {
-			isLastSubItem := i == lastSubItemIdx
+		for j, subItem := range subItems {
+			isLastSubItem := j == lastSubItemIdx
 			if (!isLastItem || !isLastSubItem) && endsWithBlankLine(subItem) {
 				list.Tight = false
 				break
