@@ -28,8 +28,7 @@ func TestCrash1(t *testing.T) {
 	}
 }
 
-// TODO: this enters infinite loop
-func NoTestInfinite1(t *testing.T) {
+func TestInfinite1(t *testing.T) {
 	test := "[[[[[[\n\t: ]]]]]]\n\n: " + "\n\n:(()"
 	c := make(chan bool, 1)
 	go func() {
@@ -77,7 +76,7 @@ main.main()
 	go.fuzz.main/main.go:10 +0x2d fp=0xc42049df80 sp=0xc42049df68 pc=0x1118dad
 runtime.main()
 */
-func NoTestInfinite2(t *testing.T) {
+func TestInfinite2(t *testing.T) {
 	test := ":\x00\x00\x00\x01V\n>* \x00\x80e\n\t* \n\n:\t"
 
 	c := make(chan bool, 1)

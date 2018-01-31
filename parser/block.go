@@ -244,7 +244,8 @@ func (p *Parser) block(data []byte) {
 
 		// anything else must look like a normal paragraph
 		// note: this finds underlined headings, too
-		data = data[p.paragraph(data):]
+		idx := p.paragraph(data)
+		data = data[idx:]
 	}
 
 	p.nesting--
@@ -1479,7 +1480,8 @@ func (p *Parser) paragraph(data []byte) int {
 			// did this blank line followed by a definition list item?
 			if p.extensions&DefinitionLists != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
-					return p.list(data[prev:], ast.ListTypeDefinition)
+					listLen := p.list(data[prev:], ast.ListTypeDefinition)
+					return prev + listLen
 				}
 			}
 
