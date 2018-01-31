@@ -344,9 +344,9 @@ func IsContainer(n Node) bool {
 	return n.AsContainer() != nil
 }
 
-// LastChild returns last child of this node
+// GetLastChild returns last child of this node
 // It's implemented as stand-alone function to keep Node interface small
-func LastChild(n Node) Node {
+func GetLastChild(n Node) Node {
 	a := n.GetChildren()
 	if len(a) > 0 {
 		return a[len(a)-1]
@@ -354,9 +354,9 @@ func LastChild(n Node) Node {
 	return nil
 }
 
-// FirstChild returns first child of this node
+// GetFirstChild returns first child of this node
 // It's implemented as stand-alone function to keep Node interface small
-func FirstChild(n Node) Node {
+func GetFirstChild(n Node) Node {
 	a := n.GetChildren()
 	if len(a) > 0 {
 		return a[0]
@@ -364,9 +364,9 @@ func FirstChild(n Node) Node {
 	return nil
 }
 
-// NextNode returns next sibling of this node
+// GetNextNode returns next sibling of this node
 // We can't make it part of Container or Leaf because we loose Node identity
-func NextNode(n Node) Node {
+func GetNextNode(n Node) Node {
 	parent := n.GetParent()
 	if parent == nil {
 		return nil
@@ -381,9 +381,9 @@ func NextNode(n Node) Node {
 	return nil
 }
 
-// PrevNode returns sibling node before n
+// GetPrevNode returns sibling node before n
 // We can't make it part of Container or Leaf because we loose Node identity
-func PrevNode(n Node) Node {
+func GetPrevNode(n Node) Node {
 	parent := n.GetParent()
 	if parent == nil {
 		return nil

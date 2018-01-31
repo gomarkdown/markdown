@@ -1200,7 +1200,7 @@ func endsWithBlankLine(block ast.Node) bool {
 		//}
 		switch block.(type) {
 		case *ast.List, *ast.ListItem:
-			block = ast.LastChild(block)
+			block = ast.GetLastChild(block)
 		default:
 			return false
 		}

@@ -336,7 +336,7 @@ func footnoteReturnLink(prefix, returnLink string, slug []byte) string {
 }
 
 func listItemOpenCR(listItem *ast.ListItem) bool {
-	if ast.PrevNode(listItem) == nil {
+	if ast.GetPrevNode(listItem) == nil {
 		return false
 	}
 	ld := listItem.Parent.(*ast.List)
@@ -532,7 +532,7 @@ func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {
 func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	// TODO: untangle this clusterfuck about when the newlines need
 	// to be added and when not.
-	prev := ast.PrevNode(para)
+	prev := ast.GetPrevNode(para)
 	if prev != nil {
 		switch prev.(type) {
 		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CodeBlock, *ast.BlockQuote, *ast.HorizontalRule:
@@ -551,7 +551,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 
 func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
 	r.outs(w, "</p>")
-	if !(isListItem(para.Parent) && ast.NextNode(para) == nil) {
+	if !(isListItem(para.Parent) && ast.GetNextNode(para) == nil) {
 		r.cr(w)
 	}
 }
@@ -611,7 +611,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 
 func (r *Renderer) headingExit(w io.Writer, heading *ast.Heading) {
 	r.outs(w, headingCloseTagFromLevel(heading.Level))
-	if !(isListItem(heading.Parent) && ast.NextNode(heading) == nil) {
+	if !(isListItem(heading.Parent) && ast.GetNextNode(heading) == nil) {
 		r.cr(w)
 	}
 }
@@ -675,7 +675,7 @@ func (r *Renderer) listExit(w io.Writer, list *ast.List) {
 	parent := list.Parent
 	switch parent.(type) {
 	case *ast.ListItem:
-		if ast.NextNode(list) != nil {
+		if ast.GetNextNode(list) != nil {
 			r.cr(w)
 		}
 	case *ast.Document, *ast.BlockQuote:
@@ -774,7 +774,7 @@ func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering boo
 	if align != "" {
 		attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
 	}
-	if ast.PrevNode(tableCell) == nil {
+	if ast.GetPrevNode(tableCell) == nil {
 		r.cr(w)
 	}
 	r.outTag(w, openTag, attrs)
@@ -785,7 +785,7 @@ func (r *Renderer) tableBody(w io.Writer, node *ast.TableBody, entering bool) {
 		r.cr(w)
 		r.outs(w, "<tbody>")
 		// XXX: this is to adhere to a rather silly test. Should fix test.
-		if ast.FirstChild(node) == nil {
+		if ast.GetFirstChild(node) == nil {
 			r.cr(w)
 		}
 	} else {
