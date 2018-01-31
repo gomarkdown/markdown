@@ -1,6 +1,9 @@
 package markdown
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // crashes found with go-fuzz
 
@@ -28,7 +31,16 @@ func TestCrash1(t *testing.T) {
 // TODO: this enters infinite loop
 func NoTestInfinite1(t *testing.T) {
 	test := "[[[[[[\n\t: ]]]]]]\n\n: " + "\n\n:(()"
-	Parse([]byte(test), nil)
+	c := make(chan bool, 1)
+	go func() {
+		Parse([]byte(test), nil)
+		c <- true
+	}()
+	select {
+	case <-c:
+	case <-time.After(2 * time.Second):
+		t.Fatalf("timed out")
+	}
 }
 
 // TODO: this enters infinite loop
@@ -67,5 +79,15 @@ runtime.main()
 */
 func NoTestInfinite2(t *testing.T) {
 	test := ":\x00\x00\x00\x01V\n>* \x00\x80e\n\t* \n\n:\t"
-	Parse([]byte(test), nil)
+
+	c := make(chan bool, 1)
+	go func() {
+		Parse([]byte(test), nil)
+		c <- true
+	}()
+	select {
+	case <-c:
+	case <-time.After(2 * time.Second):
+		t.Fatalf("timed out")
+	}
 }
