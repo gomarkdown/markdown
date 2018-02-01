@@ -175,7 +175,6 @@ func (p *Parser) finalize(block ast.Node) {
 }
 
 func (p *Parser) addChild(node ast.Node) ast.Node {
-	ast.PanicIfContainer(node)
 	for !canNodeContain(p.tip, node) {
 		p.finalize(p.tip)
 	}

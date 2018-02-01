@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"fmt"
-)
-
 // ListType contains bitwise or'ed flags for list and list item objects.
 type ListType int
 
@@ -61,27 +57,27 @@ func (c *Container) AsLeaf() *Leaf {
 	return nil
 }
 
-// GetParent returns parent
+// GetParent returns parent node
 func (c *Container) GetParent() Node {
 	return c.Parent
 }
 
-// SetParent sets the parent
+// SetParent sets the parent node
 func (c *Container) SetParent(newParent Node) {
 	c.Parent = newParent
 }
 
-// GetChildren returns children
+// GetChildren returns children nodes
 func (c *Container) GetChildren() []Node {
 	return c.Children
 }
 
-// SetChildren sets children
+// SetChildren sets children node
 func (c *Container) SetChildren(newChildren []Node) {
 	c.Children = newChildren
 }
 
-// Leaf is a node that cannot have children
+// Leaf is a type of node that cannot have children
 type Leaf struct {
 	Parent Node
 
@@ -89,58 +85,49 @@ type Leaf struct {
 	Content []byte // Markdown content of the block nodes
 }
 
-// AsContainer returns itself as *Container
+// AsContainer returns nil
 func (l *Leaf) AsContainer() *Container {
 	return nil
 }
 
-// AsLeaf returns itself as leaf
+// AsLeaf returns itself as *Leaf
 func (l *Leaf) AsLeaf() *Leaf {
 	return l
 }
 
-// GetParent returns parent
+// GetParent returns parent node
 func (l *Leaf) GetParent() Node {
 	return l.Parent
 }
 
-// SetParent sets the parent
+// SetParent sets the parent nodd
 func (l *Leaf) SetParent(newParent Node) {
 	l.Parent = newParent
 }
 
-// GetChildren returns children
+// GetChildren returns nil because Leaf cannot have children
 func (l *Leaf) GetChildren() []Node {
 	return nil
 }
 
-// SetChildren sets children
+// SetChildren will panic becuase Leaf cannot have children
 func (l *Leaf) SetChildren(newChildren []Node) {
-	// do nothing, Leaf has no children
-}
-
-// PanicIfContainer will panic if node is *Container
-func PanicIfContainer(node Node) {
-	if _, ok := node.(*Container); ok {
-		panic(fmt.Sprintf("%v is Container", node))
-	}
+	panic("leaf node cannot have children")
 }
 
 // AddChild adds child node to parent node
 func AddChild(parent Node, child Node) {
-	PanicIfContainer(parent)
-	PanicIfContainer(child)
 	pn := parent.AsContainer()
 	pn.Parent = parent
 	pn.Children = append(pn.Children, child)
 }
 
-// Document represents document
+// Document represents document node, a root of ast
 type Document struct {
 	Container
 }
 
-// BlockQuote represents data for block quote node
+// BlockQuote represents block quote node
 type BlockQuote struct {
 	Container
 }
