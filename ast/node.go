@@ -115,24 +115,17 @@ func (l *Leaf) SetChildren(newChildren []Node) {
 	panic("leaf node cannot have children")
 }
 
-// AddChild adds child node to parent node
-func AddChild(parent Node, child Node) {
-	pn := parent.AsContainer()
-	pn.Parent = parent
-	pn.Children = append(pn.Children, child)
-}
-
-// Document represents document node, a root of ast
+// Document represents markdown document node, a root of ast
 type Document struct {
 	Container
 }
 
-// BlockQuote represents block quote node
+// BlockQuote represents markdown block quote node
 type BlockQuote struct {
 	Container
 }
 
-// List represents data list node
+// List represents markdown list node
 type List struct {
 	Container
 
@@ -144,7 +137,7 @@ type List struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
-// ListItem represents data for list item node
+// ListItem represents markdown list item node
 type ListItem struct {
 	Container
 
@@ -156,12 +149,12 @@ type ListItem struct {
 	IsFootnotesList bool   // This is a list of footnotes
 }
 
-// Paragraph represents data for paragraph node
+// Paragraph represents markdown paragraph node
 type Paragraph struct {
 	Container
 }
 
-// Heading contains fields relevant to a Heading node type.
+// Heading represents markdown heading node
 type Heading struct {
 	Container
 
@@ -170,27 +163,27 @@ type Heading struct {
 	IsTitleblock bool   // Specifies whether it's a title block
 }
 
-// HorizontalRule represents data for horizontal rule node
+// HorizontalRule represents markdown horizontal rule node
 type HorizontalRule struct {
 	Leaf
 }
 
-// Emph represents data for emp node
+// Emph represents markdown emphasis node
 type Emph struct {
 	Container
 }
 
-// Strong represents data for strong node
+// Strong represents markdown strong node
 type Strong struct {
 	Container
 }
 
-// Del represents data for del node
+// Del represents markdown del node
 type Del struct {
 	Container
 }
 
-// Link represents data for link node
+// Link represents markdown link node
 type Link struct {
 	Container
 
@@ -200,7 +193,7 @@ type Link struct {
 	Footnote    Node   // If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.
 }
 
-// Image represents data for image node
+// Image represents markdown image node
 type Image struct {
 	Container
 
@@ -208,17 +201,17 @@ type Image struct {
 	Title       []byte // Title is the tooltip thing that goes in a title attribute
 }
 
-// Text represents data for text node
+// Text represents markdown text node
 type Text struct {
 	Leaf
 }
 
-// HTMLBlock represents data for html node
+// HTMLBlock represents markdown html node
 type HTMLBlock struct {
 	Leaf
 }
 
-// CodeBlock contains fields relevant to a CodeBlock node type.
+// CodeBlock represents markdown code block node
 type CodeBlock struct {
 	Leaf
 
@@ -229,33 +222,33 @@ type CodeBlock struct {
 	FenceOffset int
 }
 
-// Softbreak represents data for softbreak node
+// Softbreak represents markdown softbreak node
 // Note: not used currently
 type Softbreak struct {
 	Leaf
 }
 
-// Hardbreak represents data for hard break node
+// Hardbreak represents markdown hard break node
 type Hardbreak struct {
 	Leaf
 }
 
-// Code represents data for code node
+// Code represents markdown code node
 type Code struct {
 	Leaf
 }
 
-// HTMLSpan represents data for html span node
+// HTMLSpan represents markdown html span node
 type HTMLSpan struct {
 	Leaf
 }
 
-// Table represents data for table node
+// Table represents markdown table node
 type Table struct {
 	Container
 }
 
-// TableCell contains fields relevant to a table cell node type.
+// TableCell represents markdown table cell node
 type TableCell struct {
 	Container
 
@@ -263,32 +256,20 @@ type TableCell struct {
 	Align    CellAlignFlags // This holds the value for align attribute
 }
 
-// TableHead represents data for a table head node
+// TableHead represents markdown table head node
 type TableHead struct {
 	Container
 }
 
-// TableBody represents data for a tablef body node
+// TableBody represents markdown table body node
 type TableBody struct {
 	Container
 }
 
-// TableRow represents data for a table row node
+// TableRow represents markdown table row node
 type TableRow struct {
 	Container
 }
-
-/*
-func (n *Node) String() string {
-	ellipsis := ""
-	snippet := n.Literal
-	if len(snippet) > 16 {
-		snippet = snippet[:16]
-		ellipsis = "..."
-	}
-	return fmt.Sprintf("%T: '%s%s'", n.Data, snippet, ellipsis)
-}
-*/
 
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
@@ -298,6 +279,22 @@ func removeNodeFromArray(a []Node, node Node) []Node {
 		}
 	}
 	return nil
+}
+
+// AddChild adds child node to parent node
+func AddChild(parent Node, child Node) {
+	pn := parent.AsContainer()
+	pn.Parent = parent
+	pn.Children = append(pn.Children, child)
+}
+
+// AppendChild adds appends child to children of parent
+// It panics if either node is nil.
+func AppendChild(parent Node, child Node) {
+	RemoveFromTree(child)
+	child.SetParent(parent)
+	newChildren := append(parent.GetChildren(), child)
+	parent.SetChildren(newChildren)
 }
 
 // RemoveFromTree removes this node from tree
@@ -316,22 +313,7 @@ func RemoveFromTree(n Node) {
 	}
 }
 
-// AppendChild adds a node 'child' as a child of 'n'.
-// It panics if either node is nil.
-func AppendChild(n Node, child Node) {
-	RemoveFromTree(child)
-	child.SetParent(n)
-	newChildren := append(n.GetChildren(), child)
-	n.SetChildren(newChildren)
-}
-
-// IsContainer returns true if n is a container node (i.e. can have children,
-// as opposed to leaf node)
-func IsContainer(n Node) bool {
-	return n.AsContainer() != nil
-}
-
-// GetLastChild returns last child of this node
+// GetLastChild returns last child of node n
 // It's implemented as stand-alone function to keep Node interface small
 func GetLastChild(n Node) Node {
 	a := n.GetChildren()
@@ -341,7 +323,7 @@ func GetLastChild(n Node) Node {
 	return nil
 }
 
-// GetFirstChild returns first child of this node
+// GetFirstChild returns first child of node n
 // It's implemented as stand-alone function to keep Node interface small
 func GetFirstChild(n Node) Node {
 	a := n.GetChildren()
@@ -351,7 +333,7 @@ func GetFirstChild(n Node) Node {
 	return nil
 }
 
-// GetNextNode returns next sibling of this node
+// GetNextNode returns next sibling of node n (node after n)
 // We can't make it part of Container or Leaf because we loose Node identity
 func GetNextNode(n Node) Node {
 	parent := n.GetParent()
@@ -368,7 +350,7 @@ func GetNextNode(n Node) Node {
 	return nil
 }
 
-// GetPrevNode returns sibling node before n
+// GetPrevNode returns previous sibling of node n (node before n)
 // We can't make it part of Container or Leaf because we loose Node identity
 func GetPrevNode(n Node) Node {
 	parent := n.GetParent()
@@ -411,7 +393,7 @@ type NodeVisitorFunc func(node Node, entering bool) WalkStatus
 
 // Walk traverses tree recursively
 func Walk(n Node, visitor NodeVisitor) WalkStatus {
-	isContainer := IsContainer(n)
+	isContainer := n.AsContainer() != nil
 	status := visitor.Visit(n, true) // entering
 	if status == Terminate {
 		// even if terminating, close container node
