@@ -323,7 +323,7 @@ func (r *Renderer) outTag(w io.Writer, name string, attrs []string) {
 func footnoteRef(prefix string, node *ast.Link) string {
 	urlFrag := prefix + string(slugify(node.Destination))
 	nStr := strconv.Itoa(node.NoteID)
-	anchor := `<a rel="footnote" href="#fn:` + urlFrag + `">` + nStr + `</a>`
+	anchor := `<a href="#fn:` + urlFrag + `">` + nStr + `</a>`
 	return `<sup class="footnote-ref" id="fnref:` + urlFrag + `">` + anchor + `</sup>`
 }
 
