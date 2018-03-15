@@ -1,9 +1,8 @@
 /*
-Package parser implements parser for markdown document generating AST (abstract syntax tree).
+Package parser implements parser for markdown text that generates AST (abstract syntax tree).
 */
 package parser
 
-// Callback functions for inline parsing. One such function is defined
 import (
 	"bytes"
 	"fmt"

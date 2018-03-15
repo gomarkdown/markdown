@@ -794,16 +794,7 @@ func (r *Renderer) tableBody(w io.Writer, node *ast.TableBody, entering bool) {
 	}
 }
 
-// RenderNode is a default renderer of a single node of a syntax tree. For
-// block nodes it will be called twice: first time with entering=true, second
-// time with entering=false, so that it could know when it's working on an open
-// tag and when on close. It writes the result to w.
-//
-// The return value is a way to tell the calling walker to adjust its walk
-// pattern: e.g. it can terminate the traversal by returning Terminate. Or it
-// can ask the walker to skip a subtree of this node by returning SkipChildren.
-// The typical behavior is to return GoToNext, which asks for the usual
-// traversal to the next node.
+// RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	if r.opts.RenderNodeHook != nil {
 		status, didHandle := r.opts.RenderNodeHook(w, node, entering)
@@ -865,7 +856,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.TableRow:
 		r.outOneOfCr(w, entering, "<tr>", "</tr>")
 	default:
-		//panic("Unknown node type " + node.Type.String())
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
 	return ast.GoToNext

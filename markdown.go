@@ -11,10 +11,17 @@ import (
 
 // Renderer is an interface for implementing custom renderers.
 type Renderer interface {
-	// RenderNode is the main rendering method. It will be called once for
-	// every leaf node and twice for every non-leaf node (first with
-	// entering=true, then with entering=false). The method should write its
-	// rendition of the node to writer w.
+	// RenderNode renders markdown node to w.
+	// It's called once for a leaf node.
+	// It's called twice for non-leaf nodes:
+	// * first with entering=true
+	// * then with entering=false
+	//
+	// Return value is a way to tell the calling walker to adjust its walk
+	// pattern: e.g. it can terminate the traversal by returning Terminate. Or it
+	// can ask the walker to skip a subtree of this node by returning SkipChildren.
+	// The typical behavior is to return GoToNext, which asks for the usual
+	// traversal to the next node.
 	RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus
 
 	// RenderHeader is a method that allows the renderer to produce some
