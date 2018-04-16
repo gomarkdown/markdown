@@ -452,7 +452,7 @@ func (r *Renderer) outOneOfCr(w io.Writer, outFirst bool, first string, second s
 	}
 }
 
-func (r *Renderer) span(w io.Writer, span *ast.HTMLSpan) {
+func (r *Renderer) htmlSpan(w io.Writer, span *ast.HTMLSpan) {
 	if r.opts.Flags&SkipHTML == 0 {
 		r.out(w, span.Literal)
 	}
@@ -834,7 +834,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Paragraph:
 		r.paragraph(w, node, entering)
 	case *ast.HTMLSpan:
-		r.span(w, node)
+		r.htmlSpan(w, node)
 	case *ast.HTMLBlock:
 		r.htmlBlock(w, node)
 	case *ast.Heading:

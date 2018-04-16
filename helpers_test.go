@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -138,6 +139,7 @@ func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
 				t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
 				continue
 			}
+			inputBytes = normalizeNewlines(inputBytes)
 			input := string(inputBytes)
 
 			filename = filepath.Join("testdata", basename+".html")
@@ -146,6 +148,7 @@ func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
 				t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
 				continue
 			}
+			expectedBytes = normalizeNewlines(expectedBytes)
 			expected := string(expectedBytes)
 
 			actual := string(runMarkdown(input, params))
@@ -155,4 +158,12 @@ func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
 			}
 		}
 	})
+}
+
+func normalizeNewlines(d []byte) []byte {
+	// replace CR LF (windows) with LF (unix)
+	d = bytes.Replace(d, []byte{13, 10}, []byte{10}, -1)
+	// replace CF (mac) with LF (unix)
+	d = bytes.Replace(d, []byte{13}, []byte{10}, -1)
+	return d
 }
