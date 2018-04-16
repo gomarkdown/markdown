@@ -245,6 +245,23 @@ implements the following extensions:
     becomes `<sup>4</sup>&frasl;<sub>5</sub>`, which renders as
     <sup>4</sup>&frasl;<sub>5</sub>.
 
+*   **MathJaX Support** is an additional feature which is supported by
+    many markdown editor. It translate inline math equation quoted by `$`
+    and display math block quoted by `$$` into MathJax compatible format.
+    hyphen `_` won't break LaTeX render within a math element any more.
+    ```
+    $$
+    \left[ \begin{array}{a} a^l_1 \\ ⋮ \\ a^l_{d_l} \end{array}\right]
+    = \sigma(
+     \left[ \begin{matrix}
+     	w^l_{1,1} & ⋯  & w^l_{1,d_{l-1}} \\
+     	⋮ & ⋱  & ⋮  \\
+     	w^l_{d_l,1} & ⋯  & w^l_{d_l,d_{l-1}} \\
+     \end{matrix}\right]  ·
+     \left[ \begin{array}{x} a^{l-1}_1 \\ ⋮ \\ ⋮ \\ a^{l-1}_{d_{l-1}} \end{array}\right] +
+     \left[ \begin{array}{b} b^l_1 \\ ⋮ \\ b^l_{d_l} \end{array}\right])
+     $$
+    ```
 
 ## Todo
 

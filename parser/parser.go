@@ -35,10 +35,11 @@ const (
 	AutoHeadingIDs                                // Create the heading ID from the text
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
 	DefinitionLists                               // Parse definition lists
+	MathJax                                       // Parse MathJax
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
-		BackslashLineBreak | DefinitionLists
+		BackslashLineBreak | DefinitionLists | MathJax
 )
 
 // The size of a tab stop.
@@ -143,8 +144,8 @@ func NewWithExtensions(extension Extensions) *Parser {
 		p.inlineCallback['M'] = maybeAutoLink
 		p.inlineCallback['F'] = maybeAutoLink
 	}
-	if p.extensions&Footnotes != 0 {
-		p.notes = make([]*reference, 0)
+	if p.extensions&MathJax != 0 {
+		p.inlineCallback['$'] = math
 	}
 	return &p
 }

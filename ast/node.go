@@ -154,6 +154,16 @@ type Paragraph struct {
 	Container
 }
 
+// Math represents markdown MathAjax inline node
+type Math struct {
+	Leaf
+}
+
+// MathBlock represents markdown MathAjax block node
+type MathBlock struct {
+	Container
+}
+
 // Heading represents markdown heading node
 type Heading struct {
 	Container

@@ -1188,6 +1188,31 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, ast.
 	return 0, nil
 }
 
+// math handle inline math wrapped with '$'
+func math(p *Parser, data []byte, offset int) (int, ast.Node) {
+	data = data[offset:]
+
+	// too short, or block math
+	if len(data) <= 2 || data[1] == '$' {
+		return 0, nil
+	}
+
+	// find next '$'
+	var end int
+	for end = 1; end < len(data) && data[end] != '$'; end++ {
+	}
+
+	// $ not match
+	if end == len(data) {
+		return 0, nil
+	}
+
+	// create inline math node
+	math := &ast.Math{}
+	math.Literal = data[1:end]
+	return end + 1, math
+}
+
 func newTextNode(d []byte) *ast.Text {
 	return &ast.Text{ast.Leaf{Literal: d}}
 }

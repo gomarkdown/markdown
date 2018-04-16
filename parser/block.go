@@ -242,6 +242,12 @@ func (p *Parser) block(data []byte) {
 			}
 		}
 
+		if p.extensions&MathJax != 0 {
+			if i := p.blockMath(data); i > 0 {
+				data = data[i:]
+				continue
+			}
+		}
 		// anything else must look like a normal paragraph
 		// note: this finds underlined headings, too
 		idx := p.paragraph(data)
@@ -1449,6 +1455,30 @@ func (p *Parser) renderParagraph(data []byte) {
 	para := &ast.Paragraph{}
 	para.Content = data[beg:end]
 	p.addBlock(para)
+}
+
+// blockMath handle block surround with $$
+func (p *Parser) blockMath(data []byte) int {
+	if len(data) <= 4 || data[0] != '$' || data[1] != '$' || data[2] == '$' {
+		return 0
+	}
+
+	// find next $$
+	var end int
+	for end = 2; end+1 < len(data) && (data[end] != '$' || data[end+1] != '$'); end++ {
+	}
+
+	// $$ not match
+	if end+1 == len(data) {
+		return 0
+	}
+
+	// render the display math
+	mathBlock := &ast.MathBlock{}
+	mathBlock.Literal = data[2:end]
+	p.addBlock(mathBlock)
+
+	return end + 2
 }
 
 func (p *Parser) paragraph(data []byte) int {

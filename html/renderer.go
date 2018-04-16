@@ -855,6 +855,15 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.tableBody(w, node, entering)
 	case *ast.TableRow:
 		r.outOneOfCr(w, entering, "<tr>", "</tr>")
+	case *ast.Math:
+		r.outOneOf(w, true, `<span class="math inline">\(`, `\)</span>`)
+		EscapeHTML(w, node.Literal)
+		r.outOneOf(w, false, `<span class="math inline">\(`, `\)</span>`)
+	case *ast.MathBlock:
+		r.outOneOf(w, entering, `<p><span class="math display">\[`, `\]</span></p>`)
+		if entering {
+			EscapeHTML(w, node.Literal)
+		}
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
