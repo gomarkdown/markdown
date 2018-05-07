@@ -1,17 +1,19 @@
-# Travis CI (http://travis-ci.org/) is a continuous integration service for
-# open source projects. This file configures it to run unit tests for
-# markdown.
-
+# Setup for Travis CI http://travis-ci.org/
 language: go
 
 go:
-    - 1.5
-    - 1.9
+    - tip
+
+before_install:
+    - go get -d -t -v ./...
 
 install:
-    - go get -d -t -v ./...
     - go build -v ./...
 
 script:
-    - go test -v ./...
+    - go test -race -v ./...
     - go test -run=^$ -bench=BenchmarkReference -benchmem
+    - ./s/test_with_codecoverage.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
