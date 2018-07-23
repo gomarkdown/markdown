@@ -105,6 +105,7 @@ func (p *Parser) block(data []byte) {
 		// if p.extensions&BlockAttributes != 0 {
 		if isBlockAttribute(data) {
 			data = p.blockAttribute(data)
+			println("here", string(data))
 		}
 		//}
 

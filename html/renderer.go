@@ -818,17 +818,17 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.outOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
 		ba := &ast.BlockAttribute{}
-		for _, c := range node.GetParent().GetChildren() {
-			if ba1, ok := c.(*ast.BlockAttribute); ok {
+		prev := ast.GetPrevNode(node)
+		for prev != nil {
+			if ba1, ok := prev.(*ast.BlockAttribute); ok {
 				ba.Collapse(ba1)
-				println("collapsing")
-
 				ba1.Used = true
 			}
+			prev = ast.GetPrevNode(prev)
 		}
 		tag := "<blockquote"
-		if s := ba.String(); s != "" {
-			tag += " " + s
+		if len(ba.ID) > 0 {
+			tag += " " + string(ba.ID)
 		}
 		tag += ">"
 

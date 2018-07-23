@@ -1,10 +1,5 @@
 package ast
 
-import (
-	"fmt"
-	"sort"
-)
-
 // BlockAttribute can be attached to block elements. They are specified as
 // {#id .classs key="value"} where quotes for value are mandatory, multiple
 // key/value pairs are separated by whitespace.
@@ -15,9 +10,9 @@ import (
 type BlockAttribute struct {
 	Container
 
-	ID      string            // single #id
-	Classes []string          // zero or more .class
-	Attrs   map[string]string // zero or more key/value pairs
+	ID      []byte            // single #id
+	Classes [][]byte          // zero or more .class
+	Attrs   map[string][]byte // zero or more key/value pairs
 
 	Used bool // This BlockAttribute has been used, don't reuse it anymore.
 }
@@ -28,7 +23,7 @@ func (b *BlockAttribute) Collapse(j *BlockAttribute) *BlockAttribute {
 		return b
 	}
 
-	if j.ID != "" {
+	if len(j.ID) != 0 {
 		b.ID = j.ID
 	}
 
@@ -39,32 +34,4 @@ func (b *BlockAttribute) Collapse(j *BlockAttribute) *BlockAttribute {
 	}
 
 	return b
-}
-
-// String returns the string representation of b. TODO(miek): should be renderer specific!
-func (b *BlockAttribute) String() string {
-	if b.Used {
-		return ""
-	}
-
-	var s string
-	if b.ID != "" {
-		s = "#" + b.ID
-	}
-
-	sort.Strings(b.Classes)
-	for _, c := range b.Classes {
-		s += " " + c
-	}
-
-	var keys []string
-	for k := range b.Attrs {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for k, v := range keys {
-		s += fmt.Sprintf("%s=\"%s\" ", k, v)
-	}
-
-	return s
 }
