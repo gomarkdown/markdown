@@ -98,6 +98,16 @@ func (p *Parser) block(data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
+		// inline block attributes:
+		//
+		// {#id .class key="value"}
+		//
+		// if p.extensions&BlockAttributes != 0 {
+		if isBlockAttribute(data) {
+			data = p.blockAttribute(data)
+		}
+		//}
+
 		// prefixed heading:
 		//
 		// # Heading 1
