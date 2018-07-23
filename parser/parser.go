@@ -36,6 +36,7 @@ const (
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
 	DefinitionLists                               // Parse definition lists
 	MathJax                                       // Parse MathJax
+	BlockAttributes                               // Parse Inline Block Attributes
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |

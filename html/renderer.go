@@ -817,7 +817,22 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.outOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		r.outOneOfCr(w, entering, "<blockquote>", "</blockquote>")
+		ba := &ast.BlockAttribute{}
+		prev := ast.GetPrevNode(node)
+		for prev != nil {
+			if ba1, ok := prev.(*ast.BlockAttribute); ok {
+				ba.Collapse(ba1)
+				ba1.Used = true
+			}
+			prev = ast.GetPrevNode(prev)
+		}
+		tag := "<blockquote"
+		if len(ba.ID) > 0 {
+			tag += " " + string(ba.ID)
+		}
+		tag += ">"
+
+		r.outOneOfCr(w, entering, tag, "</blockquote>")
 	case *ast.Link:
 		r.link(w, node, entering)
 	case *ast.Image:
@@ -864,6 +879,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		if entering {
 			EscapeHTML(w, node.Literal)
 		}
+	case *ast.BlockAttribute:
+		// These are not to be rendered directly.
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
