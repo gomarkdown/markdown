@@ -36,6 +36,7 @@ const (
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
 	DefinitionLists                               // Parse definition lists
 	MathJax                                       // Parse MathJax
+	Attributes                                    // Block Attributes
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -97,6 +98,9 @@ type Parser struct {
 	oldTip               ast.Node
 	lastMatchedContainer ast.Node // = doc
 	allClosed            bool
+
+	// Attributes are attached to block level elements.
+	attr *ast.Attribute
 }
 
 // New creates a markdown parser with CommonExtensions.
