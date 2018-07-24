@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -445,6 +446,7 @@ func (r *Renderer) outOneOf(w io.Writer, outFirst bool, first string, second str
 func (r *Renderer) outOneOfCr(w io.Writer, outFirst bool, first string, second string) {
 	if outFirst {
 		r.cr(w)
+
 		r.outs(w, first)
 	} else {
 		r.outs(w, second)
@@ -546,7 +548,9 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 			r.cr(w)
 		}
 	}
-	r.outs(w, "<p>")
+
+	tag := tagWithAttributes("<p", blockAttrs(para))
+	r.outs(w, tag)
 }
 
 func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
@@ -605,6 +609,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 		attrID := `id="` + id + `"`
 		attrs = append(attrs, attrID)
 	}
+	attrs = append(attrs, blockAttrs(nodeData)...)
 	r.cr(w)
 	r.outTag(w, headingOpenTagFromLevel(nodeData.Level), attrs)
 }
@@ -654,6 +659,7 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 	if nodeData.ListFlags&ast.ListTypeDefinition != 0 {
 		openTag = "<dl"
 	}
+	attrs = append(attrs, blockAttrs(nodeData)...)
 	r.outTag(w, openTag, attrs)
 	r.cr(w)
 }
@@ -746,6 +752,7 @@ func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	var attrs []string
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
+	attrs = append(attrs, blockAttrs(codeBlock)...)
 	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
@@ -817,7 +824,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.outOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		r.outOneOfCr(w, entering, "<blockquote>", "</blockquote>")
+		tag := tagWithAttributes("<blockquote", blockAttrs(node))
+		r.outOneOfCr(w, entering, tag, "</blockquote>")
 	case *ast.Link:
 		r.link(w, node, entering)
 	case *ast.Image:
@@ -846,7 +854,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.ListItem:
 		r.listItem(w, node, entering)
 	case *ast.Table:
-		r.outOneOfCr(w, entering, "<table>", "</table>")
+		tag := tagWithAttributes("<table", blockAttrs(node))
+		r.outOneOfCr(w, entering, tag, "</table>")
 	case *ast.TableCell:
 		r.tableCell(w, node, entering)
 	case *ast.TableHead:
@@ -1104,4 +1113,46 @@ func isPunctuation(c byte) bool {
 		}
 	}
 	return false
+}
+
+func blockAttrs(node ast.Node) []string {
+	var attr *ast.Attribute
+	var s []string
+	if c := node.AsContainer(); c != nil && c.Attribute != nil {
+		attr = c.Attribute
+	}
+	if l := node.AsLeaf(); l != nil && l.Attribute != nil {
+		attr = l.Attribute
+	}
+	if attr == nil {
+		return nil
+	}
+
+	if attr.ID != nil {
+		s = append(s, fmt.Sprintf(`id="%s"`, attr.ID))
+	}
+
+	for _, c := range attr.Classes {
+		s = append(s, fmt.Sprintf(`class="%s"`, c))
+	}
+
+	// sort the attributes so it remain stable between runs
+	var keys = []string{}
+	for k, _ := range attr.Attrs {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		s = append(s, fmt.Sprintf(`%s="%s"`, k, attr.Attrs[k]))
+	}
+
+	return s
+}
+
+func tagWithAttributes(name string, attrs []string) string {
+	s := name
+	if len(attrs) > 0 {
+		s += " " + strings.Join(attrs, " ")
+	}
+	return s + ">"
 }
