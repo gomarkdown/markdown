@@ -812,12 +812,8 @@ func finalizeCodeBlock(code *ast.CodeBlock) {
 }
 
 func (p *Parser) table(data []byte) int {
-	table := &ast.Table{}
-	p.addBlock(table)
 	i, columns := p.tableHeader(data)
 	if i == 0 {
-		p.tip = table.Parent
-		ast.RemoveFromTree(table)
 		return 0
 	}
 
@@ -853,6 +849,7 @@ func isBackslashEscaped(data []byte, i int) bool {
 	return backslashes&1 == 1
 }
 
+// tableHeaders parses the header. If recognized it will also add a table.
 func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags) {
 	i := 0
 	colCount := 1
@@ -955,6 +952,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 		return
 	}
 
+	p.addBlock(&ast.Table{})
 	p.addBlock(&ast.TableHead{})
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
