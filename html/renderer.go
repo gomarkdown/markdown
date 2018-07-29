@@ -446,7 +446,6 @@ func (r *Renderer) outOneOf(w io.Writer, outFirst bool, first string, second str
 func (r *Renderer) outOneOfCr(w io.Writer, outFirst bool, first string, second string) {
 	if outFirst {
 		r.cr(w)
-
 		r.outs(w, first)
 	} else {
 		r.outs(w, second)
