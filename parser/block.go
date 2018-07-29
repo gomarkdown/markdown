@@ -98,6 +98,14 @@ func (p *Parser) block(data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
+		// user supplied parser function
+		if p.Opts.ParserHook != nil {
+			i := p.Opts.ParserHook(p, data)
+			if i > 0 {
+				data = data[i:]
+			}
+		}
+
 		// prefixed heading:
 		//
 		// # Heading 1
