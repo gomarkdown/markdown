@@ -98,14 +98,20 @@ func (p *Parser) block(data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
+		// attributes that can be specific before a block element:
+		//
+		// {#id .class1 .class2 key="value"}
+		if p.extensions&Attributes != 0 {
+			data = p.attribute(data)
+		}
+    
 		// user supplied parser function
 		if p.Opts.ParserHook != nil {
 			i := p.Opts.ParserHook(p, data)
 			if i > 0 {
 				data = data[i:]
-			}
 		}
-
+    
 		// prefixed heading:
 		//
 		// # Heading 1
@@ -267,6 +273,16 @@ func (p *Parser) block(data []byte) {
 
 func (p *Parser) addBlock(n ast.Node) ast.Node {
 	p.closeUnmatchedBlocks()
+
+	if p.attr != nil {
+		if c := n.AsContainer(); c != nil {
+			c.Attribute = p.attr
+		}
+		if l := n.AsLeaf(); l != nil {
+			l.Attribute = p.attr
+		}
+		p.attr = nil
+	}
 	return p.addChild(n)
 }
 
@@ -803,12 +819,8 @@ func finalizeCodeBlock(code *ast.CodeBlock) {
 }
 
 func (p *Parser) table(data []byte) int {
-	table := &ast.Table{}
-	p.addBlock(table)
 	i, columns := p.tableHeader(data)
 	if i == 0 {
-		p.tip = table.Parent
-		ast.RemoveFromTree(table)
 		return 0
 	}
 
@@ -844,6 +856,7 @@ func isBackslashEscaped(data []byte, i int) bool {
 	return backslashes&1 == 1
 }
 
+// tableHeaders parses the header. If recognized it will also add a table.
 func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags) {
 	i := 0
 	colCount := 1
@@ -946,6 +959,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 		return
 	}
 
+	p.addBlock(&ast.Table{})
 	p.addBlock(&ast.TableHead{})
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
