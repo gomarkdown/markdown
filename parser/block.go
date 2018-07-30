@@ -98,6 +98,13 @@ func (p *Parser) block(data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
+		// attributes that can be specific before a block element:
+		//
+		// {#id .class1 .class2 key="value"}
+		if p.extensions&Attributes != 0 {
+			data = p.attribute(data)
+		}
+
 		// prefixed heading:
 		//
 		// # Heading 1
@@ -259,6 +266,16 @@ func (p *Parser) block(data []byte) {
 
 func (p *Parser) addBlock(n ast.Node) ast.Node {
 	p.closeUnmatchedBlocks()
+
+	if p.attr != nil {
+		if c := n.AsContainer(); c != nil {
+			c.Attribute = p.attr
+		}
+		if l := n.AsLeaf(); l != nil {
+			l.Attribute = p.attr
+		}
+		p.attr = nil
+	}
 	return p.addChild(n)
 }
 

@@ -45,6 +45,8 @@ type Container struct {
 
 	Literal []byte // Text contents of the leaf nodes
 	Content []byte // Markdown content of the block nodes
+
+	*Attribute // Block level attribute
 }
 
 // AsContainer returns itself as *Container
@@ -83,6 +85,8 @@ type Leaf struct {
 
 	Literal []byte // Text contents of the leaf nodes
 	Content []byte // Markdown content of the block nodes
+
+	*Attribute // Block level attribute
 }
 
 // AsContainer returns nil
