@@ -1,6 +1,6 @@
 package parser
 
-// linesUntilEmpty scans up to the first empty line.
+// linesUntilEmpty scans lines up to the first empty line.
 func (p *Parser) linesUntilEmpty(data []byte) int {
 	line, i := 0, 0
 

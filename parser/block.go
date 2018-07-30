@@ -897,6 +897,9 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 		beg = end
 	}
+	if p.extensions | MmarkCaptions {
+
+	}
 
 	if doRender {
 		codeBlock := &ast.CodeBlock{

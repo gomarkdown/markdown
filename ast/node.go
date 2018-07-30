@@ -260,6 +260,8 @@ type CodeBlock struct {
 	FenceChar   byte
 	FenceLength int
 	FenceOffset int
+
+	Caption []byte // If enabled (MmarkCaption) holds the caption.
 }
 
 // Softbreak represents markdown softbreak node
