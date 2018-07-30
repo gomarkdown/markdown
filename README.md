@@ -264,6 +264,18 @@ implements the following extensions:
      $$
     ```
 
+*   **Ordered list start number**. With this extension enabled an ordered list will start with the
+    the number that was used to start it.
+
+*   **Block level attributes**, allow setting attributes (ID, classes and key/value pairs) on block
+    level elements. The attribute must be enclosed with braces and be put on a line before the
+    element.
+    ```
+    {#id3 .myclass fontsize="tiny"}
+    # Header 1
+    ```
+    Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
+
 ## Todo
 
 *   port https://github.com/russross/blackfriday/issues/348
