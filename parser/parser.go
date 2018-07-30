@@ -78,6 +78,8 @@ type Parser struct {
 	// the bottom will be used to fill in the link details.
 	ReferenceOverride ReferenceOverrideFunc
 
+	Opts ParserOptions
+
 	// after parsing, this is AST root of parsed markdown text
 	Doc ast.Node
 
