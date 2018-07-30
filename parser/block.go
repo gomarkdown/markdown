@@ -108,9 +108,18 @@ func (p *Parser) block(data []byte) {
 
 		// user supplied parser function
 		if p.Opts.ParserHook != nil {
-			i := p.Opts.ParserHook(p, data)
-			if i > 0 {
-				data = data[i:]
+			node, blockdata, consumed := p.Opts.ParserHook(data)
+			if consumed > 0 {
+				data = data[consumed:]
+
+				if node != nil {
+					p.addBlock(node)
+					if blockdata != nil {
+						p.block(blockdata)
+						p.finalize(node)
+					}
+				}
+				continue
 			}
 		}
 
