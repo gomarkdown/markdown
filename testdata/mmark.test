@@ -1,3 +1,8 @@
 # Test 1
 ---
 <h1>Test 1</h1>
+---
+{.myclass1 .myclass2}
+# Test 2
+---
+<h1 class="myclass1 myclass2">Test 2</h1>
