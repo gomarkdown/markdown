@@ -597,6 +597,9 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 	if nodeData.IsTitleblock {
 		attrs = append(attrs, `class="title"`)
 	}
+	if nodeData.Special != nil {
+		attrs = append(attrs, fmt.Sprintf(`special="%s"`, string(nodeData.Special)))
+	}
 	if nodeData.HeadingID != "" {
 		id := r.ensureUniqueHeadingID(nodeData.HeadingID)
 		if r.opts.HeadingIDPrefix != "" {

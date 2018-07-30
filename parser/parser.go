@@ -38,6 +38,7 @@ const (
 	MathJax                                       // Parse MathJax
 	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
+	Mmark                                         // Allow all Mmark syntax to be parsed, see mmark.nl/syntax.
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |

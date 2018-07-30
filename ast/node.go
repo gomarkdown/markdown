@@ -176,6 +176,7 @@ type Heading struct {
 	Level        int    // This holds the heading level number
 	HeadingID    string // This might hold heading ID, if present
 	IsTitleblock bool   // Specifies whether it's a title block
+	Special      []byte // We are a special heading (start with .#), contains header name
 }
 
 // HorizontalRule represents markdown horizontal rule node
