@@ -105,6 +105,14 @@ func (p *Parser) block(data []byte) {
 			data = p.attribute(data)
 		}
 
+		// user supplied parser function
+		if p.Opts.ParserHook != nil {
+			i := p.Opts.ParserHook(p, data)
+			if i > 0 {
+				data = data[i:]
+			}
+		}
+
 		// prefixed heading:
 		//
 		// # Heading 1
