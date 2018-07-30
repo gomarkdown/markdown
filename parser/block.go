@@ -240,7 +240,7 @@ func (p *Parser) block(data []byte) {
 		// 2. Item 2
 		if i := p.oliPrefix(data); i > 0 {
 			start := 0
-			if i > 2 {
+			if i > 2 && p.extensions&OrderedListStart != 0 {
 				start, _ = strconv.Atoi(string(data[:i-2])) // this cannot fail because we just est. the thing *is* a number.
 				if start == 1 {
 					start = 0
