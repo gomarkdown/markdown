@@ -28,6 +28,17 @@ const (
 	TableAlignmentCenter = (TableAlignmentLeft | TableAlignmentRight)
 )
 
+// DocumentMatters holds the type of a {front,main,back}matter in the document
+type DocumentMatters int
+
+// These are all possible Document divisions.
+const (
+	DocumentMatterNone DocumentMatters = iota
+	DocumentMatterFront
+	DocumentMatterMain
+	DocumentMatterBack
+)
+
 // Node defines an ast node
 type Node interface {
 	AsContainer() *Container
@@ -122,6 +133,14 @@ func (l *Leaf) SetChildren(newChildren []Node) {
 // Document represents markdown document node, a root of ast
 type Document struct {
 	Container
+}
+
+// DocumentMatter represents markdown node that signals a document
+// division: frontmatter, mainmatter or backmatter.
+type DocumentMatter struct {
+	Container
+
+	Matter DocumentMatters
 }
 
 // BlockQuote represents markdown block quote node
