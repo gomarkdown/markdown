@@ -137,6 +137,7 @@ type List struct {
 	Tight           bool   // Skip <p>s around list item data if true
 	BulletChar      byte   // '*', '+' or '-' in bullet lists
 	Delimiter       byte   // '.' or ')' after the number in ordered lists
+	Start           int    // for ordered lists this indicates the starting number if > 0
 	RefLink         []byte // If not nil, turns this list item into a footnote item and triggers different rendering
 	IsFootnotesList bool   // This is a list of footnotes
 }

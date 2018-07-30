@@ -653,6 +653,9 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 
 	openTag := "<ul"
 	if nodeData.ListFlags&ast.ListTypeOrdered != 0 {
+		if nodeData.Start > 0 {
+			attrs = append(attrs, fmt.Sprintf(`start="%d"`, nodeData.Start))
+		}
 		openTag = "<ol"
 	}
 	if nodeData.ListFlags&ast.ListTypeDefinition != 0 {

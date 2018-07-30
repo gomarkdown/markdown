@@ -36,6 +36,7 @@ const (
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
 	DefinitionLists                               // Parse definition lists
 	MathJax                                       // Parse MathJax
+	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
