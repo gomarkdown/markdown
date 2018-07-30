@@ -129,6 +129,11 @@ type BlockQuote struct {
 	Container
 }
 
+// Aside represents an markdown aside node.
+type Aside struct {
+	Container
+}
+
 // List represents markdown list node
 type List struct {
 	Container

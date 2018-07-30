@@ -21,14 +21,15 @@ func TestMmark(t *testing.T) {
 	if len(testdata)%2 != 0 {
 		t.Fatalf("odd test tuples: %d", len(testdata))
 	}
+
+	ext := parser.CommonExtensions | parser.Attributes | parser.OrderedListStart | parser.MmarkSpecialHeading
 	for i := 0; i < len(testdata); i += 2 {
-		ext := parser.CommonExtensions | parser.Attributes | parser.OrderedListStart | parser.MmarkSpecialHeading
-		parser := parser.NewWithExtensions(ext)
+		p := parser.NewWithExtensions(ext)
 
 		input := testdata[i]
 		want := testdata[i+1]
 
-		got := ToHTML([]byte(input), parser, nil)
+		got := ToHTML([]byte(input), p, nil)
 
 		if bytes.Compare(got, want) != 0 {
 			t.Errorf("want %s, got %s, for input %q", want, got, input)
