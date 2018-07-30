@@ -386,6 +386,9 @@ func (p *Parser) isPrefixSpecialHeading(data []byte) bool {
 	if data[1] != '#' {
 		return false
 	}
+	if data[2] == '#' { // we don't support level, so nack this.
+		return false
+	}
 
 	if p.extensions&SpaceHeadings != 0 {
 		if data[2] != ' ' {
