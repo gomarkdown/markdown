@@ -276,6 +276,9 @@ implements the following extensions:
     ```
     Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
 
+*   **Mmark Special Heading**. A heading stating with `#.`, this makes it a special header. This can
+    be used to typeset Abstract or Prefaces.
+
 ## Todo
 
 *   port https://github.com/russross/blackfriday/issues/348

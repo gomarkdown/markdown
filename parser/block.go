@@ -134,6 +134,15 @@ func (p *Parser) block(data []byte) {
 			continue
 		}
 
+		// prefixed special heading:
+		// (there are no levels.)
+		//
+		// .# Abstract
+		if p.isPrefixSpecialHeading(data) {
+			data = data[p.prefixSpecialHeading(data):]
+			continue
+		}
+
 		// block of preformatted HTML:
 		//
 		// <div>
@@ -357,6 +366,77 @@ func (p *Parser) prefixHeading(data []byte) int {
 		block := &ast.Heading{
 			HeadingID: id,
 			Level:     level,
+		}
+		block.Content = data[i:end]
+		p.addBlock(block)
+	}
+	return skip
+}
+
+func (p *Parser) isPrefixSpecialHeading(data []byte) bool {
+	if p.extensions|MmarkSpecialHeading == 0 {
+		return false
+	}
+	if len(data) < 4 {
+		return false
+	}
+	if data[0] != '.' {
+		return false
+	}
+	if data[1] != '#' {
+		return false
+	}
+	if data[2] == '#' { // we don't support level, so nack this.
+		return false
+	}
+
+	if p.extensions&SpaceHeadings != 0 {
+		if data[2] != ' ' {
+			return false
+		}
+	}
+	return true
+}
+
+func (p *Parser) prefixSpecialHeading(data []byte) int {
+	i := skipChar(data, 2, ' ') // ".#" skipped
+	end := skipUntilChar(data, i, '\n')
+	skip := end
+	id := ""
+	if p.extensions&HeadingIDs != 0 {
+		j, k := 0, 0
+		// find start/end of heading id
+		for j = i; j < end-1 && (data[j] != '{' || data[j+1] != '#'); j++ {
+		}
+		for k = j + 1; k < end && data[k] != '}'; k++ {
+		}
+		// extract heading id iff found
+		if j < end && k < end {
+			id = string(data[j+2 : k])
+			end = j
+			skip = k + 1
+			for end > 0 && data[end-1] == ' ' {
+				end--
+			}
+		}
+	}
+	for end > 0 && data[end-1] == '#' {
+		if isBackslashEscaped(data, end-1) {
+			break
+		}
+		end--
+	}
+	for end > 0 && data[end-1] == ' ' {
+		end--
+	}
+	if end > i {
+		if id == "" && p.extensions&AutoHeadingIDs != 0 {
+			id = sanitizeAnchorName(string(data[i:end]))
+		}
+		block := &ast.Heading{
+			HeadingID: id,
+			Special:   bytes.ToLower(data[i:end]),
+			Level:     1, // always level 1.
 		}
 		block.Content = data[i:end]
 		p.addBlock(block)
@@ -1389,8 +1469,8 @@ gatherlines:
 				sublist = raw.Len()
 			}
 
-		// is this a nested prefix heading?
-		case p.isPrefixHeading(chunk):
+			// is this a nested prefix heading?
+		case p.isPrefixHeading(chunk), p.isPrefixSpecialHeading(chunk):
 			// if the heading is not indented, it is not nested in the list
 			// and thus ends the list
 			if containsBlankLine && indent < 4 {
@@ -1602,7 +1682,7 @@ func (p *Parser) paragraph(data []byte) int {
 		}
 
 		// if there's a prefixed heading or a horizontal rule after this, paragraph is over
-		if p.isPrefixHeading(current) || p.isHRule(current) {
+		if p.isPrefixHeading(current) || p.isPrefixSpecialHeading(current) || p.isHRule(current) {
 			p.renderParagraph(data[:i])
 			return i
 		}
