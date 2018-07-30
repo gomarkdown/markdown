@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 )
 
@@ -20,7 +19,6 @@ func TestMmark(t *testing.T) {
 
 	ext := parser.CommonExtensions | parser.Attributes | parser.OrderedListStart
 	parser := parser.NewWithExtensions(ext)
-	renderer := html.NewRenderer(html.RendererOptions{})
 
 	testdata := bytes.Split(data, []byte("---\n"))
 	if len(testdata)%2 != 0 {
@@ -30,10 +28,10 @@ func TestMmark(t *testing.T) {
 		input := testdata[i]
 		want := testdata[i+1]
 
-		got := ToHTML([]byte(input), parser, renderer)
+		got := ToHTML([]byte(input), parser, nil)
 
 		if bytes.Compare(got, want) != 0 {
-			t.Errorf("want %s, got %s, for input %s", want, got, input)
+			t.Errorf("input %d, want %s, got %s, for input %s", i, want, got, input)
 		}
 	}
 }
