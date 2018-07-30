@@ -22,7 +22,7 @@ func TestMmark(t *testing.T) {
 		t.Fatalf("odd test tuples: %d", len(testdata))
 	}
 	for i := 0; i < len(testdata); i += 2 {
-		ext := parser.CommonExtensions | parser.Attributes | parser.OrderedListStart | parser.Mmark
+		ext := parser.CommonExtensions | parser.Attributes | parser.OrderedListStart | parser.MmarkSpecialHeading
 		parser := parser.NewWithExtensions(ext)
 
 		input := testdata[i]

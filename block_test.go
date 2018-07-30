@@ -395,7 +395,7 @@ func TestPrefixHeaderMmarkExtension(t *testing.T) {
 		"<ul>\n<li><p>List</p>\n\n<ul>\n<li><p>Nested list</p>\n\n" +
 			"<h1 special=\"nested header\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
-	doTestsBlock(t, tests, parser.Mmark)
+	doTestsBlock(t, tests, parser.MmarkSpecialHeading)
 }
 
 func TestUnderlineHeaders(t *testing.T) {
