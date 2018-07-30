@@ -536,7 +536,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	prev := ast.GetPrevNode(para)
 	if prev != nil {
 		switch prev.(type) {
-		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CodeBlock, *ast.BlockQuote, *ast.HorizontalRule:
+		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CodeBlock, *ast.BlockQuote, *ast.Aside, *ast.HorizontalRule:
 			r.cr(w)
 		}
 	}
@@ -544,6 +544,10 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	if prev == nil {
 		_, isParentBlockQuote := para.Parent.(*ast.BlockQuote)
 		if isParentBlockQuote {
+			r.cr(w)
+		}
+		_, isParentAside := para.Parent.(*ast.Aside)
+		if isParentAside {
 			r.cr(w)
 		}
 	}
@@ -689,7 +693,7 @@ func (r *Renderer) listExit(w io.Writer, list *ast.List) {
 		if ast.GetNextNode(list) != nil {
 			r.cr(w)
 		}
-	case *ast.Document, *ast.BlockQuote:
+	case *ast.Document, *ast.BlockQuote, *ast.Aside:
 		r.cr(w)
 	}
 
@@ -831,6 +835,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.BlockQuote:
 		tag := tagWithAttributes("<blockquote", blockAttrs(node))
 		r.outOneOfCr(w, entering, tag, "</blockquote>")
+	case *ast.Aside:
+		tag := tagWithAttributes("<aside", blockAttrs(node))
+		r.outOneOfCr(w, entering, tag, "</aside>")
 	case *ast.Link:
 		r.link(w, node, entering)
 	case *ast.Image:
