@@ -1,5 +1,25 @@
 package parser
 
+import (
+	"bytes"
+
+	"github.com/gomarkdown/markdown/ast"
+)
+
+func (p *Parser) caption(startwith, data []byte) (ast.Node, int) {
+	if !bytes.HasPrefix(data, startwith) {
+		return nil, 0
+	}
+	j := len(startwith)
+	data = data[j:]
+	end := p.linesUntilEmpty(data)
+
+	node := &ast.Caption{}
+	p.inline(node, data[:end])
+
+	return node, end + j
+}
+
 // linesUntilEmpty scans lines up to the first empty line.
 func (p *Parser) linesUntilEmpty(data []byte) int {
 	line, i := 0, 0

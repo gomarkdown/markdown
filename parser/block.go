@@ -897,14 +897,17 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 		beg = end
 	}
-	if p.extensions | MmarkCaptions {
-
-	}
 
 	if doRender {
 		codeBlock := &ast.CodeBlock{
 			IsFenced: true,
 		}
+		if p.extensions|MmarkCaptions != 0 {
+			caption, consumed := p.caption([]byte("Caption: "), data[beg:])
+			codeBlock.Caption = caption
+			beg += consumed
+		}
+
 		// TODO: get rid of temp buffer
 		codeBlock.Content = work.Bytes()
 		p.addBlock(codeBlock)
@@ -1169,7 +1172,8 @@ func (p *Parser) terminateBlockquote(data []byte, beg, end int) bool {
 
 // parse a blockquote fragment
 func (p *Parser) quote(data []byte) int {
-	block := p.addBlock(&ast.BlockQuote{})
+	quote := &ast.BlockQuote{}
+	block := p.addBlock(quote)
 	var raw bytes.Buffer
 	beg, end := 0, 0
 	for beg < len(data) {
@@ -1200,6 +1204,13 @@ func (p *Parser) quote(data []byte) int {
 	}
 	p.block(raw.Bytes())
 	p.finalize(block)
+
+	if p.extensions|MmarkCaptions != 0 {
+		caption, consumed := p.caption([]byte("Caption: "), data[end:])
+		quote.Caption = caption
+		end += consumed
+	}
+
 	return end
 }
 

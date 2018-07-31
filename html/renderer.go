@@ -761,18 +761,56 @@ func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 }
 
 func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
+	r.cr(w)
 	var attrs []string
+
+	// if a caption has been given, wrap in <figure> and add <figcaption>.
+	if codeBlock.Caption != nil {
+		r.outs(w, "<figure>")
+	}
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
 	attrs = append(attrs, blockAttrs(codeBlock)...)
-	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
 	EscapeHTML(w, codeBlock.Literal)
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
+
+	if codeBlock.Caption != nil {
+		r.outs(w, "<figcaption>")
+		ast.WalkFunc(codeBlock.Caption, func(node ast.Node, entering bool) ast.WalkStatus {
+			return r.RenderNode(w, node, entering)
+		})
+		r.outs(w, "</figcaption></figure>")
+	}
 	if !isListItem(codeBlock.Parent) {
 		r.cr(w)
 	}
+}
+
+func (r *Renderer) blockQuote(w io.Writer, quote *ast.BlockQuote, entering bool) {
+	if entering {
+		// if a caption has been given, wrap in <figure> and add <figcaption>.
+		if quote.Caption != nil {
+			r.outs(w, "<figure>")
+		}
+		tag := tagWithAttributes("<blockquote", blockAttrs(quote))
+
+		r.cr(w)
+		r.outs(w, tag)
+		return
+
+	}
+
+	r.outs(w, "</blockquote>")
+	if quote.Caption != nil {
+		r.outs(w, "<figcaption>")
+		ast.WalkFunc(quote.Caption, func(node ast.Node, entering bool) ast.WalkStatus {
+			return r.RenderNode(w, node, entering)
+		})
+		r.outs(w, "</figcaption></figure>")
+	}
+	r.cr(w)
 }
 
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
@@ -853,8 +891,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.outOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		tag := tagWithAttributes("<blockquote", blockAttrs(node))
-		r.outOneOfCr(w, entering, tag, "</blockquote>")
+		r.blockQuote(w, node, entering)
 	case *ast.Aside:
 		tag := tagWithAttributes("<aside", blockAttrs(node))
 		r.outOneOfCr(w, entering, tag, "</aside>")
@@ -870,6 +907,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.CodeBlock:
 		r.codeBlock(w, node)
 	case *ast.Document:
+		// do nothing
+	case *ast.Caption:
 		// do nothing
 	case *ast.Paragraph:
 		r.paragraph(w, node, entering)
