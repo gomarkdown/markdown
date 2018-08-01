@@ -111,6 +111,8 @@ type Renderer struct {
 	disableTags   int
 
 	sr *SPRenderer
+
+	documentMatter ast.DocumentMatters // keep track of front/main/back matter.
 }
 
 // NewRenderer creates and configures an Renderer object, which
@@ -810,6 +812,24 @@ func (r *Renderer) tableBody(w io.Writer, node *ast.TableBody, entering bool) {
 	}
 }
 
+func (r *Renderer) matter(w io.Writer, node *ast.DocumentMatter, entering bool) {
+	if !entering {
+		return
+	}
+	if r.documentMatter != ast.DocumentMatterNone {
+		r.outs(w, "</section>\n")
+	}
+	switch node.Matter {
+	case ast.DocumentMatterFront:
+		r.outs(w, `<section matter="front">`)
+	case ast.DocumentMatterMain:
+		r.outs(w, `<section matter="main">`)
+	case ast.DocumentMatterBack:
+		r.outs(w, `<section matter="back">`)
+	}
+	r.documentMatter = node.Matter
+}
+
 // RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	if r.opts.RenderNodeHook != nil {
@@ -885,6 +905,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		if entering {
 			EscapeHTML(w, node.Literal)
 		}
+	case *ast.DocumentMatter:
+		r.matter(w, node, entering)
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
@@ -900,7 +922,11 @@ func (r *Renderer) RenderHeader(w io.Writer, ast ast.Node) {
 }
 
 // RenderFooter writes HTML document footer.
-func (r *Renderer) RenderFooter(w io.Writer, ast ast.Node) {
+func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
+	if r.documentMatter != ast.DocumentMatterNone {
+		r.outs(w, "</section>\n")
+	}
+
 	if r.opts.Flags&CompletePage == 0 {
 		return
 	}

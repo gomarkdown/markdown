@@ -300,6 +300,18 @@ func (p *Parser) block(data []byte) {
 				continue
 			}
 		}
+
+		// document matters:
+		//
+		// {frontmatter}/{mainmatter}/{backmatter}
+		// check for Mmark extension once there.
+		if p.extensions&MmarkMatters != 0 {
+			if i := p.documentMatter(data); i > 0 {
+				data = data[i:]
+				continue
+			}
+		}
+
 		// anything else must look like a normal paragraph
 		// note: this finds underlined headings, too
 		idx := p.paragraph(data)

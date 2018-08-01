@@ -279,6 +279,8 @@ implements the following extensions:
 *   **Mmark Special Heading**. A heading stating with `#.`, this makes it a special header. This can
     be used to typeset Abstract or Prefaces.
 
+*   **Mmark document divisions**, allow front-, main- or backmatter.
+
 ## Todo
 
 *   port https://github.com/russross/blackfriday/issues/348
