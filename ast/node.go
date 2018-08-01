@@ -146,8 +146,6 @@ type DocumentMatter struct {
 // BlockQuote represents markdown block quote node
 type BlockQuote struct {
 	Container
-
-	Caption Node // If enabled (MmarkCaption) holds the caption.
 }
 
 // Aside represents an markdown aside node.
@@ -262,8 +260,6 @@ type CodeBlock struct {
 	FenceChar   byte
 	FenceLength int
 	FenceOffset int
-
-	Caption Node // If enabled (MmarkCaption) holds the caption.
 }
 
 // Softbreak represents markdown softbreak node
@@ -317,6 +313,11 @@ type TableRow struct {
 
 // Caption represents a figure, code or quote caption
 type Caption struct {
+	Container
+}
+
+// CaptionFigure is a node (blockquote or codeblock) that has a caption
+type CaptionFigure struct {
 	Container
 }
 
