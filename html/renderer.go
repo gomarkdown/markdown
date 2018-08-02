@@ -538,7 +538,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	prev := ast.GetPrevNode(para)
 	if prev != nil {
 		switch prev.(type) {
-		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CodeBlock, *ast.BlockQuote, *ast.Aside, *ast.HorizontalRule:
+		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CaptionFigure, *ast.CodeBlock, *ast.BlockQuote, *ast.Aside, *ast.HorizontalRule:
 			r.cr(w)
 		}
 	}
@@ -761,56 +761,33 @@ func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 }
 
 func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
-	r.cr(w)
 	var attrs []string
-
-	// if a caption has been given, wrap in <figure> and add <figcaption>.
-	if codeBlock.Caption != nil {
-		r.outs(w, "<figure>")
-	}
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
 	attrs = append(attrs, blockAttrs(codeBlock)...)
+	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
 	EscapeHTML(w, codeBlock.Literal)
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
-
-	if codeBlock.Caption != nil {
-		r.outs(w, "<figcaption>")
-		ast.WalkFunc(codeBlock.Caption, func(node ast.Node, entering bool) ast.WalkStatus {
-			return r.RenderNode(w, node, entering)
-		})
-		r.outs(w, "</figcaption></figure>")
-	}
 	if !isListItem(codeBlock.Parent) {
 		r.cr(w)
 	}
 }
 
-func (r *Renderer) blockQuote(w io.Writer, quote *ast.BlockQuote, entering bool) {
+func (r *Renderer) caption(w io.Writer, caption *ast.Caption) {
+	r.outs(w, "<figcaption>")
+	r.out(w, caption.Literal)
+	r.outs(w, "</figcaption>")
+}
+
+func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
 	if entering {
-		// if a caption has been given, wrap in <figure> and add <figcaption>.
-		if quote.Caption != nil {
-			r.outs(w, "<figure>")
-		}
-		tag := tagWithAttributes("<blockquote", blockAttrs(quote))
-
-		r.cr(w)
-		r.outs(w, tag)
+		r.outs(w, "<figure>")
 		return
-
 	}
 
-	r.outs(w, "</blockquote>")
-	if quote.Caption != nil {
-		r.outs(w, "<figcaption>")
-		ast.WalkFunc(quote.Caption, func(node ast.Node, entering bool) ast.WalkStatus {
-			return r.RenderNode(w, node, entering)
-		})
-		r.outs(w, "</figcaption></figure>")
-	}
-	r.cr(w)
+	r.outs(w, "</figure>")
 }
 
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
@@ -891,7 +868,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.outOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		r.blockQuote(w, node, entering)
+		tag := tagWithAttributes("<blockquote", blockAttrs(node))
+		r.outOneOfCr(w, entering, tag, "</blockquote>")
 	case *ast.Aside:
 		tag := tagWithAttributes("<aside", blockAttrs(node))
 		r.outOneOfCr(w, entering, tag, "</aside>")
@@ -906,9 +884,11 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.code(w, node)
 	case *ast.CodeBlock:
 		r.codeBlock(w, node)
-	case *ast.Document:
-		// do nothing
 	case *ast.Caption:
+		r.caption(w, node)
+	case *ast.CaptionFigure:
+		r.captionFigure(w, node, entering)
+	case *ast.Document:
 		// do nothing
 	case *ast.Paragraph:
 		r.paragraph(w, node, entering)
