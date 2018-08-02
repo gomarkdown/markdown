@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"html"
+	"log"
 	"regexp"
 	"strconv"
 	"unicode"
@@ -104,6 +105,35 @@ func (p *Parser) block(data []byte) {
 		// {#id .class1 .class2 key="value"}
 		if p.extensions&Attributes != 0 {
 			data = p.attribute(data)
+		}
+
+		if p.extensions&MmarkIncludes != 0 {
+			code := false
+			path, consumed := p.isInclude(data)
+			if consumed == 0 {
+				path, consumed = p.isCodeInclude(data)
+				code = true
+			}
+
+			if consumed > 0 {
+				data = data[consumed:]
+				old := p.cwd
+				p.cwd = updateWd(p.cwd, path)
+
+				var data1 []byte
+				var err error
+				if code {
+					data1, err = p.codeInclude(path)
+				} else {
+					data1, err = p.include(path)
+				}
+				if err != nil {
+					log.Printf("%s", err)
+				}
+				p.block(data1)
+
+				p.cwd = old
+			}
 		}
 
 		// user supplied parser function
