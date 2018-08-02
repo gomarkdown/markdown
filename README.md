@@ -276,10 +276,12 @@ implements the following extensions:
     ```
     Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
 
-*   **Mmark Special Heading**. A heading stating with `#.`, this makes it a special header. This can
+*   **Mmark special heading**. A heading stating with `#.`, this makes it a special header. This can
     be used to typeset Abstract or Prefaces.
 
 *   **Mmark document divisions**, allow front-, main- or backmatter.
+
+*   **Mmark captions**, allow captions under code blocks and block quotes, by using `Caption: <text>`
 
 ## Todo
 

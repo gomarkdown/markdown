@@ -41,6 +41,7 @@ const (
 	MmarkSpecialHeading                           // Allow Mmark special headings to be parsed. See mmark.nl/syntax
 	MmarkAsides                                   // Mmark asides paragraphs. See https://mmark.nl/syntax
 	MmarkMatters                                  // Mmark document divisions
+	MmarkCaptions                                 // Allow Mmark captions under code and quote blocks be parsed.
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -212,6 +213,13 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	case *ast.TableRow:
 		_, ok := v.(*ast.TableCell)
 		return ok
+	case *ast.CaptionFigure:
+		switch v.(type) {
+		case *ast.CodeBlock, *ast.BlockQuote, *ast.Caption:
+			return true
+		default:
+			return false
+		}
 	}
 	return false
 }

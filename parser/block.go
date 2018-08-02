@@ -902,10 +902,27 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		codeBlock := &ast.CodeBlock{
 			IsFenced: true,
 		}
-		// TODO: get rid of temp buffer
-		codeBlock.Content = work.Bytes()
-		p.addBlock(codeBlock)
-		finalizeCodeBlock(codeBlock)
+		codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
+
+		if p.extensions&MmarkCaptions == 0 {
+			p.addBlock(codeBlock)
+			finalizeCodeBlock(codeBlock)
+			return beg
+		}
+
+		if captionContent, consumed := p.caption(data[beg:]); consumed > 0 {
+			figure := &ast.CaptionFigure{}
+			caption := &ast.Caption{}
+			p.inline(caption, captionContent)
+
+			p.addBlock(figure)
+			p.addChild(codeBlock)
+			finalizeCodeBlock(codeBlock)
+			p.addChild(caption)
+			p.finalize(figure)
+
+			beg += consumed
+		}
 	}
 
 	return beg
@@ -1166,7 +1183,6 @@ func (p *Parser) terminateBlockquote(data []byte, beg, end int) bool {
 
 // parse a blockquote fragment
 func (p *Parser) quote(data []byte) int {
-	block := p.addBlock(&ast.BlockQuote{})
 	var raw bytes.Buffer
 	beg, end := 0, 0
 	for beg < len(data) {
@@ -1195,8 +1211,31 @@ func (p *Parser) quote(data []byte) int {
 		raw.Write(data[beg:end])
 		beg = end
 	}
-	p.block(raw.Bytes())
-	p.finalize(block)
+
+	if p.extensions&MmarkCaptions == 0 {
+		block := p.addBlock(&ast.BlockQuote{})
+		p.block(raw.Bytes())
+		p.finalize(block)
+		return end
+	}
+
+	if captionContent, consumed := p.caption(data[end:]); consumed > 0 {
+		figure := &ast.CaptionFigure{}
+		caption := &ast.Caption{}
+		p.inline(caption, captionContent)
+
+		p.addBlock(figure)
+		block := &ast.BlockQuote{}
+		p.addChild(block)
+		p.block(raw.Bytes())
+		p.finalize(block)
+
+		p.addChild(caption)
+		p.finalize(figure)
+
+		end += consumed
+	}
+
 	return end
 }
 

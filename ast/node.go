@@ -311,6 +311,16 @@ type TableRow struct {
 	Container
 }
 
+// Caption represents a figure, code or quote caption
+type Caption struct {
+	Container
+}
+
+// CaptionFigure is a node (blockquote or codeblock) that has a caption
+type CaptionFigure struct {
+	Container
+}
+
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {

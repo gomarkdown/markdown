@@ -16,3 +16,31 @@
 <h1>Section in matter</h1>
 </section>
 <section matter="main"></section>
+---
+# Test Code Captions
+~~~ go
+println("hi")
+~~~
+Caption: This *is* a
+  caption.
+---
+<h1>Test_Code_Captions</h1>
+<figure>
+<pre><code_class="language-go">println(&quot;hi&quot;)
+</code></pre>
+<figcaption>This <em>is</em> a
+  caption.</figcaption>
+</figure>
+---
+# Test Quote Captions
+> To be, or not to be
+
+Caption: Shakespeare.
+---
+<h1>Test Quote Captions</h1>
+<figure>
+<blockquote>
+<p>To be, or not to be</p>
+</blockquote>
+<figcaption>Shakespeare.</figcaption>
+</figure>

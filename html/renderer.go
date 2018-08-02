@@ -538,7 +538,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	prev := ast.GetPrevNode(para)
 	if prev != nil {
 		switch prev.(type) {
-		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CodeBlock, *ast.BlockQuote, *ast.Aside, *ast.HorizontalRule:
+		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CaptionFigure, *ast.CodeBlock, *ast.BlockQuote, *ast.Aside, *ast.HorizontalRule:
 			r.cr(w)
 		}
 	}
@@ -775,6 +775,25 @@ func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	}
 }
 
+func (r *Renderer) caption(w io.Writer, caption *ast.Caption, entering bool) {
+	if entering {
+		r.outs(w, "<figcaption>")
+		return
+	}
+	r.outs(w, "</figcaption>")
+}
+
+func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
+	if entering {
+		r.outs(w, "<figure>")
+		return
+	}
+
+	r.cr(w)
+	r.outs(w, "</figure>")
+	r.cr(w)
+}
+
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
 	if !entering {
 		r.outOneOf(w, tableCell.IsHeader, "</th>", "</td>")
@@ -869,6 +888,10 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.code(w, node)
 	case *ast.CodeBlock:
 		r.codeBlock(w, node)
+	case *ast.Caption:
+		r.caption(w, node, entering)
+	case *ast.CaptionFigure:
+		r.captionFigure(w, node, entering)
 	case *ast.Document:
 		// do nothing
 	case *ast.Paragraph:
