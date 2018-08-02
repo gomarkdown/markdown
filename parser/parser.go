@@ -215,7 +215,7 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 		return ok
 	case *ast.CaptionFigure:
 		switch v.(type) {
-		case *ast.CodeBlock, *ast.Caption:
+		case *ast.CodeBlock, *ast.BlockQuote, *ast.Caption:
 			return true
 		default:
 			return false
