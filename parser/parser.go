@@ -42,6 +42,7 @@ const (
 	MmarkAsides                                   // Mmark asides paragraphs. See https://mmark.nl/syntax
 	MmarkMatters                                  // Mmark document divisions
 	MmarkCaptions                                 // Allow Mmark captions under code and quote blocks be parsed.
+	MmarkReferenceIndex                           // Mmark references and indeces
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -146,6 +147,9 @@ func NewWithExtensions(extension Extensions) *Parser {
 	p.inlineCallback['\\'] = escape
 	p.inlineCallback['&'] = entity
 	p.inlineCallback['!'] = maybeImage
+	if p.extensions & MmarkReferenceIndex {
+		p.inlineCallback['('] = maybeShortRefOrIndex
+	}
 	p.inlineCallback['^'] = maybeInlineFootnote
 	if p.extensions&Autolink != 0 {
 		p.inlineCallback['h'] = maybeAutoLink
