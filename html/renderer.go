@@ -879,6 +879,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.outOneOfCr(w, entering, tag, "</aside>")
 	case *ast.Link:
 		r.link(w, node, entering)
+	case *ast.InternalLink:
+		link := &ast.Link{Destination: node.Destination}
+		r.link(w, link, entering)
 	case *ast.Image:
 		if r.opts.Flags&SkipImages != 0 {
 			return ast.SkipChildren

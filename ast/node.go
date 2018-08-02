@@ -233,6 +233,13 @@ type Link struct {
 	Footnote    Node   // If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.
 }
 
+// InternalLink is a link node that links to a local document anchor
+type InternalLink struct {
+	Container
+
+	Destination []byte // Destination is what goes into a href
+}
+
 // Image represents markdown image node
 type Image struct {
 	Container
