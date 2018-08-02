@@ -904,27 +904,26 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 		codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
 
-		if p.extensions|MmarkCaptions == 0 {
+		if p.extensions&MmarkCaptions == 0 {
 			p.addBlock(codeBlock)
 			finalizeCodeBlock(codeBlock)
 
 		} else {
 
-			captionContent, consumed := p.caption(data[beg:])
-			if consumed > 0 {
+			if captionContent, consumed := p.caption(data[beg:]); consumed > 0 {
 				figure := &ast.CaptionFigure{}
 				caption := &ast.Caption{}
-				caption.Content = captionContent
+				p.inline(caption, captionContent)
 
 				p.addBlock(figure)
-				p.addChild(codeBlock)
-				p.addChild(caption)
+				p.addBlock(caption)
+				p.addBlock(codeBlock)
 
 				finalizeCodeBlock(codeBlock)
 				p.finalize(figure)
 
+				beg += consumed
 			}
-			beg += consumed
 		}
 	}
 
