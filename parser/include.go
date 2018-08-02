@@ -26,24 +26,20 @@ func (p *Parser) isInclude(data []byte) (filename string, consumed int) {
 		return "", 0
 	}
 
-	i = skipUntilChar(data, i, '}')
 	// find the end delimiter
-	end, j := 0, 0
-	for end = i; end < len(data) && j < 2; end++ {
-		if data[end] == '}' {
-			j++
-		} else {
-			j = 0
-		}
-	}
-	if j < 2 && end >= len(data) {
+	i = skipUntilChar(data, i, '}')
+	if i+1 >= len(data) {
 		return "", 0
 	}
-	return string(data[i+2 : end-2]), end
+	if data[i+1] != '}' {
+		return "", 0
+	}
+	return string(data[2:i]), i + 1
 }
 
 func (p *Parser) include(file string) ([]byte, error) {
-	// p.cwd holds containing dir, already tailed to path
+	// p.cwd holds containing dir, already tailored to the path, means path.Base should
+	// give us the leaf.
 	data, err := ioutil.ReadFile(filepath.Join(p.cwd, path.Base(file)))
 
 	// TODO: address, prefix and stuff, becomes more full fledged function latter.
@@ -62,7 +58,7 @@ func (p *Parser) isCodeInclude(data []byte) (filename string, consumed int) {
 	return p.isInclude(data[1:])
 }
 
-// codeInclude acts like include except the returns bytes are wrapped in a fenced code block.
+// codeInclude acts like include except the returned bytes are wrapped in a fenced code block.
 func (p *Parser) codeInclude(file string) ([]byte, error) {
 	data, err := p.include(file)
 	// possible some fiddling to set the language etc.

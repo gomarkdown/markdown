@@ -108,14 +108,25 @@ func (p *Parser) block(data []byte) {
 		}
 
 		if p.extensions&MmarkIncludes != 0 {
+			code := false
 			path, consumed := p.isInclude(data)
+			if consumed == 0 {
+				path, consumed = p.isCodeInclude(data)
+				code = true
+			}
+
 			if consumed > 0 {
 				data = data[consumed:]
-
 				old := p.cwd
-
 				p.cwd = updateWd(p.cwd, path)
-				data1, err := p.include(path)
+
+				var data1 []byte
+				var err error
+				if code {
+					data1, err = p.codeInclude(path)
+				} else {
+					data1, err = p.include(path)
+				}
 				if err != nil {
 					log.Printf("%s", err)
 				}
