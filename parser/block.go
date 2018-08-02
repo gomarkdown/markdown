@@ -916,10 +916,9 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 				p.inline(caption, captionContent)
 
 				p.addBlock(figure)
-				p.addBlock(caption)
-				p.addBlock(codeBlock)
-
+				p.addChild(codeBlock)
 				finalizeCodeBlock(codeBlock)
+				p.addChild(caption)
 				p.finalize(figure)
 
 				beg += consumed

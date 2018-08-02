@@ -775,9 +775,11 @@ func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	}
 }
 
-func (r *Renderer) caption(w io.Writer, caption *ast.Caption) {
-	r.outs(w, "<figcaption>")
-	r.out(w, caption.Literal)
+func (r *Renderer) caption(w io.Writer, caption *ast.Caption, entering bool) {
+	if entering {
+		r.outs(w, "<figcaption>")
+		return
+	}
 	r.outs(w, "</figcaption>")
 }
 
@@ -787,7 +789,9 @@ func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, enterin
 		return
 	}
 
+	r.cr(w)
 	r.outs(w, "</figure>")
+	r.cr(w)
 }
 
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
@@ -885,7 +889,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.CodeBlock:
 		r.codeBlock(w, node)
 	case *ast.Caption:
-		r.caption(w, node)
+		r.caption(w, node, entering)
 	case *ast.CaptionFigure:
 		r.captionFigure(w, node, entering)
 	case *ast.Document:

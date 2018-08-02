@@ -213,6 +213,13 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	case *ast.TableRow:
 		_, ok := v.(*ast.TableCell)
 		return ok
+	case *ast.CaptionFigure:
+		switch v.(type) {
+		case *ast.CodeBlock, *ast.Caption:
+			return true
+		default:
+			return false
+		}
 	}
 	return false
 }
