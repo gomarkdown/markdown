@@ -6,6 +6,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"unicode/utf8"
 
@@ -41,6 +42,7 @@ const (
 	MmarkSpecialHeading                           // Allow Mmark special headings to be parsed. See mmark.nl/syntax
 	MmarkAsides                                   // Mmark asides paragraphs. See https://mmark.nl/syntax
 	MmarkMatters                                  // Mmark document divisions
+	MmarkIncludes                                 // Mmark includes
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -107,6 +109,9 @@ type Parser struct {
 
 	// Attributes are attached to block level elements.
 	attr *ast.Attribute
+
+	// Current working directory for relative includes.
+	cwd string
 }
 
 // New creates a markdown parser with CommonExtensions.
@@ -157,6 +162,7 @@ func NewWithExtensions(extension Extensions) *Parser {
 	if p.extensions&MathJax != 0 {
 		p.inlineCallback['$'] = math
 	}
+	p.cwd, _ = os.Getwd()
 	return &p
 }
 
