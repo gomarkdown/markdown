@@ -8,11 +8,11 @@ import (
 
 // citation parses a citation. In its most simple form [@ref], we allow multiple
 // being separated by semicolons and a sub reference inside ala pandoc: [@ref p. 23].
-// Each citation can have a modifier: !, ? or - wich mean;
+// Each citation can have a modifier: !, ? or - wich mean:
 //
 // ! - normative
 // ? - formative
-// - - suppress
+// - - suppressed
 func citation(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// look for the matching closing bracket
 	i := offset + 1
