@@ -106,6 +106,25 @@ func (p *Parser) block(data []byte) {
 			data = p.attribute(data)
 		}
 
+		if p.extensions&Mmark != 0 {
+			f := p.include
+			path, address, consumed := p.isInclude(data)
+			if consumed == 0 {
+				path, address, consumed = p.isCodeInclude(data)
+				f = p.codeInclude
+			}
+			if consumed > 0 {
+				data = data[consumed:]
+				old := p.cwd
+				p.cwd = updateWd(p.cwd, path)
+
+				data1 := f(path, address)
+				p.block(data1)
+
+				p.cwd = old
+			}
+		}
+
 		// user supplied parser function
 		if p.Opts.ParserHook != nil {
 			node, blockdata, consumed := p.Opts.ParserHook(data)

@@ -6,6 +6,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 	"unicode/utf8"
 
@@ -105,6 +106,9 @@ type Parser struct {
 
 	// Attributes are attached to block level elements.
 	attr *ast.Attribute
+
+	// Current working directory for relative includes.
+	cwd string
 }
 
 // New creates a markdown parser with CommonExtensions.
@@ -158,6 +162,9 @@ func NewWithExtensions(extension Extensions) *Parser {
 	if p.extensions&MathJax != 0 {
 		p.inlineCallback['$'] = math
 	}
+
+	p.cwd, _ = os.Getwd()
+
 	return &p
 }
 
