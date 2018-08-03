@@ -16,13 +16,13 @@ func TestUpdateWd(t *testing.T) {
 
 func TestIsInclude(t *testing.T) {
 	p := New()
-	if name, _ := p.isInclude([]byte("{{foo}}")); name != "foo" {
+	if name, _, _ := p.isInclude([]byte("{{foo}}")); name != "foo" {
 		t.Errorf("want %s, got %s", "foo", name)
 	}
-	if name, _ := p.isInclude([]byte("{{foo}")); name != "" {
+	if name, _, _ := p.isInclude([]byte("{{foo}")); name != "" {
 		t.Errorf("want %s, got %s", "", name)
 	}
-	if name, _ := p.isInclude([]byte("{foo}")); name != "" {
+	if name, _, _ := p.isInclude([]byte("{foo}")); name != "" {
 		t.Errorf("want %s, got %s", "", name)
 	}
 }
