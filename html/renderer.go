@@ -879,7 +879,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.outOneOfCr(w, entering, tag, "</aside>")
 	case *ast.Link:
 		r.link(w, node, entering)
-	case *ast.InternalLink:
+	case *ast.CrossReference:
 		link := &ast.Link{Destination: node.Destination}
 		r.link(w, link, entering)
 	case *ast.Image:
