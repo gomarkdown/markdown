@@ -5,6 +5,9 @@ import "github.com/gomarkdown/markdown/ast"
 // parse '(#r)', where r does not contain spaces and is an existing label. Or.
 // (!item) (!item, subitem), for an index, (!!item) signals primary.
 func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
+	if p.extensions&MmarkReferenceIndex == 0 {
+		return 0, nil
+	}
 	if len(data[offset:]) < 4 {
 		return 0, nil
 	}
@@ -15,28 +18,29 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return 0, nil
 	}
 	i++
-	for i < len(data) && data[i] != ')' {
+Loop:
+	for i < len(data) {
 		c := data[i]
 		switch {
 		case c == ')':
-			break
+			break Loop
 		case !isAlnum(c):
 			if c == '_' || c == '-' || c == ':' {
 				i++
 				continue
 			}
 			i = 0
-			break
+			break Loop
 		}
 		i++
 	}
-	// not found or not valid
-	if i == 0 {
+	// end not found or no valid syntax
+	if i == 0 || data[i-1] != ')' {
 		return 0, nil
 	}
 
 	id := data[2:i]
-	node := &ast.InternalLink{}
+	node := &ast.CrossReference{}
 	node.Destination = id
 
 	return i, node

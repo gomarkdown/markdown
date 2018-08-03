@@ -38,11 +38,11 @@ const (
 	MathJax                                       // Parse MathJax
 	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
-	MmarkSpecialHeading                           // Allow Mmark special headings to be parsed. See mmark.nl/syntax
 	MmarkAsides                                   // Mmark asides paragraphs. See https://mmark.nl/syntax
-	MmarkMatters                                  // Mmark document divisions
 	MmarkCaptions                                 // Allow Mmark captions under code and quote blocks be parsed.
-	MmarkReferenceIndex                           // Mmark cross references and indices
+	MmarkMatters                                  // Mmark document divisions, see https://mmark.nl/syntax#document-matters
+	MmarkReferenceIndex                           // Mmark cross references and indices. See https://mmark.nl/syntax#cross-references
+	MmarkSpecialHeading                           // Allow Mmark special headings to be parsed. See mmark.nl/syntax
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -166,7 +166,6 @@ func NewWithExtensions(extension Extensions) *Parser {
 }
 
 func (p *Parser) getRef(refid string) (ref *reference, found bool) {
-	fmt.Printf("%+v\n", p.refs)
 	if p.ReferenceOverride != nil {
 		r, overridden := p.ReferenceOverride(refid)
 		if overridden {
