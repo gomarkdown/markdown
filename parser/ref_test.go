@@ -8,7 +8,6 @@ import (
 
 func TestCrossReference(t *testing.T) {
 	p := New()
-	p.extensions |= MmarkReferenceIndex
 
 	tests := []struct {
 		data []byte
