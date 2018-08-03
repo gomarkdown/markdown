@@ -232,7 +232,7 @@ func (p *Parser) block(data []byte) {
 		//
 		// A> The proof is too large to fit
 		// A> in the margin.
-		if p.extensions|MmarkAsides != 0 {
+		if p.extensions|Mmark != 0 {
 			if p.asidePrefix(data) > 0 {
 				data = data[p.aside(data):]
 				continue
@@ -304,8 +304,7 @@ func (p *Parser) block(data []byte) {
 		// document matters:
 		//
 		// {frontmatter}/{mainmatter}/{backmatter}
-		// check for Mmark extension once there.
-		if p.extensions&MmarkMatters != 0 {
+		if p.extensions&Mmark != 0 {
 			if i := p.documentMatter(data); i > 0 {
 				data = data[i:]
 				continue
@@ -397,7 +396,7 @@ func (p *Parser) prefixHeading(data []byte) int {
 }
 
 func (p *Parser) isPrefixSpecialHeading(data []byte) bool {
-	if p.extensions|MmarkSpecialHeading == 0 {
+	if p.extensions|Mmark == 0 {
 		return false
 	}
 	if len(data) < 4 {
@@ -904,7 +903,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 		codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
 
-		if p.extensions&MmarkCaptions == 0 {
+		if p.extensions&Mmark == 0 {
 			p.addBlock(codeBlock)
 			finalizeCodeBlock(codeBlock)
 			return beg
@@ -1212,7 +1211,7 @@ func (p *Parser) quote(data []byte) int {
 		beg = end
 	}
 
-	if p.extensions&MmarkCaptions == 0 {
+	if p.extensions&Mmark == 0 {
 		block := p.addBlock(&ast.BlockQuote{})
 		p.block(raw.Bytes())
 		p.finalize(block)
