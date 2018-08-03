@@ -233,6 +233,13 @@ type Link struct {
 	Footnote    Node   // If it's a footnote, this is a direct link to the footnote Node. Otherwise nil.
 }
 
+// CrossReference is a reference node.
+type CrossReference struct {
+	Container
+
+	Destination []byte // Destination is where the reference points to
+}
+
 // Image represents markdown image node
 type Image struct {
 	Container
