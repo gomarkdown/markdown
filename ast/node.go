@@ -252,7 +252,7 @@ type CrossReference struct {
 
 // Citation is a citation node.
 type Citation struct {
-	Container
+	Leaf
 
 	Destination [][]byte        // Destination is where the citation points to. Multiple ones are allowed.
 	Type        []CitationTypes // 1:1 mapping of destination and citation type

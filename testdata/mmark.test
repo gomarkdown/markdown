@@ -44,3 +44,18 @@ Caption: Shakespeare.
 </blockquote>
 <figcaption>Shakespeare.</figcaption>
 </figure>
+---
+# Test Citations
+[@RFC1034]
+---
+html
+---
+# Test Multiple Citations
+[@RFC1034; @!RFC1035]
+---
+html
+---
+# Test Multiple Citations
+[@-RFC1034] [@?RFC1035]
+---
+html

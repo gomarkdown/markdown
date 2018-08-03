@@ -218,6 +218,10 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	case offset >= 0 && data[offset] == '!':
 		t = linkImg
 		offset++
+	// [@citation], [@-citation], [@?citation], [@!citation]
+	case p.extensions&Mmark != 0 && len(data)-1 > offset && data[offset+1] == '@':
+		t = linkCitation
+	// [text] == regular link
 	// ^[text] == inline footnote
 	// [^refId] == deferred footnote
 	case p.extensions&Footnotes != 0:
@@ -227,15 +231,6 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		} else if len(data)-1 > offset && data[offset+1] == '^' {
 			t = linkDeferredFootnote
 		}
-	// [@citation], [-@citation] support
-	case p.extensions&Mmark != 0:
-		if len(data)-1 > offset && data[offset+1] == '@' {
-			t = linkCitation
-		}
-		if len(data)-2 > offset && data[offset+1] == '-' && data[offset+2] == '@' {
-			t = linkCitation
-		}
-	// [text] == regular link
 	default:
 		t = linkNormal
 	}
