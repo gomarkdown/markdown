@@ -36,11 +36,11 @@ func (p *Parser) isInclude(data []byte) (filename string, address []byte, consum
 	return string(data[2:i]), nil, i + 1
 }
 
-func (p *Parser) include(file string, address []byte) []byte {
+func (p *Parser) readInclude(file string, address []byte) []byte {
 	// p.cwd holds containing dir, already tailored to the path, means path.Base should give us the leaf.
 	fullPath := filepath.Join(p.cwd, path.Base(file))
-	if p.Opts.IncludeHook != nil {
-		return p.Opts.IncludeHook(fullPath, address)
+	if p.Opts.ReadIncludeFn != nil {
+		return p.Opts.ReadIncludeFn(fullPath, address)
 	}
 
 	return nil
@@ -57,9 +57,9 @@ func (p *Parser) isCodeInclude(data []byte) (filename string, address []byte, co
 	return p.isInclude(data[1:])
 }
 
-// codeInclude acts like include except the returned bytes are wrapped in a fenced code block.
-func (p *Parser) codeInclude(file string, address []byte) []byte {
-	data := p.include(file, address)
+// readCodeInclude acts like include except the returned bytes are wrapped in a fenced code block.
+func (p *Parser) readCodeInclude(file string, address []byte) []byte {
+	data := p.readInclude(file, address)
 	if data == nil {
 		return nil
 	}
