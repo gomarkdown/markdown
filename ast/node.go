@@ -39,6 +39,16 @@ const (
 	DocumentMatterBack
 )
 
+// CitationTypes holds the type of a citation, informative, normative or suppressed
+type CitationTypes int
+
+const (
+	CitationTypeNone CitationTypes = iota
+	CitationTypeSuppressed
+	CitationTypeInformative
+	CitationTypeNormative
+)
+
 // Node defines an ast node
 type Node interface {
 	AsContainer() *Container
@@ -238,6 +248,14 @@ type CrossReference struct {
 	Container
 
 	Destination []byte // Destination is where the reference points to
+}
+
+// Citation is a citation node.
+type Citation struct {
+	Container
+
+	Destination [][]byte        // Destination is where the citation points to. Multiple ones are allowed.
+	Type        []CitationTypes // 1:1 mapping of destination and citation type
 }
 
 // Image represents markdown image node

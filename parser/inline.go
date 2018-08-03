@@ -177,6 +177,7 @@ const (
 	linkImg
 	linkDeferredFootnote
 	linkInlineFootnote
+	linkCitation
 )
 
 func isReferenceStyleLink(data []byte, pos int, t linkType) bool {
@@ -200,7 +201,7 @@ func maybeInlineFootnote(p *Parser, data []byte, offset int) (int, ast.Node) {
 	return 0, nil
 }
 
-// '[': parse a link or an image or a footnote
+// '[': parse a link or an image or a footnote or a citation
 func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// no links allowed inside regular links, footnote, and deferred footnotes
 	if p.insideLink && (offset > 0 && data[offset-1] == '[' || len(data)-1 > offset && data[offset+1] == '^') {
@@ -226,12 +227,24 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		} else if len(data)-1 > offset && data[offset+1] == '^' {
 			t = linkDeferredFootnote
 		}
+	// [@citation], [-@citation] support
+	case p.extensions&Mmark != 0:
+		if len(data)-1 > offset && data[offset+1] == '@' {
+			t = linkCitation
+		}
+		if len(data)-2 > offset && data[offset+1] == '-' && data[offset+2] == '@' {
+			t = linkCitation
+		}
 	// [text] == regular link
 	default:
 		t = linkNormal
 	}
 
 	data = data[offset:]
+
+	if t == linkCitation {
+		return citation(p, data, 0)
+	}
 
 	var (
 		i                       = 1
