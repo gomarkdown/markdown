@@ -849,6 +849,24 @@ func (r *Renderer) matter(w io.Writer, node *ast.DocumentMatter, entering bool) 
 	r.documentMatter = node.Matter
 }
 
+func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
+	for i, c := range node.Destination {
+		attr := []string{`class="none"`}
+		switch node.Type[i] {
+		case ast.CitationTypeNormative:
+			attr[0] = `class="normative"`
+		case ast.CitationTypeInformative:
+			attr[0] = `class="informative"`
+		case ast.CitationTypeSuppressed:
+			attr[0] = `class="suppressed"`
+		}
+		r.outTag(w, "<cite", attr)
+		r.out(w, []byte("["))
+		r.out(w, c)
+		r.outs(w, "]</cite>")
+	}
+}
+
 // RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	if r.opts.RenderNodeHook != nil {
@@ -882,6 +900,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.CrossReference:
 		link := &ast.Link{Destination: node.Destination}
 		r.link(w, link, entering)
+	case *ast.Citation:
+		r.citation(w, node)
 	case *ast.Image:
 		if r.opts.Flags&SkipImages != 0 {
 			return ast.SkipChildren
