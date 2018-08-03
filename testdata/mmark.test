@@ -57,7 +57,7 @@ Caption: Shakespeare.
 ---
 <h1>Test Multiple Citations</h1>
 
-<p><cite class="informative">[RFC1034]</cite> <cite class="normative">[RFC1035]</cite></p>
+<p><cite class="informative">[RFC1034]</cite><cite class="normative">[RFC1035]</cite></p>
 ---
 # Test Multiple Citations with modifier
 [@-RFC1034] [@?RFC1035]
