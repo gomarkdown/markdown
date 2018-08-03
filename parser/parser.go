@@ -38,11 +38,7 @@ const (
 	MathJax                                       // Parse MathJax
 	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
-	MmarkAsides                                   // Mmark asides paragraphs. See https://mmark.nl/syntax
-	MmarkCaptions                                 // Allow Mmark captions under code and quote blocks be parsed.
-	MmarkMatters                                  // Mmark document divisions, see https://mmark.nl/syntax#document-matters
-	MmarkReferenceIndex                           // Mmark cross references and indices. See https://mmark.nl/syntax#cross-references
-	MmarkSpecialHeading                           // Allow Mmark special headings to be parsed. See mmark.nl/syntax
+	Mmark                                         // Support Mmark syntax, see https://mmark.nl/syntax
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -147,7 +143,7 @@ func NewWithExtensions(extension Extensions) *Parser {
 	p.inlineCallback['\\'] = escape
 	p.inlineCallback['&'] = entity
 	p.inlineCallback['!'] = maybeImage
-	if p.extensions&MmarkReferenceIndex != 0 {
+	if p.extensions&Mmark != 0 {
 		p.inlineCallback['('] = maybeShortRefOrIndex
 	}
 	p.inlineCallback['^'] = maybeInlineFootnote
