@@ -850,12 +850,20 @@ func (r *Renderer) matter(w io.Writer, node *ast.DocumentMatter, entering bool) 
 }
 
 func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
-	for _, c := range node.Destination {
-		r.outs(w, "<cite>")
+	for i, c := range node.Destination {
+		attr := []string{`class="none"`}
+		switch node.Type[i] {
+		case ast.CitationTypeNormative:
+			attr[0] = `class="normative"`
+		case ast.CitationTypeInformative:
+			attr[0] = `class="informative"`
+		case ast.CitationTypeSuppressed:
+			attr[0] = `class="suppressed"`
+		}
+		r.outTag(w, "<cite", attr)
 		r.out(w, []byte("["))
 		r.out(w, c)
-		r.out(w, []byte("]"))
-		r.outs(w, "</cite>")
+		r.outs(w, "]</cite>")
 	}
 }
 

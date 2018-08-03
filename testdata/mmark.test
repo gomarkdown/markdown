@@ -48,14 +48,20 @@ Caption: Shakespeare.
 # Test Citations
 [@RFC1034]
 ---
-html
+<h1>Test_Citations</h1>
+
+<p><cite class="informative">[RFC1034]</cite></p>
 ---
 # Test Multiple Citations
 [@RFC1034; @!RFC1035]
 ---
-html
+<h1>Test Multiple Citations</h1>
+
+<p><cite class="informative">[RFC1034]</cite> <cite class="normative">[RFC1035]</cite></p>
 ---
-# Test Multiple Citations
+# Test Multiple Citations with modifier
 [@-RFC1034] [@?RFC1035]
 ---
-html
+<h1>Test Multiple Citations with modifier</h1>
+
+<p><cite class="suppressed">[RFC1034]</cite> <cite class="informative">[RFC1035]</cite></p>

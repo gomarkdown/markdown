@@ -68,5 +68,5 @@ func citation(p *Parser, data []byte, offset int) (int, ast.Node) {
 		node.Type = append(node.Type, citeType)
 	}
 
-	return i, node
+	return i + 1, node
 }
