@@ -18,9 +18,9 @@ var (
 	htmlEntityRe = regexp.MustCompile(`&[a-z]{2,5};`)
 )
 
-// inline parses text within a block.
+// Inline parses text within a block.
 // Each function returns the number of consumed chars.
-func (p *Parser) inline(currBlock ast.Node, data []byte) {
+func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 	// handlers might call us recursively: enforce a maximum depth
 	if p.nesting >= p.maxNesting || len(data) == 0 {
 		return
@@ -534,7 +534,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			// temporarily and recurse
 			insideLink := p.insideLink
 			p.insideLink = true
-			p.inline(link, data[1:txtE])
+			p.Inline(link, data[1:txtE])
 			p.insideLink = insideLink
 		}
 		return i, link
@@ -1121,7 +1121,7 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 			}
 
 			emph := &ast.Emph{}
-			p.inline(emph, data[:i])
+			p.Inline(emph, data[:i])
 			return i + 1, emph
 		}
 	}
@@ -1144,7 +1144,7 @@ func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 			if c == '~' {
 				node = &ast.Del{}
 			}
-			p.inline(node, data[:i])
+			p.Inline(node, data[:i])
 			return i + 2, node
 		}
 		i++
@@ -1175,7 +1175,7 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, ast.
 			strong := &ast.Strong{}
 			em := &ast.Emph{}
 			ast.AppendChild(strong, em)
-			p.inline(em, data[:i])
+			p.Inline(em, data[:i])
 			return i + 3, strong
 		case i+1 < len(data) && data[i+1] == c:
 			// double symbol found, hand over to emph1

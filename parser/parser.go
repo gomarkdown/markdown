@@ -271,7 +271,7 @@ func (p *Parser) Parse(input []byte) ast.Node {
 	ast.WalkFunc(p.Doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		switch node.(type) {
 		case *ast.Paragraph, *ast.Heading, *ast.TableCell:
-			p.inline(node, node.AsContainer().Content)
+			p.Inline(node, node.AsContainer().Content)
 			node.AsContainer().Content = nil
 		}
 		return ast.GoToNext
@@ -306,7 +306,7 @@ func (p *Parser) parseRefsToAST() {
 			flags |= ast.ListItemContainsBlock
 			p.block(ref.title)
 		} else {
-			p.inline(block, ref.title)
+			p.Inline(block, ref.title)
 		}
 		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
@@ -317,7 +317,7 @@ func (p *Parser) parseRefsToAST() {
 	ast.WalkFunc(block, func(node ast.Node, entering bool) ast.WalkStatus {
 		switch node.(type) {
 		case *ast.Paragraph, *ast.Heading:
-			p.inline(node, node.AsContainer().Content)
+			p.Inline(node, node.AsContainer().Content)
 			node.AsContainer().Content = nil
 		}
 		return ast.GoToNext
