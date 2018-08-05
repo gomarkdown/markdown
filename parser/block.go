@@ -931,7 +931,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		if captionContent, consumed := p.caption(data[beg:]); consumed > 0 {
 			figure := &ast.CaptionFigure{}
 			caption := &ast.Caption{}
-			p.inline(caption, captionContent)
+			p.Inline(caption, captionContent)
 
 			p.addBlock(figure)
 			p.addChild(codeBlock)
@@ -1240,7 +1240,7 @@ func (p *Parser) quote(data []byte) int {
 	if captionContent, consumed := p.caption(data[end:]); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
-		p.inline(caption, captionContent)
+		p.Inline(caption, captionContent)
 
 		p.addBlock(figure)
 		block := &ast.BlockQuote{}
