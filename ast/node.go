@@ -356,7 +356,7 @@ func removeNodeFromArray(a []Node, node Node) []Node {
 	return nil
 }
 
-// AppendChild adds appends child to children of parent
+// AppendChild appends child to children of parent
 // It panics if either node is nil.
 func AppendChild(parent Node, child Node) {
 	RemoveFromTree(child)
