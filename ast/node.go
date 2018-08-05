@@ -356,13 +356,6 @@ func removeNodeFromArray(a []Node, node Node) []Node {
 	return nil
 }
 
-// AddChild adds child node to parent node
-func AddChild(parent Node, child Node) {
-	pn := parent.AsContainer()
-	pn.Parent = parent
-	pn.Children = append(pn.Children, child)
-}
-
 // AppendChild adds appends child to children of parent
 // It panics if either node is nil.
 func AppendChild(parent Node, child Node) {
