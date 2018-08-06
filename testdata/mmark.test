@@ -65,3 +65,11 @@ Caption: Shakespeare.
 <h1>Test Multiple Citations with modifier</h1>
 
 <p><cite class="suppressed">[RFC1034]</cite> <cite class="informative">[RFC1035]</cite></p>
+---
+{.myclass1 .myclass2}
+~~~
+code
+~~~
+---
+<pre><code class="myclass1 myclass2">code
+</code></pre>
