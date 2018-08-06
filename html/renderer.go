@@ -554,7 +554,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 		}
 	}
 
-	tag := tagWithAttributes("<p", blockAttrs(para))
+	tag := tagWithAttributes("<p", BlockAttrs(para))
 	r.outs(w, tag)
 }
 
@@ -617,7 +617,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 		attrID := `id="` + id + `"`
 		attrs = append(attrs, attrID)
 	}
-	attrs = append(attrs, blockAttrs(nodeData)...)
+	attrs = append(attrs, BlockAttrs(nodeData)...)
 	r.cr(w)
 	r.outTag(w, headingOpenTagFromLevel(nodeData.Level), attrs)
 }
@@ -670,7 +670,7 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 	if nodeData.ListFlags&ast.ListTypeDefinition != 0 {
 		openTag = "<dl"
 	}
-	attrs = append(attrs, blockAttrs(nodeData)...)
+	attrs = append(attrs, BlockAttrs(nodeData)...)
 	r.outTag(w, openTag, attrs)
 	r.cr(w)
 }
@@ -763,7 +763,7 @@ func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	var attrs []string
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
-	attrs = append(attrs, blockAttrs(codeBlock)...)
+	attrs = append(attrs, BlockAttrs(codeBlock)...)
 	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
@@ -890,10 +890,10 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.outOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		tag := tagWithAttributes("<blockquote", blockAttrs(node))
+		tag := tagWithAttributes("<blockquote", BlockAttrs(node))
 		r.outOneOfCr(w, entering, tag, "</blockquote>")
 	case *ast.Aside:
-		tag := tagWithAttributes("<aside", blockAttrs(node))
+		tag := tagWithAttributes("<aside", BlockAttrs(node))
 		r.outOneOfCr(w, entering, tag, "</aside>")
 	case *ast.Link:
 		r.link(w, node, entering)
@@ -932,7 +932,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.ListItem:
 		r.listItem(w, node, entering)
 	case *ast.Table:
-		tag := tagWithAttributes("<table", blockAttrs(node))
+		tag := tagWithAttributes("<table", BlockAttrs(node))
 		r.outOneOfCr(w, entering, tag, "</table>")
 	case *ast.TableCell:
 		r.tableCell(w, node, entering)
@@ -1199,9 +1199,10 @@ func isPunctuation(c byte) bool {
 	return false
 }
 
-func blockAttrs(node ast.Node) []string {
+// BlockAttrs takes a node and checks if it has block level attributes set. If so it
+// will return a slice each containing a "key=value(s)" string.
+func BlockAttrs(node ast.Node) []string {
 	var attr *ast.Attribute
-	var s []string
 	if c := node.AsContainer(); c != nil && c.Attribute != nil {
 		attr = c.Attribute
 	}
@@ -1212,12 +1213,17 @@ func blockAttrs(node ast.Node) []string {
 		return nil
 	}
 
+	var s []string
 	if attr.ID != nil {
 		s = append(s, fmt.Sprintf(`id="%s"`, attr.ID))
 	}
 
+	classes := ""
 	for _, c := range attr.Classes {
-		s = append(s, fmt.Sprintf(`class="%s"`, c))
+		classes += " " + string(c)
+	}
+	if classes != "" {
+		s = append(s, fmt.Sprintf(`class="%s"`, classes[1:])) // skip space we added.
 	}
 
 	// sort the attributes so it remain stable between runs
