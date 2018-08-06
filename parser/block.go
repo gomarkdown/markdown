@@ -928,6 +928,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 			return beg
 		}
 
+		// Check for caption and if found make it a figure.
 		if captionContent, consumed := p.caption(data[beg:]); consumed > 0 {
 			figure := &ast.CaptionFigure{}
 			caption := &ast.Caption{}
@@ -940,7 +941,13 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 			p.finalize(figure)
 
 			beg += consumed
+
+			return beg
 		}
+
+		// Still here, normal block
+		p.addBlock(codeBlock)
+		finalizeCodeBlock(codeBlock)
 	}
 
 	return beg
