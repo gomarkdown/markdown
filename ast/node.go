@@ -28,6 +28,19 @@ const (
 	TableAlignmentCenter = (TableAlignmentLeft | TableAlignmentRight)
 )
 
+func (a CellAlignFlags) String() string {
+	switch a {
+	case TableAlignmentLeft:
+		return "left"
+	case TableAlignmentRight:
+		return "right"
+	case TableAlignmentCenter:
+		return "center"
+	default:
+		return ""
+	}
+}
+
 // DocumentMatters holds the type of a {front,main,back}matter in the document
 type DocumentMatters int
 
