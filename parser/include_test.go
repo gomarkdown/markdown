@@ -25,4 +25,19 @@ func TestIsInclude(t *testing.T) {
 	if name, _, _ := p.isInclude([]byte("{foo}")); name != "" {
 		t.Errorf("want %s, got %s", "", name)
 	}
+
+	name, address, _ := p.isInclude([]byte("{{foo}}[a]"))
+	if name != "foo" {
+		t.Errorf("want %s, got %s", "foo", name)
+	}
+	if string(address) != "a" {
+		t.Errorf("want %s, got %s", "a", string(address))
+	}
+	name, address, _ = p.isInclude([]byte("{{foo}}[a"))
+	if name != "" {
+		t.Errorf("want %s, got %s", "", name)
+	}
+	if string(address) != "" {
+		t.Errorf("want %s, got %s", "", string(address))
+	}
 }
