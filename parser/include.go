@@ -47,9 +47,8 @@ func (p *Parser) isInclude(data []byte) (filename string, address []byte, consum
 			return "", nil, 0
 		}
 		address = data[start:i]
-
 	}
-	return string(data[2:end]), address, i
+	return string(data[2:end]), address, i + 1
 }
 
 func (p *Parser) readInclude(file string, address []byte) []byte {
