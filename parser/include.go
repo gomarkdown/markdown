@@ -15,7 +15,9 @@ func updateWd(cur, new string) string {
 	return path.Dir(filepath.Join(cur, new))
 }
 
-// {{...}}
+// isInclude parses {{...}}[...], that contains a path between the {{, the [...] syntax contains
+// an address to select which lines to include. It is treated as an opaque string and just given
+// to readInclude.
 func (p *Parser) isInclude(data []byte) (filename string, address []byte, consumed int) {
 	i := 0
 	if len(data) < 3 {
@@ -30,10 +32,24 @@ func (p *Parser) isInclude(data []byte) (filename string, address []byte, consum
 	if i+1 >= len(data) {
 		return "", nil, 0
 	}
-	if data[i+1] != '}' {
+	end := i
+	i++
+	if data[i] != '}' {
 		return "", nil, 0
 	}
-	return string(data[2:i]), nil, i + 1
+
+	if i+1 < len(data) && data[i+1] == '[' { // potential address specification
+		i++
+		start := i + 1
+
+		i = skipUntilChar(data, start, ']')
+		if i >= len(data) {
+			return "", nil, 0
+		}
+		address = data[start:i]
+
+	}
+	return string(data[2:end]), address, i
 }
 
 func (p *Parser) readInclude(file string, address []byte) []byte {
@@ -46,7 +62,7 @@ func (p *Parser) readInclude(file string, address []byte) []byte {
 	return nil
 }
 
-// <{{...}}
+// isCodeInclude parses <{{...}} which is similar to isInclude the returned bytes are, however wrapped in a code block.
 func (p *Parser) isCodeInclude(data []byte) (filename string, address []byte, consumed int) {
 	if len(data) < 3 {
 		return "", nil, 0
