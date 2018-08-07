@@ -358,20 +358,6 @@ func skipParagraphTags(para *ast.Paragraph) bool {
 	return tightOrTerm
 }
 
-// TODO: change this to be ast.CellAlignFlags.ToString()
-func cellAlignment(align ast.CellAlignFlags) string {
-	switch align {
-	case ast.TableAlignmentLeft:
-		return "left"
-	case ast.TableAlignmentRight:
-		return "right"
-	case ast.TableAlignmentCenter:
-		return "center"
-	default:
-		return ""
-	}
-}
-
 func (r *Renderer) out(w io.Writer, d []byte) {
 	r.lastOutputLen = len(d)
 	if r.disableTags > 0 {
@@ -807,7 +793,7 @@ func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering boo
 	if tableCell.IsHeader {
 		openTag = "<th"
 	}
-	align := cellAlignment(tableCell.Align)
+	align := tableCell.Align.String()
 	if align != "" {
 		attrs = append(attrs, fmt.Sprintf(`align="%s"`, align))
 	}
