@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"path"
 	"path/filepath"
 )
@@ -71,7 +72,11 @@ func (p *Parser) isCodeInclude(data []byte) (filename string, address []byte, co
 	if data[0] != '<' {
 		return "", nil, 0
 	}
-	return p.isInclude(data[1:])
+	filename, address, consumed = p.isInclude(data[1:])
+	if consumed == 0 {
+		return "", nil, 0
+	}
+	return filename, address, consumed + 1
 }
 
 // readCodeInclude acts like include except the returned bytes are wrapped in a fenced code block.
@@ -80,8 +85,15 @@ func (p *Parser) readCodeInclude(file string, address []byte) []byte {
 	if data == nil {
 		return nil
 	}
-	// possible some fiddling to set the language etc.
-	data = append([]byte("```\n"), data...)
-	data = append(data, []byte("```")...)
-	return data
+	ext := path.Ext(file)
+	buf := &bytes.Buffer{}
+	buf.Write([]byte("```"))
+	if ext != "" {
+		buf.WriteString(" " + ext[1:] + "\n")
+	} else {
+		buf.WriteByte('\n')
+	}
+	buf.Write(data)
+	buf.WriteString("```\n")
+	return buf.Bytes()
 }
