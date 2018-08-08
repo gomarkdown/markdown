@@ -90,7 +90,7 @@ func TestIsCodeInclude(t *testing.T) {
 
 	p := New()
 	for i, test := range tests {
-		file, addr, read := p.isInclude(test.data)
+		file, addr, read := p.isCodeInclude(test.data)
 		if file != test.file {
 			t.Errorf("test %d, want %s, got %s", i, test.file, file)
 		}
