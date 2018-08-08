@@ -15,29 +15,58 @@ func TestUpdateWd(t *testing.T) {
 }
 
 func TestIsInclude(t *testing.T) {
-	p := New()
-	if name, _, _ := p.isInclude([]byte("{{foo}}")); name != "foo" {
-		t.Errorf("want %s, got %s", "foo", name)
-	}
-	if name, _, _ := p.isInclude([]byte("{{foo}")); name != "" {
-		t.Errorf("want %s, got %s", "", name)
-	}
-	if name, _, _ := p.isInclude([]byte("{foo}")); name != "" {
-		t.Errorf("want %s, got %s", "", name)
+	tests := []struct {
+		data []byte
+		file string
+		addr string
+		read int
+	}{
+		{
+			[]byte("{{foo}}"),
+			"foo", "", 7,
+		},
+		{
+			[]byte("{{foo}}  "),
+			"foo", "", 7,
+		},
+		{
+			[]byte("{{foo}}[a]"),
+			"foo", "a", 10,
+		},
+		{
+			[]byte("{{foo}}[a  ]  "),
+			"foo", "a  ", 12,
+		},
+		{
+			[]byte("{{foo}}a]"),
+			"foo", "", 7,
+		},
+		// fails
+		{
+			[]byte("{foo}}"),
+			"", "", 0,
+		},
+		{
+			[]byte("{foo}"),
+			"", "", 0,
+		},
+		{
+			[]byte("{{foo}}[a"),
+			"", "", 0,
+		},
 	}
 
-	name, address, _ := p.isInclude([]byte("{{foo}}[a]"))
-	if name != "foo" {
-		t.Errorf("want %s, got %s", "foo", name)
-	}
-	if string(address) != "a" {
-		t.Errorf("want %s, got %s", "a", string(address))
-	}
-	name, address, _ = p.isInclude([]byte("{{foo}}[a"))
-	if name != "" {
-		t.Errorf("want %s, got %s", "", name)
-	}
-	if string(address) != "" {
-		t.Errorf("want %s, got %s", "", string(address))
+	p := New()
+	for i, test := range tests {
+		file, addr, read := p.isInclude(test.data)
+		if file != test.file {
+			t.Errorf("test %d, want %s, got %s", i, test.file, file)
+		}
+		if string(addr) != test.addr {
+			t.Errorf("test %d, want %s, got %s", i, test.addr, addr)
+		}
+		if read != test.read {
+			t.Errorf("test %d, want %d, got %d", i, test.read, read)
+		}
 	}
 }
