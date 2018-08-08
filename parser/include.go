@@ -37,18 +37,20 @@ func (p *Parser) isInclude(data []byte) (filename string, address []byte, consum
 	if data[i] != '}' {
 		return "", nil, 0
 	}
+	filename = string(data[2:end])
 
 	if i+1 < len(data) && data[i+1] == '[' { // potential address specification
-		i++
-		start := i + 1
+		start := i + 2
 
-		i = skipUntilChar(data, start, ']')
-		if i >= len(data) {
+		end = skipUntilChar(data, start, ']')
+		if end >= len(data) {
 			return "", nil, 0
 		}
-		address = data[start:i]
+		address = data[start:end]
+		return filename, address, end + 1
 	}
-	return string(data[2:end]), address, i + 1
+
+	return filename, address, i + 1
 }
 
 func (p *Parser) readInclude(file string, address []byte) []byte {
