@@ -1260,7 +1260,13 @@ func (p *Parser) quote(data []byte) int {
 		p.finalize(figure)
 
 		end += consumed
+
+		return end
 	}
+
+	block := p.addBlock(&ast.BlockQuote{})
+	p.block(raw.Bytes())
+	p.finalize(block)
 
 	return end
 }

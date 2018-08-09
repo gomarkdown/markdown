@@ -45,6 +45,12 @@ Caption: Shakespeare.
 <figcaption>Shakespeare.</figcaption>
 </figure>
 ---
+> Bare
+---
+<blockquote>
+<p>Bare</p>
+</blockquote>
+---
 # Test Citations
 [@RFC1034]
 ---
