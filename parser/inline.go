@@ -606,6 +606,16 @@ const (
 // '<' when tags or autolinks are allowed
 func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
 	data = data[offset:]
+
+	if p.extensions&Mmark != 0 {
+		id, consumed := IsCallout(data)
+		if consumed > 0 {
+			node := &ast.Callout{}
+			node.ID = id
+			return consumed, node
+		}
+	}
+
 	altype, end := tagLength(data)
 	if size := p.inlineHTMLComment(data); size > 0 {
 		end = size
