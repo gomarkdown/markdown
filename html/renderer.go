@@ -94,6 +94,10 @@ type RendererOptions struct {
 	// if set, called at the start of RenderNode(). Allows replacing
 	// rendering of some nodes
 	RenderNodeHook RenderNodeFunc
+
+	// Comments is a list of comments the renderer should detect when
+	// parsing code blocks and detecting callouts.
+	Comments [][]byte
 }
 
 // Renderer implements Renderer interface for HTML output.
@@ -753,7 +757,11 @@ func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	r.cr(w)
 	r.outs(w, "<pre>")
 	r.outTag(w, "<code", attrs)
-	EscapeHTML(w, codeBlock.Literal)
+	if r.opts.Comments != nil {
+		r.EscapeHTMLCallouts(w, codeBlock.Literal)
+	} else {
+		EscapeHTML(w, codeBlock.Literal)
+	}
 	r.outs(w, "</code>")
 	r.outs(w, "</pre>")
 	if !isListItem(codeBlock.Parent) {
@@ -847,10 +855,17 @@ func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
 			attr[0] = `class="suppressed"`
 		}
 		r.outTag(w, "<cite", attr)
-		r.out(w, []byte("["))
+		r.outs(w, "[")
 		r.out(w, c)
 		r.outs(w, "]</cite>")
 	}
+}
+
+func (r *Renderer) callout(w io.Writer, node *ast.Callout) {
+	attr := []string{`class="callout"`}
+	r.outTag(w, "<span", attr)
+	r.out(w, node.ID)
+	r.outs(w, "</span>")
 }
 
 // RenderNode renders a markdown node to HTML
@@ -939,6 +954,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		}
 	case *ast.DocumentMatter:
 		r.matter(w, node, entering)
+	case *ast.Callout:
+		r.callout(w, node)
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}

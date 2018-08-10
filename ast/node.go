@@ -359,6 +359,13 @@ type CaptionFigure struct {
 	Container
 }
 
+// Callout is a node that can exist both in text (where it is an actual node) and in a code block.
+type Callout struct {
+	Leaf
+
+	ID []byte // number of this callout
+}
+
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {
