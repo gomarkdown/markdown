@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/gomarkdown/markdown/ast"
-	"github.com/mmarkdown/markdown/parser"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // EscapeHTMLCallouts writes html-escaped d to w. It escapes &, <, > and " characters, *but*
