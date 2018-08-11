@@ -55,10 +55,8 @@ func (p *Parser) isInclude(data []byte) (filename string, address []byte, consum
 }
 
 func (p *Parser) readInclude(file string, address []byte) []byte {
-	// p.cwd holds containing dir, already tailored to the path, means path.Base should give us the leaf.
-	fullPath := filepath.Join(p.cwd, path.Base(file))
 	if p.Opts.ReadIncludeFn != nil {
-		return p.Opts.ReadIncludeFn(fullPath, address)
+		return p.Opts.ReadIncludeFn(file, address)
 	}
 
 	return nil
