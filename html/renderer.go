@@ -88,6 +88,7 @@ type RendererOptions struct {
 	Title string // Document title (used if CompletePage is set)
 	CSS   string // Optional CSS file URL (used if CompletePage is set)
 	Icon  string // Optional icon file URL (used if CompletePage is set)
+	Head  []byte // Optional head data injected in the <head> section (used if CompletePage is set)
 
 	Flags Flags // Flags allow customizing this renderer's behavior
 
@@ -1024,6 +1025,9 @@ func (r *Renderer) writeDocumentHeader(w io.Writer) {
 		io.WriteString(w, "\"")
 		io.WriteString(w, ending)
 		io.WriteString(w, ">\n")
+	}
+	if r.opts.Head != nil {
+		w.Write(r.opts.Head)
 	}
 	io.WriteString(w, "</head>\n")
 	io.WriteString(w, "<body>\n\n")
