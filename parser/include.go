@@ -8,7 +8,7 @@ import (
 
 // updateWd updates the working directory. If new is an absolute
 // path we just use that, relative paths are taken relative of cur.
-func updateWd(cur, new string) string {
+func UpdateWd(cur, new string) string {
 	if path.IsAbs(new) {
 		return path.Dir(new)
 	}
