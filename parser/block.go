@@ -114,14 +114,8 @@ func (p *Parser) block(data []byte) {
 				f = p.readCodeInclude
 			}
 			if consumed > 0 {
-				old := p.cwd
-				p.cwd = updateWd(p.cwd, path)
-
 				included := f(path, address)
 				p.block(included)
-
-				p.cwd = old
-				data = data[consumed+1:]
 				continue
 			}
 		}

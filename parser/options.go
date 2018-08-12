@@ -12,7 +12,7 @@ type ParserOptions struct {
 // returns an ast.Node, a buffer that should be parsed as a block and the the number of bytes consumed.
 type BlockFunc func(data []byte) (ast.Node, []byte, int)
 
-// ReadIncludeFunc reads the file under path and returns the read bytes. If path is not absolute it is taken
-// relative to the currently parsed file. If this not set no data will be read from the filesystem.
-// address is the optional address specifier of which lines of the file to return.
+// ReadIncludeFunc reads the file under path and returns the read bytes If this
+// not set no data will be read. address is the optional address specifier of
+// which lines of the file to return.
 type ReadIncludeFunc func(path string, address []byte) []byte
