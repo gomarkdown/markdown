@@ -116,6 +116,7 @@ func (p *Parser) block(data []byte) {
 			if consumed > 0 {
 				included := f(path, address)
 				p.block(included)
+				data = data[consumed:]
 				continue
 			}
 		}

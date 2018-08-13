@@ -3,18 +3,7 @@ package parser
 import (
 	"bytes"
 	"path"
-	"path/filepath"
 )
-
-// updateWd updates the working directory. If new is an absolute
-// path we just use that, relative paths are taken relative of cur.
-func updateWd(cur, new string) string {
-	if path.IsAbs(new) {
-		return path.Dir(new)
-	}
-
-	return path.Dir(filepath.Join(cur, new))
-}
 
 // isInclude parses {{...}}[...], that contains a path between the {{, the [...] syntax contains
 // an address to select which lines to include. It is treated as an opaque string and just given
