@@ -366,6 +366,15 @@ type Callout struct {
 	ID []byte // number of this callout
 }
 
+// Index is a node that contains an Index item and an optional, subitem.
+type Index struct {
+	Leaf
+
+	Primary bool
+	Item    []byte
+	Subitem []byte
+}
+
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {
