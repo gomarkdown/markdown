@@ -869,6 +869,10 @@ func (r *Renderer) callout(w io.Writer, node *ast.Callout) {
 	r.outs(w, "</span>")
 }
 
+func (r *Renderer) index(w io.Writer, node *ast.Index) {
+	// there is no in-text representation.
+}
+
 // RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	if r.opts.RenderNodeHook != nil {
@@ -957,6 +961,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.matter(w, node, entering)
 	case *ast.Callout:
 		r.callout(w, node)
+	case *ast.Index:
+		r.index(w, node)
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
