@@ -373,6 +373,7 @@ type Index struct {
 	Primary bool
 	Item    []byte
 	Subitem []byte
+	ID      int // number of the index
 }
 
 func removeNodeFromArray(a []Node, node Node) []Node {
