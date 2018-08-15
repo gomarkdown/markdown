@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-	"strconv"
 
 	"github.com/gomarkdown/markdown/ast"
 )
@@ -64,7 +63,7 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 		idx := &ast.Index{}
 
-		idx.ID = []byte(strconv.Itoa(p.indexCnt))
+		idx.ID = p.indexCnt
 		p.indexCnt++
 
 		idx.Primary = data[start] == '!'

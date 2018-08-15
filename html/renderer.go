@@ -871,7 +871,7 @@ func (r *Renderer) callout(w io.Writer, node *ast.Callout) {
 
 func (r *Renderer) index(w io.Writer, node *ast.Index) {
 	// there is no in-text representation.
-	attr := []string{`class="index"`, `id="` + string(node.ID) + `"`}
+	attr := []string{`class="index"`, fmt.Sprintf(`id="%d"`, node.ID)}
 	r.outTag(w, "<span", attr)
 	r.outs(w, "</span>")
 }
