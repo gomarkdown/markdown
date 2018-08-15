@@ -780,7 +780,8 @@ func (r *Renderer) caption(w io.Writer, caption *ast.Caption, entering bool) {
 
 func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
 	if entering {
-		r.outs(w, "<figure>")
+		attrs := BlockAttrs(figure)
+		r.outTag(w, "<figure", attrs)
 		return
 	}
 
