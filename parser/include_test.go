@@ -90,3 +90,14 @@ func TestIsCodeInclude(t *testing.T) {
 		}
 	}
 }
+
+func TestPush(t *testing.T) {
+	i := newIncStack()
+	if i.Push("/new/foo"); i.stack[0] != "/new" {
+		t.Errorf("want %s, got %s", "/new", i.stack[0])
+	}
+
+	if i.Push("new/new"); i.stack[1] != "/new/new" {
+		t.Errorf("want %s, got %s", "/new/new", i.stack[1])
+	}
+}

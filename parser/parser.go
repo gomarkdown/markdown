@@ -105,6 +105,8 @@ type Parser struct {
 
 	// Attributes are attached to block level elements.
 	attr *ast.Attribute
+
+	includeStack *incStack
 }
 
 // New creates a markdown parser with CommonExtensions.
@@ -119,12 +121,13 @@ func New() *Parser {
 // NewWithExtensions creates a markdown parser with given extensions.
 func NewWithExtensions(extension Extensions) *Parser {
 	p := Parser{
-		refs:       make(map[string]*reference),
-		maxNesting: 16,
-		insideLink: false,
-		Doc:        &ast.Document{},
-		extensions: extension,
-		allClosed:  true,
+		refs:         make(map[string]*reference),
+		maxNesting:   16,
+		insideLink:   false,
+		Doc:          &ast.Document{},
+		extensions:   extension,
+		allClosed:    true,
+		includeStack: newIncStack(),
 	}
 	p.tip = p.Doc
 	p.oldTip = p.Doc
