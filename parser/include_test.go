@@ -101,3 +101,14 @@ func TestPush(t *testing.T) {
 		t.Errorf("want %s, got %s", "/new/new", i.stack[1])
 	}
 }
+
+func TestPop(t *testing.T) {
+	i := newIncStack()
+	if i.Push("/new/foo"); i.stack[0] != "/new" {
+		t.Errorf("want %s, got %s", "/new", i.stack[0])
+	}
+	i.Pop()
+	if len(i.stack) != 0 {
+		t.Errorf("after pop, want %d, got %d", 0, len(i.stack))
+	}
+}
