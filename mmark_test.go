@@ -31,12 +31,6 @@ func TestMmark(t *testing.T) {
 
 		got := ToHTML([]byte(input), p, nil)
 
-		// make whitespace more visible
-		got = bytes.Replace(got, []byte(" "), []byte("_"), -1)
-		want = bytes.Replace(want, []byte(" "), []byte("_"), -1)
-		got = bytes.Replace(got, []byte("\n"), []byte("_\n"), -1)
-		want = bytes.Replace(want, []byte("\n"), []byte("_\n"), -1)
-
 		if bytes.Compare(got, want) != 0 {
 			t.Errorf("want (%d bytes) %s, got (%d bytes) %s, for input %q", len(want), want, len(got), got, input)
 		}

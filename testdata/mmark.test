@@ -24,9 +24,9 @@ println("hi")
 Caption: This *is* a
   caption.
 ---
-<h1>Test_Code_Captions</h1>
+<h1>Test Code Captions</h1>
 <figure>
-<pre><code_class="language-go">println(&quot;hi&quot;)
+<pre><code class="language-go">println(&quot;hi&quot;)
 </code></pre>
 <figcaption>This <em>is</em> a
   caption.</figcaption>
@@ -54,7 +54,7 @@ Caption: Shakespeare.
 # Test Citations
 [@RFC1034]
 ---
-<h1>Test_Citations</h1>
+<h1>Test Citations</h1>
 
 <p><cite class="informative">[RFC1034]</cite></p>
 ---
