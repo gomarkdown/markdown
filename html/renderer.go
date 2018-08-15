@@ -76,7 +76,7 @@ type RendererOptions struct {
 	// Add this text to each footnote anchor, to ensure uniqueness.
 	FootnoteAnchorPrefix string
 	// Show this text inside the <a> tag for a footnote return link, if the
-	// FootnotReturnLinks flag is enabled. If blank, the string
+	// FootnoteReturnLinks flag is enabled. If blank, the string
 	// <sup>[return]</sup> is used.
 	FootnoteReturnLinkContents string
 	// If set, add this text to the front of each Heading ID, to ensure
