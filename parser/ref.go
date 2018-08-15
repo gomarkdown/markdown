@@ -34,8 +34,10 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 			}
 			i++
 		}
-		// end not found or no valid syntax
-		if i == 0 || data[i-1] != ')' {
+		if i >= len(data) {
+			return 0, nil
+		}
+		if data[i] != ')' {
 			return 0, nil
 		}
 
@@ -43,7 +45,7 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 		node := &ast.CrossReference{}
 		node.Destination = id
 
-		return i, node
+		return i + 1, node
 
 	case '!': // index
 		i++

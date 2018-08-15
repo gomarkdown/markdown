@@ -90,3 +90,10 @@ code
 <p>
 
 </p>
+---
+# Cross ref
+Look at (#basics)
+---
+<h1>Cross ref</h1>
+
+<p>Look at <a href="basics"></a></p>
