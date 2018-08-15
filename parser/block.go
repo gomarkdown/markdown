@@ -114,8 +114,10 @@ func (p *Parser) block(data []byte) {
 				f = p.readCodeInclude
 			}
 			if consumed > 0 {
-				included := f(path, address)
+				included := f(p.includeStack.Last(), path, address)
+				p.includeStack.Push(path)
 				p.block(included)
+				p.includeStack.Pop()
 				data = data[consumed:]
 				continue
 			}
