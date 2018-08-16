@@ -87,9 +87,9 @@ code
 ---
 <h1>Index</h1>
 
-<p><span class="index" id="0"></span>
-<span class="index" id="1"></span>
-<span class="index" id="2"></span></p>
+<p><span class="index" id="idx-0"></span>
+<span class="index" id="idx-1"></span>
+<span class="index" id="idx-2"></span></p>
 ---
 # Cross ref
 Look at (#basics)
