@@ -1,29 +1,29 @@
 # Test 1
----
++++
 <h1>Test 1</h1>
----
++++
 .# Test 2
----
++++
 <h1 special="test 2">Test 2</h1>
----
++++
 # Test 3
 {frontmatter}
 # Section in matter
 {mainmatter}
----
++++
 <h1>Test 3</h1>
 <section matter="front">
 <h1>Section in matter</h1>
 </section>
 <section matter="main"></section>
----
++++
 # Test Code Captions
 ~~~ go
 println("hi")
 ~~~
 Caption: This *is* a
   caption.
----
++++
 <h1>Test Code Captions</h1>
 <figure>
 <pre><code class="language-go">println(&quot;hi&quot;)
@@ -31,12 +31,12 @@ Caption: This *is* a
 <figcaption>This <em>is</em> a
   caption.</figcaption>
 </figure>
----
++++
 # Test Quote Captions
 > To be, or not to be
 
 Caption: Shakespeare.
----
++++
 <h1>Test Quote Captions</h1>
 <figure>
 <blockquote>
@@ -44,56 +44,56 @@ Caption: Shakespeare.
 </blockquote>
 <figcaption>Shakespeare.</figcaption>
 </figure>
----
++++
 > Bare
----
++++
 <blockquote>
 <p>Bare</p>
 </blockquote>
----
++++
 # Test Citations
 [@RFC1034]
----
++++
 <h1>Test Citations</h1>
 
 <p><cite class="informative">[RFC1034]</cite></p>
----
++++
 # Test Multiple Citations
 [@RFC1034; @!RFC1035]
----
++++
 <h1>Test Multiple Citations</h1>
 
 <p><cite class="informative">[RFC1034]</cite><cite class="normative">[RFC1035]</cite></p>
----
++++
 # Test Multiple Citations with modifier
 [@-RFC1034] [@?RFC1035]
----
++++
 <h1>Test Multiple Citations with modifier</h1>
 
 <p><cite class="suppressed">[RFC1034]</cite> <cite class="informative">[RFC1035]</cite></p>
----
++++
 {.myclass1 .myclass2}
 ~~~
 code
 ~~~
----
++++
 <pre><code class="myclass1 myclass2">code
 </code></pre>
----
++++
 # Index
 (!myitem, subitem)
 (!!item)
 (!!item,   subtitem  )
----
++++
 <h1>Index</h1>
 
 <p><span class="index" id="idx-0"></span>
 <span class="index" id="idx-1"></span>
 <span class="index" id="idx-2"></span></p>
----
++++
 # Cross ref
 Look at (#basics)
----
++++
 <h1>Cross ref</h1>
 
 <p>Look at <a href="basics"></a></p>
