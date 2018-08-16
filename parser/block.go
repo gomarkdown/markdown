@@ -980,7 +980,7 @@ func finalizeCodeBlock(code *ast.CodeBlock) {
 }
 
 func (p *Parser) table(data []byte) int {
-	i, columns := p.tableHeader(data)
+	i, columns, table := p.tableHeader(data)
 	if i == 0 {
 		return 0
 	}
@@ -1004,6 +1004,23 @@ func (p *Parser) table(data []byte) int {
 		i = skipCharN(data, i, '\n', 1)
 		p.tableRow(data[rowStart:i], columns, false)
 	}
+	if captionContent, consumed := p.caption(data[i:]); consumed > 0 {
+		caption := &ast.Caption{}
+		p.Inline(caption, captionContent)
+
+		// Some switcheroo to re-insert the parsed table as a child of the captionfigure.
+		figure := &ast.CaptionFigure{}
+		table2 := &ast.Table{}
+		children := table.GetChildren()
+		ast.RemoveFromTree(table)
+
+		table2.SetChildren(children)
+		ast.AppendChild(figure, table2)
+		ast.AppendChild(figure, caption)
+
+		p.addChild(figure)
+		i += consumed
+	}
 
 	return i
 }
@@ -1018,7 +1035,7 @@ func isBackslashEscaped(data []byte, i int) bool {
 }
 
 // tableHeaders parses the header. If recognized it will also add a table.
-func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags) {
+func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags, table ast.Node) {
 	i := 0
 	colCount := 1
 	for i = 0; i < len(data) && data[i] != '\n'; i++ {
@@ -1120,7 +1137,8 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 		return
 	}
 
-	p.addBlock(&ast.Table{})
+	table = &ast.Table{}
+	p.addBlock(table)
 	p.addBlock(&ast.TableHead{})
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
