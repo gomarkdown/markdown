@@ -17,7 +17,7 @@ func TestMmark(t *testing.T) {
 		t.Fatalf("failed to open file %q: %s", testfile, err)
 	}
 
-	testdata := bytes.Split(data, []byte("---\n"))
+	testdata := bytes.Split(data, []byte("+++\n"))
 	if len(testdata)%2 != 0 {
 		t.Fatalf("odd test tuples: %d", len(testdata))
 	}
