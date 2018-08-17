@@ -334,8 +334,8 @@ type TableCell struct {
 	Align    CellAlignFlags // This holds the value for align attribute
 }
 
-// TableHead represents markdown table head node
-type TableHead struct {
+// TableHeader represents markdown table head node
+type TableHeader struct {
 	Container
 }
 
@@ -346,6 +346,11 @@ type TableBody struct {
 
 // TableRow represents markdown table row node
 type TableRow struct {
+	Container
+}
+
+// TableFooter represents markdown table foot node
+type TableFooter struct {
 	Container
 }
 

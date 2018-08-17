@@ -1002,6 +1002,11 @@ func (p *Parser) table(data []byte) int {
 
 		// include the newline in data sent to tableRow
 		i = skipCharN(data, i, '\n', 1)
+
+		if p.tableFooter(data[rowStart:i]) {
+			continue
+		}
+
 		p.tableRow(data[rowStart:i], columns, false)
 	}
 	if captionContent, consumed := p.caption(data[i:], []byte("Table: ")); consumed > 0 {
@@ -1140,6 +1145,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 	table = &ast.Table{}
 	p.addBlock(table)
 	p.addBlock(&ast.TableHead{})
+	p.addBlock(&ast.TableHeader{})
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
 	return
@@ -1192,6 +1198,30 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 	}
 
 	// silently ignore rows with too many cells
+}
+
+// tableFooter parses the (optional) table footer.
+func (p *Parser) tableFooter(data []byte) bool {
+	colCount := 1
+	for i := 0; i < len(data) && data[i] != '\n'; i++ {
+		if data[i] == '|' && !isBackslashEscaped(data, i) {
+			colCount++
+			continue
+		}
+		// remaining data must be the = character
+		if data[i] != '=' {
+			return false
+		}
+	}
+
+	// doesn't look like a table footer
+	if colCount == 1 {
+		return false
+	}
+
+	p.addBlock(&ast.TableFooter{})
+
+	return true
 }
 
 // returns blockquote prefix length
