@@ -4,11 +4,11 @@ import (
 	"bytes"
 )
 
-func (p *Parser) caption(data []byte) ([]byte, int) {
-	if !bytes.HasPrefix(data, []byte("Caption: ")) {
+func (p *Parser) caption(data, caption []byte) ([]byte, int) {
+	if !bytes.HasPrefix(data, caption) {
 		return nil, 0
 	}
-	j := len("Caption: ")
+	j := len(caption)
 	data = data[j:]
 	end := p.linesUntilEmpty(data)
 
