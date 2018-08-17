@@ -857,9 +857,8 @@ func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
 			attr[0] = `class="suppressed"`
 		}
 		r.outTag(w, "<cite", attr)
-		r.outs(w, "[")
-		r.out(w, c)
-		r.outs(w, "]</cite>")
+		r.outs(w, fmt.Sprintf(`<a href="#`+"%s"+`"></a>`, c))
+		r.outs(w, "</cite>")
 	}
 }
 

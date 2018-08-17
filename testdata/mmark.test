@@ -56,21 +56,21 @@ Caption: Shakespeare.
 +++
 <h1>Test Citations</h1>
 
-<p><cite class="informative">[RFC1034]</cite></p>
+<p><cite class="informative"><a href="#RFC1034"></a></cite></p>
 +++
 # Test Multiple Citations
 [@RFC1034; @!RFC1035]
 +++
 <h1>Test Multiple Citations</h1>
 
-<p><cite class="informative">[RFC1034]</cite><cite class="normative">[RFC1035]</cite></p>
+<p><cite class="informative"><a href="#RFC1034"></a></cite><cite class="normative"><a href="#RFC1035"></a></cite></p>
 +++
 # Test Multiple Citations with modifier
 [@-RFC1034] [@?RFC1035]
 +++
 <h1>Test Multiple Citations with modifier</h1>
 
-<p><cite class="suppressed">[RFC1034]</cite> <cite class="informative">[RFC1035]</cite></p>
+<p><cite class="suppressed"><a href="#RFC1034"></a></cite> <cite class="informative"><a href="#RFC1035"></a></cite></p>
 +++
 {.myclass1 .myclass2}
 ~~~
@@ -87,9 +87,9 @@ code
 +++
 <h1>Index</h1>
 
-<p><span class="index" id="idx-0"></span>
-<span class="index" id="idx-1"></span>
-<span class="index" id="idx-2"></span></p>
+<p><span class="index" id="idxref:0"></span>
+<span class="index" id="idxref:1"></span>
+<span class="index" id="idxref:2"></span></p>
 +++
 # Cross ref
 Look at (#basics)
