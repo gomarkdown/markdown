@@ -29,6 +29,10 @@ func TestIsInclude(t *testing.T) {
 			[]byte("{{foo}}a]"),
 			"foo", "", 7,
 		},
+		{
+			[]byte("   {{foo}}"),
+			"foo", "", 10,
+		},
 		// fails
 		{
 			[]byte("{foo}}"),
@@ -73,6 +77,10 @@ func TestIsCodeInclude(t *testing.T) {
 		{
 			[]byte("<{{foo}}  "),
 			"foo", "", 8,
+		},
+		{
+			[]byte("   <{{foo}}  "),
+			"foo", "", 11,
 		},
 	}
 
