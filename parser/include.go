@@ -10,13 +10,14 @@ import (
 // an address to select which lines to include. It is treated as an opaque string and just given
 // to readInclude.
 func (p *Parser) isInclude(data []byte) (filename string, address []byte, consumed int) {
-	i := 0
-	if len(data) < 3 {
+	i := skipCharN(data, 0, ' ', 3) // start with up to 3 spaces
+	if len(data[i:]) < 3 {
 		return "", nil, 0
 	}
 	if data[i] != '{' || data[i+1] != '{' {
 		return "", nil, 0
 	}
+	start := i + 2
 
 	// find the end delimiter
 	i = skipUntilChar(data, i, '}')
@@ -28,7 +29,7 @@ func (p *Parser) isInclude(data []byte) (filename string, address []byte, consum
 	if data[i] != '}' {
 		return "", nil, 0
 	}
-	filename = string(data[2:end])
+	filename = string(data[start:end])
 
 	if i+1 < len(data) && data[i+1] == '[' { // potential address specification
 		start := i + 2
@@ -54,17 +55,20 @@ func (p *Parser) readInclude(from, file string, address []byte) []byte {
 
 // isCodeInclude parses <{{...}} which is similar to isInclude the returned bytes are, however wrapped in a code block.
 func (p *Parser) isCodeInclude(data []byte) (filename string, address []byte, consumed int) {
-	if len(data) < 3 {
+	i := skipCharN(data, 0, ' ', 3) // start with up to 3 spaces
+	if len(data[i:]) < 3 {
 		return "", nil, 0
 	}
-	if data[0] != '<' {
+	if data[i] != '<' {
 		return "", nil, 0
 	}
-	filename, address, consumed = p.isInclude(data[1:])
+	start := i
+
+	filename, address, consumed = p.isInclude(data[i+1:])
 	if consumed == 0 {
 		return "", nil, 0
 	}
-	return filename, address, consumed + 1
+	return filename, address, start + consumed + 1
 }
 
 // readCodeInclude acts like include except the returned bytes are wrapped in a fenced code block.
