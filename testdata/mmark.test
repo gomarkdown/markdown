@@ -21,7 +21,7 @@
 ~~~ go
 println("hi")
 ~~~
-Caption: This *is* a
+Figure: This *is* a
   caption.
 +++
 <h1>Test Code Captions</h1>
@@ -35,7 +35,7 @@ Caption: This *is* a
 # Test Quote Captions
 > To be, or not to be
 
-Caption: Shakespeare.
+Quote: Shakespeare.
 +++
 <h1>Test Quote Captions</h1>
 <figure>
