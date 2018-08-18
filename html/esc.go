@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-var htmlEscaper = [256][]byte{
+var Escaper = [256][]byte{
 	'&': []byte("&amp;"),
 	'<': []byte("&lt;"),
 	'>': []byte("&gt;"),
@@ -17,7 +17,7 @@ func EscapeHTML(w io.Writer, d []byte) {
 	var start, end int
 	n := len(d)
 	for end < n {
-		escSeq := htmlEscaper[d[end]]
+		escSeq := Escaper[d[end]]
 		if escSeq != nil {
 			w.Write(d[start:end])
 			w.Write(escSeq)
