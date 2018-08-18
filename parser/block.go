@@ -933,6 +933,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 			p.Inline(caption, captionContent)
 
 			p.addBlock(figure)
+			codeBlock.AsLeaf().Attribute = figure.AsContainer().Attribute
 			p.addChild(codeBlock)
 			finalizeCodeBlock(codeBlock)
 			p.addChild(caption)
@@ -1016,6 +1017,8 @@ func (p *Parser) table(data []byte) int {
 		// Some switcheroo to re-insert the parsed table as a child of the captionfigure.
 		figure := &ast.CaptionFigure{}
 		table2 := &ast.Table{}
+		// Retain any block level attributes.
+		table2.AsContainer().Attribute = table.AsContainer().Attribute
 		children := table.GetChildren()
 		ast.RemoveFromTree(table)
 
@@ -1294,8 +1297,9 @@ func (p *Parser) quote(data []byte) int {
 		caption := &ast.Caption{}
 		p.Inline(caption, captionContent)
 
-		p.addBlock(figure)
+		p.addBlock(figure) // this discard any attributes
 		block := &ast.BlockQuote{}
+		block.AsContainer().Attribute = figure.AsContainer().Attribute
 		p.addChild(block)
 		p.block(raw.Bytes())
 		p.finalize(block)

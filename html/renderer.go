@@ -404,8 +404,9 @@ func headingCloseTagFromLevel(level int) string {
 	return closeHTags[level-1]
 }
 
-func (r *Renderer) outHRTag(w io.Writer) {
-	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, "<hr>", "<hr />")
+func (r *Renderer) outHRTag(w io.Writer, attrs []string) {
+	hr := tagWithAttributes("<hr", attrs)
+	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, hr, "<hr />")
 }
 
 func (r *Renderer) text(w io.Writer, text *ast.Text) {
@@ -595,7 +596,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 		attrs = append(attrs, `class="title"`)
 	}
 	if nodeData.Special != nil {
-		attrs = append(attrs, fmt.Sprintf(`special="%s"`, string(nodeData.Special)))
+		attrs = append(attrs, `class="special"`)
 	}
 	if nodeData.HeadingID != "" {
 		id := r.ensureUniqueHeadingID(nodeData.HeadingID)
@@ -628,9 +629,9 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 	}
 }
 
-func (r *Renderer) horizontalRule(w io.Writer) {
+func (r *Renderer) horizontalRule(w io.Writer, node *ast.HorizontalRule) {
 	r.cr(w)
-	r.outHRTag(w)
+	r.outHRTag(w, BlockAttrs(node))
 	r.cr(w)
 }
 
@@ -640,7 +641,7 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 
 	if nodeData.IsFootnotesList {
 		r.outs(w, "\n<div class=\"footnotes\">\n\n")
-		r.outHRTag(w)
+		r.outHRTag(w, nil)
 		r.cr(w)
 	}
 	r.cr(w)
@@ -753,11 +754,15 @@ func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 
 func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	var attrs []string
+	// TODO(miek): this can add multiple class= attribute, they should be coalesced into one.
+	// This is probably true for some other elements as well
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
 	attrs = append(attrs, BlockAttrs(codeBlock)...)
 	r.cr(w)
+
 	r.outs(w, "<pre>")
-	r.outTag(w, "<code", attrs)
+	code := tagWithAttributes("<code", attrs)
+	r.outs(w, code)
 	if r.opts.Comments != nil {
 		r.EscapeHTMLCallouts(w, codeBlock.Literal)
 	} else {
@@ -779,15 +784,7 @@ func (r *Renderer) caption(w io.Writer, caption *ast.Caption, entering bool) {
 }
 
 func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
-	if entering {
-		attrs := BlockAttrs(figure)
-		r.outTag(w, "<figure", attrs)
-		return
-	}
-
-	r.cr(w)
-	r.outs(w, "</figure>")
-	r.cr(w)
+	r.outOneOf(w, entering, "<figure>", "\n</figure>\n")
 }
 
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
@@ -935,7 +932,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Heading:
 		r.heading(w, node, entering)
 	case *ast.HorizontalRule:
-		r.horizontalRule(w)
+		r.horizontalRule(w, node)
 	case *ast.List:
 		r.list(w, node, entering)
 	case *ast.ListItem:
