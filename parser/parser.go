@@ -203,7 +203,7 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	switch n.(type) {
 	case *ast.List:
 		return isListItem(v)
-	case *ast.Document, *ast.BlockQuote, *ast.ListItem:
+	case *ast.Document, *ast.BlockQuote, *ast.Aside, *ast.ListItem:
 		return !isListItem(v)
 	case *ast.Table:
 		switch v.(type) {
