@@ -64,7 +64,7 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 		idx := &ast.Index{}
 
-		idx.ID = fmt.Sprintf("idx-%d", p.indexCnt)
+		idx.ID = fmt.Sprintf("idxref:%d", p.indexCnt)
 		p.indexCnt++
 
 		idx.Primary = data[start] == '!'

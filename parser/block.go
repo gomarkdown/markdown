@@ -927,7 +927,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 
 		// Check for caption and if found make it a figure.
-		if captionContent, consumed := p.caption(data[beg:]); consumed > 0 {
+		if captionContent, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
 			figure := &ast.CaptionFigure{}
 			caption := &ast.Caption{}
 			p.Inline(caption, captionContent)
@@ -1260,7 +1260,7 @@ func (p *Parser) quote(data []byte) int {
 		return end
 	}
 
-	if captionContent, consumed := p.caption(data[end:]); consumed > 0 {
+	if captionContent, consumed := p.caption(data[end:], []byte("Quote: ")); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
 		p.Inline(caption, captionContent)

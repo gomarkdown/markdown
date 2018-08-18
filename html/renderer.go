@@ -857,9 +857,8 @@ func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
 			attr[0] = `class="suppressed"`
 		}
 		r.outTag(w, "<cite", attr)
-		r.outs(w, "[")
-		r.out(w, c)
-		r.outs(w, "]</cite>")
+		r.outs(w, fmt.Sprintf(`<a href="#`+"%s"+`"></a>`, c))
+		r.outs(w, "</cite>")
 	}
 }
 
@@ -908,7 +907,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Link:
 		r.link(w, node, entering)
 	case *ast.CrossReference:
-		link := &ast.Link{Destination: node.Destination}
+		link := &ast.Link{Destination: append([]byte("#"), node.Destination...)}
 		r.link(w, link, entering)
 	case *ast.Citation:
 		r.citation(w, node)
