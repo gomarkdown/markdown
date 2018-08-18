@@ -95,14 +95,14 @@ code
 Look at (#basics)
 +++
 <h1>Cross ref</h1>
-+++
+
 <p>Look at <a href="#basics"></a></p>
 +++
 Name    | Age
 --------|------
 Bob     | 27
 Alice   | 23
-Caption: Look at this table!
+Table: Look at this table!
 +++
 <figure>
 <table>
@@ -127,3 +127,15 @@ Caption: Look at this table!
 </table>
 <figcaption>Look at this table!</figcaption>
 </figure>
++++
+# Aside
+A> This is an aside
++++
+<h1>Aside</h1>
+bliep
++++
+# Quote
+> This is a quote
++++
+<h1>Quote</h1>
+bliep

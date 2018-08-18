@@ -34,11 +34,11 @@ func (p *Parser) terminateAside(data []byte, beg, end int) bool {
 	return p.asidePrefix(data[end:]) == 0 && p.isEmpty(data[end:]) == 0
 }
 
-// parse a blockquote fragment
+// parse a aside fragment
 func (p *Parser) aside(data []byte) int {
-	block := p.addBlock(&ast.Aside{})
 	var raw bytes.Buffer
 	beg, end := 0, 0
+	// identical to quote
 	for beg < len(data) {
 		end = beg
 		// Step over whole lines, collecting them. While doing that, check for
@@ -65,6 +65,8 @@ func (p *Parser) aside(data []byte) int {
 		raw.Write(data[beg:end])
 		beg = end
 	}
+
+	block := p.addBlock(&ast.Aside{})
 	p.block(raw.Bytes())
 	p.finalize(block)
 	return end
