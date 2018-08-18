@@ -132,10 +132,7 @@ Table: Look at this table!
 A> This is an aside
 +++
 <h1>Aside</h1>
-bliep
-+++
-# Quote
-> This is a quote
-+++
-<h1>Quote</h1>
-bliep
+
+<aside>
+<p>This is an aside</p>
+</aside>
