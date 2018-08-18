@@ -945,12 +945,14 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.outOneOfCr(w, entering, tag, "</table>")
 	case *ast.TableCell:
 		r.tableCell(w, node, entering)
-	case *ast.TableHead:
+	case *ast.TableHeader:
 		r.outOneOfCr(w, entering, "<thead>", "</thead>")
 	case *ast.TableBody:
 		r.tableBody(w, node, entering)
 	case *ast.TableRow:
 		r.outOneOfCr(w, entering, "<tr>", "</tr>")
+	case *ast.TableFooter:
+		r.outOneOfCr(w, entering, "<tfoot>", "</tfoot>")
 	case *ast.Math:
 		r.outOneOf(w, true, `<span class="math inline">\(`, `\)</span>`)
 		EscapeHTML(w, node.Literal)

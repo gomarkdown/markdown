@@ -1206,6 +1206,9 @@ func TestTable(t *testing.T) {
 
 		"a|b\\|c|d\n---|---|---\nf|g\\|h|i\n",
 		"<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b|c</th>\n<th>d</th>\n</tr>\n</thead>\n\n<tbody>\n<tr>\n<td>f</td>\n<td>g|h</td>\n<td>i</td>\n</tr>\n</tbody>\n</table>\n",
+
+		"a|b\\|c|d\n---|---|---\nf|g\\|h|i\n===|===|===\nj|k|l|m\n",
+		"<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b|c</th>\n<th>d</th>\n</tr>\n</thead>\n\n<tbody>\n<tr>\n<td>f</td>\n<td>g|h</td>\n<td>i</td>\n</tr>\n</tbody>\n\n<tfoot>\n<tr>\n<td>j</td>\n<td>k</td>\n<td>l</td>\n</tr>\n</tfoot>\n</table>\n",
 	}
 	doTestsBlock(t, tests, parser.Tables)
 }

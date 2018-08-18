@@ -207,12 +207,12 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 		return !isListItem(v)
 	case *ast.Table:
 		switch v.(type) {
-		case *ast.TableHead, *ast.TableBody:
+		case *ast.TableHeader, *ast.TableBody, *ast.TableFooter:
 			return true
 		default:
 			return false
 		}
-	case *ast.TableHead, *ast.TableBody:
+	case *ast.TableHeader, *ast.TableBody, *ast.TableFooter:
 		_, ok := v.(*ast.TableRow)
 		return ok
 	case *ast.TableRow:
