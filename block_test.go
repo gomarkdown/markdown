@@ -380,20 +380,20 @@ func TestPrefixHeaderMmarkExtension(t *testing.T) {
 	t.Parallel()
 	var tests = []string{
 		".# Header 1\n",
-		`<h1 special="header 1">Header 1</h1>` + "\n",
+		`<h1 class="special">Header 1</h1>` + "\n",
 
 		".## Header 2\n",
 		"<p>.## Header 2</p>\n",
 
 		"Hello\n.# Header 1\nGoodbye\n",
-		"<p>Hello</p>\n\n<h1 special=\"header 1\">Header 1</h1>\n\n<p>Goodbye</p>\n",
+		"<p>Hello</p>\n\n<h1 class=\"special\">Header 1</h1>\n\n<p>Goodbye</p>\n",
 
 		"* List\n.# Header\n* List\n",
-		"<ul>\n<li><p>List</p>\n\n<h1 special=\"header\">Header</h1></li>\n\n<li><p>List</p></li>\n</ul>\n",
+		"<ul>\n<li><p>List</p>\n\n<h1 class=\"special\">Header</h1></li>\n\n<li><p>List</p></li>\n</ul>\n",
 
 		"*   List\n    * Nested list\n    .# Nested header\n",
 		"<ul>\n<li><p>List</p>\n\n<ul>\n<li><p>Nested list</p>\n\n" +
-			"<h1 special=\"nested header\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
+			"<h1 class=\"special\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
 	doTestsBlock(t, tests, parser.Mmark)
 }
