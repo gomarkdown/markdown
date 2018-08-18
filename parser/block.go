@@ -1144,7 +1144,6 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 
 	table = &ast.Table{}
 	p.addBlock(table)
-	p.addBlock(&ast.TableHead{})
 	p.addBlock(&ast.TableHeader{})
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
