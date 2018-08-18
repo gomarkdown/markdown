@@ -592,11 +592,20 @@ func (r *Renderer) htmlBlock(w io.Writer, node *ast.HTMLBlock) {
 
 func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 	var attrs []string
+	var class string
+	// TODO(miek): add helper functions for coalescing these classes.
 	if nodeData.IsTitleblock {
-		attrs = append(attrs, `class="title"`)
+		class = "title"
 	}
-	if nodeData.Special != nil {
-		attrs = append(attrs, `class="special"`)
+	if nodeData.IsSpecial {
+		if class != "" {
+			class += " special"
+		} else {
+			class = "special"
+		}
+	}
+	if class != "" {
+		attrs = []string{`class="` + class + `"`}
 	}
 	if nodeData.HeadingID != "" {
 		id := r.ensureUniqueHeadingID(nodeData.HeadingID)
