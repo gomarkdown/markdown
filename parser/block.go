@@ -474,9 +474,10 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 		}
 		block := &ast.Heading{
 			HeadingID: id,
-			Special:   bytes.ToLower(data[i:end]),
+			IsSpecial: true,
 			Level:     1, // always level 1.
 		}
+		block.Literal = data[i:end]
 		block.Content = data[i:end]
 		p.addBlock(block)
 	}
