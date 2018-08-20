@@ -842,11 +842,11 @@ func (r *Renderer) matter(w io.Writer, node *ast.DocumentMatter, entering bool) 
 	}
 	switch node.Matter {
 	case ast.DocumentMatterFront:
-		r.outs(w, `<section matter="front">`)
+		r.outs(w, `<section data-matter="front">`)
 	case ast.DocumentMatterMain:
-		r.outs(w, `<section matter="main">`)
+		r.outs(w, `<section data-matter="main">`)
 	case ast.DocumentMatterBack:
-		r.outs(w, `<section matter="back">`)
+		r.outs(w, `<section data-matter="back">`)
 	}
 	r.documentMatter = node.Matter
 }
