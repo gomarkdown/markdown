@@ -12,10 +12,10 @@
 {mainmatter}
 +++
 <h1>Test 3</h1>
-<section matter="front">
+<section data-matter="front">
 <h1>Section in matter</h1>
 </section>
-<section matter="main"></section>
+<section data-matter="main"></section>
 +++
 # Test Code Captions
 ~~~ go
