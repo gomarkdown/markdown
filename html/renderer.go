@@ -15,6 +15,10 @@ import (
 // Flags control optional behavior of HTML renderer.
 type Flags int
 
+// IDTag is the tag used for tag identification, it defaults to "id", some renderers
+// may with to override this an use "anchor".
+var IDTag = "id"
+
 // HTML renderer configuration options.
 const (
 	FlagsNone               Flags = 0
@@ -1239,7 +1243,7 @@ func BlockAttrs(node ast.Node) []string {
 
 	var s []string
 	if attr.ID != nil {
-		s = append(s, fmt.Sprintf(`id="%s"`, attr.ID))
+		s = append(s, fmt.Sprintf(`%s="%s"`, IDTag, attr.ID))
 	}
 
 	classes := ""
