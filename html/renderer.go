@@ -16,7 +16,7 @@ import (
 type Flags int
 
 // IDTag is the tag used for tag identification, it defaults to "id", some renderers
-// may with to override this an use "anchor".
+// may wish to override this and use e.g. "anchor".
 var IDTag = "id"
 
 // HTML renderer configuration options.
