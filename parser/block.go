@@ -1028,6 +1028,8 @@ func (p *Parser) table(data []byte) int {
 		ast.AppendChild(figure, caption)
 
 		p.addChild(figure)
+		p.finalize(figure)
+
 		i += consumed
 	}
 
