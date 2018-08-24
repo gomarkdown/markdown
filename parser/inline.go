@@ -228,7 +228,7 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 		}
 		sup := &ast.Superscript{}
 		sup.Literal = data[offset+1 : offset+ret]
-		return offset + ret + 1, sup
+		return offset + ret, sup
 	}
 
 	return 0, nil
