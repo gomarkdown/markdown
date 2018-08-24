@@ -278,6 +278,9 @@ implements the following extensions:
 *   **Ordered list start number**. With this extension enabled an ordered list will start with the
     the number that was used to start it.
 
+*   **Super and subscript**. With this extension enabled sequences between ^ will indicate
+    superscript and ~ will become a subscript. For example: H~2~O is a liquid, 2^10^ is 1024.
+
 *   **Block level attributes**, allow setting attributes (ID, classes and key/value pairs) on block
     level elements. The attribute must be enclosed with braces and be put on a line before the
     element.

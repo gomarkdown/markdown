@@ -38,6 +38,7 @@ const (
 	MathJax                                       // Parse MathJax
 	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
+	SuperSubScript                                // Super- and subscript support: 2^10^, H~2~O.
 	Mmark                                         // Support Mmark syntax, see https://mmark.nl/syntax
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
@@ -150,7 +151,7 @@ func NewWithExtensions(extension Extensions) *Parser {
 	if p.extensions&Mmark != 0 {
 		p.inlineCallback['('] = maybeShortRefOrIndex
 	}
-	p.inlineCallback['^'] = maybeInlineFootnote
+	p.inlineCallback['^'] = maybeInlineFootnoteOrSuper
 	if p.extensions&Autolink != 0 {
 		p.inlineCallback['h'] = maybeAutoLink
 		p.inlineCallback['m'] = maybeAutoLink
