@@ -79,7 +79,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 				return 0, nil
 			}
 			ret++ // we started with data[1:] above.
-			for i := 1; i < ret+1; i++ {
+			for i := 1; i < ret; i++ {
 				if isSpace(data[i]) && !isEscape(data, i) {
 					return 0, nil
 				}
@@ -221,7 +221,7 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 		if ret == 0 {
 			return 0, nil
 		}
-		for i := offset; i < offset+ret+1; i++ {
+		for i := offset; i < offset+ret; i++ {
 			if isSpace(data[i]) && !isEscape(data, i) {
 				return 0, nil
 			}
