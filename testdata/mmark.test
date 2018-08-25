@@ -212,3 +212,11 @@ Figure: Go code
 </code></pre>
 <figcaption>Go code</figcaption>
 </figure>
++++
+water is H~2~O
++++
+<p>water is H<sub>2</sub>O</p>
++++
+1024 is 2^10^
++++
+<p>1024 is 2<sup>10</sup></p>
