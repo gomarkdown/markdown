@@ -381,6 +381,16 @@ type Index struct {
 	ID      string // ID of the index
 }
 
+// Subscript is a subscript node
+type Subscript struct {
+	Leaf
+}
+
+// Subscript is a superscript node
+type Superscript struct {
+	Leaf
+}
+
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {

@@ -34,3 +34,17 @@ func escLink(w io.Writer, text []byte) {
 	unesc := html.UnescapeString(string(text))
 	EscapeHTML(w, []byte(unesc))
 }
+
+// Escape writes the text to w, but skips the escape character.
+func Escape(w io.Writer, text []byte) {
+	esc := false
+	for i := 0; i < len(text); i++ {
+		if text[i] == '\\' {
+			esc = !esc
+		}
+		if esc && text[i] == '\\' {
+			continue
+		}
+		w.Write([]byte{text[i]})
+	}
+}

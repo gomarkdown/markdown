@@ -68,8 +68,25 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 	if n > 2 && data[1] != c {
 		// whitespace cannot follow an opening emphasis;
 		// strikethrough only takes two characters '~~'
-		if c == '~' || isSpace(data[1]) {
+		if isSpace(data[1]) {
 			return 0, nil
+		}
+		if p.extensions&SuperSubscript != 0 && c == '~' {
+			// potential subscript, no spaces, except when escaped, helperEmphasis does
+			// not check that for us, so walk the bytes and check.
+			ret := skipUntilChar(data[1:], 0, c)
+			if ret == 0 {
+				return 0, nil
+			}
+			ret++ // we started with data[1:] above.
+			for i := 1; i < ret+1; i++ {
+				if isSpace(data[i]) && !isEscape(data, i) {
+					return 0, nil
+				}
+			}
+			sub := &ast.Subscript{}
+			sub.Literal = data[1:ret]
+			return ret + 1, sub
 		}
 		ret, node := helperEmphasis(p, data[1:], c)
 		if ret == 0 {
@@ -194,10 +211,26 @@ func maybeImage(p *Parser, data []byte, offset int) (int, ast.Node) {
 	return 0, nil
 }
 
-func maybeInlineFootnote(p *Parser, data []byte, offset int) (int, ast.Node) {
+func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.Node) {
 	if offset < len(data)-1 && data[offset+1] == '[' {
 		return link(p, data, offset)
 	}
+
+	if p.extensions&SuperSubscript != 0 {
+		ret := skipUntilChar(data[offset:], 1, '^')
+		if ret == 0 {
+			return 0, nil
+		}
+		for i := offset; i < offset+ret+1; i++ {
+			if isSpace(data[i]) && !isEscape(data, i) {
+				return 0, nil
+			}
+		}
+		sup := &ast.Superscript{}
+		sup.Literal = data[offset+1 : offset+ret]
+		return offset + ret, sup
+	}
+
 	return 0, nil
 }
 

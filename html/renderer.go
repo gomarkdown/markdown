@@ -978,6 +978,18 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.callout(w, node)
 	case *ast.Index:
 		r.index(w, node)
+	case *ast.Subscript:
+		r.outOneOf(w, true, "<sub>", "</sub>")
+		if entering {
+			Escape(w, node.Literal)
+		}
+		r.outOneOf(w, false, "<sub>", "</sub>")
+	case *ast.Superscript:
+		r.outOneOf(w, true, "<sup>", "</sup>")
+		if entering {
+			Escape(w, node.Literal)
+		}
+		r.outOneOf(w, false, "<sup>", "</sup>")
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
