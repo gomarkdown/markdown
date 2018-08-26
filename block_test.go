@@ -874,6 +874,15 @@ func TestDefinitionList(t *testing.T) {
 			"<dd><p>Definition b</p></dd>\n" +
 			"</dl>\n" +
 			"\n<p>Text 2</p>\n",
+		"Term 1\n: Definition a\n\n   * item1\n   * item2\n",
+		"<dl>\n" +
+			"<dt>Term 1</dt>\n" +
+			"<dd><p>Definition a</p>\n\n" +
+			"<ul>\n" +
+			"<li>item1</li>\n" +
+			"<li>item2</li>\n" +
+			"</ul></dd>\n" +
+			"</dl>\n",
 	}
 	doTestsBlock(t, tests, parser.DefinitionLists)
 }
