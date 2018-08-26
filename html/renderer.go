@@ -32,6 +32,7 @@ const (
 	CompletePage                              // Generate a complete HTML page
 	UseXHTML                                  // Generate XHTML output instead of HTML
 	FootnoteReturnLinks                       // Generate a link at the end of a footnote to return to the source
+	FootnoteNoHRTag                           // Do not output an HR after starting a footnote list.
 	Smartypants                               // Enable smart punctuation substitutions
 	SmartypantsFractions                      // Enable smart fractions (with Smartypants)
 	SmartypantsDashes                         // Enable smart dashes (with Smartypants)
@@ -654,8 +655,10 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 
 	if nodeData.IsFootnotesList {
 		r.outs(w, "\n<div class=\"footnotes\">\n\n")
-		r.outHRTag(w, nil)
-		r.cr(w)
+		if r.opts.Flags&FootnoteNoHRTag == 0 {
+			r.outHRTag(w, nil)
+			r.cr(w)
+		}
 	}
 	r.cr(w)
 	if isListItem(nodeData.Parent) {
@@ -990,6 +993,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			Escape(w, node.Literal)
 		}
 		r.outOneOf(w, false, "<sup>", "</sup>")
+	case *ast.Footnotes:
+		// nothing by default; just output the list.
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}

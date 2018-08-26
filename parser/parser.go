@@ -288,6 +288,7 @@ func (p *Parser) parseRefsToAST() {
 		IsFootnotesList: true,
 		ListFlags:       ast.ListTypeOrdered,
 	}
+	p.addBlock(&ast.Footnotes{})
 	block := p.addBlock(list)
 	flags := ast.ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is
