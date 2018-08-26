@@ -275,7 +275,10 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		}
 		return ast.GoToNext
 	})
-	p.parseRefsToAST()
+
+	if p.Opts.Flags&SkipFootnoteList == 0 {
+		p.parseRefsToAST()
+	}
 	return p.Doc
 }
 
