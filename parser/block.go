@@ -1462,6 +1462,18 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int) int {
 	return i
 }
 
+// Returns true if the list item is not the same type as its parent list
+func (p *Parser) listTypeChanged(data []byte, flags *ast.ListType) bool {
+	if p.dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 {
+		return true
+	} else if p.oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 {
+		return true
+	} else if p.uliPrefix(data) > 0 && (*flags&ast.ListTypeOrdered != 0 || *flags&ast.ListTypeDefinition != 0) {
+		return true
+	}
+	return false
+}
+
 // Returns true if block ends with a blank line, descending if needed
 // into lists and sublists.
 func endsWithBlankLine(block ast.Node) bool {
@@ -1599,14 +1611,21 @@ gatherlines:
 			p.oliPrefix(chunk) > 0 ||
 			p.dliPrefix(chunk) > 0:
 
-			if containsBlankLine {
-				*flags |= ast.ListItemContainsBlock
+			// to be a nested list, it must be indented more
+			// if not, it is either a different kind of list
+			// or the next item in the same list
+			if indent <= itemIndent {
+				if p.listTypeChanged(chunk, flags) {
+					*flags |= ast.ListItemEndOfList
+				} else if containsBlankLine {
+					*flags |= ast.ListItemContainsBlock
+				}
+
+				break gatherlines
 			}
 
-			// to be a nested list, it must be indented more
-			// if not, it is the next item in the same list
-			if indent <= itemIndent {
-				break gatherlines
+			if containsBlankLine {
+				*flags |= ast.ListItemContainsBlock
 			}
 
 			// is this the first item in the nested list?
