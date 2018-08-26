@@ -4,11 +4,22 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
+// Flags control optional behavior of parser.
+type Flags int
+
 // ParserOptions is a collection of supplementary parameters tweaking the behavior of various parts of the parser.
 type ParserOptions struct {
 	ParserHook    BlockFunc
 	ReadIncludeFn ReadIncludeFunc
+
+	Flags Flags // Flags allow customizing the parser's behavior, beyond the extensions which control what is parsed.
 }
+
+// Parser renderer configuration options.
+const (
+	FlagsNone        Flags = 0
+	SkipFootnoteList Flags = 1 << iota // Skip adding the footnote list (regardless if they are parsed)
+)
 
 // BlockFunc allows to registration of a parser function. If successful it
 // returns an ast.Node, a buffer that should be parsed as a block and the the number of bytes consumed.
