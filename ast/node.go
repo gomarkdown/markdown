@@ -391,6 +391,11 @@ type Superscript struct {
 	Leaf
 }
 
+// Footnotes is a node that contains all footnotes
+type Footnotes struct {
+	Container
+}
+
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {
