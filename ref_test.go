@@ -87,6 +87,7 @@ func benchFile(b *testing.B, basename string) {
 		benchResultAnchor = runMarkdown(test, params)
 	}
 }
+
 func BenchmarkReferenceAmps(b *testing.B) {
 	benchFile(b, "Amps and angle encoding")
 }
@@ -165,4 +166,48 @@ func BenchmarkReferenceTabs(b *testing.B) {
 
 func BenchmarkReferenceTidyness(b *testing.B) {
 	benchFile(b, "Tidyness")
+}
+
+func BenchmarkReference(b *testing.B) {
+	params := TestParams{extensions: parser.CommonExtensions}
+	files := []string{
+		"Amps and angle encoding",
+		"Auto links",
+		"Backslash escapes",
+		"Blockquotes with code blocks",
+		"Code Blocks",
+		"Code Spans",
+		"Hard-wrapped paragraphs with list-like lines",
+		"Horizontal rules",
+		"Inline HTML (Advanced)",
+		"Inline HTML (Simple)",
+		"Inline HTML comments",
+		"Links, inline style",
+		"Links, reference style",
+		"Links, shortcut references",
+		"Literal quotes in titles",
+		"Markdown Documentation - Basics",
+		"Markdown Documentation - Syntax",
+		"Nested blockquotes",
+		"Ordered and unordered lists",
+		"Strong and em together",
+		"Tabs",
+		"Tidyness",
+	}
+	var tests []string
+	for _, basename := range files {
+		filename := filepath.Join("testdata", basename+".text")
+		inputBytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			b.Errorf("Couldn't open '%s', error: %v\n", filename, err)
+			continue
+		}
+		tests = append(tests, string(inputBytes))
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		for _, test := range tests {
+			benchResultAnchor = runMarkdown(test, params)
+		}
+	}
 }
