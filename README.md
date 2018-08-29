@@ -188,6 +188,17 @@ implements the following extensions:
     Alice   | 23
     ```
 
+    Table footers are supported as well and can be added with equal signs (`=`):
+
+    ```
+    Name    | Age
+    --------|------
+    Bob     | 27
+    Alice   | 23
+    ========|======
+    Total   | 50
+    ```
+
 *   **Fenced code blocks**. In addition to the normal 4-space
     indentation to mark code blocks, you can explicitly mark them
     and supply a language (to make syntax highlighting simple). Just
@@ -267,6 +278,9 @@ implements the following extensions:
 *   **Ordered list start number**. With this extension enabled an ordered list will start with the
     the number that was used to start it.
 
+*   **Super and subscript**. With this extension enabled sequences between ^ will indicate
+    superscript and ~ will become a subscript. For example: H~2~O is a liquid, 2^10^ is 1024.
+
 *   **Block level attributes**, allow setting attributes (ID, classes and key/value pairs) on block
     level elements. The attribute must be enclosed with braces and be put on a line before the
     element.
@@ -276,12 +290,7 @@ implements the following extensions:
     ```
     Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
 
-*   **Mmark special heading**. A heading stating with `#.`, this makes it a special header. This can
-    be used to typeset Abstract or Prefaces.
-
-*   **Mmark document divisions**, allow front-, main- or backmatter.
-
-*   **Mmark captions**, allow captions under code blocks and block quotes, by using `Caption: <text>`
+*   **Mmark support**, see <https://mmark.nl/syntax> for all new syntax elements this adds.
 
 ## Todo
 

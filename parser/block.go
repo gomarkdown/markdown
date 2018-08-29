@@ -114,8 +114,10 @@ func (p *Parser) block(data []byte) {
 				f = p.readCodeInclude
 			}
 			if consumed > 0 {
-				included := f(path, address)
+				included := f(p.includeStack.Last(), path, address)
+				p.includeStack.Push(path)
 				p.block(included)
+				p.includeStack.Pop()
 				data = data[consumed:]
 				continue
 			}
@@ -472,9 +474,10 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 		}
 		block := &ast.Heading{
 			HeadingID: id,
-			Special:   bytes.ToLower(data[i:end]),
+			IsSpecial: true,
 			Level:     1, // always level 1.
 		}
+		block.Literal = data[i:end]
 		block.Content = data[i:end]
 		p.addBlock(block)
 	}
@@ -925,12 +928,13 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 
 		// Check for caption and if found make it a figure.
-		if captionContent, consumed := p.caption(data[beg:]); consumed > 0 {
+		if captionContent, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
 			figure := &ast.CaptionFigure{}
 			caption := &ast.Caption{}
 			p.Inline(caption, captionContent)
 
 			p.addBlock(figure)
+			codeBlock.AsLeaf().Attribute = figure.AsContainer().Attribute
 			p.addChild(codeBlock)
 			finalizeCodeBlock(codeBlock)
 			p.addChild(caption)
@@ -978,7 +982,7 @@ func finalizeCodeBlock(code *ast.CodeBlock) {
 }
 
 func (p *Parser) table(data []byte) int {
-	i, columns := p.tableHeader(data)
+	i, columns, table := p.tableHeader(data)
 	if i == 0 {
 		return 0
 	}
@@ -1000,7 +1004,33 @@ func (p *Parser) table(data []byte) int {
 
 		// include the newline in data sent to tableRow
 		i = skipCharN(data, i, '\n', 1)
+
+		if p.tableFooter(data[rowStart:i]) {
+			continue
+		}
+
 		p.tableRow(data[rowStart:i], columns, false)
+	}
+	if captionContent, consumed := p.caption(data[i:], []byte("Table: ")); consumed > 0 {
+		caption := &ast.Caption{}
+		p.Inline(caption, captionContent)
+
+		// Some switcheroo to re-insert the parsed table as a child of the captionfigure.
+		figure := &ast.CaptionFigure{}
+		table2 := &ast.Table{}
+		// Retain any block level attributes.
+		table2.AsContainer().Attribute = table.AsContainer().Attribute
+		children := table.GetChildren()
+		ast.RemoveFromTree(table)
+
+		table2.SetChildren(children)
+		ast.AppendChild(figure, table2)
+		ast.AppendChild(figure, caption)
+
+		p.addChild(figure)
+		p.finalize(figure)
+
+		i += consumed
 	}
 
 	return i
@@ -1016,7 +1046,7 @@ func isBackslashEscaped(data []byte, i int) bool {
 }
 
 // tableHeaders parses the header. If recognized it will also add a table.
-func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags) {
+func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlags, table ast.Node) {
 	i := 0
 	colCount := 1
 	for i = 0; i < len(data) && data[i] != '\n'; i++ {
@@ -1118,8 +1148,9 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 		return
 	}
 
-	p.addBlock(&ast.Table{})
-	p.addBlock(&ast.TableHead{})
+	table = &ast.Table{}
+	p.addBlock(table)
+	p.addBlock(&ast.TableHeader{})
 	p.tableRow(header, columns, true)
 	size = skipCharN(data, i, '\n', 1)
 	return
@@ -1172,6 +1203,30 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 	}
 
 	// silently ignore rows with too many cells
+}
+
+// tableFooter parses the (optional) table footer.
+func (p *Parser) tableFooter(data []byte) bool {
+	colCount := 1
+	for i := 0; i < len(data) && data[i] != '\n'; i++ {
+		if data[i] == '|' && !isBackslashEscaped(data, i) {
+			colCount++
+			continue
+		}
+		// remaining data must be the = character
+		if data[i] != '=' {
+			return false
+		}
+	}
+
+	// doesn't look like a table footer
+	if colCount == 1 {
+		return false
+	}
+
+	p.addBlock(&ast.TableFooter{})
+
+	return true
 }
 
 // returns blockquote prefix length
@@ -1240,13 +1295,14 @@ func (p *Parser) quote(data []byte) int {
 		return end
 	}
 
-	if captionContent, consumed := p.caption(data[end:]); consumed > 0 {
+	if captionContent, consumed := p.caption(data[end:], []byte("Quote: ")); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
 		p.Inline(caption, captionContent)
 
-		p.addBlock(figure)
+		p.addBlock(figure) // this discard any attributes
 		block := &ast.BlockQuote{}
+		block.AsContainer().Attribute = figure.AsContainer().Attribute
 		p.addChild(block)
 		p.block(raw.Bytes())
 		p.finalize(block)
@@ -1406,6 +1462,18 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int) int {
 	return i
 }
 
+// Returns true if the list item is not the same type as its parent list
+func (p *Parser) listTypeChanged(data []byte, flags *ast.ListType) bool {
+	if p.dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 {
+		return true
+	} else if p.oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 {
+		return true
+	} else if p.uliPrefix(data) > 0 && (*flags&ast.ListTypeOrdered != 0 || *flags&ast.ListTypeDefinition != 0) {
+		return true
+	}
+	return false
+}
+
 // Returns true if block ends with a blank line, descending if needed
 // into lists and sublists.
 func endsWithBlankLine(block ast.Node) bool {
@@ -1543,14 +1611,21 @@ gatherlines:
 			p.oliPrefix(chunk) > 0 ||
 			p.dliPrefix(chunk) > 0:
 
-			if containsBlankLine {
-				*flags |= ast.ListItemContainsBlock
+			// to be a nested list, it must be indented more
+			// if not, it is either a different kind of list
+			// or the next item in the same list
+			if indent <= itemIndent {
+				if p.listTypeChanged(chunk, flags) {
+					*flags |= ast.ListItemEndOfList
+				} else if containsBlankLine {
+					*flags |= ast.ListItemContainsBlock
+				}
+
+				break gatherlines
 			}
 
-			// to be a nested list, it must be indented more
-			// if not, it is the next item in the same list
-			if indent <= itemIndent {
-				break gatherlines
+			if containsBlankLine {
+				*flags |= ast.ListItemContainsBlock
 			}
 
 			// is this the first item in the nested list?

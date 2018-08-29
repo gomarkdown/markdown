@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-var htmlEscaper = [256][]byte{
+var Escaper = [256][]byte{
 	'&': []byte("&amp;"),
 	'<': []byte("&lt;"),
 	'>': []byte("&gt;"),
@@ -17,7 +17,7 @@ func EscapeHTML(w io.Writer, d []byte) {
 	var start, end int
 	n := len(d)
 	for end < n {
-		escSeq := htmlEscaper[d[end]]
+		escSeq := Escaper[d[end]]
 		if escSeq != nil {
 			w.Write(d[start:end])
 			w.Write(escSeq)
@@ -33,4 +33,18 @@ func EscapeHTML(w io.Writer, d []byte) {
 func escLink(w io.Writer, text []byte) {
 	unesc := html.UnescapeString(string(text))
 	EscapeHTML(w, []byte(unesc))
+}
+
+// Escape writes the text to w, but skips the escape character.
+func Escape(w io.Writer, text []byte) {
+	esc := false
+	for i := 0; i < len(text); i++ {
+		if text[i] == '\\' {
+			esc = !esc
+		}
+		if esc && text[i] == '\\' {
+			continue
+		}
+		w.Write([]byte{text[i]})
+	}
 }

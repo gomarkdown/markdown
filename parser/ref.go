@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/gomarkdown/markdown/ast"
 )
@@ -34,8 +35,10 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 			}
 			i++
 		}
-		// end not found or no valid syntax
-		if i == 0 || data[i-1] != ')' {
+		if i >= len(data) {
+			return 0, nil
+		}
+		if data[i] != ')' {
 			return 0, nil
 		}
 
@@ -43,7 +46,7 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 		node := &ast.CrossReference{}
 		node.Destination = id
 
-		return i, node
+		return i + 1, node
 
 	case '!': // index
 		i++
@@ -58,7 +61,12 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 		if len(data[start:i]) < 1 {
 			return 0, nil
 		}
+
 		idx := &ast.Index{}
+
+		idx.ID = fmt.Sprintf("idxref:%d", p.indexCnt)
+		p.indexCnt++
+
 		idx.Primary = data[start] == '!'
 		buf := data[start:i]
 

@@ -15,6 +15,10 @@ import (
 // Flags control optional behavior of HTML renderer.
 type Flags int
 
+// IDTag is the tag used for tag identification, it defaults to "id", some renderers
+// may wish to override this and use e.g. "anchor".
+var IDTag = "id"
+
 // HTML renderer configuration options.
 const (
 	FlagsNone               Flags = 0
@@ -28,6 +32,7 @@ const (
 	CompletePage                              // Generate a complete HTML page
 	UseXHTML                                  // Generate XHTML output instead of HTML
 	FootnoteReturnLinks                       // Generate a link at the end of a footnote to return to the source
+	FootnoteNoHRTag                           // Do not output an HR after starting a footnote list.
 	Smartypants                               // Enable smart punctuation substitutions
 	SmartypantsFractions                      // Enable smart fractions (with Smartypants)
 	SmartypantsDashes                         // Enable smart dashes (with Smartypants)
@@ -76,7 +81,7 @@ type RendererOptions struct {
 	// Add this text to each footnote anchor, to ensure uniqueness.
 	FootnoteAnchorPrefix string
 	// Show this text inside the <a> tag for a footnote return link, if the
-	// HTML_FOOTNOTE_RETURN_LINKS flag is enabled. If blank, the string
+	// FootnoteReturnLinks flag is enabled. If blank, the string
 	// <sup>[return]</sup> is used.
 	FootnoteReturnLinkContents string
 	// If set, add this text to the front of each Heading ID, to ensure
@@ -404,8 +409,9 @@ func headingCloseTagFromLevel(level int) string {
 	return closeHTags[level-1]
 }
 
-func (r *Renderer) outHRTag(w io.Writer) {
-	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, "<hr>", "<hr />")
+func (r *Renderer) outHRTag(w io.Writer, attrs []string) {
+	hr := tagWithAttributes("<hr", attrs)
+	r.outOneOf(w, r.opts.Flags&UseXHTML == 0, hr, "<hr />")
 }
 
 func (r *Renderer) text(w io.Writer, text *ast.Text) {
@@ -591,11 +597,20 @@ func (r *Renderer) htmlBlock(w io.Writer, node *ast.HTMLBlock) {
 
 func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 	var attrs []string
+	var class string
+	// TODO(miek): add helper functions for coalescing these classes.
 	if nodeData.IsTitleblock {
-		attrs = append(attrs, `class="title"`)
+		class = "title"
 	}
-	if nodeData.Special != nil {
-		attrs = append(attrs, fmt.Sprintf(`special="%s"`, string(nodeData.Special)))
+	if nodeData.IsSpecial {
+		if class != "" {
+			class += " special"
+		} else {
+			class = "special"
+		}
+	}
+	if class != "" {
+		attrs = []string{`class="` + class + `"`}
 	}
 	if nodeData.HeadingID != "" {
 		id := r.ensureUniqueHeadingID(nodeData.HeadingID)
@@ -628,9 +643,9 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 	}
 }
 
-func (r *Renderer) horizontalRule(w io.Writer) {
+func (r *Renderer) horizontalRule(w io.Writer, node *ast.HorizontalRule) {
 	r.cr(w)
-	r.outHRTag(w)
+	r.outHRTag(w, BlockAttrs(node))
 	r.cr(w)
 }
 
@@ -640,8 +655,10 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 
 	if nodeData.IsFootnotesList {
 		r.outs(w, "\n<div class=\"footnotes\">\n\n")
-		r.outHRTag(w)
-		r.cr(w)
+		if r.opts.Flags&FootnoteNoHRTag == 0 {
+			r.outHRTag(w, nil)
+			r.cr(w)
+		}
 	}
 	r.cr(w)
 	if isListItem(nodeData.Parent) {
@@ -753,11 +770,15 @@ func (r *Renderer) listItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 
 func (r *Renderer) codeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	var attrs []string
+	// TODO(miek): this can add multiple class= attribute, they should be coalesced into one.
+	// This is probably true for some other elements as well
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
 	attrs = append(attrs, BlockAttrs(codeBlock)...)
 	r.cr(w)
+
 	r.outs(w, "<pre>")
-	r.outTag(w, "<code", attrs)
+	code := tagWithAttributes("<code", attrs)
+	r.outs(w, code)
 	if r.opts.Comments != nil {
 		r.EscapeHTMLCallouts(w, codeBlock.Literal)
 	} else {
@@ -779,14 +800,7 @@ func (r *Renderer) caption(w io.Writer, caption *ast.Caption, entering bool) {
 }
 
 func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
-	if entering {
-		r.outs(w, "<figure>")
-		return
-	}
-
-	r.cr(w)
-	r.outs(w, "</figure>")
-	r.cr(w)
+	r.outOneOf(w, entering, "<figure>", "\n</figure>\n")
 }
 
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
@@ -835,11 +849,11 @@ func (r *Renderer) matter(w io.Writer, node *ast.DocumentMatter, entering bool) 
 	}
 	switch node.Matter {
 	case ast.DocumentMatterFront:
-		r.outs(w, `<section matter="front">`)
+		r.outs(w, `<section data-matter="front">`)
 	case ast.DocumentMatterMain:
-		r.outs(w, `<section matter="main">`)
+		r.outs(w, `<section data-matter="main">`)
 	case ast.DocumentMatterBack:
-		r.outs(w, `<section matter="back">`)
+		r.outs(w, `<section data-matter="back">`)
 	}
 	r.documentMatter = node.Matter
 }
@@ -856,9 +870,8 @@ func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
 			attr[0] = `class="suppressed"`
 		}
 		r.outTag(w, "<cite", attr)
-		r.outs(w, "[")
-		r.out(w, c)
-		r.outs(w, "]</cite>")
+		r.outs(w, fmt.Sprintf(`<a href="#`+"%s"+`"></a>`, c))
+		r.outs(w, "</cite>")
 	}
 }
 
@@ -871,6 +884,9 @@ func (r *Renderer) callout(w io.Writer, node *ast.Callout) {
 
 func (r *Renderer) index(w io.Writer, node *ast.Index) {
 	// there is no in-text representation.
+	attr := []string{`class="index"`, fmt.Sprintf(`id="%s"`, node.ID)}
+	r.outTag(w, "<span", attr)
+	r.outs(w, "</span>")
 }
 
 // RenderNode renders a markdown node to HTML
@@ -904,7 +920,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Link:
 		r.link(w, node, entering)
 	case *ast.CrossReference:
-		link := &ast.Link{Destination: node.Destination}
+		link := &ast.Link{Destination: append([]byte("#"), node.Destination...)}
 		r.link(w, link, entering)
 	case *ast.Citation:
 		r.citation(w, node)
@@ -932,7 +948,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Heading:
 		r.heading(w, node, entering)
 	case *ast.HorizontalRule:
-		r.horizontalRule(w)
+		r.horizontalRule(w, node)
 	case *ast.List:
 		r.list(w, node, entering)
 	case *ast.ListItem:
@@ -942,12 +958,14 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.outOneOfCr(w, entering, tag, "</table>")
 	case *ast.TableCell:
 		r.tableCell(w, node, entering)
-	case *ast.TableHead:
+	case *ast.TableHeader:
 		r.outOneOfCr(w, entering, "<thead>", "</thead>")
 	case *ast.TableBody:
 		r.tableBody(w, node, entering)
 	case *ast.TableRow:
 		r.outOneOfCr(w, entering, "<tr>", "</tr>")
+	case *ast.TableFooter:
+		r.outOneOfCr(w, entering, "<tfoot>", "</tfoot>")
 	case *ast.Math:
 		r.outOneOf(w, true, `<span class="math inline">\(`, `\)</span>`)
 		EscapeHTML(w, node.Literal)
@@ -963,6 +981,20 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.callout(w, node)
 	case *ast.Index:
 		r.index(w, node)
+	case *ast.Subscript:
+		r.outOneOf(w, true, "<sub>", "</sub>")
+		if entering {
+			Escape(w, node.Literal)
+		}
+		r.outOneOf(w, false, "<sub>", "</sub>")
+	case *ast.Superscript:
+		r.outOneOf(w, true, "<sup>", "</sup>")
+		if entering {
+			Escape(w, node.Literal)
+		}
+		r.outOneOf(w, false, "<sup>", "</sup>")
+	case *ast.Footnotes:
+		// nothing by default; just output the list.
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
@@ -1228,7 +1260,7 @@ func BlockAttrs(node ast.Node) []string {
 
 	var s []string
 	if attr.ID != nil {
-		s = append(s, fmt.Sprintf(`id="%s"`, attr.ID))
+		s = append(s, fmt.Sprintf(`%s="%s"`, IDTag, attr.ID))
 	}
 
 	classes := ""

@@ -380,20 +380,20 @@ func TestPrefixHeaderMmarkExtension(t *testing.T) {
 	t.Parallel()
 	var tests = []string{
 		".# Header 1\n",
-		`<h1 special="header 1">Header 1</h1>` + "\n",
+		`<h1 class="special">Header 1</h1>` + "\n",
 
 		".## Header 2\n",
 		"<p>.## Header 2</p>\n",
 
 		"Hello\n.# Header 1\nGoodbye\n",
-		"<p>Hello</p>\n\n<h1 special=\"header 1\">Header 1</h1>\n\n<p>Goodbye</p>\n",
+		"<p>Hello</p>\n\n<h1 class=\"special\">Header 1</h1>\n\n<p>Goodbye</p>\n",
 
 		"* List\n.# Header\n* List\n",
-		"<ul>\n<li><p>List</p>\n\n<h1 special=\"header\">Header</h1></li>\n\n<li><p>List</p></li>\n</ul>\n",
+		"<ul>\n<li><p>List</p>\n\n<h1 class=\"special\">Header</h1></li>\n\n<li><p>List</p></li>\n</ul>\n",
 
 		"*   List\n    * Nested list\n    .# Nested header\n",
 		"<ul>\n<li><p>List</p>\n\n<ul>\n<li><p>Nested list</p>\n\n" +
-			"<h1 special=\"nested header\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
+			"<h1 class=\"special\">Nested header</h1></li>\n</ul></li>\n</ul>\n",
 	}
 	doTestsBlock(t, tests, parser.Mmark)
 }
@@ -874,6 +874,15 @@ func TestDefinitionList(t *testing.T) {
 			"<dd><p>Definition b</p></dd>\n" +
 			"</dl>\n" +
 			"\n<p>Text 2</p>\n",
+		"Term 1\n: Definition a\n\n   * item1\n   * item2\n",
+		"<dl>\n" +
+			"<dt>Term 1</dt>\n" +
+			"<dd><p>Definition a</p>\n\n" +
+			"<ul>\n" +
+			"<li>item1</li>\n" +
+			"<li>item2</li>\n" +
+			"</ul></dd>\n" +
+			"</dl>\n",
 	}
 	doTestsBlock(t, tests, parser.DefinitionLists)
 }
@@ -1206,6 +1215,9 @@ func TestTable(t *testing.T) {
 
 		"a|b\\|c|d\n---|---|---\nf|g\\|h|i\n",
 		"<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b|c</th>\n<th>d</th>\n</tr>\n</thead>\n\n<tbody>\n<tr>\n<td>f</td>\n<td>g|h</td>\n<td>i</td>\n</tr>\n</tbody>\n</table>\n",
+
+		"a|b\\|c|d\n---|---|---\nf|g\\|h|i\n===|===|===\nj|k|l|m\n",
+		"<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b|c</th>\n<th>d</th>\n</tr>\n</thead>\n\n<tbody>\n<tr>\n<td>f</td>\n<td>g|h</td>\n<td>i</td>\n</tr>\n</tbody>\n\n<tfoot>\n<tr>\n<td>j</td>\n<td>k</td>\n<td>l</td>\n</tr>\n</tfoot>\n</table>\n",
 	}
 	doTestsBlock(t, tests, parser.Tables)
 }

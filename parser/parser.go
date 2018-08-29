@@ -38,6 +38,7 @@ const (
 	MathJax                                       // Parse MathJax
 	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
+	SuperSubscript                                // Super- and subscript support: 2^10^, H~2~O.
 	Mmark                                         // Support Mmark syntax, see https://mmark.nl/syntax
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
@@ -92,6 +93,7 @@ type Parser struct {
 	nesting        int
 	maxNesting     int
 	insideLink     bool
+	indexCnt       int // incremented after every index
 
 	// Footnotes need to be ordered as well as available to quickly check for
 	// presence. If a ref is also a footnote, it's stored both in refs and here
@@ -105,6 +107,8 @@ type Parser struct {
 
 	// Attributes are attached to block level elements.
 	attr *ast.Attribute
+
+	includeStack *incStack
 }
 
 // New creates a markdown parser with CommonExtensions.
@@ -119,12 +123,13 @@ func New() *Parser {
 // NewWithExtensions creates a markdown parser with given extensions.
 func NewWithExtensions(extension Extensions) *Parser {
 	p := Parser{
-		refs:       make(map[string]*reference),
-		maxNesting: 16,
-		insideLink: false,
-		Doc:        &ast.Document{},
-		extensions: extension,
-		allClosed:  true,
+		refs:         make(map[string]*reference),
+		maxNesting:   16,
+		insideLink:   false,
+		Doc:          &ast.Document{},
+		extensions:   extension,
+		allClosed:    true,
+		includeStack: newIncStack(),
 	}
 	p.tip = p.Doc
 	p.oldTip = p.Doc
@@ -146,7 +151,7 @@ func NewWithExtensions(extension Extensions) *Parser {
 	if p.extensions&Mmark != 0 {
 		p.inlineCallback['('] = maybeShortRefOrIndex
 	}
-	p.inlineCallback['^'] = maybeInlineFootnote
+	p.inlineCallback['^'] = maybeInlineFootnoteOrSuper
 	if p.extensions&Autolink != 0 {
 		p.inlineCallback['h'] = maybeAutoLink
 		p.inlineCallback['m'] = maybeAutoLink
@@ -199,16 +204,16 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	switch n.(type) {
 	case *ast.List:
 		return isListItem(v)
-	case *ast.Document, *ast.BlockQuote, *ast.ListItem:
+	case *ast.Document, *ast.BlockQuote, *ast.Aside, *ast.ListItem:
 		return !isListItem(v)
 	case *ast.Table:
 		switch v.(type) {
-		case *ast.TableHead, *ast.TableBody:
+		case *ast.TableHeader, *ast.TableBody, *ast.TableFooter:
 			return true
 		default:
 			return false
 		}
-	case *ast.TableHead, *ast.TableBody:
+	case *ast.TableHeader, *ast.TableBody, *ast.TableFooter:
 		_, ok := v.(*ast.TableRow)
 		return ok
 	case *ast.TableRow:
@@ -270,7 +275,10 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		}
 		return ast.GoToNext
 	})
-	p.parseRefsToAST()
+
+	if p.Opts.Flags&SkipFootnoteList == 0 {
+		p.parseRefsToAST()
+	}
 	return p.Doc
 }
 
@@ -283,6 +291,7 @@ func (p *Parser) parseRefsToAST() {
 		IsFootnotesList: true,
 		ListFlags:       ast.ListTypeOrdered,
 	}
+	p.addBlock(&ast.Footnotes{})
 	block := p.addBlock(list)
 	flags := ast.ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is

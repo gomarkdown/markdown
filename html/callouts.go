@@ -32,7 +32,7 @@ Parse:
 			}
 		}
 
-		escSeq := htmlEscaper[d[i]]
+		escSeq := Escaper[d[i]]
 		if escSeq != nil {
 			w.Write(escSeq)
 		} else {

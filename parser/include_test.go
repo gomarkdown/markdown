@@ -29,6 +29,10 @@ func TestIsInclude(t *testing.T) {
 			[]byte("{{foo}}a]"),
 			"foo", "", 7,
 		},
+		{
+			[]byte("   {{foo}}"),
+			"foo", "", 10,
+		},
 		// fails
 		{
 			[]byte("{foo}}"),
@@ -74,6 +78,10 @@ func TestIsCodeInclude(t *testing.T) {
 			[]byte("<{{foo}}  "),
 			"foo", "", 8,
 		},
+		{
+			[]byte("   <{{foo}}  "),
+			"foo", "", 11,
+		},
 	}
 
 	p := New()
@@ -88,5 +96,27 @@ func TestIsCodeInclude(t *testing.T) {
 		if read != test.read {
 			t.Errorf("test %d, want %d, got %d", i, test.read, read)
 		}
+	}
+}
+
+func TestPush(t *testing.T) {
+	i := newIncStack()
+	if i.Push("/new/foo"); i.stack[0] != "/new" {
+		t.Errorf("want %s, got %s", "/new", i.stack[0])
+	}
+
+	if i.Push("new/new"); i.stack[1] != "/new/new" {
+		t.Errorf("want %s, got %s", "/new/new", i.stack[1])
+	}
+}
+
+func TestPop(t *testing.T) {
+	i := newIncStack()
+	if i.Push("/new/foo"); i.stack[0] != "/new" {
+		t.Errorf("want %s, got %s", "/new", i.stack[0])
+	}
+	i.Pop()
+	if len(i.stack) != 0 {
+		t.Errorf("after pop, want %d, got %d", 0, len(i.stack))
 	}
 }

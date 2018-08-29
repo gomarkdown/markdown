@@ -223,7 +223,7 @@ type Heading struct {
 	Level        int    // This holds the heading level number
 	HeadingID    string // This might hold heading ID, if present
 	IsTitleblock bool   // Specifies whether it's a title block
-	Special      []byte // We are a special heading (start with .#), contains header name
+	IsSpecial    bool   // We are a special heading (starts with .#)
 }
 
 // HorizontalRule represents markdown horizontal rule node
@@ -334,8 +334,8 @@ type TableCell struct {
 	Align    CellAlignFlags // This holds the value for align attribute
 }
 
-// TableHead represents markdown table head node
-type TableHead struct {
+// TableHeader represents markdown table head node
+type TableHeader struct {
 	Container
 }
 
@@ -346,6 +346,11 @@ type TableBody struct {
 
 // TableRow represents markdown table row node
 type TableRow struct {
+	Container
+}
+
+// TableFooter represents markdown table foot node
+type TableFooter struct {
 	Container
 }
 
@@ -373,6 +378,22 @@ type Index struct {
 	Primary bool
 	Item    []byte
 	Subitem []byte
+	ID      string // ID of the index
+}
+
+// Subscript is a subscript node
+type Subscript struct {
+	Leaf
+}
+
+// Subscript is a superscript node
+type Superscript struct {
+	Leaf
+}
+
+// Footnotes is a node that contains all footnotes
+type Footnotes struct {
+	Container
 }
 
 func removeNodeFromArray(a []Node, node Node) []Node {

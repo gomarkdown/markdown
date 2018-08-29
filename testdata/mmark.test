@@ -1,42 +1,42 @@
 # Test 1
----
++++
 <h1>Test 1</h1>
----
++++
 .# Test 2
----
-<h1 special="test 2">Test 2</h1>
----
++++
+<h1 class="special">Test 2</h1>
++++
 # Test 3
 {frontmatter}
 # Section in matter
 {mainmatter}
----
++++
 <h1>Test 3</h1>
-<section matter="front">
+<section data-matter="front">
 <h1>Section in matter</h1>
 </section>
-<section matter="main"></section>
----
+<section data-matter="main"></section>
++++
 # Test Code Captions
 ~~~ go
 println("hi")
 ~~~
-Caption: This *is* a
+Figure: This *is* a
   caption.
----
-<h1>Test_Code_Captions</h1>
++++
+<h1>Test Code Captions</h1>
 <figure>
-<pre><code_class="language-go">println(&quot;hi&quot;)
+<pre><code class="language-go">println(&quot;hi&quot;)
 </code></pre>
 <figcaption>This <em>is</em> a
   caption.</figcaption>
 </figure>
----
++++
 # Test Quote Captions
 > To be, or not to be
 
-Caption: Shakespeare.
----
+Quote: Shakespeare.
++++
 <h1>Test Quote Captions</h1>
 <figure>
 <blockquote>
@@ -44,49 +44,179 @@ Caption: Shakespeare.
 </blockquote>
 <figcaption>Shakespeare.</figcaption>
 </figure>
----
++++
 > Bare
----
++++
 <blockquote>
 <p>Bare</p>
 </blockquote>
----
++++
 # Test Citations
 [@RFC1034]
----
-<h1>Test_Citations</h1>
++++
+<h1>Test Citations</h1>
 
-<p><cite class="informative">[RFC1034]</cite></p>
----
+<p><cite class="informative"><a href="#RFC1034"></a></cite></p>
++++
 # Test Multiple Citations
 [@RFC1034; @!RFC1035]
----
++++
 <h1>Test Multiple Citations</h1>
 
-<p><cite class="informative">[RFC1034]</cite><cite class="normative">[RFC1035]</cite></p>
----
+<p><cite class="informative"><a href="#RFC1034"></a></cite><cite class="normative"><a href="#RFC1035"></a></cite></p>
++++
 # Test Multiple Citations with modifier
 [@-RFC1034] [@?RFC1035]
----
++++
 <h1>Test Multiple Citations with modifier</h1>
 
-<p><cite class="suppressed">[RFC1034]</cite> <cite class="informative">[RFC1035]</cite></p>
----
+<p><cite class="suppressed"><a href="#RFC1034"></a></cite> <cite class="informative"><a href="#RFC1035"></a></cite></p>
++++
 {.myclass1 .myclass2}
 ~~~
 code
 ~~~
----
++++
 <pre><code class="myclass1 myclass2">code
 </code></pre>
----
++++
 # Index
 (!myitem, subitem)
 (!!item)
 (!!item,   subtitem  )
----
++++
 <h1>Index</h1>
 
-<p>
+<p><span class="index" id="idxref:0"></span>
+<span class="index" id="idxref:1"></span>
+<span class="index" id="idxref:2"></span></p>
++++
+# Cross ref
+Look at (#basics)
++++
+<h1>Cross ref</h1>
 
-</p>
+<p>Look at <a href="#basics"></a></p>
++++
+Name    | Age
+--------|------
+Bob     | 27
+Alice   | 23
+Table: Look at this table!
++++
+<figure>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Age</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Bob</td>
+<td>27</td>
+</tr>
+
+<tr>
+<td>Alice</td>
+<td>23</td>
+</tr>
+</tbody>
+</table>
+<figcaption>Look at this table!</figcaption>
+</figure>
++++
+# Aside
+A> This is an aside
++++
+<h1>Aside</h1>
+
+<aside>
+<p>This is an aside</p>
+</aside>
++++
+{.myclass3}
+.# Preface section
++++
+<h1 class="special" class="myclass3">Preface section</h1>
++++
+{.myclass4}
+A> hello
++++
+<aside class="myclass4">
+<p>hello</p>
+</aside>
++++
+{.thick}
+********
++++
+<hr class="thick">
++++
+{.myclass2}
+Name    | Age
+--------|------
+Bob     | 27
++++
+<table class="myclass2">
+<thead>
+<tr>
+<th>Name</th>
+<th>Age</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Bob</td>
+<td>27</td>
+</tr>
+</tbody>
+</table>
++++
+{.myclass3}
+Just some text
++++
+<p class="myclass3">Just some text</p>
++++
+{type="roman"}
+1. List item1
+2. List item2
++++
+<ol type="roman">
+<li>List item1</li>
+<li>List item2</li>
+</ol>
++++
+{.myclass3}
+> Hallo
+
+Quote: Someone
++++
+<figure>
+<blockquote class="myclass3">
+<p>Hallo</p>
+</blockquote>
+<figcaption>Someone</figcaption>
+</figure>
++++
+{.myclass5}
+~~~
+println("Yep!")
+~~~
+Figure: Go code
++++
+<figure>
+<pre><code class="myclass5">println(&quot;Yep!&quot;)
+</code></pre>
+<figcaption>Go code</figcaption>
+</figure>
++++
+water is H~2~O
++++
+<p>water is H<sub>2</sub>O</p>
++++
+1024 is 2^10^
++++
+<p>1024 is 2<sup>10</sup></p>
