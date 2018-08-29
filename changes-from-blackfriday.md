@@ -15,7 +15,7 @@ Implementing a full renderer is a lot of work and often you just want to tweak h
 
 I've added a way to hook `Renderer.Render` function in html renderer with a custom function that can take over rendering of specific nodes.
 
-I use it myself to do syntax-higlighting of code snippets.
+I use it myself to do syntax-highlighting of code snippets.
 
 **Speed up go test**
 
