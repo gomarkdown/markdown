@@ -220,3 +220,14 @@ water is H~2~O
 1024 is 2^10^
 +++
 <p>1024 is 2<sup>10</sup></p>
++++
+!---
+![Alt text](/path/to/img1.jpg "Optional title")
+![Alt text](/path/to/img2.jpg "Optional title")
+!---
+Figure: this is a figure containing subfigures.
++++
+<figure><p><img src="/path/to/img1.jpg" alt="Alt text" title="Optional title" />
+<img src="/path/to/img2.jpg" alt="Alt text" title="Optional title" /></p>
+<figcaption>this is a figure containing subfigures.</figcaption>
+</figure>
