@@ -249,7 +249,7 @@ func (p *Parser) block(data []byte) {
 		//
 		// A> The proof is too large to fit
 		// A> in the margin.
-		if p.extensions|Mmark != 0 {
+		if p.extensions&Mmark != 0 {
 			if p.asidePrefix(data) > 0 {
 				data = data[p.aside(data):]
 				continue
