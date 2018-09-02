@@ -256,6 +256,19 @@ func (p *Parser) block(data []byte) {
 			}
 		}
 
+		// figure block:
+		//
+		// !---
+		// ![Alt Text](img.jpg "This is an image")
+		// ![Alt Text](img2.jpg "This is a second image")
+		// !---
+		if p.extensions&Mmark != 0 {
+			if i := p.figureBlock(data, true); i > 0 {
+				data = data[i:]
+				continue
+			}
+		}
+
 		// table:
 		//
 		// Name  | Age | Phone
@@ -1876,6 +1889,14 @@ func (p *Parser) paragraph(data []byte) int {
 		// if there's a fenced code block, paragraph is over
 		if p.extensions&FencedCode != 0 {
 			if p.fencedCodeBlock(current, false) > 0 {
+				p.renderParagraph(data[:i])
+				return i
+			}
+		}
+
+		// if there's a figure block, paragraph is over
+		if p.extensions&Mmark != 0 {
+			if p.figureBlock(current, false) > 0 {
 				p.renderParagraph(data[:i])
 				return i
 			}
