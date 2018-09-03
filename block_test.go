@@ -1538,6 +1538,14 @@ func TestListWithMalformedFencedCodeBlock(t *testing.T) {
 	doTestsBlock(t, tests, parser.FencedCode)
 }
 
+func TestDefinitionListWithFencedCodeBlock(t *testing.T) {
+	var tests = []string{
+		"one:\n: def1\n\ntwo:\n: def2\n\n ~~~\ncode\n ~~~\n",
+		"<dl>\n<dt>one:</dt>\n<dd><p>def1</p></dd>\n<dt>two:</dt>\n<dd><p>def2</p>\n\n<pre><code>code\n</code></pre></dd>\n</dl>\n",
+	}
+	doTestsBlock(t, tests, parser.FencedCode|parser.DefinitionLists)
+}
+
 func TestListWithFencedCodeBlockNoExtensions(t *testing.T) {
 	// If there is a fenced code block in a list, and FencedCode is not set,
 	// lists should be processed normally.
