@@ -1627,7 +1627,10 @@ gatherlines:
 					// start of codeblock
 					codeBlockMarker = marker
 				} else {
-					// end of codeblock.
+					// end of codeblock, mark list as containing a block
+					if containsBlankLine {
+						*flags |= ast.ListItemContainsBlock
+					}
 					codeBlockMarker = ""
 				}
 			}
