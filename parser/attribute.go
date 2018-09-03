@@ -12,6 +12,11 @@ func (p *Parser) attribute(data []byte) []byte {
 		return data
 	}
 	i := 0
+	// skip up to three spaces
+	for i < 3 && data[i] == ' ' {
+		i++
+	}
+
 	if data[i] != '{' {
 		return data
 	}
@@ -23,12 +28,11 @@ func (p *Parser) attribute(data []byte) []byte {
 		return data
 	}
 
-	i = skipSpace(data, i)
 	b := &ast.Attribute{Attrs: make(map[string][]byte)}
 
 	esc := false
 	quote := false
-	trail := 0
+	trail := i - 1
 Loop:
 	for ; i < len(data); i++ {
 		switch data[i] {
