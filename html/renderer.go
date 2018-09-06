@@ -84,8 +84,10 @@ type RendererOptions struct {
 	// FootnoteReturnLinks flag is enabled. If blank, the string
 	// <sup>[return]</sup> is used.
 	FootnoteReturnLinkContents string
-	// If set, add this text to the front of each Heading ID, to ensure
-	// uniqueness.
+	// CitationFormatString defines how a citation is rendered. If blnck, the string
+	// <sup>[%s]</sup> is used. Where %s will be substituted with the citation target.
+	CitationFormatString string
+	// If set, add this text to the front of each Heading ID, to ensure uniqueness.
 	HeadingIDPrefix string
 	// If set, add this text to the back of each Heading ID, to ensure uniqueness.
 	HeadingIDSuffix string
@@ -136,6 +138,9 @@ func NewRenderer(opts RendererOptions) *Renderer {
 
 	if opts.FootnoteReturnLinkContents == "" {
 		opts.FootnoteReturnLinkContents = `<sup>[return]</sup>`
+	}
+	if opts.CitationFormatString == "" {
+		opts.CitationFormatString = `<sup>[%s]</sup>`
 	}
 
 	return &Renderer{
@@ -870,7 +875,7 @@ func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
 			attr[0] = `class="suppressed"`
 		}
 		r.outTag(w, "<cite", attr)
-		r.outs(w, fmt.Sprintf(`<a href="#`+"%s"+`"></a>`, c))
+		r.outs(w, fmt.Sprintf(`<a href="#%s">`+r.opts.CitationFormatString+`</a>`, c, c))
 		r.outs(w, "</cite>")
 	}
 }
