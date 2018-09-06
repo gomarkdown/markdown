@@ -56,21 +56,21 @@ Quote: Shakespeare.
 +++
 <h1>Test Citations</h1>
 
-<p><cite class="informative"><a href="#RFC1034"></a></cite></p>
+<p><cite class="informative"><a href="#RFC1034"><sup>[RFC1034]</sup></a></cite></p>
 +++
 # Test Multiple Citations
 [@RFC1034; @!RFC1035]
 +++
 <h1>Test Multiple Citations</h1>
 
-<p><cite class="informative"><a href="#RFC1034"></a></cite><cite class="normative"><a href="#RFC1035"></a></cite></p>
+<p><cite class="informative"><a href="#RFC1034"><sup>[RFC1034]</sup></a></cite><cite class="normative"><a href="#RFC1035"><sup>[RFC1035]</sup></a></cite></p>
 +++
 # Test Multiple Citations with modifier
 [@-RFC1034] [@?RFC1035]
 +++
 <h1>Test Multiple Citations with modifier</h1>
 
-<p><cite class="suppressed"><a href="#RFC1034"></a></cite> <cite class="informative"><a href="#RFC1035"></a></cite></p>
+<p><cite class="suppressed"><a href="#RFC1034"><sup>[RFC1034]</sup></a></cite> <cite class="informative"><a href="#RFC1035"><sup>[RFC1035]</sup></a></cite></p>
 +++
 {.myclass1 .myclass2}
 ~~~
