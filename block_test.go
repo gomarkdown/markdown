@@ -1530,6 +1530,21 @@ two:
 	doTestsBlock(t, tests, parser.FencedCode|parser.DefinitionLists)
 }
 
+func TestListWithFencedCodeBlockAndHeader(t *testing.T) {
+	var tests = []string{
+		`1. a
+
+    ~~~go
+    c
+    ~~~
+
+# B
+`,
+		"<ol>\n<li><p>a</p>\n\n<pre><code class=\"language-go\">c\n</code></pre></li>\n</ol>\n\n<h1>B</h1>\n",
+	}
+	doTestsBlock(t, tests, parser.FencedCode)
+}
+
 func TestTitleBlock_EXTENSION_TITLEBLOCK(t *testing.T) {
 	t.Parallel()
 	var tests = []string{
