@@ -1513,50 +1513,36 @@ func TestMathBlock(t *testing.T) {
 	doTestsBlock(t, tests, parser.CommonExtensions)
 }
 
-func TestListWithFencedCodeBlock(t *testing.T) {
-	var tests = []string{
-		"1. one\n\n    ```\n    code\n    ```\n\n2. two\n",
-		"<ol>\n<li><p>one</p>\n\n<pre><code>code\n</code></pre></li>\n\n<li><p>two</p></li>\n</ol>\n",
-		// https://github.com/russross/blackfriday/issues/239
-		"1. one\n\n    ```\n    - code\n    ```\n\n2. two\n",
-		"<ol>\n<li><p>one</p>\n\n<pre><code>- code\n</code></pre></li>\n\n<li><p>two</p></li>\n</ol>\n",
-	}
-	doTestsBlock(t, tests, parser.FencedCode)
-}
-
-func TestListWithMalformedFencedCodeBlock(t *testing.T) {
-	// Ensure that in the case of an unclosed fenced code block in a list,
-	// no source gets ommitted (even if it is malformed).
-	// See russross/blackfriday#372 for context.
-	var tests = []string{
-		"1. one\n\n    ```\n    code\n\n2. two\n",
-		"<ol>\n<li>one\n```\ncode\n2. two</li>\n</ol>\n",
-
-		"1. one\n\n    ```\n    - code\n\n2. two\n",
-		"<ol>\n<li>one\n```\n- code\n2. two</li>\n</ol>\n",
-	}
-	doTestsBlock(t, tests, parser.FencedCode)
-}
-
 func TestDefinitionListWithFencedCodeBlock(t *testing.T) {
 	var tests = []string{
-		"one:\n: def1\n\ntwo:\n: def2\n\n ~~~\ncode\n ~~~\n",
+		`one:
+: def1
+
+two:
+: def2
+
+    ~~~
+    code
+    ~~~
+`,
 		"<dl>\n<dt>one:</dt>\n<dd><p>def1</p></dd>\n<dt>two:</dt>\n<dd><p>def2</p>\n\n<pre><code>code\n</code></pre></dd>\n</dl>\n",
 	}
 	doTestsBlock(t, tests, parser.FencedCode|parser.DefinitionLists)
 }
 
-func TestListWithFencedCodeBlockNoExtensions(t *testing.T) {
-	// If there is a fenced code block in a list, and FencedCode is not set,
-	// lists should be processed normally.
+func TestListWithFencedCodeBlockAndHeader(t *testing.T) {
 	var tests = []string{
-		"1. one\n\n    ```\n    code\n    ```\n\n2. two\n",
-		"<ol>\n<li><p>one</p>\n\n<p><code>\ncode\n</code></p></li>\n\n<li><p>two</p></li>\n</ol>\n",
+		`1. a
 
-		"1. one\n\n    ```\n    - code\n    ```\n\n2. two\n",
-		"<ol>\n<li><p>one</p>\n\n<p>```</p>\n\n<ul>\n<li>code\n```</li>\n</ul></li>\n\n<li><p>two</p></li>\n</ol>\n",
+    ~~~go
+    c
+    ~~~
+
+# B
+`,
+		"<ol>\n<li><p>a</p>\n\n<pre><code class=\"language-go\">c\n</code></pre></li>\n</ol>\n\n<h1>B</h1>\n",
 	}
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, tests, parser.FencedCode)
 }
 
 func TestTitleBlock_EXTENSION_TITLEBLOCK(t *testing.T) {
