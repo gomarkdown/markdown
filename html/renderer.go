@@ -106,6 +106,10 @@ type RendererOptions struct {
 	// Comments is a list of comments the renderer should detect when
 	// parsing code blocks and detecting callouts.
 	Comments [][]byte
+
+	// Generator is a meta tag that is inserted in the generated HTML so show what rendered it. It should not include the closing tag.
+	// Defaults (not content is not closed) to `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
+	Generator string
 }
 
 // Renderer implements Renderer interface for HTML output.
@@ -141,6 +145,9 @@ func NewRenderer(opts RendererOptions) *Renderer {
 	}
 	if opts.CitationFormatString == "" {
 		opts.CitationFormatString = `<sup>[%s]</sup>`
+	}
+	if opts.Generator == "" {
+		opts.Generator = `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
 	}
 
 	return &Renderer{
@@ -1048,7 +1055,7 @@ func (r *Renderer) writeDocumentHeader(w io.Writer) {
 		EscapeHTML(w, []byte(r.opts.Title))
 	}
 	io.WriteString(w, "</title>\n")
-	io.WriteString(w, "  <meta name=\"GENERATOR\" content=\"github.com/gomarkdown/markdown markdown processor for Go")
+	io.WriteString(w, r.opts.Generator)
 	io.WriteString(w, "\"")
 	io.WriteString(w, ending)
 	io.WriteString(w, ">\n")
