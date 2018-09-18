@@ -108,7 +108,7 @@ type RendererOptions struct {
 	Comments [][]byte
 
 	// Generator is a meta tag that is inserted in the generated HTML so show what rendered it. It should not include the closing tag.
-	// Defaults (not content is not closed) to `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
+	// Defaults (note content quote is not closed) to `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
 	Generator string
 }
 
