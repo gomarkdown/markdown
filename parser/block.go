@@ -1620,9 +1620,7 @@ gatherlines:
 		// evaluate how this line fits in
 		switch {
 		// is this a nested list item?
-		case (p.uliPrefix(chunk) > 0 && !p.isHRule(chunk)) ||
-			p.oliPrefix(chunk) > 0 ||
-			p.dliPrefix(chunk) > 0:
+		case (p.uliPrefix(chunk) > 0 && !p.isHRule(chunk)) || p.oliPrefix(chunk) > 0 || p.dliPrefix(chunk) > 0:
 
 			// to be a nested list, it must be indented more
 			// if not, it is either a different kind of list
@@ -1644,6 +1642,11 @@ gatherlines:
 			// is this the first item in the nested list?
 			if sublist == 0 {
 				sublist = raw.Len()
+				// in the case of dliPrefix we are too late and need to search back for the definition item, which
+				// should be on the previous line, we then adjust sublist to start there.
+				if p.dliPrefix(chunk) > 0 {
+					sublist = backUntilChar(raw.Bytes(), raw.Len()-1, '\n')
+				}
 			}
 
 			// is this a nested prefix heading?
@@ -1958,6 +1961,13 @@ func skipSpace(data []byte, i int) int {
 
 func backChar(data []byte, i int, c byte) int {
 	for i > 0 && data[i-1] == c {
+		i--
+	}
+	return i
+}
+
+func backUntilChar(data []byte, i int, c byte) int {
+	for i > 0 && data[i-1] != c {
 		i--
 	}
 	return i

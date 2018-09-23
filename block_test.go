@@ -887,6 +887,39 @@ func TestDefinitionList(t *testing.T) {
 	doTestsBlock(t, tests, parser.DefinitionLists)
 }
 
+func TestNestedDefinitionList(t *testing.T) {
+	t.Parallel()
+	var tests = []string{
+		// Definition list in def. list.
+		`Term 1
+:   Definition
+Next line
+
+Term 2
+:   Definition b
+
+    Term 11
+    :   Definition c
+`, "<dl>\n<dt>Term 1</dt>\n<dd><p>Definition\nNext line</p></dd>\n<dt>Term 2</dt>\n<dd><p>Definition b</p>\n\n<dl>\n<dt>Term 11</dt>\n<dd>Definition c</dd>\n</dl></dd>\n</dl>\n",
+
+		// Definition list in def. list with sublist.
+		`Term 1
+:   Definition
+Next line
+
+Term 2
+:   Definition b
+
+    Term 11
+    :   Definition c
+
+    * sublist1
+    * sublist2
+`, "<dl>\n<dt>Term 1</dt>\n<dd><p>Definition\nNext line</p></dd>\n<dt>Term 2</dt>\n<dd><p>Definition b</p>\n\n<dl>\n<dt>Term 11</dt>\n<dd>Definition c</dd>\n</dl>\n\n<ul>\n<li>sublist1</li>\n<li>sublist2</li>\n</ul></dd>\n</dl>\n",
+	}
+	doTestsBlock(t, tests, parser.DefinitionLists)
+}
+
 func TestPreformattedHtml(t *testing.T) {
 	t.Parallel()
 	var tests = []string{
