@@ -89,6 +89,7 @@ type Parser struct {
 	extensions Extensions
 
 	refs           map[string]*reference
+	refsRecord     map[string]struct{}
 	inlineCallback [256]inlineParser
 	nesting        int
 	maxNesting     int
@@ -124,6 +125,7 @@ func New() *Parser {
 func NewWithExtensions(extension Extensions) *Parser {
 	p := Parser{
 		refs:         make(map[string]*reference),
+		refsRecord:   make(map[string]struct{}),
 		maxNesting:   16,
 		insideLink:   false,
 		Doc:          &ast.Document{},
@@ -185,6 +187,11 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 	// refs are case insensitive
 	ref, found = p.refs[strings.ToLower(refid)]
 	return ref, found
+}
+
+func (p *Parser) isFootnote(ref *reference) bool {
+	_, ok := p.refsRecord[string(ref.link)]
+	return ok
 }
 
 func (p *Parser) finalize(block ast.Node) {

@@ -512,6 +512,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			}
 
 			p.notes = append(p.notes, ref)
+			p.refsRecord[string(ref.link)] = struct{}{}
 
 			link = ref.link
 			title = ref.title
@@ -522,10 +523,11 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 				return 0, nil
 			}
 
-			if t == linkDeferredFootnote {
+			if t == linkDeferredFootnote && !p.isFootnote(lr) {
 				lr.noteID = len(p.notes) + 1
 				lr.footnote = footnoteNode
 				p.notes = append(p.notes, lr)
+				p.refsRecord[string(lr.link)] = struct{}{}
 			}
 
 			// keep link and title from reference
