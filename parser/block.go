@@ -106,7 +106,7 @@ func (p *Parser) block(data []byte) {
 			data = p.attribute(data)
 		}
 
-		if p.extensions&Mmark != 0 {
+		if p.extensions&Includes != 0 {
 			f := p.readInclude
 			path, address, consumed := p.isInclude(data)
 			if consumed == 0 {
