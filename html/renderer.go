@@ -812,7 +812,14 @@ func (r *Renderer) caption(w io.Writer, caption *ast.Caption, entering bool) {
 }
 
 func (r *Renderer) captionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
-	r.outOneOf(w, entering, "<figure>", "\n</figure>\n")
+	// TODO(miek): copy more generic ways of mmark over to here.
+	fig := "<figure"
+	if figure.HeadingID != "" {
+		fig += ` id="` + figure.HeadingID + `">`
+	} else {
+		fig += ">"
+	}
+	r.outOneOf(w, entering, fig, "\n</figure>\n")
 }
 
 func (r *Renderer) tableCell(w io.Writer, tableCell *ast.TableCell, entering bool) {
