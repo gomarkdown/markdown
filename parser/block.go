@@ -941,9 +941,10 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 
 		// Check for caption and if found make it a figure.
-		if captionContent, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
+		if captionContent, id, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
 			figure := &ast.CaptionFigure{}
 			caption := &ast.Caption{}
+			figure.HeadingID = id
 			p.Inline(caption, captionContent)
 
 			p.addBlock(figure)
@@ -1024,12 +1025,13 @@ func (p *Parser) table(data []byte) int {
 
 		p.tableRow(data[rowStart:i], columns, false)
 	}
-	if captionContent, consumed := p.caption(data[i:], []byte("Table: ")); consumed > 0 {
+	if captionContent, id, consumed := p.caption(data[i:], []byte("Table: ")); consumed > 0 {
 		caption := &ast.Caption{}
 		p.Inline(caption, captionContent)
 
 		// Some switcheroo to re-insert the parsed table as a child of the captionfigure.
 		figure := &ast.CaptionFigure{}
+		figure.HeadingID = id
 		table2 := &ast.Table{}
 		// Retain any block level attributes.
 		table2.AsContainer().Attribute = table.AsContainer().Attribute
@@ -1308,9 +1310,10 @@ func (p *Parser) quote(data []byte) int {
 		return end
 	}
 
-	if captionContent, consumed := p.caption(data[end:], []byte("Quote: ")); consumed > 0 {
+	if captionContent, id, consumed := p.caption(data[end:], []byte("Quote: ")); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
+		figure.HeadingID = id
 		p.Inline(caption, captionContent)
 
 		p.addBlock(figure) // this discard any attributes

@@ -4,15 +4,24 @@ import (
 	"bytes"
 )
 
-func (p *Parser) caption(data, caption []byte) ([]byte, int) {
+// caption checks for a caption, it returns the caption data and a potential "headingID".
+func (p *Parser) caption(data, caption []byte) ([]byte, string, int) {
 	if !bytes.HasPrefix(data, caption) {
-		return nil, 0
+		return nil, "", 0
 	}
 	j := len(caption)
 	data = data[j:]
 	end := p.linesUntilEmpty(data)
 
-	return data[:end], end + j
+	data = data[:end]
+
+	id, start := captionID(data)
+	if id != "" {
+		id = sanitizeAnchorName(id)
+		return data[:start], id, end + j
+	}
+
+	return data, "", end + j
 }
 
 // linesUntilEmpty scans lines up to the first empty line.
@@ -35,4 +44,22 @@ func (p *Parser) linesUntilEmpty(data []byte) int {
 		break
 	}
 	return i
+}
+
+// captionID checks if the caption *ends* in {#....}. If so the text after {# is taken to be
+// the ID/anchor of the entire figure block.
+func captionID(data []byte) (string, int) {
+	end := len(data)
+
+	j, k := 0, 0
+	// find start/end of heading id
+	for j = 0; j < end-1 && (data[j] != '{' || data[j+1] != '#'); j++ {
+	}
+	for k = j + 1; k < end && data[k] != '}'; k++ {
+	}
+	// Must be at the ending, otherwise we will ignore it.
+	if j < end-4 && k == end-2 {
+		return string(data[j+2 : k]), j
+	}
+	return "", 0
 }

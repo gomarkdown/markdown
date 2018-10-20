@@ -103,9 +103,12 @@ func (p *Parser) figureBlock(data []byte, doRender bool) int {
 
 	defer p.finalize(figure)
 
-	if captionContent, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
+	if captionContent, id, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
 		caption := &ast.Caption{}
 		p.Inline(caption, captionContent)
+
+		figure.HeadingID = id
+
 		p.addChild(caption)
 
 		beg += consumed

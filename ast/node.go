@@ -362,6 +362,8 @@ type Caption struct {
 // CaptionFigure is a node (blockquote or codeblock) that has a caption
 type CaptionFigure struct {
 	Container
+
+	HeadingID string // This might hold heading ID, if present
 }
 
 // Callout is a node that can exist both in text (where it is an actual node) and in a code block.
