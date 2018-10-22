@@ -17,7 +17,6 @@ func (p *Parser) caption(data, caption []byte) ([]byte, string, int) {
 
 	id, start := captionID(data)
 	if id != "" {
-		id = sanitizeAnchorName(id)
 		return data[:start], id, end + j
 	}
 
@@ -57,8 +56,14 @@ func captionID(data []byte) (string, int) {
 	}
 	for k = j + 1; k < end && data[k] != '}'; k++ {
 	}
-	// Must be at the ending, otherwise we will ignore it.
-	if j < end-4 && k == end-2 {
+	// remains must be whitespace.
+	for l := k + 1; l < end; l++ {
+		if !isSpace(data[l]) {
+			return "", 0
+		}
+	}
+
+	if j > 0 && k > 0 && j+2 < k {
 		return string(data[j+2 : k]), j
 	}
 	return "", 0
