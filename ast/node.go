@@ -269,6 +269,7 @@ type Citation struct {
 
 	Destination [][]byte        // Destination is where the citation points to. Multiple ones are allowed.
 	Type        []CitationTypes // 1:1 mapping of destination and citation type
+	Suffix      [][]byte        // Potential citation suffix, i.e. [@!RFC1035, p. 144]
 }
 
 // Image represents markdown image node
