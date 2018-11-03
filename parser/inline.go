@@ -275,10 +275,10 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	}
 
 	var (
-		i                       = 1
-		noteID                  int
-		title, link, altContent []byte
-		textHasNl               = false
+		i                               = 1
+		noteID                          int
+		title, link, linkID, altContent []byte
+		textHasNl                       = false
 	)
 
 	if t == linkDeferredFootnote {
@@ -453,6 +453,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		}
 
 		// keep link and title from reference
+		linkID = id
 		link = lr.link
 		title = lr.title
 		if altContentConsidered {
@@ -561,6 +562,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		link := &ast.Link{
 			Destination: normalizeURI(uLink),
 			Title:       title,
+			DeferredID:  linkID,
 		}
 		if len(altContent) > 0 {
 			ast.AppendChild(link, newTextNode(altContent))
@@ -588,6 +590,9 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			Title:       title,
 			NoteID:      noteID,
 			Footnote:    footnoteNode,
+		}
+		if t == linkDeferredFootnote {
+			link.DeferredID = data[2:txtE]
 		}
 		if t == linkInlineFootnote {
 			i++
