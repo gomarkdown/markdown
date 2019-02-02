@@ -40,9 +40,8 @@ func TestOptions(t *testing.T) {
 hallo
 %%%
 `),
-			want: []byte(`Document ''
-    BlockQuote ''
-        Paragraph 'hallo'
+			want: []byte(`BlockQuote
+  Paragraph 'hallo'
 `),
 		},
 	}
