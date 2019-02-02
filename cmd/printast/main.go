@@ -31,7 +31,7 @@ func main() {
 		}
 		doc := markdown.Parse(d, nil)
 		fmt.Printf("Ast of file '%s':\n", fileName)
-		ast.Print(os.Stdout, doc)
+		ast.PrintWithPrefix(os.Stdout, doc, " ")
 		fmt.Print("\n")
 	}
 }

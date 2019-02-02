@@ -15,11 +15,18 @@ func Print(dst io.Writer, doc Node) {
 	PrintWithPrefix(dst, doc, "  ")
 }
 
-// PrintWithPrefix is like Pring but allows customizing prefix used for
+// PrintWithPrefix is like Print but allows customizing prefix used for
 // indentation. By default it's 2 spaces. You can change it to e.g. tab
 // by passing "\t"
 func PrintWithPrefix(w io.Writer, doc Node, prefix string) {
-	printRecur(w, doc, prefix, 0)
+	// for more compact output, don't print outer Document
+	if _, ok := doc.(*Document); ok {
+		for _, c := range doc.GetChildren() {
+			printRecur(w, c, prefix, 0)
+		}
+	} else {
+		printRecur(w, doc, prefix, 0)
+	}
 }
 
 // ToString is like Dump but returns result as a string
@@ -74,16 +81,78 @@ func getNodeType(node Node) string {
 	return s
 }
 
+func printDefault(w io.Writer, indent string, typeName string, content string) {
+	content = strings.TrimSpace(content)
+	if len(content) > 0 {
+		fmt.Fprintf(w, "%s%s '%s'\n", indent, typeName, content)
+	} else {
+		fmt.Fprintf(w, "%s%s\n", indent, typeName)
+	}
+}
+
+func getListFlags(f ListType) string {
+	var s string
+	if f&ListTypeOrdered != 0 {
+		s += "ordered "
+	}
+	if f&ListTypeDefinition != 0 {
+		s += "definition "
+	}
+	if f&ListTypeTerm != 0 {
+		s += "term "
+	}
+	if f&ListItemContainsBlock != 0 {
+		s += "has_block "
+	}
+	if f&ListItemBeginningOfList != 0 {
+		s += "start "
+	}
+	if f&ListItemEndOfList != 0 {
+		s += "end "
+	}
+	s = strings.TrimSpace(s)
+	return s
+}
+
 func printRecur(w io.Writer, node Node, prefix string, depth int) {
 	if node == nil {
 		return
 	}
 	indent := strings.Repeat(prefix, depth)
-	io.WriteString(w, indent)
 
 	content := shortenString(getContent(node), 40)
 	typeName := getNodeType(node)
-	fmt.Fprintf(w, "%s%s '%s'\n", indent, typeName, content)
+	switch v := node.(type) {
+	case *Link:
+		content := "url=" + string(v.Destination)
+		printDefault(w, indent, typeName, content)
+	case *Image:
+		content := "url=" + string(v.Destination)
+		printDefault(w, indent, typeName, content)
+	case *List:
+		if v.Start > 1 {
+			content += fmt.Sprintf("start=%d ", v.Start)
+		}
+		if v.Tight {
+			content += "tight "
+		}
+		flags := getListFlags(v.ListFlags)
+		if len(flags) > 0 {
+			content += "flags=" + flags + " "
+		}
+		printDefault(w, indent, typeName, content)
+	case *ListItem:
+		if v.Tight {
+			content += "tight "
+		}
+		flags := getListFlags(v.ListFlags)
+		if len(flags) > 0 {
+			content += "flags=" + flags + " "
+		}
+		printDefault(w, indent, typeName, content)
+	default:
+		printDefault(w, indent, typeName, content)
+	}
 	for _, child := range node.GetChildren() {
 		printRecur(w, child, prefix, depth+1)
 	}
