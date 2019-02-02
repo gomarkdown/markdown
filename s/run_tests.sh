@@ -1,6 +1,5 @@
 #!/bin/bash
 set -u -e -o pipefail -o verbose
 
-go build ./...
-
+go clean -testcache
 go test -v ./...
