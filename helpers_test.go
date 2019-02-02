@@ -18,22 +18,6 @@ type TestParams struct {
 	html.RendererOptions
 }
 
-func execRecoverableTestSuite(t *testing.T, tests []string, params TestParams, suite func(candidate *string)) {
-	// Catch and report panics. This is useful when running 'go test -v' on
-	// the integration server. When developing, though, crash dump is often
-	// preferable, so recovery can be easily turned off with doRecover = false.
-	var candidate string
-	const doRecover = false
-	if doRecover {
-		defer func() {
-			if err := recover(); err != nil {
-				t.Errorf("\npanic while processing [%#v]: %s\n", candidate, err)
-			}
-		}()
-	}
-	suite(&candidate)
-}
-
 func runMarkdown(input string, params TestParams) string {
 	params.RendererOptions.Flags = params.Flags
 	parser := parser.NewWithExtensions(params.extensions)
@@ -62,18 +46,15 @@ func doTestsBlock(t *testing.T, tests []string, extensions parser.Extensions) {
 }
 
 func doTestsParam(t *testing.T, tests []string, params TestParams) {
-	execRecoverableTestSuite(t, tests, params, func(candidate *string) {
-		for i := 0; i+1 < len(tests); i += 2 {
-			input := tests[i]
-			*candidate = input
-			expected := tests[i+1]
-			actual := runMarkdown(*candidate, params)
-			if actual != expected {
-				t.Errorf("\nInput   [%#v]\nExpected[%#v]\nActual  [%#v]",
-					*candidate, expected, actual)
-			}
+	for i := 0; i+1 < len(tests); i += 2 {
+		input := tests[i]
+		expected := tests[i+1]
+		got := runMarkdown(input, params)
+		if got != expected {
+			t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot    [%#v]\nInput:\n%s\nExpected:\n%s\nGot:\n%s\n",
+				input, expected, got, input, expected, got)
 		}
-	})
+	}
 }
 
 func doTestsInline(t *testing.T, tests []string) {
@@ -131,33 +112,31 @@ func transformLinks(tests []string, prefix string) []string {
 
 func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
 	params := TestParams{extensions: flag}
-	execRecoverableTestSuite(t, files, params, func(candidate *string) {
-		for _, basename := range files {
-			filename := filepath.Join("testdata", basename+".text")
-			inputBytes, err := ioutil.ReadFile(filename)
-			if err != nil {
-				t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
-				continue
-			}
-			inputBytes = normalizeNewlines(inputBytes)
-			input := string(inputBytes)
-
-			filename = filepath.Join("testdata", basename+".html")
-			expectedBytes, err := ioutil.ReadFile(filename)
-			if err != nil {
-				t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
-				continue
-			}
-			expectedBytes = normalizeNewlines(expectedBytes)
-			expected := string(expectedBytes)
-
-			actual := string(runMarkdown(input, params))
-			if actual != expected {
-				t.Errorf("\n    [%#v]\nExpected[%#v]\nActual  [%#v]",
-					basename+".text", expected, actual)
-			}
+	for _, basename := range files {
+		filename := filepath.Join("testdata", basename+".text")
+		inputBytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
+			continue
 		}
-	})
+		inputBytes = normalizeNewlines(inputBytes)
+		input := string(inputBytes)
+
+		filename = filepath.Join("testdata", basename+".html")
+		expectedBytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
+			continue
+		}
+		expectedBytes = normalizeNewlines(expectedBytes)
+		expected := string(expectedBytes)
+
+		actual := string(runMarkdown(input, params))
+		if actual != expected {
+			t.Errorf("\n    [%#v]\nExpected[%#v]\nActual  [%#v]",
+				basename+".text", expected, actual)
+		}
+	}
 }
 
 func normalizeNewlines(d []byte) []byte {
