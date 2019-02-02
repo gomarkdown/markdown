@@ -1,6 +1,9 @@
 package markdown
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -8,72 +11,31 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
-func TestPrefixHeaderNoExtensions(t *testing.T) {
-	var tests = []string{
-		"# Header 1\n",
-		"<h1>Header 1</h1>\n",
-
-		"## Header 2\n",
-		"<h2>Header 2</h2>\n",
-
-		"### Header 3\n",
-		"<h3>Header 3</h3>\n",
-
-		"#### Header 4\n",
-		"<h4>Header 4</h4>\n",
-
-		"##### Header 5\n",
-		"<h5>Header 5</h5>\n",
-
-		"###### Header 6\n",
-		"<h6>Header 6</h6>\n",
-
-		"####### Header 7\n",
-		"<h6># Header 7</h6>\n",
-
-		"#Header 1\n",
-		"<h1>Header 1</h1>\n",
-
-		"##Header 2\n",
-		"<h2>Header 2</h2>\n",
-
-		"###Header 3\n",
-		"<h3>Header 3</h3>\n",
-
-		"####Header 4\n",
-		"<h4>Header 4</h4>\n",
-
-		"#####Header 5\n",
-		"<h5>Header 5</h5>\n",
-
-		"######Header 6\n",
-		"<h6>Header 6</h6>\n",
-
-		"#######Header 7\n",
-		"<h6>#Header 7</h6>\n",
-
-		"Hello\n# Header 1\nGoodbye\n",
-		"<p>Hello</p>\n\n<h1>Header 1</h1>\n\n<p>Goodbye</p>\n",
-
-		"* List\n# Header\n* List\n",
-		"<ul>\n<li><p>List</p>\n\n<h1>Header</h1></li>\n\n<li><p>List</p></li>\n</ul>\n",
-
-		"* List\n#Header\n* List\n",
-		"<ul>\n<li><p>List</p>\n\n<h1>Header</h1></li>\n\n<li><p>List</p></li>\n</ul>\n",
-
-		"*   List\n    * Nested list\n    # Nested header\n",
-		"<ul>\n<li><p>List</p>\n\n<ul>\n<li><p>Nested list</p>\n\n" +
-			"<h1>Nested header</h1></li>\n</ul></li>\n</ul>\n",
-
-		"#Header 1 \\#\n",
-		"<h1>Header 1 #</h1>\n",
-
-		"#Header 1 \\# foo\n",
-		"<h1>Header 1 # foo</h1>\n",
-
-		"#Header 1 #\\##\n",
-		"<h1>Header 1 ##</h1>\n",
+func must(err error) {
+	if err != nil {
+		panic(err.Error())
 	}
+}
+
+func writeTest(file string, tests []string) {
+	path := filepath.Join("testdata", file)
+	f, err := os.Create(path)
+	must(err)
+	defer f.Close()
+	lastIdx := len(tests) - 1
+	for i, s := range tests {
+		if !strings.HasSuffix(s, "\n") {
+			s += "\n"
+		}
+		fmt.Fprint(f, s)
+		if i != lastIdx {
+			fmt.Fprint(f, "+++\n")
+		}
+	}
+}
+
+func TestPrefixHeaderNoExtensions(t *testing.T) {
+	tests := readTestFile2(t, "PrefixHeaderNoExtensions.tests")
 	doTestsBlock(t, tests, 0)
 }
 
