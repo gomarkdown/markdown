@@ -37,13 +37,11 @@ var (
 )
 
 func TestReference(t *testing.T) {
-	t.Parallel()
 	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines")
 	doTestsReference(t, files, 0)
 }
 
 func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
-	t.Parallel()
 	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines no empty line before block")
 	doTestsReference(t, files, parser.NoEmptyLineBeforeBlock)
 }

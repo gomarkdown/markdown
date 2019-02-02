@@ -9,7 +9,6 @@ import (
 )
 
 func TestBlockAttribute(t *testing.T) {
-	t.Parallel()
 	p := NewWithExtensions(CommonExtensions | Attributes)
 	tests := []struct {
 		data []byte

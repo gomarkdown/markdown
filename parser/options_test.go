@@ -30,7 +30,6 @@ func blockTitleHook(data []byte) (ast.Node, []byte, int) {
 }
 
 func TestOptions(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
 		data []byte
 		want []byte

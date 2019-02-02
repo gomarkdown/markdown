@@ -9,7 +9,6 @@ import (
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"# Header 1\n",
 		"<h1>Header 1</h1>\n",
@@ -79,7 +78,6 @@ func TestPrefixHeaderNoExtensions(t *testing.T) {
 }
 
 func TestPrefixHeaderSpaceExtension(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"# Header 1\n",
 		"<h1>Header 1</h1>\n",
@@ -140,7 +138,6 @@ func TestPrefixHeaderSpaceExtension(t *testing.T) {
 }
 
 func TestPrefixHeaderIdExtension(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"# Header 1 {#someid}\n",
 		"<h1 id=\"someid\">Header 1</h1>\n",
@@ -201,7 +198,6 @@ func TestPrefixHeaderIdExtension(t *testing.T) {
 }
 
 func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"# header 1 {#someid}\n",
 		"<h1 id=\"PRE:someid:POST\">header 1</h1>\n",
@@ -254,7 +250,6 @@ func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 }
 
 func TestPrefixAutoHeaderIdExtension(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"# Header 1\n",
 		"<h1 id=\"header-1\">Header 1</h1>\n",

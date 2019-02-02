@@ -5,7 +5,6 @@ import (
 )
 
 func TestIsFenceLine(t *testing.T) {
-	t.Parallel()
 	tests := []struct {
 		data            []byte
 		syntaxRequested bool

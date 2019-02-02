@@ -1043,7 +1043,6 @@ This uses footnote C.[^C]
 }
 
 func TestInlineComments(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"Hello <!-- there ->\n",
 		"<p>Hello &lt;!&mdash; there &ndash;&gt;</p>\n",
@@ -1073,7 +1072,6 @@ func TestInlineComments(t *testing.T) {
 }
 
 func TestSmartDoubleQuotes(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"this should be normal \"quoted\" text.\n",
 		"<p>this should be normal &ldquo;quoted&rdquo; text.</p>\n",
@@ -1086,7 +1084,6 @@ func TestSmartDoubleQuotes(t *testing.T) {
 }
 
 func TestSmartDoubleQuotesNBSP(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"this should be normal \"quoted\" text.\n",
 		"<p>this should be normal &ldquo;&nbsp;quoted&nbsp;&rdquo; text.</p>\n",
@@ -1099,7 +1096,6 @@ func TestSmartDoubleQuotesNBSP(t *testing.T) {
 }
 
 func TestSmartAngledDoubleQuotes(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"this should be angled \"quoted\" text.\n",
 		"<p>this should be angled &laquo;quoted&raquo; text.</p>\n",
@@ -1112,7 +1108,6 @@ func TestSmartAngledDoubleQuotes(t *testing.T) {
 }
 
 func TestSmartAngledDoubleQuotesNBSP(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"this should be angled \"quoted\" text.\n",
 		"<p>this should be angled &laquo;&nbsp;quoted&nbsp;&raquo; text.</p>\n",
@@ -1125,7 +1120,6 @@ func TestSmartAngledDoubleQuotesNBSP(t *testing.T) {
 }
 
 func TestSmartFractions(t *testing.T) {
-	t.Parallel()
 	var tests = []string{
 		"1/2, 1/4 and 3/4; 1/4th and 3/4ths\n",
 		"<p>&frac12;, &frac14; and &frac34;; &frac14;th and &frac34;ths</p>\n",
@@ -1144,7 +1138,6 @@ func TestSmartFractions(t *testing.T) {
 }
 
 func TestDisableSmartDashes(t *testing.T) {
-	t.Parallel()
 	doTestsInlineParam(t, []string{
 		"foo - bar\n",
 		"<p>foo - bar</p>\n",
@@ -1180,7 +1173,6 @@ func TestDisableSmartDashes(t *testing.T) {
 }
 
 func TestSkipLinks(t *testing.T) {
-	t.Parallel()
 	doTestsInlineParam(t, []string{
 		"[foo](gopher://foo.bar)",
 		"<p><tt>foo</tt></p>\n",
@@ -1193,7 +1185,6 @@ func TestSkipLinks(t *testing.T) {
 }
 
 func TestSkipImages(t *testing.T) {
-	t.Parallel()
 	doTestsInlineParam(t, []string{
 		"![foo](/bar/)\n",
 		"<p></p>\n",
@@ -1203,7 +1194,6 @@ func TestSkipImages(t *testing.T) {
 }
 
 func TestUseXHTML(t *testing.T) {
-	t.Parallel()
 	doTestsParam(t, []string{
 		"---",
 		"<hr>\n",
@@ -1215,7 +1205,6 @@ func TestUseXHTML(t *testing.T) {
 }
 
 func TestSkipHTML(t *testing.T) {
-	t.Parallel()
 	doTestsParam(t, []string{
 		"<div class=\"foo\"></div>\n\ntext\n\n<form>the form</form>",
 		"<p>text</p>\n\n<p>the form</p>\n",

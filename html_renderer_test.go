@@ -14,7 +14,6 @@ func renderHookEmpty(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus,
 }
 
 func TestRenderNodeHookEmpty(t *testing.T) {
-	t.Parallel()
 	tests := []string{
 		"[foo](gopher://foo.bar)",
 		"",
@@ -42,7 +41,6 @@ func renderHookCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkSta
 }
 
 func TestRenderNodeHookCode(t *testing.T) {
-	t.Parallel()
 	tests := []string{
 		"a\n```go\ncode\n```\nb",
 		"<p>a</p>\ncode_replacement\n<p>b</p>\n",

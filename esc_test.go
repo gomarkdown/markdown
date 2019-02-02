@@ -8,7 +8,6 @@ import (
 )
 
 func TestEsc(t *testing.T) {
-	t.Parallel()
 	tests := []string{
 		"abc", "abc",
 		"a&c", "a&amp;c",
