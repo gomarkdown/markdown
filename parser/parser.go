@@ -20,8 +20,8 @@ type Extensions int
 const (
 	NoExtensions           Extensions = 0
 	NoIntraEmphasis        Extensions = 1 << iota // Ignore emphasis markers inside words
-	Tables                                        // Render tables
-	FencedCode                                    // Render fenced code blocks
+	Tables                                        // Parse tables
+	FencedCode                                    // Parse fenced code blocks
 	Autolink                                      // Detect embedded URLs that are not explicitly marked
 	Strikethrough                                 // Strikethrough text using ~~test~~
 	LaxHTMLBlocks                                 // Loosen up HTML block parsing rules
