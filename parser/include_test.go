@@ -1,6 +1,9 @@
 package parser
 
-import "testing"
+import (
+	"runtime"
+	"testing"
+)
 
 func TestIsInclude(t *testing.T) {
 	tests := []struct {
@@ -99,7 +102,14 @@ func TestIsCodeInclude(t *testing.T) {
 	}
 }
 
+func isWindows() bool {
+	return runtime.GOOS == "windows"
+}
+
 func TestPush(t *testing.T) {
+	if isWindows() {
+		return
+	}
 	i := newIncStack()
 	if i.Push("/new/foo"); i.stack[0] != "/new" {
 		t.Errorf("want %s, got %s", "/new", i.stack[0])
