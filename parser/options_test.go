@@ -49,7 +49,7 @@ hallo
 	}
 
 	p := New()
-	p.Opts = ParserOptions{ParserHook: blockTitleHook}
+	p.Opts = Options{ParserHook: blockTitleHook}
 	buf := &bytes.Buffer{}
 
 	for _, test := range tests {

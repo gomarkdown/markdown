@@ -7,12 +7,12 @@ import (
 // Flags control optional behavior of parser.
 type Flags int
 
-// ParserOptions is a collection of supplementary parameters tweaking the behavior of various parts of the parser.
-type ParserOptions struct {
+// Options is a collection of supplementary parameters tweaking the behavior of various parts of the parser.
+type Options struct {
 	ParserHook    BlockFunc
 	ReadIncludeFn ReadIncludeFunc
 
-	Flags Flags // Flags allow customizing the parser's behavior, beyond the extensions which control what is parsed.
+	Flags Flags // Flags allow customizing parser's behavior
 }
 
 // Parser renderer configuration options.
