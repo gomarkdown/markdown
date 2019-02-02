@@ -40,7 +40,7 @@ func TestPrefixHeaderNoExtensions(t *testing.T) {
 }
 
 func TestPrefixHeaderSpaceExtension(t *testing.T) {
-	tests := readTestFile2(t, "TestPrefixHeaderSpaceExtension")
+	tests := readTestFile2(t, "PrefixHeaderSpaceExtension.tests")
 	doTestsBlock(t, tests, parser.SpaceHeadings)
 }
 
