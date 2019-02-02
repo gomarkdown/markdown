@@ -10,16 +10,14 @@ import (
 
 // Markdown 1.0.3 reference tests
 
-func TestReference(t *testing.T) {
-	t.Parallel()
-	files := []string{
+var (
+	refFiles = []string{
 		"Amps and angle encoding",
 		"Auto links",
 		"Backslash escapes",
 		"Blockquotes with code blocks",
 		"Code Blocks",
 		"Code Spans",
-		"Hard-wrapped paragraphs with list-like lines",
 		"Horizontal rules",
 		"Inline HTML (Advanced)",
 		"Inline HTML (Simple)",
@@ -36,35 +34,17 @@ func TestReference(t *testing.T) {
 		"Tabs",
 		"Tidyness",
 	}
+)
+
+func TestReference(t *testing.T) {
+	t.Parallel()
+	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines")
 	doTestsReference(t, files, 0)
 }
 
 func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 	t.Parallel()
-	files := []string{
-		"Amps and angle encoding",
-		"Auto links",
-		"Backslash escapes",
-		"Blockquotes with code blocks",
-		"Code Blocks",
-		"Code Spans",
-		"Hard-wrapped paragraphs with list-like lines no empty line before block",
-		"Horizontal rules",
-		"Inline HTML (Advanced)",
-		"Inline HTML (Simple)",
-		"Inline HTML comments",
-		"Links, inline style",
-		"Links, reference style",
-		"Links, shortcut references",
-		"Literal quotes in titles",
-		"Markdown Documentation - Basics",
-		"Markdown Documentation - Syntax",
-		"Nested blockquotes",
-		"Ordered and unordered lists",
-		"Strong and em together",
-		"Tabs",
-		"Tidyness",
-	}
+	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines no empty line before block")
 	doTestsReference(t, files, parser.NoEmptyLineBeforeBlock)
 }
 
@@ -170,30 +150,7 @@ func BenchmarkReferenceTidyness(b *testing.B) {
 
 func BenchmarkReference(b *testing.B) {
 	params := TestParams{extensions: parser.CommonExtensions}
-	files := []string{
-		"Amps and angle encoding",
-		"Auto links",
-		"Backslash escapes",
-		"Blockquotes with code blocks",
-		"Code Blocks",
-		"Code Spans",
-		"Hard-wrapped paragraphs with list-like lines",
-		"Horizontal rules",
-		"Inline HTML (Advanced)",
-		"Inline HTML (Simple)",
-		"Inline HTML comments",
-		"Links, inline style",
-		"Links, reference style",
-		"Links, shortcut references",
-		"Literal quotes in titles",
-		"Markdown Documentation - Basics",
-		"Markdown Documentation - Syntax",
-		"Nested blockquotes",
-		"Ordered and unordered lists",
-		"Strong and em together",
-		"Tabs",
-		"Tidyness",
-	}
+	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines")
 	var tests []string
 	for _, basename := range files {
 		filename := filepath.Join("testdata", basename+".text")
