@@ -1,3 +1,15 @@
+1. list
+
+
+    code maybe
++++
+<ol>
+<li>list</li>
+</ol>
+
+<pre><code>code maybe
+</code></pre>
++++
 not list
 
     code maybe
@@ -8,17 +20,6 @@ not list
 </code></pre>
 +++
 1. list
-
-    code maybe
-+++
-<ol>
-<li><p>list</p>
-
-<p>code maybe</p></li>
-</ol>
-+++
-1. list
-
 
     code maybe
 +++

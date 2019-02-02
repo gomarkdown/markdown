@@ -300,7 +300,8 @@ func (p *Parser) block(data []byte) {
 		if i := p.oliPrefix(data); i > 0 {
 			start := 0
 			if i > 2 && p.extensions&OrderedListStart != 0 {
-				start, _ = strconv.Atoi(string(data[:i-2])) // this cannot fail because we just est. the thing *is* a number.
+				s := string(data[:i-2])
+				start, _ = strconv.Atoi(s)
 				if start == 1 {
 					start = 0
 				}
@@ -1586,6 +1587,7 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 
 	// process the following lines
 	containsBlankLine := false
+	nBlankLines := 0
 	sublist := 0
 
 gatherlines:
@@ -1602,7 +1604,13 @@ gatherlines:
 		if p.isEmpty(data[line:i]) > 0 {
 			containsBlankLine = true
 			line = i
+			nBlankLines++
+			if nBlankLines > 1 && p.extensions&EmptyLinesBreakList != 0 {
+				break gatherlines
+			}
 			continue
+		} else {
+			nBlankLines = 0
 		}
 
 		// calculate the indentation

@@ -39,6 +39,7 @@ const (
 	OrderedListStart                              // Keep track of the first number used when starting an ordered list.
 	Attributes                                    // Block Attributes
 	SuperSubscript                                // Super- and subscript support: 2^10^, H~2~O.
+	EmptyLinesBreakList                           // 2 empty lines break out of list
 	Includes                                      // Support including other files.
 	Mmark                                         // Support Mmark syntax, see https://mmark.nl/syntax
 
