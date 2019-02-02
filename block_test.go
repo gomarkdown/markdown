@@ -1737,3 +1737,8 @@ func TestSpaceHeadings(t *testing.T) {
 	}
 	doTestsParam(t, tests, TestParams{extensions: parser.SpaceHeadings})
 }
+
+func TestCodeInList(t *testing.T) {
+	tests := readTestFile2(t, "code_in_list.test")
+	doTestsParam(t, tests, TestParams{extensions: parser.CommonExtensions})
+}
