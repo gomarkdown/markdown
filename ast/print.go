@@ -136,6 +136,9 @@ func printRecur(w io.Writer, node Node, prefix string, depth int) {
 		if v.Tight {
 			content += "tight "
 		}
+		if v.IsFootnotesList {
+			content += "footnotes "
+		}
 		flags := getListFlags(v.ListFlags)
 		if len(flags) > 0 {
 			content += "flags=" + flags + " "
@@ -144,6 +147,9 @@ func printRecur(w io.Writer, node Node, prefix string, depth int) {
 	case *ListItem:
 		if v.Tight {
 			content += "tight "
+		}
+		if v.IsFootnotesList {
+			content += "footnotes "
 		}
 		flags := getListFlags(v.ListFlags)
 		if len(flags) > 0 {

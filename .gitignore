@@ -9,3 +9,5 @@ tags
 fuzz-workdir/
 markdown-fuzz.zip
 coverage.txt
+testdata/*_got.md
+testdata/*_ast.txt

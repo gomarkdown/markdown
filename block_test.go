@@ -1740,6 +1740,6 @@ func TestSpaceHeadings(t *testing.T) {
 
 func TestCodeInList(t *testing.T) {
 	tests := readTestFile2(t, "code_in_list.test")
-	exts := parser.CommonExtensions | parser.OrderedListStart | parser.EmptyLinesBreakList
+	exts := parser.CommonExtensions
 	doTestsParam(t, tests, TestParams{extensions: exts})
 }

@@ -1587,7 +1587,6 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 
 	// process the following lines
 	containsBlankLine := false
-	nBlankLines := 0
 	sublist := 0
 
 gatherlines:
@@ -1604,13 +1603,7 @@ gatherlines:
 		if p.isEmpty(data[line:i]) > 0 {
 			containsBlankLine = true
 			line = i
-			nBlankLines++
-			if nBlankLines > 1 && p.extensions&EmptyLinesBreakList != 0 {
-				break gatherlines
-			}
 			continue
-		} else {
-			nBlankLines = 0
 		}
 
 		// calculate the indentation

@@ -4,11 +4,10 @@
     code maybe
 +++
 <ol>
-<li>list</li>
-</ol>
+<li><p>list</p>
 
-<pre><code>code maybe
-</code></pre>
+<p>code maybe</p></li>
+</ol>
 +++
 not list
 

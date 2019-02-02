@@ -7,6 +7,7 @@ import (
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // This prints AST of parsed markdown document.
@@ -29,7 +30,9 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Couldn't open '%s', error: '%s'\n", fileName, err)
 			continue
 		}
-		doc := markdown.Parse(d, nil)
+		exts := parser.CommonExtensions // parser.OrderedListStart | parser.NoEmptyLineBeforeBlock
+		p := parser.NewWithExtensions(exts)
+		doc := markdown.Parse(d, p)
 		fmt.Printf("Ast of file '%s':\n", fileName)
 		ast.PrintWithPrefix(os.Stdout, doc, " ")
 		fmt.Print("\n")
