@@ -1,0 +1,67 @@
+nothing inline
++++
+<p>nothing inline</p>
++++
+simple *inline* test
++++
+<p>simple <em>inline</em> test</p>
++++
+*at the* beginning
++++
+<p><em>at the</em> beginning</p>
++++
+at the *end*
++++
+<p>at the <em>end</em></p>
++++
+*try two* in *one line*
++++
+<p><em>try two</em> in <em>one line</em></p>
++++
+over *two\nlines* test
++++
+<p>over <em>two\nlines</em> test</p>
++++
+odd *number of* markers* here
++++
+<p>odd <em>number of</em> markers* here</p>
++++
+odd *number\nof* markers* here
++++
+<p>odd <em>number\nof</em> markers* here</p>
++++
+simple _inline_ test
++++
+<p>simple <em>inline</em> test</p>
++++
+_at the_ beginning
++++
+<p><em>at the</em> beginning</p>
++++
+at the _end_
++++
+<p>at the <em>end</em></p>
++++
+_try two_ in _one line_
++++
+<p><em>try two</em> in <em>one line</em></p>
++++
+over _two\nlines_ test
++++
+<p>over <em>two\nlines</em> test</p>
++++
+odd _number of_ markers_ here
++++
+<p>odd <em>number of</em> markers_ here</p>
++++
+odd _number\nof_ markers_ here
++++
+<p>odd <em>number\nof</em> markers_ here</p>
++++
+mix of *markers_
++++
+<p>mix of *markers_</p>
++++
+*What is A\* algorithm?*
++++
+<p><em>What is A* algorithm?</em></p>

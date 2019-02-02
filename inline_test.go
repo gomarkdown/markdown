@@ -11,59 +11,8 @@ import (
 )
 
 func TestEmphasis(t *testing.T) {
-	var tests = []string{
-		"nothing inline\n",
-		"<p>nothing inline</p>\n",
-
-		"simple *inline* test\n",
-		"<p>simple <em>inline</em> test</p>\n",
-
-		"*at the* beginning\n",
-		"<p><em>at the</em> beginning</p>\n",
-
-		"at the *end*\n",
-		"<p>at the <em>end</em></p>\n",
-
-		"*try two* in *one line*\n",
-		"<p><em>try two</em> in <em>one line</em></p>\n",
-
-		"over *two\nlines* test\n",
-		"<p>over <em>two\nlines</em> test</p>\n",
-
-		"odd *number of* markers* here\n",
-		"<p>odd <em>number of</em> markers* here</p>\n",
-
-		"odd *number\nof* markers* here\n",
-		"<p>odd <em>number\nof</em> markers* here</p>\n",
-
-		"simple _inline_ test\n",
-		"<p>simple <em>inline</em> test</p>\n",
-
-		"_at the_ beginning\n",
-		"<p><em>at the</em> beginning</p>\n",
-
-		"at the _end_\n",
-		"<p>at the <em>end</em></p>\n",
-
-		"_try two_ in _one line_\n",
-		"<p><em>try two</em> in <em>one line</em></p>\n",
-
-		"over _two\nlines_ test\n",
-		"<p>over <em>two\nlines</em> test</p>\n",
-
-		"odd _number of_ markers_ here\n",
-		"<p>odd <em>number of</em> markers_ here</p>\n",
-
-		"odd _number\nof_ markers_ here\n",
-		"<p>odd <em>number\nof</em> markers_ here</p>\n",
-
-		"mix of *markers_\n",
-		"<p>mix of *markers_</p>\n",
-
-		"*What is A\\* algorithm?*\n",
-		"<p><em>What is A* algorithm?</em></p>\n",
-	}
-	doTestsInline(t, tests)
+	tests := readTestFile2(t, "emphasis.test")
+	doTestsInlineParam(t, tests, TestParams{})
 }
 
 func TestReferenceOverride(t *testing.T) {
