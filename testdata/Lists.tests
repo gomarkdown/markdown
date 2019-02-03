@@ -1,0 +1,15 @@
+1. This is the code in the Text Editor:
+
+
+```
+using System;
+namespace FirstCsharp
+```
++++
+<ol>
+<li>This is the code in the Text Editor:</li>
+</ol>
+
+<pre><code>using System;
+namespace FirstCsharp
+</code></pre>

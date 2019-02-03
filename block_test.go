@@ -215,3 +215,9 @@ func TestCodeInList(t *testing.T) {
 	exts := parser.CommonExtensions
 	doTestsParam(t, tests, TestParams{extensions: exts})
 }
+
+func TestLists(t *testing.T) {
+	tests := readTestFile2(t, "Lists.tests")
+	exts := parser.CommonExtensions
+	doTestsParam(t, tests, TestParams{extensions: exts})
+}
