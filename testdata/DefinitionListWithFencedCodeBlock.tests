@@ -1,0 +1,19 @@
+one:
+: def1
+
+two:
+: def2
+
+    ~~~
+    code
+    ~~~
++++
+<dl>
+<dt>one:</dt>
+<dd><p>def1</p></dd>
+<dt>two:</dt>
+<dd><p>def2</p>
+
+<pre><code>code
+</code></pre></dd>
+</dl>

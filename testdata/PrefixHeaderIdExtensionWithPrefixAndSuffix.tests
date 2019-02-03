@@ -1,0 +1,73 @@
+# header 1 {#someid}
++++
+<h1 id="PRE:someid:POST">header 1</h1>
++++
+## header 2 {#someid}
++++
+<h2 id="PRE:someid:POST">header 2</h2>
++++
+### header 3 {#someid}
++++
+<h3 id="PRE:someid:POST">header 3</h3>
++++
+#### header 4 {#someid}
++++
+<h4 id="PRE:someid:POST">header 4</h4>
++++
+##### header 5 {#someid}
++++
+<h5 id="PRE:someid:POST">header 5</h5>
++++
+###### header 6 {#someid}
++++
+<h6 id="PRE:someid:POST">header 6</h6>
++++
+####### header 7 {#someid}
++++
+<h6 id="PRE:someid:POST"># header 7</h6>
++++
+# header 1 # {#someid}
++++
+<h1 id="PRE:someid:POST">header 1</h1>
++++
+## header 2 ## {#someid}
++++
+<h2 id="PRE:someid:POST">header 2</h2>
++++
+* List
+# Header {#someid}
+* List
++++
+<ul>
+<li><p>List</p>
+
+<h1 id="PRE:someid:POST">Header</h1></li>
+
+<li><p>List</p></li>
+</ul>
++++
+* List
+#Header {#someid}
+* List
++++
+<ul>
+<li><p>List</p>
+
+<h1 id="PRE:someid:POST">Header</h1></li>
+
+<li><p>List</p></li>
+</ul>
++++
+*   List
+    * Nested list
+    # Nested header {#someid}
++++
+<ul>
+<li><p>List</p>
+
+<ul>
+<li><p>Nested list</p>
+
+<h1 id="PRE:someid:POST">Nested header</h1></li>
+</ul></li>
+</ul>

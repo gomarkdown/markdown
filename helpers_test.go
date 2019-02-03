@@ -51,7 +51,7 @@ func doTestsParam(t *testing.T, tests []string, params TestParams) {
 		expected := tests[i+1]
 		got := runMarkdown(input, params)
 		if got != expected {
-			t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot    [%#v]\nInput:\n%s\nExpected:\n%s\nGot:\n%s\n",
+			t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\nInput:\n%s\nExpected:\n%s\nGot:\n%s\n",
 				input, expected, got, input, expected, got)
 		}
 	}

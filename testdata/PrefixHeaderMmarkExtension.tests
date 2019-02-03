@@ -1,0 +1,43 @@
+.# Header 1
++++
+<h1 class="special">Header 1</h1>
++++
+.## Header 2
++++
+<p>.## Header 2</p>
++++
+Hello
+.# Header 1
+Goodbye
++++
+<p>Hello</p>
+
+<h1 class="special">Header 1</h1>
+
+<p>Goodbye</p>
++++
+* List
+.# Header
+* List
++++
+<ul>
+<li><p>List</p>
+
+<h1 class="special">Header</h1></li>
+
+<li><p>List</p></li>
+</ul>
++++
+*   List
+    * Nested list
+    .# Nested header
++++
+<ul>
+<li><p>List</p>
+
+<ul>
+<li><p>Nested list</p>
+
+<h1 class="special">Nested header</h1></li>
+</ul></li>
+</ul>

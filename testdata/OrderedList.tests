@@ -1,0 +1,251 @@
+1. Hello
++++
+<ol>
+<li>Hello</li>
+</ol>
++++
+1. Yin
+2. Yang
++++
+<ol>
+<li>Yin</li>
+<li>Yang</li>
+</ol>
++++
+1. Ting
+2. Bong
+3. Goo
++++
+<ol>
+<li>Ting</li>
+<li>Bong</li>
+<li>Goo</li>
+</ol>
++++
+1. Yin
+
+2. Yang
++++
+<ol>
+<li><p>Yin</p></li>
+
+<li><p>Yang</p></li>
+</ol>
++++
+1. Ting
+
+2. Bong
+3. Goo
++++
+<ol>
+<li><p>Ting</p></li>
+
+<li><p>Bong</p></li>
+
+<li><p>Goo</p></li>
+</ol>
++++
+1 Hello
++++
+<p>1 Hello</p>
++++
+1.Hello
++++
+<p>1.Hello</p>
++++
+1.  Hello 
++++
+<ol>
+<li>Hello</li>
+</ol>
++++
+1.  Hello 
+    Next line 
++++
+<ol>
+<li>Hello
+Next line</li>
+</ol>
++++
+Paragraph
+1. No linebreak
++++
+<p>Paragraph
+1. No linebreak</p>
++++
+Paragraph
+
+1. Linebreak
++++
+<p>Paragraph</p>
+
+<ol>
+<li>Linebreak</li>
+</ol>
++++
+1.  List
+    1. Nested list
++++
+<ol>
+<li>List
+
+<ol>
+<li>Nested list</li>
+</ol></li>
+</ol>
++++
+1.  List
+
+    1. Nested list
++++
+<ol>
+<li><p>List</p>
+
+<ol>
+<li>Nested list</li>
+</ol></li>
+</ol>
++++
+1.  List
+    Second line
+
+    1. Nested
++++
+<ol>
+<li><p>List
+Second line</p>
+
+<ol>
+<li>Nested</li>
+</ol></li>
+</ol>
++++
+1.  List
+    1. Nested
+
+    Continued
++++
+<ol>
+<li><p>List</p>
+
+<ol>
+<li>Nested</li>
+</ol>
+
+<p>Continued</p></li>
+</ol>
++++
+1.  List
+   1. shallow indent
++++
+<ol>
+<li>List
+
+<ol>
+<li>shallow indent</li>
+</ol></li>
+</ol>
++++
+1. List
+ 1. shallow indent
+  2. part of second list
+   3. still second
+    4. almost there
+     1. third level
++++
+<ol>
+<li>List
+
+<ol>
+<li>shallow indent</li>
+<li>part of second list</li>
+<li>still second</li>
+<li>almost there
+
+<ol>
+<li>third level</li>
+</ol></li>
+</ol></li>
+</ol>
++++
+1. List
+        extra indent, same paragraph
++++
+<ol>
+<li>List
+    extra indent, same paragraph</li>
+</ol>
++++
+1. List
+
+        code block
++++
+<ol>
+<li><p>List</p>
+
+<pre><code>code block
+</code></pre></li>
+</ol>
++++
+1. List
+
+          code block with spaces
++++
+<ol>
+<li><p>List</p>
+
+<pre><code>  code block with spaces
+</code></pre></li>
+</ol>
++++
+1. List
+    * Mixted list
++++
+<ol>
+<li>List
+
+<ul>
+<li>Mixted list</li>
+</ul></li>
+</ol>
++++
+1. List
+ * Mixed list
++++
+<ol>
+<li>List
+
+<ul>
+<li>Mixed list</li>
+</ul></li>
+</ol>
++++
+* Start with unordered
+ 1. Ordered
++++
+<ul>
+<li>Start with unordered
+
+<ol>
+<li>Ordered</li>
+</ol></li>
+</ul>
++++
+* Start with unordered
+    1. Ordered
++++
+<ul>
+<li>Start with unordered
+
+<ol>
+<li>Ordered</li>
+</ol></li>
+</ul>
++++
+1. numbers
+1. are ignored
++++
+<ol>
+<li>numbers</li>
+<li>are ignored</li>
+</ol>

@@ -1,0 +1,7 @@
+$y=a+b$$
++++
+<p><span class="math inline">\(y=a+b\)</span>$</p>
++++
+$$y_2=a_3+b_4$$
++++
+<p><span class="math display">\[y_2=a_3+b_4\]</span></p>

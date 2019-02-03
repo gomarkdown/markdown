@@ -1,0 +1,149 @@
+<div></div>
++++
+<div></div>
++++
+<div>
+</div>
++++
+<div>
+</div>
++++
+<div>
+</div>
+Paragraph
++++
+<p><div>
+</div>
+Paragraph</p>
++++
+<div class="foo">
+</div>
++++
+<div class="foo">
+</div>
++++
+<div>
+Anything here
+</div>
++++
+<div>
+Anything here
+</div>
++++
+<div>
+  Anything here
+</div>
++++
+<div>
+  Anything here
+</div>
++++
+<div>
+Anything here
+  </div>
++++
+<div>
+Anything here
+  </div>
++++
+<div>
+This is *not* &proceessed
+</div>
++++
+<div>
+This is *not* &proceessed
+</div>
++++
+<faketag>
+  Something
+</faketag>
++++
+<p><faketag>
+  Something
+</faketag></p>
++++
+<div>
+  Something here
+</divv>
++++
+<p><div>
+  Something here
+</divv></p>
++++
+Paragraph
+<div>
+Here? >&<
+</div>
++++
+<p>Paragraph
+<div>
+Here? &gt;&amp;&lt;
+</div></p>
++++
+Paragraph
+
+<div>
+How about here? >&<
+</div>
++++
+<p>Paragraph</p>
+
+<div>
+How about here? >&<
+</div>
++++
+Paragraph
+<div>
+Here? >&<
+</div>
+And here?
++++
+<p>Paragraph
+<div>
+Here? &gt;&amp;&lt;
+</div>
+And here?</p>
++++
+Paragraph
+
+<div>
+How about here? >&<
+</div>
+And here?
++++
+<p>Paragraph</p>
+
+<p><div>
+How about here? &gt;&amp;&lt;
+</div>
+And here?</p>
++++
+Paragraph
+<div>
+Here? >&<
+</div>
+
+And here?
++++
+<p>Paragraph
+<div>
+Here? &gt;&amp;&lt;
+</div></p>
+
+<p>And here?</p>
++++
+Paragraph
+
+<div>
+How about here? >&<
+</div>
+
+And here?
++++
+<p>Paragraph</p>
+
+<div>
+How about here? >&<
+</div>
+
+<p>And here?</p>

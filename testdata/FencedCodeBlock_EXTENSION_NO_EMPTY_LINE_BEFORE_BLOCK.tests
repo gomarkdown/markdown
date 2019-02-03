@@ -1,0 +1,168 @@
+``` go
+func foo() bool {
+	return true;
+}
+```
++++
+<pre><code class="language-go">func foo() bool {
+	return true;
+}
+</code></pre>
++++
+``` c
+/* special & char < > " escaping */
+```
++++
+<pre><code class="language-c">/* special &amp; char &lt; &gt; &quot; escaping */
+</code></pre>
++++
+``` c
+no *inline* processing ~~of text~~
+```
++++
+<pre><code class="language-c">no *inline* processing ~~of text~~
+</code></pre>
++++
+```
+No language
+```
++++
+<pre><code>No language
+</code></pre>
++++
+``` {ocaml}
+language in braces
+```
++++
+<pre><code class="language-ocaml">language in braces
+</code></pre>
++++
+```    {ocaml}      
+with extra whitespace
+```
++++
+<pre><code class="language-ocaml">with extra whitespace
+</code></pre>
++++
+```{   ocaml   }
+with extra whitespace
+```
++++
+<pre><code class="language-ocaml">with extra whitespace
+</code></pre>
++++
+~ ~~ java
+With whitespace
+~~~
++++
+<p>~ ~~ java
+With whitespace
+~~~</p>
++++
+~~
+only two
+~~
++++
+<p>~~
+only two
+~~</p>
++++
+```` python
+extra
+````
++++
+<pre><code class="language-python">extra
+</code></pre>
++++
+~~~ perl
+three to start, four to end
+~~~~
++++
+<p>~~~ perl
+three to start, four to end
+~~~~</p>
++++
+~~~~ perl
+four to start, three to end
+~~~
++++
+<p>~~~~ perl
+four to start, three to end
+~~~</p>
++++
+~~~ bash
+tildes
+~~~
++++
+<pre><code class="language-bash">tildes
+</code></pre>
++++
+``` lisp
+no ending
++++
+<p>``` lisp
+no ending</p>
++++
+~~~ lisp
+end with language
+~~~ lisp
++++
+<p>~~~ lisp
+end with language
+~~~ lisp</p>
++++
+```
+mismatched begin and end
+~~~
++++
+<p>```
+mismatched begin and end
+~~~</p>
++++
+~~~
+mismatched begin and end
+```
++++
+<p>~~~
+mismatched begin and end
+```</p>
++++
+   ``` oz
+leading spaces
+```
++++
+<pre><code class="language-oz">leading spaces
+</code></pre>
++++
+  ``` oz
+leading spaces
+ ```
++++
+<pre><code class="language-oz">leading spaces
+</code></pre>
++++
+ ``` oz
+leading spaces
+  ```
++++
+<pre><code class="language-oz">leading spaces
+</code></pre>
++++
+``` oz
+leading spaces
+   ```
++++
+<pre><code class="language-oz">leading spaces
+</code></pre>
++++
+    ``` oz
+leading spaces
+    ```
++++
+<pre><code>``` oz
+</code></pre>
+
+<p>leading spaces</p>
+
+<pre><code>```
+</code></pre>

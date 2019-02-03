@@ -1,0 +1,109 @@
+Header 1
+========
++++
+<h1>Header 1</h1>
++++
+Header 2
+--------
++++
+<h2>Header 2</h2>
++++
+A
+=
++++
+<h1>A</h1>
++++
+B
+-
++++
+<h2>B</h2>
++++
+Paragraph
+Header
+=
++++
+<p>Paragraph</p>
+
+<h1>Header</h1>
++++
+Header
+===
+Paragraph
++++
+<h1>Header</h1>
+
+<p>Paragraph</p>
++++
+Header
+===
+Another header
+---
++++
+<h1>Header</h1>
+
+<h2>Another header</h2>
++++
+   Header
+======
++++
+<h1>Header</h1>
++++
+    Code
+========
++++
+<pre><code>Code
+</code></pre>
+
+<p>========</p>
++++
+Header with *inline*
+=====
++++
+<h1>Header with <em>inline</em></h1>
++++
+*   List
+    * Sublist
+    Not a header
+    ------
++++
+<ul>
+<li>List
+
+<ul>
+<li>Sublist
+Not a header
+------</li>
+</ul></li>
+</ul>
++++
+Paragraph
+
+
+
+
+Header
+===
++++
+<p>Paragraph</p>
+
+<h1>Header</h1>
++++
+Trailing space 
+====        
+
++++
+<h1>Trailing space</h1>
++++
+Trailing spaces
+====        
+
++++
+<h1>Trailing spaces</h1>
++++
+Double underline
+=====
+=====
++++
+<h1>Double underline</h1>
+
+<p>=====</p>

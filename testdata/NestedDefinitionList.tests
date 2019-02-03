@@ -1,0 +1,53 @@
+Term 1
+:   Definition
+Next line
+
+Term 2
+:   Definition b
+
+    Term 11
+    :   Definition c
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition
+Next line</p></dd>
+<dt>Term 2</dt>
+<dd><p>Definition b</p>
+
+<dl>
+<dt>Term 11</dt>
+<dd>Definition c</dd>
+</dl></dd>
+</dl>
++++
+Term 1
+:   Definition
+Next line
+
+Term 2
+:   Definition b
+
+    Term 11
+    :   Definition c
+
+    * sublist1
+    * sublist2
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition
+Next line</p></dd>
+<dt>Term 2</dt>
+<dd><p>Definition b</p>
+
+<dl>
+<dt>Term 11</dt>
+<dd>Definition c</dd>
+</dl>
+
+<ul>
+<li>sublist1</li>
+<li>sublist2</li>
+</ul></dd>
+</dl>

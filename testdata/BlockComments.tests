@@ -1,0 +1,39 @@
+Some text
+
+<!-- comment -->
++++
+<p>Some text</p>
+
+<!-- comment -->
++++
+Some text
+
+<!--
+
+multiline
+comment
+-->
++++
+<p>Some text</p>
+
+<!--
+
+multiline
+comment
+-->
++++
+Some text
+
+<!--
+
+<div><p>Commented</p>
+<span>html</span></div>
+-->
++++
+<p>Some text</p>
+
+<!--
+
+<div><p>Commented</p>
+<span>html</span></div>
+-->

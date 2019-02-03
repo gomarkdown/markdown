@@ -1,0 +1,106 @@
+Header 1
+========
++++
+<h1 id="header-1">Header 1</h1>
++++
+Header 2
+--------
++++
+<h2 id="header-2">Header 2</h2>
++++
+A
+=
++++
+<h1 id="a">A</h1>
++++
+B
+-
++++
+<h2 id="b">B</h2>
++++
+Paragraph
+Header
+=
++++
+<p>Paragraph</p>
+
+<h1 id="header">Header</h1>
++++
+Header
+===
+Paragraph
++++
+<h1 id="header">Header</h1>
+
+<p>Paragraph</p>
++++
+Header
+===
+Another header
+---
++++
+<h1 id="header">Header</h1>
+
+<h2 id="another-header">Another header</h2>
++++
+   Header
+======
++++
+<h1 id="header">Header</h1>
++++
+Header with *inline*
+=====
++++
+<h1 id="header-with-inline">Header with <em>inline</em></h1>
++++
+Paragraph
+
+
+
+
+Header
+===
++++
+<p>Paragraph</p>
+
+<h1 id="header">Header</h1>
++++
+Trailing space 
+====        
+
++++
+<h1 id="trailing-space">Trailing space</h1>
++++
+Trailing spaces
+====        
+
++++
+<h1 id="trailing-spaces">Trailing spaces</h1>
++++
+Double underline
+=====
+=====
++++
+<h1 id="double-underline">Double underline</h1>
+
+<p>=====</p>
++++
+Header
+======
+
+Header
+======
++++
+<h1 id="header">Header</h1>
+
+<h1 id="header-1">Header</h1>
++++
+Header 1
+========
+
+Header 1
+========
++++
+<h1 id="header-1">Header 1</h1>
+
+<h1 id="header-1-1">Header 1</h1>

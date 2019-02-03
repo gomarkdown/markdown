@@ -1,0 +1,107 @@
+> ```go
+package moo
+
+```
++++
+<blockquote>
+<pre><code class="language-go">package moo
+
+</code></pre>
+</blockquote>
++++
+> foo
+> 
+> ```go
+package moo
+```
+> 
+> goo.
++++
+<blockquote>
+<p>foo</p>
+
+<pre><code class="language-go">package moo
+</code></pre>
+
+<p>goo.</p>
+</blockquote>
++++
+> foo
+> 
+> quote
+continues
+```
++++
+<blockquote>
+<p>foo</p>
+
+<p>quote
+continues
+```</p>
+</blockquote>
++++
+> foo
+> 
+> ```go
+package moo
+```
+> 
+> goo.
+> 
+> ```go
+package zoo
+```
+> 
+> woo.
++++
+<blockquote>
+<p>foo</p>
+
+<pre><code class="language-go">package moo
+</code></pre>
+
+<p>goo.</p>
+
+<pre><code class="language-go">package zoo
+</code></pre>
+
+<p>woo.</p>
+</blockquote>
++++
+> plain quoted text
+> ```fenced
+code
+ with leading single space correctly preserved
+okay
+```
+> rest of quoted text
++++
+<blockquote>
+<p>plain quoted text</p>
+
+<pre><code class="language-fenced">code
+ with leading single space correctly preserved
+okay
+</code></pre>
+
+<p>rest of quoted text</p>
+</blockquote>
++++
+> plain quoted text
+> ```fenced
+> code
+>  with leading single space correctly preserved
+> okay
+> ```
+> rest of quoted text
++++
+<blockquote>
+<p>plain quoted text</p>
+
+<pre><code class="language-fenced">code
+ with leading single space correctly preserved
+okay
+</code></pre>
+
+<p>rest of quoted text</p>
+</blockquote>

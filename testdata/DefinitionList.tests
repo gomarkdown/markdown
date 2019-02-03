@@ -1,0 +1,224 @@
+Term 1
+:   Definition a
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+</dl>
++++
+Term 1
+:   Definition a 
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+</dl>
++++
+Term 1
+:   Definition a
+:   Definition b
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+<dd>Definition b</dd>
+</dl>
++++
+Term 1
+:   Definition a
+
+Term 2
+:   Definition b
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+<dt>Term 2</dt>
+<dd>Definition b</dd>
+</dl>
++++
+Term 1
+:   Definition a
+
+Term 2
+:   Definition b
+
+Term 3
+:   Definition c
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+<dt>Term 2</dt>
+<dd>Definition b</dd>
+<dt>Term 3</dt>
+<dd>Definition c</dd>
+</dl>
++++
+Term 1
+:   Definition a
+:   Definition b
+
+Term 2
+:   Definition c
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+<dd>Definition b</dd>
+<dt>Term 2</dt>
+<dd>Definition c</dd>
+</dl>
++++
+Term 1
+
+:   Definition a
+
+Term 2
+
+:   Definition b
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition a</p></dd>
+<dt>Term 2</dt>
+<dd><p>Definition b</p></dd>
+</dl>
++++
+Term 1
+
+:   Definition a
+
+:   Definition b
+
+Term 2
+
+:   Definition c
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition a</p></dd>
+<dd><p>Definition b</p></dd>
+<dt>Term 2</dt>
+<dd><p>Definition c</p></dd>
+</dl>
++++
+Term 1
+:   Definition a
+Next line
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a
+Next line</dd>
+</dl>
++++
+Term 1
+:   Definition a
+  Next line
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a
+Next line</dd>
+</dl>
++++
+Term 1
+:   Definition a 
+  Next line 
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a
+Next line</dd>
+</dl>
++++
+Term 1
+:   Definition a
+Next line
+
+Term 2
+:   Definition b
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a
+Next line</dd>
+<dt>Term 2</dt>
+<dd>Definition b</dd>
+</dl>
++++
+Term 1
+: Definition a
++++
+<dl>
+<dt>Term 1</dt>
+<dd>Definition a</dd>
+</dl>
++++
+Term 1
+:Definition a
++++
+<p>Term 1
+:Definition a</p>
++++
+Term 1
+
+:   Definition a
+
+Term 2
+
+:   Definition b
+
+Text 1
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition a</p></dd>
+<dt>Term 2</dt>
+<dd><p>Definition b</p></dd>
+</dl>
+
+<p>Text 1</p>
++++
+Term 1
+
+:   Definition a
+
+Text 1
+
+Term 2
+
+:   Definition b
+
+Text 2
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition a</p></dd>
+</dl>
+
+<p>Text 1</p>
+
+<dl>
+<dt>Term 2</dt>
+<dd><p>Definition b</p></dd>
+</dl>
+
+<p>Text 2</p>
++++
+Term 1
+: Definition a
+
+   * item1
+   * item2
++++
+<dl>
+<dt>Term 1</dt>
+<dd><p>Definition a</p>
+
+<ul>
+<li>item1</li>
+<li>item2</li>
+</ul></dd>
+</dl>
