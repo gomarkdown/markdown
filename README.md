@@ -40,8 +40,8 @@ import (
     "github.com/gomarkdown/markdown/parser"
 )
 
-extensions := html.CommonExtensions | html.AutoHeadingIDs
-parser := parser.NewWithExensions(extensions)
+extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+parser := parser.NewWithExtensions(extensions)
 
 md := []byte("markdown text")
 html := markdown.ToHTML(md, parser, nil)
