@@ -18,6 +18,7 @@ script:
     - go test -v ./...
     - go test -run=^$ -bench=BenchmarkReference -benchmem
     - ./s/test_with_codecoverage.sh
+    - ./s/ci_fuzzit.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
