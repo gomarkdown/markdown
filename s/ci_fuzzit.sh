@@ -1,6 +1,8 @@
 set -xe
 
 ## see our config, for debugging
+wd=`pwd`
+echo "pwd: ${pwd}"
 go env
 
 ## Install go-fuzz
@@ -8,7 +10,7 @@ go get -u github.com/dvyukov/go-fuzz/go-fuzz github.com/dvyukov/go-fuzz/go-fuzz-
 
 ## build and send to fuzzit
 go build ./...
-go-fuzz-build -libfuzzer -o fuzzer.a ./...
+go-fuzz-build -libfuzzer -o fuzzer.a .
 clang -fsanitize=fuzzer fuzzer.a -o fuzzer
 
 wget -q -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v2.0.0/fuzzit_Linux_x86_64
