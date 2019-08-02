@@ -19,4 +19,7 @@ wget -q -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v2.0.0/f
 chmod a+x fuzzit
 ./fuzzit auth ${FUZZIT_API_KEY}
 export TARGET_ID=2n6hO2dQzylLxX5GGhRG
+
+ls -lah
+
 ./fuzzit create job --type $1 --branch $TRAVIS_BRANCH --revision $TRAVIS_COMMIT $TARGET_ID ./fuzzer
