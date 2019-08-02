@@ -1,5 +1,7 @@
 set -xe
 
+export GO111MODULE="off"
+
 ## see our config, for debugging
 wd=`pwd`
 echo "pwd: ${pwd}"
