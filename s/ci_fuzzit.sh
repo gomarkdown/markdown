@@ -7,6 +7,12 @@ wd=`pwd`
 echo "pwd: ${pwd}"
 go env
 
+if [ -z ${1+x} ]; then
+    echo "must call with job type as first argument e.g. 'fuzzing' or 'sanity'"
+    echo "see https://github.com/fuzzitdev/example-go/blob/master/.travis.yml"
+    exit 1
+fi
+
 ## Install go-fuzz
 go get -u github.com/dvyukov/go-fuzz/go-fuzz github.com/dvyukov/go-fuzz/go-fuzz-build
 
@@ -22,4 +28,4 @@ export TARGET_ID=2n6hO2dQzylLxX5GGhRG
 
 ls -lah
 
-./fuzzit create job --type $1 --branch $TRAVIS_BRANCH --revision $TRAVIS_COMMIT --target_id $TARGET_ID ./fuzzer
+./fuzzit create job --type $1 --branch $TRAVIS_BRANCH --revision $TRAVIS_COMMIT $TARGET_ID ./fuzzer
