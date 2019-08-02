@@ -22,4 +22,4 @@ export TARGET_ID=2n6hO2dQzylLxX5GGhRG
 
 ls -lah
 
-./fuzzit create job --type $1 --branch $TRAVIS_BRANCH --revision $TRAVIS_COMMIT $TARGET_ID ./fuzzer
+./fuzzit create job --type $1 --branch $TRAVIS_BRANCH --revision $TRAVIS_COMMIT --target_id $TARGET_ID ./fuzzer
