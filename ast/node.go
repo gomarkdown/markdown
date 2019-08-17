@@ -313,6 +313,11 @@ type Hardbreak struct {
 	Leaf
 }
 
+// NonBlockingSpace represents markdown non-blocking space node
+type NonBlockingSpace struct {
+	Leaf
+}
+
 // Code represents markdown code node
 type Code struct {
 	Leaf
