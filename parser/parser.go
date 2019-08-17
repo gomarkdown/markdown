@@ -27,6 +27,7 @@ const (
 	LaxHTMLBlocks                                 // Loosen up HTML block parsing rules
 	SpaceHeadings                                 // Be strict about prefix heading rules
 	HardLineBreak                                 // Translate newlines into line breaks
+	NonBlockingSpace                              // Translate backspace spaces into line non-blocking spaces
 	TabSizeEight                                  // Expand tabs to eight spaces instead of four
 	Footnotes                                     // Pandoc-style footnotes
 	NoEmptyLineBeforeBlock                        // No need to insert an empty line to start a (code, quote, ordered list, unordered list) block

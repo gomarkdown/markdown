@@ -695,6 +695,10 @@ func escape(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return 2, nil
 	}
 
+	if p.extensions&NonBlockingSpace != 0 && data[1] == ' ' {
+		return 2, &ast.NonBlockingSpace{}
+	}
+
 	if p.extensions&BackslashLineBreak != 0 && data[1] == '\n' {
 		return 2, &ast.Hardbreak{}
 	}

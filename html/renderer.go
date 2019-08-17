@@ -446,6 +446,10 @@ func (r *Renderer) hardBreak(w io.Writer, node *ast.Hardbreak) {
 	r.cr(w)
 }
 
+func (r *Renderer) nonBlockingSpace(w io.Writer, node *ast.NonBlockingSpace) {
+	r.outs(w, "&nbsp;")
+}
+
 func (r *Renderer) outOneOf(w io.Writer, outFirst bool, first string, second string) {
 	if outFirst {
 		r.outs(w, first)
@@ -924,6 +928,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		// TODO: make it configurable via out(renderer.softbreak)
 	case *ast.Hardbreak:
 		r.hardBreak(w, node)
+	case *ast.NonBlockingSpace:
+		r.nonBlockingSpace(w, node)
 	case *ast.Emph:
 		r.outOneOf(w, entering, "<em>", "</em>")
 	case *ast.Strong:
