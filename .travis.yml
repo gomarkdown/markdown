@@ -2,7 +2,7 @@
 language: go
 
 go:
-    - tip
+  - tip
 
 # this breaks building from PRs because go get over-writes checkout out
 # code with the code from master branch
@@ -12,13 +12,13 @@ go:
 #    - go get -d -t -v ./...
 
 install:
-    - go build -v ./...
+  - go build -v ./...
 
 script:
-    - go test -v ./...
-    - go test -run=^$ -bench=BenchmarkReference -benchmem
-    - ./s/test_with_codecoverage.sh
-    - ./s/ci_fuzzit.sh fuzzing
+  - go test -v ./...
+  - go test -run=^$ -bench=BenchmarkReference -benchmem
+  - ./s/test_with_codecoverage.sh
+  - ./s/ci_fuzzit.sh
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

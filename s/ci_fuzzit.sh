@@ -2,30 +2,16 @@ set -xe
 
 export GO111MODULE="off"
 
-## see our config, for debugging
-wd=`pwd`
-echo "pwd: ${pwd}"
-go env
-
-if [ -z ${1+x} ]; then
-    echo "must call with job type as first argument e.g. 'fuzzing' or 'sanity'"
-    echo "see https://github.com/fuzzitdev/example-go/blob/master/.travis.yml"
-    exit 1
-fi
-
-## Install go-fuzz
+## install go-fuzz
 go get -u github.com/dvyukov/go-fuzz/go-fuzz github.com/dvyukov/go-fuzz/go-fuzz-build
 
 ## build and send to fuzzit
-go build ./...
 go-fuzz-build -libfuzzer -o fuzzer.a .
 clang -fsanitize=fuzzer fuzzer.a -o fuzzer
 
-wget -q -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v2.0.0/fuzzit_Linux_x86_64
+wget -q -O fuzzit https://github.com/fuzzitdev/fuzzit/releases/download/v2.4.27/fuzzit_Linux_x86_64
 chmod a+x fuzzit
-./fuzzit auth ${FUZZIT_API_KEY}
-export TARGET_ID=2n6hO2dQzylLxX5GGhRG
 
-ls -lah
-
-./fuzzit create job --type $1 --branch $TRAVIS_BRANCH --revision $TRAVIS_COMMIT $TARGET_ID ./fuzzer
+# TODO: create a target and re-enable
+export TARGET=markdown
+# ./fuzzit create job --type fuzzing  $TARGET ./fuzzer
