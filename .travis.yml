@@ -1,15 +1,8 @@
-# Setup for Travis CI http://travis-ci.org/
+dist: bionic
 language: go
 
 go:
-  - tip
-
-# this breaks building from PRs because go get over-writes checkout out
-# code with the code from master branch
-# we don't have any dependencies so no need to fetch them
-# If we did, we can fetch them manually or do some magic with go list ./... | grep filter | xargs go get -u
-#before_install:
-#    - go get -d -t -v ./...
+  - "1.12.x"
 
 install:
   - go build -v ./...
