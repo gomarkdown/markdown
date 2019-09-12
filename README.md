@@ -1,6 +1,6 @@
-Markdown Parser and HTML Renderer for Go
-===========
-[![GoDoc](https://godoc.org/github.com/gomarkdown/markdown?status.svg)](https://godoc.org/github.com/gomarkdown/markdown) [![Build Status](https://travis-ci.org/gomarkdown/markdown.svg?branch=master)](https://travis-ci.org/gomarkdown/markdown) [![codecov](https://codecov.io/gh/gomarkdown/markdown/branch/master/graph/badge.svg)](https://codecov.io/gh/gomarkdown/markdown)
+# Markdown Parser and HTML Renderer for Go
+
+[![GoDoc](https://godoc.org/github.com/gomarkdown/markdown?status.svg)](https://godoc.org/github.com/gomarkdown/markdown) [![codecov](https://codecov.io/gh/gomarkdown/markdown/branch/master/graph/badge.svg)](https://codecov.io/gh/gomarkdown/markdown)
 
 Package `github.com/gomarkdown/markdown` is a very fast Go library for parsing [Markdown](https://daringfireball.net/projects/markdown/) documents and rendering them to HTML.
 
@@ -11,10 +11,11 @@ It's fast and supports common extensions.
     go get -u github.com/gomarkdown/markdown
 
 API Docs:
-* https://godoc.org/github.com/gomarkdown/markdown : top level package
-* https://godoc.org/github.com/gomarkdown/markdown/ast : defines abstract syntax tree of parsed markdown document
-* https://godoc.org/github.com/gomarkdown/markdown/parser : parser
-* https://godoc.org/github.com/gomarkdown/markdown/html : html renderer
+
+- https://godoc.org/github.com/gomarkdown/markdown : top level package
+- https://godoc.org/github.com/gomarkdown/markdown/ast : defines abstract syntax tree of parsed markdown document
+- https://godoc.org/github.com/gomarkdown/markdown/parser : parser
+- https://godoc.org/github.com/gomarkdown/markdown/html : html renderer
 
 ## Usage
 
@@ -24,7 +25,6 @@ To convert markdown text to HTML using reasonable defaults:
 md := []byte("## markdown document")
 output := markdown.ToHTML(md, nil, nil)
 ```
-
 
 ## Customizing markdown parser
 
@@ -75,7 +75,7 @@ The function is called for each node in AST, you can implement custom rendering 
 
 Here's the simplest example that drops all code blocks from the output:
 
-```go
+````go
 import (
     "github.com/gomarkdown/markdown"
     "github.com/gomarkdown/markdown/ast"
@@ -101,7 +101,7 @@ opts := html.RendererOptions{
 renderer := html.NewRenderer(opts)
 md := "test\n```\nthis code block will be dropped from output\n```\ntext"
 html := markdown.ToHTML([]byte(s), nil, renderer)
-```
+````
 
 ## Sanitize untrusted content
 
@@ -136,185 +136,187 @@ To run: `mdtohtml input-file [output-file]`
 
 ## Features
 
-*   **Compatibility**. The Markdown v1.0.3 test suite passes with
-    the `--tidy` option.  Without `--tidy`, the differences are
-    mostly in whitespace and entity escaping, where this package is
-    more consistent and cleaner.
+- **Compatibility**. The Markdown v1.0.3 test suite passes with
+  the `--tidy` option. Without `--tidy`, the differences are
+  mostly in whitespace and entity escaping, where this package is
+  more consistent and cleaner.
 
-*   **Common extensions**, including table support, fenced code
-    blocks, autolinks, strikethroughs, non-strict emphasis, etc.
+- **Common extensions**, including table support, fenced code
+  blocks, autolinks, strikethroughs, non-strict emphasis, etc.
 
-*   **Safety**. Markdown is paranoid when parsing, making it safe
-    to feed untrusted user input without fear of bad things
-    happening. The test suite stress tests this and there are no
-    known inputs that make it crash.  If you find one, please let me
-    know and send me the input that does it.
+- **Safety**. Markdown is paranoid when parsing, making it safe
+  to feed untrusted user input without fear of bad things
+  happening. The test suite stress tests this and there are no
+  known inputs that make it crash. If you find one, please let me
+  know and send me the input that does it.
 
-    NOTE: "safety" in this context means *runtime safety only*. In order to
-    protect yourself against JavaScript injection in untrusted content, see
-    [this example](https://github.com/gomarkdown/markdown#sanitize-untrusted-content).
+  NOTE: "safety" in this context means _runtime safety only_. In order to
+  protect yourself against JavaScript injection in untrusted content, see
+  [this example](https://github.com/gomarkdown/markdown#sanitize-untrusted-content).
 
-*   **Fast**. It is fast enough to render on-demand in
-    most web applications without having to cache the output.
+- **Fast**. It is fast enough to render on-demand in
+  most web applications without having to cache the output.
 
-*   **Thread safety**. You can run multiple parsers in different
-    goroutines without ill effect. There is no dependence on global
-    shared state.
+- **Thread safety**. You can run multiple parsers in different
+  goroutines without ill effect. There is no dependence on global
+  shared state.
 
-*   **Minimal dependencies**. Only depends on standard library packages in Go.
+- **Minimal dependencies**. Only depends on standard library packages in Go.
 
-*   **Standards compliant**. Output successfully validates using the
-    W3C validation tool for HTML 4.01 and XHTML 1.0 Transitional.
-
+- **Standards compliant**. Output successfully validates using the
+  W3C validation tool for HTML 4.01 and XHTML 1.0 Transitional.
 
 ## Extensions
 
 In addition to the standard markdown syntax, this package
 implements the following extensions:
 
-*   **Intra-word emphasis supression**. The `_` character is
-    commonly used inside words when discussing code, so having
-    markdown interpret it as an emphasis command is usually the
-    wrong thing. We let you treat all emphasis markers as
-    normal characters when they occur inside a word.
+- **Intra-word emphasis supression**. The `_` character is
+  commonly used inside words when discussing code, so having
+  markdown interpret it as an emphasis command is usually the
+  wrong thing. We let you treat all emphasis markers as
+  normal characters when they occur inside a word.
 
-*   **Tables**. Tables can be created by drawing them in the input
-    using a simple syntax:
+- **Tables**. Tables can be created by drawing them in the input
+  using a simple syntax:
 
-    ```
-    Name    | Age
-    --------|------
-    Bob     | 27
-    Alice   | 23
-    ```
+  ```
+  Name    | Age
+  --------|------
+  Bob     | 27
+  Alice   | 23
+  ```
 
-    Table footers are supported as well and can be added with equal signs (`=`):
+  Table footers are supported as well and can be added with equal signs (`=`):
 
-    ```
-    Name    | Age
-    --------|------
-    Bob     | 27
-    Alice   | 23
-    ========|======
-    Total   | 50
-    ```
+  ```
+  Name    | Age
+  --------|------
+  Bob     | 27
+  Alice   | 23
+  ========|======
+  Total   | 50
+  ```
 
-*   **Fenced code blocks**. In addition to the normal 4-space
-    indentation to mark code blocks, you can explicitly mark them
-    and supply a language (to make syntax highlighting simple). Just
-    mark it like this:
+- **Fenced code blocks**. In addition to the normal 4-space
+  indentation to mark code blocks, you can explicitly mark them
+  and supply a language (to make syntax highlighting simple). Just
+  mark it like this:
 
-        ```go
-        func getTrue() bool {
-            return true
-        }
-        ```
+      ```go
+      func getTrue() bool {
+          return true
+      }
+      ```
 
-    You can use 3 or more backticks to mark the beginning of the
-    block, and the same number to mark the end of the block.
+  You can use 3 or more backticks to mark the beginning of the
+  block, and the same number to mark the end of the block.
 
-*   **Definition lists**. A simple definition list is made of a single-line
-    term followed by a colon and the definition for that term.
+- **Definition lists**. A simple definition list is made of a single-line
+  term followed by a colon and the definition for that term.
 
-        Cat
-        : Fluffy animal everyone likes
+      Cat
+      : Fluffy animal everyone likes
 
-        Internet
-        : Vector of transmission for pictures of cats
+      Internet
+      : Vector of transmission for pictures of cats
 
-    Terms must be separated from the previous definition by a blank line.
+  Terms must be separated from the previous definition by a blank line.
 
-*   **Footnotes**. A marker in the text that will become a superscript number;
-    a footnote definition that will be placed in a list of footnotes at the
-    end of the document. A footnote looks like this:
+- **Footnotes**. A marker in the text that will become a superscript number;
+  a footnote definition that will be placed in a list of footnotes at the
+  end of the document. A footnote looks like this:
 
-        This is a footnote.[^1]
+      This is a footnote.[^1]
 
-        [^1]: the footnote text.
+      [^1]: the footnote text.
 
-*   **Autolinking**. We can find URLs that have not been
-    explicitly marked as links and turn them into links.
+- **Autolinking**. We can find URLs that have not been
+  explicitly marked as links and turn them into links.
 
-*   **Strikethrough**. Use two tildes (`~~`) to mark text that
-    should be crossed out.
+- **Strikethrough**. Use two tildes (`~~`) to mark text that
+  should be crossed out.
 
-*   **Hard line breaks**. With this extension enabled newlines in the input
-    translate into line breaks in the output. This extension is off by default.
+- **Hard line breaks**. With this extension enabled newlines in the input
+  translate into line breaks in the output. This extension is off by default.
 
-*   **Non blocking space**. With this extension enabled spaces preceeded by an backslash n the input
-    translate non-blocking spaces in the output. This extension is off by default.
+- **Non blocking space**. With this extension enabled spaces preceeded by an backslash n the input
+  translate non-blocking spaces in the output. This extension is off by default.
 
-*   **Smart quotes**. Smartypants-style punctuation substitution is
-    supported, turning normal double- and single-quote marks into
-    curly quotes, etc.
+- **Smart quotes**. Smartypants-style punctuation substitution is
+  supported, turning normal double- and single-quote marks into
+  curly quotes, etc.
 
-*   **LaTeX-style dash parsing** is an additional option, where `--`
-    is translated into `&ndash;`, and `---` is translated into
-    `&mdash;`. This differs from most smartypants processors, which
-    turn a single hyphen into an ndash and a double hyphen into an
-    mdash.
+- **LaTeX-style dash parsing** is an additional option, where `--`
+  is translated into `&ndash;`, and `---` is translated into
+  `&mdash;`. This differs from most smartypants processors, which
+  turn a single hyphen into an ndash and a double hyphen into an
+  mdash.
 
-*   **Smart fractions**, where anything that looks like a fraction
-    is translated into suitable HTML (instead of just a few special
-    cases like most smartypant processors). For example, `4/5`
-    becomes `<sup>4</sup>&frasl;<sub>5</sub>`, which renders as
-    <sup>4</sup>&frasl;<sub>5</sub>.
+- **Smart fractions**, where anything that looks like a fraction
+  is translated into suitable HTML (instead of just a few special
+  cases like most smartypant processors). For example, `4/5`
+  becomes `<sup>4</sup>&frasl;<sub>5</sub>`, which renders as
+  <sup>4</sup>&frasl;<sub>5</sub>.
 
-*   **MathJaX Support** is an additional feature which is supported by
-    many markdown editor. It translate inline math equation quoted by `$`
-    and display math block quoted by `$$` into MathJax compatible format.
-    hyphen `_` won't break LaTeX render within a math element any more.
-    ```
-    $$
-    \left[ \begin{array}{a} a^l_1 \\ ⋮ \\ a^l_{d_l} \end{array}\right]
-    = \sigma(
-     \left[ \begin{matrix}
-     	w^l_{1,1} & ⋯  & w^l_{1,d_{l-1}} \\
-     	⋮ & ⋱  & ⋮  \\
-     	w^l_{d_l,1} & ⋯  & w^l_{d_l,d_{l-1}} \\
-     \end{matrix}\right]  ·
-     \left[ \begin{array}{x} a^{l-1}_1 \\ ⋮ \\ ⋮ \\ a^{l-1}_{d_{l-1}} \end{array}\right] +
-     \left[ \begin{array}{b} b^l_1 \\ ⋮ \\ b^l_{d_l} \end{array}\right])
-     $$
-    ```
+- **MathJaX Support** is an additional feature which is supported by
+  many markdown editor. It translate inline math equation quoted by `$`
+  and display math block quoted by `$$` into MathJax compatible format.
+  hyphen `_` won't break LaTeX render within a math element any more.
 
-*   **Ordered list start number**. With this extension enabled an ordered list will start with the
-    the number that was used to start it.
+  ```
+  $$
+  \left[ \begin{array}{a} a^l_1 \\ ⋮ \\ a^l_{d_l} \end{array}\right]
+  = \sigma(
+   \left[ \begin{matrix}
+   	w^l_{1,1} & ⋯  & w^l_{1,d_{l-1}} \\
+   	⋮ & ⋱  & ⋮  \\
+   	w^l_{d_l,1} & ⋯  & w^l_{d_l,d_{l-1}} \\
+   \end{matrix}\right]  ·
+   \left[ \begin{array}{x} a^{l-1}_1 \\ ⋮ \\ ⋮ \\ a^{l-1}_{d_{l-1}} \end{array}\right] +
+   \left[ \begin{array}{b} b^l_1 \\ ⋮ \\ b^l_{d_l} \end{array}\right])
+   $$
+  ```
 
-*   **Super and subscript**. With this extension enabled sequences between ^ will indicate
-    superscript and ~ will become a subscript. For example: H~2~O is a liquid, 2^10^ is 1024.
+- **Ordered list start number**. With this extension enabled an ordered list will start with the
+  the number that was used to start it.
 
-*   **Block level attributes**, allow setting attributes (ID, classes and key/value pairs) on block
-    level elements. The attribute must be enclosed with braces and be put on a line before the
-    element.
-    ```
-    {#id3 .myclass fontsize="tiny"}
-    # Header 1
-    ```
-    Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
+- **Super and subscript**. With this extension enabled sequences between ^ will indicate
+  superscript and ~ will become a subscript. For example: H~2~O is a liquid, 2^10^ is 1024.
 
-*   **Mmark support**, see <https://mmark.nl/syntax> for all new syntax elements this adds.
+- **Block level attributes**, allow setting attributes (ID, classes and key/value pairs) on block
+  level elements. The attribute must be enclosed with braces and be put on a line before the
+  element.
+
+  ```
+  {#id3 .myclass fontsize="tiny"}
+  # Header 1
+  ```
+
+  Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
+
+- **Mmark support**, see <https://mmark.nl/syntax> for all new syntax elements this adds.
 
 ## Todo
 
-*   port https://github.com/russross/blackfriday/issues/348
-*   port [LaTeX output](https://github.com/Ambrevar/Blackfriday-LaTeX):
-    renders output as LaTeX.
-*   port https://github.com/shurcooL/github_flavored_markdown to markdown
-*   port [markdownfmt](https://github.com/shurcooL/markdownfmt): like gofmt,
-    but for markdown.
-*   More unit testing
-*   Improve unicode support. It does not understand all unicode
-    rules (about what constitutes a letter, a punctuation symbol,
-    etc.), so it may fail to detect word boundaries correctly in
-    some instances. It is safe on all utf-8 input.
+- port https://github.com/russross/blackfriday/issues/348
+- port [LaTeX output](https://github.com/Ambrevar/Blackfriday-LaTeX):
+  renders output as LaTeX.
+- port https://github.com/shurcooL/github_flavored_markdown to markdown
+- port [markdownfmt](https://github.com/shurcooL/markdownfmt): like gofmt,
+  but for markdown.
+- More unit testing
+- Improve unicode support. It does not understand all unicode
+  rules (about what constitutes a letter, a punctuation symbol,
+  etc.), so it may fail to detect word boundaries correctly in
+  some instances. It is safe on all utf-8 input.
 
 ## History
 
 markdown is a fork of v2 of https://github.com/russross/blackfriday that is:
 
-* actively maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
-* refactored API (split into ast/parser/html sub-packages)
+- actively maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
+- refactored API (split into ast/parser/html sub-packages)
 
 Blackfriday itself was based on C implementation [sundown](https://github.com/vmg/sundown) which in turn was based on [libsoldout](http://fossil.instinctive.eu/libsoldout/home).
 

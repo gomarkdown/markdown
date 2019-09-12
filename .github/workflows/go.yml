@@ -16,6 +16,16 @@ jobs:
       - name: Test
         run: go test -v ./...
 
+      - name: Benchmark
+        run: go test -run=^$ -bench=BenchmarkReference -benchmem
+
+      - name: Coverage
+        run: ./s/test_with_codecoverage.sh
+
+      # TODO: enable
+      #- name: Fuzz
+      #  run: ./s/ci_fuzzit.sh
+
       - name: Staticcheck
         run: |
           # add executables installed with go get to PATH

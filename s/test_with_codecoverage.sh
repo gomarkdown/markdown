@@ -10,3 +10,5 @@ pkgs=$(go list ./... | grep -v /cmd)
 cover_pkgs=$(go list ./... | grep -v /cmd | tr "\n" ",")
 
 go test -race -covermode=atomic -coverprofile=coverage.txt -coverpkg ${cover_pkgs} ${pkgs}
+
+bash <(curl -s https://codecov.io/bash)
