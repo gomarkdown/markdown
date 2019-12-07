@@ -92,11 +92,11 @@ func TestBlockAttribute(t *testing.T) {
 			continue
 		}
 
-		if bytes.Compare(test.attr.ID, p.attr.ID) != 0 {
+		if !bytes.Equal(test.attr.ID, p.attr.ID) {
 			t.Errorf("test %d, got %q for ID, want %q", i, p.attr.ID, test.attr.ID)
 		}
 		for i, c := range test.attr.Classes {
-			if bytes.Compare(c, p.attr.Classes[i]) != 0 {
+			if !bytes.Equal(c, p.attr.Classes[i]) {
 				t.Errorf("test %d, got %q for class, want %q", i, p.attr.Classes[i], c)
 			}
 		}

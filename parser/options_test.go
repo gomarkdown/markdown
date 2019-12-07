@@ -57,7 +57,7 @@ hallo
 		data = bytes.Replace(data, []byte(" "), []byte("_"), -1)
 		test.want = bytes.Replace(test.want, []byte(" "), []byte("_"), -1)
 
-		if bytes.Compare(data, test.want) != 0 {
+		if !bytes.Equal(data, test.want) {
 			t.Errorf("want ast %s, got %s", test.want, data)
 		}
 	}

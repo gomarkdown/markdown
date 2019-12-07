@@ -199,10 +199,10 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	}
 	r.outs(w, cleanString)
 	// If it ends with a space, make note of that.
-	if len(cleanString) >= 1 && cleanString[len(cleanString)-1] == ' ' {
-		// TODO: write equivalent of this
-		// r.normalTextMarker[out] = out.Len()
-	}
+	//if len(cleanString) >= 1 && cleanString[len(cleanString)-1] == ' ' {
+	// TODO: write equivalent of this
+	// r.normalTextMarker[out] = out.Len()
+	//}
 }
 
 func (r *Renderer) del(w io.Writer, node *ast.Del) {

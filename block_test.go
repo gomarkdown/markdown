@@ -1,38 +1,11 @@
 package markdown
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 )
-
-func must(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
-}
-
-func writeTest(file string, tests []string) {
-	path := filepath.Join("testdata", file)
-	f, err := os.Create(path)
-	must(err)
-	defer f.Close()
-	lastIdx := len(tests) - 1
-	for i, s := range tests {
-		if !strings.HasSuffix(s, "\n") {
-			s += "\n"
-		}
-		fmt.Fprint(f, s)
-		if i != lastIdx {
-			fmt.Fprint(f, "+++\n")
-		}
-	}
-}
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
 	tests := readTestFile2(t, "PrefixHeaderNoExtensions.tests")

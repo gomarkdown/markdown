@@ -19,8 +19,8 @@ jobs:
       - name: Benchmark
         run: go test -run=^$ -bench=BenchmarkReference -benchmem
 
-      - name: Coverage
-        run: ./s/test_with_codecoverage.sh
+      #- name: Coverage
+      #  run: ./s/test_with_codecoverage.sh
 
       # TODO: enable
       #- name: Fuzz

@@ -23,22 +23,6 @@ func testDataToStrArray(tests []*testData) []string {
 	return res
 }
 
-func strArrayToTestData(a []string) []*testData {
-	if len(a)%2 == 1 {
-		panic("must have even number of items in a")
-	}
-	res := []*testData{}
-	for i := 0; i < len(a)/2; i++ {
-		j := i * 2
-		td := &testData{
-			md:   []byte(a[j]),
-			html: []byte(a[j+1]),
-		}
-		res = append(res, td)
-	}
-	return res
-}
-
 func readTestFile2(t *testing.T, fileName string) []string {
 	tests := readTestFile(t, fileName)
 	return testDataToStrArray(tests)
@@ -76,7 +60,7 @@ func TestMmark(t *testing.T) {
 		got := ToHTML(td.md, p, nil)
 		want := td.html
 
-		if bytes.Compare(got, want) != 0 {
+		if !bytes.Equal(got, want) {
 			t.Errorf("want (%d bytes) %s, got (%d bytes) %s, for input %q", len(want), want, len(got), got, td.md)
 		}
 	}
