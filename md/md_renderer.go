@@ -331,7 +331,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Image:
 		r.image(w, node)
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Code:
 		r.code(w, node)
 	case *ast.CodeBlock:
