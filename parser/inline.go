@@ -536,6 +536,9 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			// if inline footnote, title == footnote contents
 			title = lr.title
 			noteID = lr.noteID
+			if len(lr.text) > 0 {
+				altContent = lr.text
+			}
 		}
 
 		// rewind the whitespace
