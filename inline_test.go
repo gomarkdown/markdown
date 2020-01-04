@@ -37,6 +37,9 @@ func TestReferenceOverride(t *testing.T) {
 
 		"test [ref5][]\n",
 		"<p>test <a href=\"http://www.ref5.com/\" title=\"Reference 5\">Moo</a></p>\n",
+
+		"test [ref6]\n",
+		"<p>test <a href=\"http://www.ref6.com/\" title=\"Reference 6\">Moo</a></p>\n",
 	}
 	doTestsInlineParam(t, tests, TestParams{
 		referenceOverride: func(reference string) (rv *parser.Reference, overridden bool) {
@@ -65,6 +68,12 @@ func TestReferenceOverride(t *testing.T) {
 				return &parser.Reference{
 					Link:  "http://www.ref5.com/",
 					Title: "Reference 5",
+					Text:  "Moo",
+				}, true
+			case "ref6":
+				return &parser.Reference{
+					Link:  "http://www.ref6.com/",
+					Title: "Reference 6",
 					Text:  "Moo",
 				}, true
 			}
