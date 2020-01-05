@@ -1183,7 +1183,7 @@ func TestInlineMath(t *testing.T) {
 func TestSubSuper(t *testing.T) {
 	var tests = []string{
 		"H~2~O is a liquid, 2^10^ is 1024\n",
-		"<p><sub>2</sub>O is a liquid, 2<sup>10</sup> is 1024</p>\n",
+		"<p>H<sub>2</sub>O is a liquid, 2<sup>10</sup> is 1024</p>\n",
 		"2^10^ is 1024, H~2~O is a liquid\n",
 		"<p>2<sup>10</sup> is 1024, H<sub>2</sub>O is a liquid</p>\n",
 	}
