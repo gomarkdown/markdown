@@ -225,32 +225,20 @@ func findHTMLTagPos(tag []byte, tagname string) (bool, int) {
 }
 
 func isRelativeLink(link []byte) (yes bool) {
-	// a tag begin with '#'
-	if link[0] == '#' {
-		return true
-	}
-
-	// link begin with '/' but not '//', the second maybe a protocol relative link
-	if len(link) >= 2 && link[0] == '/' && link[1] != '/' {
-		return true
-	}
-
-	// only the root '/'
 	if len(link) == 1 && link[0] == '/' {
-		return true
+		return false
 	}
 
-	// current directory : begin with "./"
-	if bytes.HasPrefix(link, []byte("./")) {
-		return true
+	if len(link) >= 2 && link[0] == '/' && link[1] != '/' {
+		return false
 	}
 
-	// parent directory : begin with "../"
-	if bytes.HasPrefix(link, []byte("../")) {
-		return true
+	// ftp://xxxx https://xxx
+	if strings.Contains(string(link), "://") {
+		return false
 	}
 
-	return false
+	return true
 }
 
 func (r *Renderer) ensureUniqueHeadingID(id string) string {
@@ -273,12 +261,13 @@ func (r *Renderer) ensureUniqueHeadingID(id string) string {
 }
 
 func (r *Renderer) addAbsPrefix(link []byte) []byte {
-	if r.opts.AbsolutePrefix != "" && isRelativeLink(link) && link[0] != '.' {
+	if r.opts.AbsolutePrefix != "" && isRelativeLink(link) {
 		newDest := r.opts.AbsolutePrefix
-		if link[0] != '/' {
-			newDest += "/"
+		if bytes.HasPrefix(link, []byte("./")) {
+			newDest += string(link[2:])
+		} else {
+			newDest += string(link)
 		}
-		newDest += string(link)
 		return []byte(newDest)
 	}
 	return link
