@@ -1186,6 +1186,8 @@ func TestSubSuper(t *testing.T) {
 		"<p>H<sub>2</sub>O is a liquid, 2<sup>10</sup> is 1024</p>\n",
 		"2^10^ is 1024, H~2~O is a liquid\n",
 		"<p>2<sup>10</sup> is 1024, H<sub>2</sub>O is a liquid</p>\n",
+		"2\\^10 is 2^10^ is 1024\n",
+		"<p>2^10 is 2<sup>10</sup> is 1024</p>\n",
 	}
 	doTestsInlineParam(t, tests, TestParams{extensions: parser.SuperSubscript})
 }
