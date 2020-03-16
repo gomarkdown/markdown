@@ -28,6 +28,7 @@ const (
 	Safelink                                  // Only link to trusted protocols
 	NofollowLinks                             // Only link with rel="nofollow"
 	NoreferrerLinks                           // Only link with rel="noreferrer"
+	NoopenerLinks                             // Only link with rel="noopener"
 	HrefTargetBlank                           // Add a blank target
 	CompletePage                              // Generate a complete HTML page
 	UseXHTML                                  // Generate XHTML output instead of HTML
@@ -294,6 +295,9 @@ func appendLinkAttrs(attrs []string, flags Flags, link []byte) []string {
 	}
 	if flags&NoreferrerLinks != 0 {
 		val = append(val, "noreferrer")
+	}
+	if flags&NoopenerLinks != 0 {
+		val = append(val, "noopener")
 	}
 	if flags&HrefTargetBlank != 0 {
 		attrs = append(attrs, `target="_blank"`)
