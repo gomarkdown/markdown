@@ -23,3 +23,12 @@ func TestDocument(t *testing.T) {
 	}
 	doTests(t, tests)
 }
+
+func TestLineEndings(t *testing.T) {
+	var tests = []string{
+		// https://github.com/gomarkdown/markdown/issues/154
+		"something else",
+		"<p>something else</p>\n",
+	}
+	doTests(t, tests)
+}
