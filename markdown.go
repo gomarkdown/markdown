@@ -3,6 +3,7 @@ package markdown
 import (
 	"bytes"
 	"io"
+	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
@@ -74,7 +75,8 @@ func Render(doc ast.Node, renderer Renderer) []byte {
 // If you pass nil for both, we use parser configured with parser.CommonExtensions
 // and html.Renderer configured with html.CommonFlags.
 func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
-	doc := Parse(markdown, p)
+	markdownForAll := strings.Replace(string(markdown), "\r\n", "\n", -1)
+	doc := Parse([]byte(markdownForAll), p)
 	if renderer == nil {
 		opts := html.RendererOptions{
 			Flags: html.CommonFlags,
