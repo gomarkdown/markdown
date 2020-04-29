@@ -2,7 +2,7 @@
 
 ##Subtitle1
 
-##Subtitle2
+##Subtitle2 {#T2}
 +++
 <nav>
 
@@ -11,7 +11,7 @@
 <ul>
 <li><a href="#toc_1">Subtitle1</a></li>
 
-<li><a href="#toc_2">Subtitle2</a></li>
+<li><a href="#T2">Subtitle2</a></li>
 </ul></li>
 </ul>
 
@@ -21,7 +21,7 @@
 
 <h2 id="toc_1">Subtitle1</h2>
 
-<h2 id="toc_2">Subtitle2</h2>
+<h2 id="T2">Subtitle2</h2>
 +++
 # Title
 
