@@ -169,6 +169,7 @@ func TestBlockComments(t *testing.T) {
 func TestTOC(t *testing.T) {
 	tests := readTestFile2(t, "TOC.tests")
 	doTestsParam(t, tests, TestParams{
+		extensions: parser.HeadingIDs,
 		Flags: html.UseXHTML | html.TOC,
 	})
 }

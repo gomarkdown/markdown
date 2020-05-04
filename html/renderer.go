@@ -1114,7 +1114,9 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 				buf.WriteString("</a>")
 				return ast.GoToNext
 			}
-			nodeData.HeadingID = fmt.Sprintf("toc_%d", headingCount)
+			if nodeData.HeadingID == "" {
+				nodeData.HeadingID = fmt.Sprintf("toc_%d", headingCount)
+			}
 			if nodeData.Level == tocLevel {
 				buf.WriteString("</li>\n\n<li>")
 			} else if nodeData.Level < tocLevel {
@@ -1130,7 +1132,7 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 				}
 			}
 
-			fmt.Fprintf(&buf, `<a href="#toc_%d">`, headingCount)
+			fmt.Fprintf(&buf, `<a href="#%s">`, nodeData.HeadingID)
 			headingCount++
 			return ast.GoToNext
 		}
