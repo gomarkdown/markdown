@@ -1632,7 +1632,6 @@ gatherlines:
 			if indent <= itemIndent {
 				if p.listTypeChanged(chunk, flags) {
 					*flags |= ast.ListItemEndOfList
-					*flags |= ast.ListItemContainsBlock
 				} else if containsBlankLine {
 					*flags |= ast.ListItemContainsBlock
 				}
