@@ -63,7 +63,6 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 	} else {
 		r.listDepth--
 	}
-
 }
 
 func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
@@ -268,7 +267,11 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 func (r *Renderer) code(w io.Writer, node *ast.Code) {
 	r.outs(w, "`")
 	r.out(w, node.Literal)
-	r.outs(w, "`")
+	r.outs(w, "`\n")
+}
+
+func (r *Renderer) heading(w io.Writer, node *ast.Heading) {
+	panic(fmt.Sprintf("node %T NYI", node))
 }
 
 func (r *Renderer) image(w io.Writer, node *ast.Image) {
@@ -348,7 +351,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.HTMLBlock:
 		r.htmlBlock(w, node)
 	case *ast.Heading:
-		panic(fmt.Sprintf("node %T NYI", node))
+		r.heading(w, node)
 	case *ast.HorizontalRule:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.List:

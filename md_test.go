@@ -13,8 +13,8 @@ import (
 )
 
 func TestMd(t *testing.T) {
-	// disabled for now
 	if true {
+		// disabled for now because md render is not finished
 		return
 	}
 	files := []string{
@@ -44,7 +44,7 @@ func TestMd(t *testing.T) {
 				t.Errorf("ioutil.WriteFile('%s') failed with %s", pathGot, err)
 			}
 			pathAST := filepath.Join("testdata", file+"_ast.txt")
-			f, err := os.Open(pathAST)
+			f, err := os.Create(pathAST)
 			if err != nil {
 				t.Errorf("ioutil.WriteFile('%s') failed with %s", pathAST, err)
 			}
