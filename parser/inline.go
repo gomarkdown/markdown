@@ -320,6 +320,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// inline style link
 	switch {
 	case i < len(data) && data[i] == '(':
+		parenLevel := 1
 		// skip initial whitespace
 		i++
 
@@ -357,14 +358,18 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			for i < len(data) {
 				switch {
 				case data[i] == '\\':
-					i += 2
+					i++
 
 				case data[i] == ')':
-					break findtitleend
+					parenLevel--
+					if parenLevel <= 0 {
+						break findtitleend
+					}
 
-				default:
-					i++
+				case data[i] == '(':
+					parenLevel++
 				}
+				i++
 			}
 
 			if i >= len(data) {
