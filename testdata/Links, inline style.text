@@ -8,5 +8,10 @@ Just a [URL](/url/).
 
 [URL and title](/url/ "title has spaces afterward"  ).
 
+[hyphen and title](- "title").
+
+[hyphen and title](- "title with parentheses()").
+
+[hyphen and title](- "?=title with other chars(#var)"  ).
 
 [Empty]().
