@@ -14,4 +14,20 @@ Just a [URL](/url/).
 
 [hyphen and title](- "?=title with other chars(#var)"  ).
 
+[hyphen and title](- "title with parentheses missing open)").
+
+[hyphen and title](- "title with parentheses missing close(").
+
+[hyphen and title](- "title with parentheses misplaced)(").
+
+[hyphen and title](- "title with escaped \"double\" quote").
+
+[hyphen and title](- "title with embedded 'single' quote").
+
+[hyphen and title](- 'title with escaped \'single\' quote').
+
+[hyphen and title](- 'title with embedded "double" quote').
+
+[hyphen and title](- 'title saying meh ¯\_(ツ)_/¯').
+
 [Empty]().
