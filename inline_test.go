@@ -384,11 +384,11 @@ func TestInlineLink(t *testing.T) {
 		"[![image](someimage)](with image)\n",
 		"<p><a href=\"with image\"><img src=\"someimage\" alt=\"image\" /></a></p>\n",
 
-		"[link](url \"one quote)\n",
-		"<p><a href=\"url &quot;one quote\">link</a></p>\n",
+		"[link](url \"one quote - broken markdown)\n",
+		"<p>[link](url &quot;one quote - broken markdown)</p>\n",
 
-		"[link](url 'one quote)\n",
-		"<p><a href=\"url 'one quote\">link</a></p>\n",
+		"[link](url 'one quote - broken markdown)\n",
+		"<p>[link](url 'one quote - broken markdown)</p>\n",
 
 		"[link](<url>)\n",
 		"<p><a href=\"url\">link</a></p>\n",
