@@ -413,6 +413,9 @@ func TestInlineLink(t *testing.T) {
 
 		"[link](<../>)\n",
 		"<p><a href=\"../\">link</a></p>\n",
+
+		"[disambiguation](http://en.wikipedia.org/wiki/Disambiguation_(disambiguation))",
+		"<p><a href=\"http://en.wikipedia.org/wiki/Disambiguation_(disambiguation)\">disambiguation</a></p>\n",
 	}
 	doLinkTestsInline(t, tests)
 

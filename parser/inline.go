@@ -326,6 +326,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		i = skipSpace(data, i)
 
 		linkB := i
+		brace := 0
 
 		// look for link end: ' " )
 	findlinkend:
@@ -334,7 +335,18 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			case data[i] == '\\':
 				i += 2
 
-			case data[i] == ')' || data[i] == '\'' || data[i] == '"':
+			case data[i] == '(':
+				brace++
+				i++
+
+			case data[i] == ')':
+				if brace <= 0 {
+					break findlinkend
+				}
+				brace--
+				i++
+
+			case data[i] == '\'' || data[i] == '"':
 				break findlinkend
 
 			default:
