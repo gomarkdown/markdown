@@ -166,11 +166,16 @@ func TestBlockComments(t *testing.T) {
 	doTestsBlock(t, tests, 0)
 }
 
+func TestBug168(t *testing.T) {
+	tests := readTestFile2(t, "bug168.tests")
+	doTestsBlock(t, tests, 0)
+}
+
 func TestTOC(t *testing.T) {
 	tests := readTestFile2(t, "TOC.tests")
 	doTestsParam(t, tests, TestParams{
 		extensions: parser.HeadingIDs,
-		Flags: html.UseXHTML | html.TOC,
+		Flags:      html.UseXHTML | html.TOC,
 	})
 }
 
