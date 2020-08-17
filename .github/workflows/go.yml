@@ -22,10 +22,6 @@ jobs:
       #- name: Coverage
       #  run: ./s/test_with_codecoverage.sh
 
-      # TODO: enable
-      #- name: Fuzz
-      #  run: ./s/ci_fuzzit.sh
-
       - name: Staticcheck
         run: |
           go get -u honnef.co/go/tools/cmd/staticcheck
