@@ -1,0 +1,11 @@
+<dialog open>
+<form method="dialog">
+<button>OK</button>
+</form>
+</dialog>
++++
+<dialog open>
+<form method="dialog">
+<button>OK</button>
+</form>
+</dialog>
