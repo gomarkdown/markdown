@@ -237,8 +237,10 @@ func (p *Parser) block(data []byte) {
 		// or
 		// ______
 		if p.isHRule(data) {
-			p.addBlock(&ast.HorizontalRule{})
 			i := skipUntilChar(data, 0, '\n')
+			hr := ast.HorizontalRule{}
+			hr.Literal = bytes.Trim(data[:i], " \n")
+			p.addBlock(&hr)
 			data = data[i:]
 			continue
 		}
