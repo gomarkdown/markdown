@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.1.1](https://github.com/moorara/markdown/tree/v0.1.1) (2020-10-09)
+
+[Full Changelog](https://github.com/moorara/markdown/compare/v0.1.0...v0.1.1)
+
+**Merged pull requests:**
+
+- Remove dot files [\#2](https://github.com/moorara/markdown/pull/2) ([moorara](https://github.com/moorara))
+
 ## [v0.1.0](https://github.com/moorara/markdown/tree/v0.1.0) (2020-10-09)
 
 [Full Changelog](https://github.com/moorara/markdown/compare/8eb580260dbc73b7d84be803d77b50a9dced03d0...v0.1.0)
