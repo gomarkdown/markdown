@@ -1,0 +1,25 @@
+name: Main
+on: push
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 2
+      - name: Lint
+        uses: moorara/actions/go-lint@master
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Test
+        id: test
+        uses: moorara/actions/go-cover@master
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v1
+        with:
+          name: coverage-report
+          path: ${{ steps.test.outputs.coverage_report_file }}
