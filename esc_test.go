@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/moorara/markdown/html"
+	"github.com/moorara/markdown/render/html"
 )
 
 func TestEsc(t *testing.T) {

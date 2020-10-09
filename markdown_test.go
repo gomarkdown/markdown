@@ -1,6 +1,8 @@
 package markdown
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestDocument(t *testing.T) {
 	var tests = []string{
@@ -21,5 +23,6 @@ func TestDocument(t *testing.T) {
 		"   [",
 		"<p>[</p>\n",
 	}
-	doTests(t, tests)
+
+	runTests(t, tests)
 }

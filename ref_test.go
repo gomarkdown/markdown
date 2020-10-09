@@ -38,12 +38,12 @@ var (
 
 func TestReference(t *testing.T) {
 	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines")
-	doTestsReference(t, files, 0)
+	runReferenceTests(t, files, 0)
 }
 
 func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 	files := append(refFiles, "Hard-wrapped paragraphs with list-like lines no empty line before block")
-	doTestsReference(t, files, parser.NoEmptyLineBeforeBlock)
+	runReferenceTests(t, files, parser.NoEmptyLineBeforeBlock)
 }
 
 // benchResultAnchor is an anchor variable to store the result of a benchmarked

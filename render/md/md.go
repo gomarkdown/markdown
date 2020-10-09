@@ -9,12 +9,12 @@ import (
 	"github.com/moorara/markdown/ast"
 )
 
-// Renderer renders to markdown. Allows to convert to a canonnical
-// form
+// Renderer renders to markdown.
+// It alllows to convert to a canonnical form.
 type Renderer struct {
 	orderedListCounter map[int]int
-	// used to keep track of whether a given list item uses a paragraph
-	// for large spacing.
+
+	// used to keep track of whether a given list item uses a paragraph for large spacing
 	paragraph map[int]bool
 
 	lastOutputLen  int
@@ -48,9 +48,9 @@ func (r *Renderer) cr(w io.Writer) {
 
 func (r *Renderer) doubleSpace(w io.Writer) {
 	// TODO: need to remember number of written bytes
-	//if out.Len() > 0 {
+	// if out.Len() > 0 {
 	r.outs(w, "\n")
-	//}
+	// }
 }
 
 func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {

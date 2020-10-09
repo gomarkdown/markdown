@@ -37,7 +37,7 @@ import (
 	"io"
 
 	"github.com/moorara/markdown/ast"
-	"github.com/moorara/markdown/html"
+	"github.com/moorara/markdown/render/html"
 	"github.com/moorara/markdown/parser"
 )
 

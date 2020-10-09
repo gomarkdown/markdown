@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/moorara/markdown/html"
 	"github.com/moorara/markdown/parser"
+	"github.com/moorara/markdown/render/html"
 )
 
 type TestParams struct {
@@ -28,9 +28,9 @@ func runMarkdown(input string, params TestParams) string {
 	return string(d)
 }
 
-// doTests runs full document tests using MarkdownCommon configuration.
-func doTests(t *testing.T, tests []string) {
-	doTestsParam(t, tests, TestParams{
+// runTests runs full document tests using MarkdownCommon configuration.
+func runTests(t *testing.T, tests []string) {
+	runParamTests(t, tests, TestParams{
 		extensions: parser.CommonExtensions,
 		RendererOptions: html.RendererOptions{
 			Flags: html.CommonFlags,
@@ -38,14 +38,14 @@ func doTests(t *testing.T, tests []string) {
 	})
 }
 
-func doTestsBlock(t *testing.T, tests []string, extensions parser.Extensions) {
-	doTestsParam(t, tests, TestParams{
+func runBlockTests(t *testing.T, tests []string, extensions parser.Extensions) {
+	runParamTests(t, tests, TestParams{
 		extensions: extensions,
 		Flags:      html.UseXHTML,
 	})
 }
 
-func doTestsParam(t *testing.T, tests []string, params TestParams) {
+func runParamTests(t *testing.T, tests []string, params TestParams) {
 	for i := 0; i+1 < len(tests); i += 2 {
 		input := tests[i]
 		expected := tests[i+1]
@@ -57,43 +57,43 @@ func doTestsParam(t *testing.T, tests []string, params TestParams) {
 	}
 }
 
-func doTestsInline(t *testing.T, tests []string) {
-	doTestsInlineParam(t, tests, TestParams{})
+func runInlineTests(t *testing.T, tests []string) {
+	runInlineParamTests(t, tests, TestParams{})
 }
 
-func doLinkTestsInline(t *testing.T, tests []string) {
-	doTestsInline(t, tests)
+func runInlineLinkTests(t *testing.T, tests []string) {
+	runInlineTests(t, tests)
 
 	prefix := "http://localhost"
 	params := html.RendererOptions{AbsolutePrefix: prefix}
 	transformTests := transformLinks(tests, prefix)
-	doTestsInlineParam(t, transformTests, TestParams{
+	runInlineParamTests(t, transformTests, TestParams{
 		RendererOptions: params,
 	})
-	doTestsInlineParam(t, transformTests, TestParams{
+	runInlineParamTests(t, transformTests, TestParams{
 		Flags:           html.UseXHTML,
 		RendererOptions: params,
 	})
 }
 
-func doSafeTestsInline(t *testing.T, tests []string) {
-	doTestsInlineParam(t, tests, TestParams{Flags: html.Safelink})
+func runInlineSafeTests(t *testing.T, tests []string) {
+	runInlineParamTests(t, tests, TestParams{Flags: html.Safelink})
 
 	// All the links in this test should not have the prefix appended, so
 	// just rerun it with different parameters and the same expectations.
 	prefix := "http://localhost"
 	params := html.RendererOptions{AbsolutePrefix: prefix}
 	transformTests := transformLinks(tests, prefix)
-	doTestsInlineParam(t, transformTests, TestParams{
+	runInlineParamTests(t, transformTests, TestParams{
 		Flags:           html.Safelink,
 		RendererOptions: params,
 	})
 }
 
-func doTestsInlineParam(t *testing.T, tests []string, params TestParams) {
+func runInlineParamTests(t *testing.T, tests []string, params TestParams) {
 	params.extensions |= parser.Autolink | parser.Strikethrough
 	params.Flags |= html.UseXHTML
-	doTestsParam(t, tests, params)
+	runParamTests(t, tests, params)
 }
 
 func transformLinks(tests []string, prefix string) []string {
@@ -110,7 +110,7 @@ func transformLinks(tests []string, prefix string) []string {
 	return newTests
 }
 
-func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
+func runReferenceTests(t *testing.T, files []string, flag parser.Extensions) {
 	params := TestParams{extensions: flag}
 	for _, basename := range files {
 		filename := filepath.Join("testdata", basename+".text")

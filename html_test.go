@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/moorara/markdown/ast"
-	"github.com/moorara/markdown/html"
 	"github.com/moorara/markdown/parser"
+	"github.com/moorara/markdown/render/html"
 )
 
 func renderHookEmpty(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
@@ -28,7 +28,7 @@ func TestRenderNodeHookEmpty(t *testing.T) {
 	params := TestParams{
 		RendererOptions: htmlParams,
 	}
-	doTestsParam(t, tests, params)
+	runParamTests(t, tests, params)
 }
 
 func renderHookCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
@@ -52,5 +52,5 @@ func TestRenderNodeHookCode(t *testing.T) {
 		RendererOptions: opts,
 		extensions:      parser.CommonExtensions,
 	}
-	doTestsParam(t, tests, params)
+	runParamTests(t, tests, params)
 }

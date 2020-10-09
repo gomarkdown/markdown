@@ -44,14 +44,14 @@ html := markdown.ToHTML(md, parser, nil)
 
 ### Customizing HTML Renderer
 
-Similarly, HTML renderer can be configured with different [options](https://godoc.org/github.com/moorara/markdown/html#RendererOptions)
+Similarly, HTML renderer can be configured with different [options](https://godoc.org/github.com/moorara/markdown/render/html#RendererOptions)
 
 Here's how to use a custom renderer:
 
 ```go
 import (
   "github.com/moorara/markdown"
-  "github.com/moorara/markdown/html"
+  "github.com/moorara/markdown/render/html"
 )
 
 htmlFlags := html.CommonFlags | html.HrefTargetBlank

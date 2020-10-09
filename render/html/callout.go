@@ -32,7 +32,7 @@ Parse:
 			}
 		}
 
-		escSeq := Escaper[d[i]]
+		escSeq := escaper[d[i]]
 		if escSeq != nil {
 			w.Write(escSeq)
 		} else {

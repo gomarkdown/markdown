@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/moorara/markdown/ast"
-	"github.com/moorara/markdown/md"
+	"github.com/moorara/markdown/render/md"
 	"github.com/moorara/markdown/parser"
 )
 

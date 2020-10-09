@@ -7,7 +7,7 @@ import (
 
 // SmartyPants rendering
 
-// SPRenderer is a struct containing state of a Smartypants renderer.
+// SPRenderer is a struct containing state of a Smarty Pants renderer.
 type SPRenderer struct {
 	inSingleQuote bool
 	inDoubleQuote bool

@@ -1,4 +1,15 @@
+/*
+Package ast defines tree representation of a parsed markdown document.
+*/
 package ast
+
+// Attribute can be attached to block elements.
+// They are specified as {#id .classs key="value"} where quotes for values are mandatory, multiple key/value pairs are separated by whitespace.
+type Attribute struct {
+	ID      []byte
+	Classes [][]byte
+	Attrs   map[string][]byte
+}
 
 // ListType contains bitwise or'ed flags for list and list item objects.
 type ListType int
@@ -41,7 +52,7 @@ func (a CellAlignFlags) String() string {
 	}
 }
 
-// DocumentMatters holds the type of a {front,main,back}matter in the document
+// DocumentMatters holds the type of a {front,main,back}matter in the document.
 type DocumentMatters int
 
 // These are all possible Document divisions.
@@ -52,13 +63,17 @@ const (
 	DocumentMatterBack
 )
 
-// CitationTypes holds the type of a citation, informative, normative or suppressed
+// CitationTypes holds the type of a citation, informative, normative or suppressed.
 type CitationTypes int
 
 const (
+	// CitationTypeNone is the default citation type.
 	CitationTypeNone CitationTypes = iota
+	// CitationTypeSuppressed represents a suppressed citation.
 	CitationTypeSuppressed
+	// CitationTypeInformative represents a informative citation.
 	CitationTypeInformative
+	// CitationTypeNormative represents a normative citation.
 	CitationTypeNormative
 )
 
@@ -395,7 +410,7 @@ type Subscript struct {
 	Leaf
 }
 
-// Subscript is a superscript node
+// Superscript is a superscript node
 type Superscript struct {
 	Leaf
 }
