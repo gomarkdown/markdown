@@ -3,7 +3,7 @@ package parser
 import (
 	"bytes"
 
-	"github.com/gomarkdown/markdown/ast"
+	"github.com/moorara/markdown/ast"
 )
 
 // citation parses a citation. In its most simple form [@ref], we allow multiple

@@ -4,7 +4,7 @@ Initial performance:
 ```
 goos: darwin
 goarch: amd64
-pkg: github.com/gomarkdown/markdown
+pkg: github.com/moorara/markdown
 BenchmarkEscapeHTML-8                           	 2000000	       823 ns/op	       0 B/op	       0 allocs/op
 BenchmarkSmartDoubleQuotes-8                    	  300000	      5033 ns/op	    9872 B/op	      56 allocs/op
 BenchmarkReferenceAmps-8                        	  100000	     19538 ns/op	   26776 B/op	     150 allocs/op
@@ -30,7 +30,7 @@ BenchmarkReferenceStrongAndEm-8                 	  200000	     10020 ns/op	   17
 BenchmarkReferenceTabs-8                        	  200000	     12025 ns/op	   18224 B/op	      81 allocs/op
 BenchmarkReferenceTidyness-8                    	  200000	      8985 ns/op	   14432 B/op	      71 allocs/op
 PASS
-ok  	github.com/gomarkdown/markdown	45.375s
+ok  	github.com/moorara/markdown	45.375s
 ```
 
 After switching to using interface{} for Node.Data:
@@ -70,7 +70,7 @@ $ ./s/run-bench.sh
 go test -bench=. -test.benchmem
 goos: darwin
 goarch: amd64
-pkg: github.com/gomarkdown/markdown
+pkg: github.com/moorara/markdown
 BenchmarkEscapeHTML-8                           	 2000000	       834 ns/op	       0 B/op	       0 allocs/op
 BenchmarkSmartDoubleQuotes-8                    	  300000	      3486 ns/op	    6160 B/op	      27 allocs/op
 BenchmarkReferenceAmps-8                        	  100000	     18158 ns/op	   14792 B/op	     125 allocs/op
@@ -95,7 +95,7 @@ BenchmarkReferenceOrderedAndUnorderedLists-8    	   20000	     74422 ns/op	   51
 BenchmarkReferenceStrongAndEm-8                 	  200000	      7888 ns/op	    9088 B/op	      49 allocs/op
 BenchmarkReferenceTabs-8                        	  200000	     10061 ns/op	   10688 B/op	      58 allocs/op
 BenchmarkReferenceTidyness-8                    	  200000	      7152 ns/op	    8208 B/op	      46 allocs/op
-ok  	github.com/gomarkdown/markdown	40.809s
+ok  	github.com/moorara/markdown	40.809s
 ```
 
 After refactoring Renderer:
@@ -124,7 +124,7 @@ BenchmarkReferenceOrderedAndUnorderedLists-8               20000             841
 BenchmarkReferenceStrongAndEm-8                           200000              8664 ns/op            9136 B/op         51 allocs/op
 BenchmarkReferenceTabs-8                                  100000             11110 ns/op           10736 B/op         60 allocs/op
 BenchmarkReferenceTidyness-8                              200000              7628 ns/op            8256 B/op         48 allocs/op
-ok      github.com/gomarkdown/markdown  40.841s
+ok      github.com/moorara/markdown  40.841s
 ```
 
 After Node refactor to have Children array:
@@ -154,7 +154,7 @@ BenchmarkReferenceStrongAndEm-8                           100000             105
 BenchmarkReferenceTabs-8                                  100000             13171 ns/op           10968 B/op         77 allocs/op
 BenchmarkReferenceTidyness-8                              200000              8903 ns/op            8404 B/op         62 allocs/op
 PASS
-ok      github.com/gomarkdown/markdown  43.477s
+ok      github.com/moorara/markdown  43.477s
 ```
 It's slower (but opens up possibilities for further improvements).
 
@@ -185,5 +185,5 @@ BenchmarkReferenceStrongAndEm-8                           100000             130
 BenchmarkReferenceTabs-8                                  100000             15005 ns/op           10752 B/op         71 allocs/op
 BenchmarkReferenceTidyness-8                              200000             10308 ns/op            8292 B/op         58 allocs/op
 PASS
-ok      github.com/gomarkdown/markdown  42.176s
+ok      github.com/moorara/markdown  42.176s
 ```

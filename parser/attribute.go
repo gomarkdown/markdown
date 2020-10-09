@@ -3,7 +3,7 @@ package parser
 import (
 	"bytes"
 
-	"github.com/gomarkdown/markdown/ast"
+	"github.com/moorara/markdown/ast"
 )
 
 // attribute parses a (potential) block attribute and adds it to p.

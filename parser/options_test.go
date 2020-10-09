@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/gomarkdown/markdown/ast"
+	"github.com/moorara/markdown/ast"
 )
 
 func blockTitleHook(data []byte) (ast.Node, []byte, int) {

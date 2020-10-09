@@ -5,7 +5,7 @@ Configuring and customizing a renderer
 
 A renderer can be configured with multiple options:
 
-	import "github.com/gomarkdown/markdown/html"
+	import "github.com/moorara/markdown/html"
 
 	flags := html.CommonFlags | html.CompletePage | html.HrefTargetBlank
 	opts := html.RendererOptions{
@@ -20,8 +20,8 @@ This is most useful for rendering nodes that allow for design choices, like
 links or code blocks.
 
 	import (
-		"github.com/gomarkdown/markdown/html"
-		"github.com/gomarkdown/markdown/ast"
+		"github.com/moorara/markdown/html"
+		"github.com/moorara/markdown/ast"
 	)
 
 	// a very dummy render hook that will output "code_replacements" instead of

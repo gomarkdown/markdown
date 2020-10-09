@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gomarkdown/markdown/ast"
+	"github.com/moorara/markdown/ast"
 )
 
 // Flags control optional behavior of HTML renderer.
@@ -109,7 +109,7 @@ type RendererOptions struct {
 	Comments [][]byte
 
 	// Generator is a meta tag that is inserted in the generated HTML so show what rendered it. It should not include the closing tag.
-	// Defaults (note content quote is not closed) to `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
+	// Defaults (note content quote is not closed) to `  <meta name="GENERATOR" content="github.com/moorara/markdown markdown processor for Go`
 	Generator string
 }
 
@@ -148,7 +148,7 @@ func NewRenderer(opts RendererOptions) *Renderer {
 		opts.CitationFormatString = `<sup>[%s]</sup>`
 	}
 	if opts.Generator == "" {
-		opts.Generator = `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
+		opts.Generator = `  <meta name="GENERATOR" content="github.com/moorara/markdown markdown processor for Go`
 	}
 
 	return &Renderer{

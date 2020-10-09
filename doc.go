@@ -16,9 +16,9 @@ Customizing parsing and HTML rendering
 You can customize parser and HTML renderer:
 
 	import (
-		"github.com/gomarkdown/markdown/parser"
-		"github.com/gomarkdown/markdown/renderer"
-		"github.com/gomarkdown/markdown"
+		"github.com/moorara/markdown/parser"
+		"github.com/moorara/markdown/renderer"
+		"github.com/moorara/markdown"
 	)
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
 	p := parser.NewWithExtensions(extensions)
@@ -30,6 +30,6 @@ You can customize parser and HTML renderer:
 	md := []byte("markdown text")
 	html := markdown.ToHTML(md, p, renderer)
 
-For a cmd-line tool see https://github.com/gomarkdown/mdtohtml
+For a cmd-line tool see https://github.com/moorara/mdtohtml
 */
 package markdown
