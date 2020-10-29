@@ -54,3 +54,35 @@ func TestRenderNodeHookCode(t *testing.T) {
 	}
 	doTestsParam(t, tests, params)
 }
+
+func renderImagePre(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+	if _, ok := node.(*ast.Image); ok && entering {
+		_, _ = io.WriteString(w, `<figure>`)
+	}
+
+	return 0, false
+}
+
+func renderImagePost(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	if _, ok := node.(*ast.Image); ok && !entering {
+		_, _ = io.WriteString(w, `</figure>`)
+	}
+
+	return ast.GoToNext
+}
+
+func TestRenderImagePrePost(t *testing.T) {
+	tests := []string{
+		"![some-image](image.png)",
+		"<p><figure><img src=\"image.png\" alt=\"some-image\" /></figure></p>\n",
+	}
+	opts := html.RendererOptions{
+		RenderNodeHook:     renderImagePre,
+		RenderNodeHookPost: renderImagePost,
+	}
+	params := TestParams{
+		RendererOptions: opts,
+		extensions:      parser.CommonExtensions,
+	}
+	doTestsParam(t, tests, params)
+}

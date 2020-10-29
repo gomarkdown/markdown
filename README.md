@@ -116,6 +116,49 @@ md := "test\n```\nthis code block will be dropped from output\n```\ntext"
 html := markdown.ToHTML([]byte(s), nil, renderer)
 ````
 
+You can also append things after the internal rendering was processed, as sown in this example:
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/html"
+)
+
+func renderImagePre(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+	if _, ok := node.(*ast.Image); ok && entering {
+		_, _ = io.WriteString(w, `<figure>`)
+	}
+
+	return 0, false
+}
+
+func renderImagePost(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	if _, ok := node.(*ast.Image); ok && !entering {
+		_, _ = io.WriteString(w, `</figure>`)
+	}
+
+	return ast.GoToNext
+}
+
+func main() {
+	opts := html.RendererOptions{
+		RenderNodeHook:     renderImagePre,
+		RenderNodeHookPost: renderImagePost,
+	}
+	renderer := html.NewRenderer(opts)
+	// Returns:
+	//
+	//  <p><figure><img src="image.png" alt="some-image" /></figure></p>
+	fmt.Println(markdown.ToHTML([]byte("![some-image](image.png)"), nil, renderer))
+}
+```
+
 ## Sanitize untrusted content
 
 We don't protect against malicious content. When dealing with user-provided

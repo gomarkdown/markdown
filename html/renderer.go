@@ -74,6 +74,11 @@ const (
 // skip rendering this node and will return WalkStatus
 type RenderNodeFunc func(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool)
 
+// RenderNodeFuncPost allows reusing most of Renderer logic and augmenting the rendering
+// of some nodes. It runs after the renderer has run and can help wrapping, for example, images
+// in a figure. The default return value is ast.GoToNext.
+type RenderNodeFuncPost func(w io.Writer, node ast.Node, entering bool) ast.WalkStatus
+
 // RendererOptions is a collection of supplementary parameters tweaking
 // the behavior of various parts of HTML renderer.
 type RendererOptions struct {
@@ -103,6 +108,10 @@ type RendererOptions struct {
 	// if set, called at the start of RenderNode(). Allows replacing
 	// rendering of some nodes
 	RenderNodeHook RenderNodeFunc
+
+	// if set, called at the end of RenderNode(). Allows replacing
+	// rendering of some nodes
+	RenderNodeHookPost RenderNodeFuncPost
 
 	// Comments is a list of comments the renderer should detect when
 	// parsing code blocks and detecting callouts.
@@ -1026,6 +1035,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		// nothing by default; just output the list.
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
+	}
+	if r.opts.RenderNodeHookPost != nil {
+		return r.opts.RenderNodeHookPost(w, node, entering)
 	}
 	return ast.GoToNext
 }
