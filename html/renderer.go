@@ -3,6 +3,7 @@ package html
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"io"
 	"regexp"
 	"sort"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // Flags control optional behavior of HTML renderer.
@@ -132,6 +134,51 @@ type Renderer struct {
 	sr *SPRenderer
 
 	documentMatter ast.DocumentMatters // keep track of front/main/back matter.
+}
+
+// Escaper defines how to escape HTML special characters
+var Escaper = [256][]byte{
+	'&': []byte("&amp;"),
+	'<': []byte("&lt;"),
+	'>': []byte("&gt;"),
+	'"': []byte("&quot;"),
+}
+
+// EscapeHTML writes html-escaped d to w. It escapes &, <, > and " characters.
+func EscapeHTML(w io.Writer, d []byte) {
+	var start, end int
+	n := len(d)
+	for end < n {
+		escSeq := Escaper[d[end]]
+		if escSeq != nil {
+			w.Write(d[start:end])
+			w.Write(escSeq)
+			start = end + 1
+		}
+		end++
+	}
+	if start < n && end <= n {
+		w.Write(d[start:end])
+	}
+}
+
+func escLink(w io.Writer, text []byte) {
+	unesc := html.UnescapeString(string(text))
+	EscapeHTML(w, []byte(unesc))
+}
+
+// Escape writes the text to w, but skips the escape character.
+func Escape(w io.Writer, text []byte) {
+	esc := false
+	for i := 0; i < len(text); i++ {
+		if text[i] == '\\' {
+			esc = !esc
+		}
+		if esc && text[i] == '\\' {
+			continue
+		}
+		w.Write([]byte{text[i]})
+	}
 }
 
 // NewRenderer creates and configures an Renderer object, which
@@ -806,6 +853,39 @@ func (r *Renderer) ListItem(w io.Writer, listItem *ast.ListItem, entering bool) 
 		r.listItemEnter(w, listItem)
 	} else {
 		r.listItemExit(w, listItem)
+	}
+}
+
+// EscapeHTMLCallouts writes html-escaped d to w. It escapes &, <, > and " characters, *but*
+// expands callouts <<N>> with the callout HTML, i.e. by calling r.callout() with a newly created
+// ast.Callout node.
+func (r *Renderer) EscapeHTMLCallouts(w io.Writer, d []byte) {
+	ld := len(d)
+Parse:
+	for i := 0; i < ld; i++ {
+		for _, comment := range r.opts.Comments {
+			if !bytes.HasPrefix(d[i:], comment) {
+				break
+			}
+
+			lc := len(comment)
+			if i+lc < ld {
+				if id, consumed := parser.IsCallout(d[i+lc:]); consumed > 0 {
+					// We have seen a callout
+					callout := &ast.Callout{ID: id}
+					r.Callout(w, callout)
+					i += consumed + lc - 1
+					continue Parse
+				}
+			}
+		}
+
+		escSeq := Escaper[d[i]]
+		if escSeq != nil {
+			w.Write(escSeq)
+		} else {
+			w.Write([]byte{d[i]})
+		}
 	}
 }
 
