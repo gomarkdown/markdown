@@ -25,7 +25,7 @@ Parse:
 				if id, consumed := parser.IsCallout(d[i+lc:]); consumed > 0 {
 					// We have seen a callout
 					callout := &ast.Callout{ID: id}
-					r.callout(w, callout)
+					r.Callout(w, callout)
 					i += consumed + lc - 1
 					continue Parse
 				}
