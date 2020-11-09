@@ -113,29 +113,31 @@ func transformLinks(tests []string, prefix string) []string {
 func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {
 	params := TestParams{extensions: flag}
 	for _, basename := range files {
-		filename := filepath.Join("testdata", basename+".text")
-		inputBytes, err := ioutil.ReadFile(filename)
-		if err != nil {
-			t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
-			continue
-		}
-		inputBytes = normalizeNewlines(inputBytes)
-		input := string(inputBytes)
+		t.Run(basename, func(t *testing.T) {
+			filename := filepath.Join("testdata", basename+".text")
+			inputBytes, err := ioutil.ReadFile(filename)
+			if err != nil {
+				t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
+				return
+			}
+			inputBytes = normalizeNewlines(inputBytes)
+			input := string(inputBytes)
 
-		filename = filepath.Join("testdata", basename+".html")
-		expectedBytes, err := ioutil.ReadFile(filename)
-		if err != nil {
-			t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
-			continue
-		}
-		expectedBytes = normalizeNewlines(expectedBytes)
-		expected := string(expectedBytes)
+			filename = filepath.Join("testdata", basename+".html")
+			expectedBytes, err := ioutil.ReadFile(filename)
+			if err != nil {
+				t.Errorf("Couldn't open '%s', error: %v\n", filename, err)
+				return
+			}
+			expectedBytes = normalizeNewlines(expectedBytes)
+			expected := string(expectedBytes)
 
-		actual := string(runMarkdown(input, params))
-		if actual != expected {
-			t.Errorf("\n    [%#v]\nExpected[%#v]\nActual  [%#v]",
-				basename+".text", expected, actual)
-		}
+			actual := string(runMarkdown(input, params))
+			if actual != expected {
+				t.Errorf("\n    [%#v]\nExpected[%#v]\nActual  [%#v]",
+					basename+".text", expected, actual)
+			}
+		})
 	}
 }
 
