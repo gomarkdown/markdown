@@ -258,3 +258,15 @@ j|k|l|m
 </tr>
 </tfoot>
 </table>
++++
+---|---
+c | d
++++
+<table>
+<tbody>
+<tr>
+<td>c</td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
