@@ -54,3 +54,26 @@ func TestRenderNodeHookCode(t *testing.T) {
 	}
 	doTestsParam(t, tests, params)
 }
+
+func TestRenderNodeHookLinkAttrs(t *testing.T) {
+	tests := []string{
+		`[Click Me](gopher://foo.bar "Click Me")`,
+		`<p><a class="button" href="gopher://foo.bar" target="_blank" title="Click Me">Click Me</a></p>` + "\n",
+	}
+	opts := html.RendererOptions{
+		RenderNodeHook: func(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
+			link, isLink := node.(*ast.Link)
+			if isLink {
+				link.AdditionalAttributes = append(link.AdditionalAttributes, `class="button"`)
+			}
+
+			return ast.GoToNext, false
+		},
+	}
+	params := TestParams{
+		Flags:          html.HrefTargetBlank,
+		RendererOptions: opts,
+		extensions:      parser.CommonExtensions,
+	}
+	doTestsParam(t, tests, params)
+}

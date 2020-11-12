@@ -537,7 +537,7 @@ func (r *Renderer) HTMLSpan(w io.Writer, span *ast.HTMLSpan) {
 }
 
 func (r *Renderer) linkEnter(w io.Writer, link *ast.Link) {
-	var attrs []string
+	attrs := link.AdditionalAttributes
 	dest := link.Destination
 	dest = r.addAbsPrefix(dest)
 	var hrefBuf bytes.Buffer
