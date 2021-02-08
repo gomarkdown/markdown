@@ -270,3 +270,29 @@ c | d
 </tr>
 </tbody>
 </table>
++++
+a || b
+---|---|---
+f|||
+h|i|j
++++
+<table>
+<thead>
+<tr>
+<th colspan="2">a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td colspan="3">f</td>
+</tr>
+
+<tr>
+<td>h</td>
+<td>i</td>
+<td>j</td>
+</tr>
+</tbody>
+</table>
