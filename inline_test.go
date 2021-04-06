@@ -1165,6 +1165,15 @@ func TestSkipImages(t *testing.T) {
 	})
 }
 
+func TestLazyLoadImages(t *testing.T) {
+	doTestsInlineParam(t, []string{
+		"![foo](/bar/)\n",
+		"<p><img loading=\"lazy\" src=\"/bar/\" alt=\"foo\" /></p>\n",
+	}, TestParams{
+		Flags: html.LazyLoadImages,
+	})
+}
+
 func TestUseXHTML(t *testing.T) {
 	doTestsParam(t, []string{
 		"---",
