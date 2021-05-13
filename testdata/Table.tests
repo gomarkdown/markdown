@@ -296,3 +296,22 @@ h|i|j
 </tr>
 </tbody>
 </table>
++++
+| a | b |
+|---|---|
+| | |+++
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
