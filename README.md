@@ -259,10 +259,10 @@ implements the following extensions:
   should be crossed out.
 
 - **Hard line breaks**. With this extension enabled newlines in the input
-  translate into line breaks in the output. This extension is off by default.
+  translates into line breaks in the output. This extension is off by default.
 
-- **Non blocking space**. With this extension enabled spaces preceeded by an backslash n the input
-  translate non-blocking spaces in the output. This extension is off by default.
+- **Non blocking space**. With this extension enabled spaces preceeded by a backslash
+  in the input translates non-blocking spaces in the output. This extension is off by default.
 
 - **Smart quotes**. Smartypants-style punctuation substitution is
   supported, turning normal double- and single-quote marks into
@@ -281,9 +281,9 @@ implements the following extensions:
   <sup>4</sup>&frasl;<sub>5</sub>.
 
 - **MathJaX Support** is an additional feature which is supported by
-  many markdown editor. It translate inline math equation quoted by `$`
-  and display math block quoted by `$$` into MathJax compatible format.
-  hyphen `_` won't break LaTeX render within a math element any more.
+  many markdown editor. It translates inline math equations quoted by `$`
+  and displays math blocks quoted by `$$` into MathJax compatible format.
+  Hyphens (`_`) won't break LaTeX render within a math element any more.
 
   ```
   $$
@@ -299,13 +299,13 @@ implements the following extensions:
    $$
   ```
 
-- **Ordered list start number**. With this extension enabled an ordered list will start with the
+- **Ordered list start number**. With this extension enabled an ordered list will start with
   the number that was used to start it.
 
 - **Super and subscript**. With this extension enabled sequences between ^ will indicate
   superscript and ~ will become a subscript. For example: H~2~O is a liquid, 2^10^ is 1024.
 
-- **Block level attributes**, allow setting attributes (ID, classes and key/value pairs) on block
+- **Block level attributes** allow setting attributes (ID, classes and key/value pairs) on block
   level elements. The attribute must be enclosed with braces and be put on a line before the
   element.
 
