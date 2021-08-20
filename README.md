@@ -25,6 +25,7 @@ Some tools using this package:
 - https://github.com/romanyx/mdopen : view markdown files in the default browser
 - https://github.com/ystyle/sqlmanager : a library for manager sql with markdown like beetsql
 - https://gitlab.com/kendellfab/fazer : library for making templates
+- https://github.com/blmayer/tasker : a simple task list web app
 
 ## Usage
 
