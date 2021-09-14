@@ -258,8 +258,16 @@ func TestCodeSpan(t *testing.T) {
 
 		"```multiple ticks `with` ticks inside```\n",
 		"<p><code>multiple ticks `with` ticks inside</code></p>\n",
+
+		"`@param {(string|number)} n`",
+		"<p><code>@param {(string|number)} n</code></p>\n",
 	}
-	doTestsInline(t, tests)
+	doTestsInlineParam(t, tests, TestParams{})
+
+	tp := TestParams{
+		extensions: parser.Mmark,
+	}
+	doTestsInlineParam(t, tests, tp)
 }
 
 func TestLineBreak(t *testing.T) {
@@ -579,8 +587,37 @@ func TestReferenceLink(t *testing.T) {
 	doLinkTestsInline(t, tests)
 }
 
-func TestTags(t *testing.T) {
-	var tests = []string{
+func parseTestCases(s string) []string {
+	var res []string
+	tests := strings.Split(s, "----")
+	for _, test := range tests {
+		parts := strings.Split(test, "--")
+		s1 := strings.TrimLeft(parts[0], "\n")
+		s2 := strings.TrimLeft(parts[1], "\n")
+		res = append(res, s1, s2)
+	}
+	return res
+}
+
+var testTagsTestCases = `a <span>tag</span>
+--
+<p>a <span>tag</span></p>
+----
+<span>tag</span>
+--
+<p><span>tag</span></p>
+----
+<span>mismatch</spandex>
+--
+<p><span>mismatch</spandex></p>
+----
+a <singleton /> tag
+--
+<p>a <singleton /> tag</p>
+`
+
+func TestParseTestCases(t *testing.T) {
+	var exp = []string{
 		"a <span>tag</span>\n",
 		"<p>a <span>tag</span></p>\n",
 
@@ -593,6 +630,17 @@ func TestTags(t *testing.T) {
 		"a <singleton /> tag\n",
 		"<p>a <singleton /> tag</p>\n",
 	}
+	got := parseTestCases(testTagsTestCases)
+	for i, sGot := range got {
+		sExp := exp[i]
+		if sExp != sGot {
+			t.Errorf("\nExpected[%#v]\nGot     [%#v]\n", sExp, sGot)
+		}
+	}
+}
+
+func TestTags(t *testing.T) {
+	tests := parseTestCases(testTagsTestCases)
 	doTestsInline(t, tests)
 }
 
