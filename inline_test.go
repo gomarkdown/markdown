@@ -588,31 +588,30 @@ func TestReferenceLink(t *testing.T) {
 }
 
 func parseTestCases(s string) []string {
-	var res []string
-	tests := strings.Split(s, "----")
-	for _, test := range tests {
-		parts := strings.Split(test, "--")
-		s1 := strings.TrimLeft(parts[0], "\n")
-		s2 := strings.TrimLeft(parts[1], "\n")
-		res = append(res, s1, s2)
+	parts := strings.Split(s, "+++")
+	if len(parts)%2 != 0 {
+		panic("odd test tuples")
 	}
-	return res
+	for i, s := range parts {
+		parts[i] = strings.TrimLeft(s, "\n")
+	}
+	return parts
 }
 
 var testTagsTestCases = `a <span>tag</span>
---
++++
 <p>a <span>tag</span></p>
-----
++++
 <span>tag</span>
---
++++
 <p><span>tag</span></p>
-----
++++
 <span>mismatch</spandex>
---
++++
 <p><span>mismatch</spandex></p>
-----
++++
 a <singleton /> tag
---
++++
 <p>a <singleton /> tag</p>
 `
 
