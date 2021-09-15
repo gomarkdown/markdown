@@ -1,0 +1,12 @@
+# foo
+## foo
+## foo-1
+# foo
++++
+<h1 id="foo">foo</h1>
+
+<h2 id="foo-1">foo</h2>
+
+<h2 id="foo-1-1">foo-1</h2>
+
+<h1 id="foo-2">foo</h1>
