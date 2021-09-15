@@ -8,18 +8,15 @@ import (
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
-	tests := readTestFile2(t, "PrefixHeaderNoExtensions.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "PrefixHeaderNoExtensions.tests", 0)
 }
 
 func TestPrefixHeaderSpaceExtension(t *testing.T) {
-	tests := readTestFile2(t, "PrefixHeaderSpaceExtension.tests")
-	doTestsBlock(t, tests, parser.SpaceHeadings)
+	doTestsBlock(t, "PrefixHeaderSpaceExtension.tests", parser.SpaceHeadings)
 }
 
 func TestPrefixHeaderIdExtension(t *testing.T) {
-	tests := readTestFile2(t, "PrefixHeaderIdExtension.tests")
-	doTestsBlock(t, tests, parser.HeadingIDs)
+	doTestsBlock(t, "PrefixHeaderIdExtension.tests", parser.HeadingIDs)
 }
 
 func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
@@ -38,8 +35,7 @@ func TestPrefixHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 }
 
 func TestPrefixAutoHeaderIdExtension(t *testing.T) {
-	tests := readTestFile2(t, "PrefixAutoHeaderIdExtension.tests")
-	doTestsBlock(t, tests, parser.AutoHeadingIDs)
+	doTestsBlock(t, "PrefixAutoHeaderIdExtension.tests", parser.AutoHeadingIDs)
 }
 
 func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
@@ -57,118 +53,95 @@ func TestPrefixAutoHeaderIdExtensionWithPrefixAndSuffix(t *testing.T) {
 }
 
 func TestPrefixMultipleHeaderExtensions(t *testing.T) {
-	tests := readTestFile2(t, "PrefixMultipleHeaderExtensions.tests")
-	doTestsBlock(t, tests, parser.AutoHeadingIDs|parser.HeadingIDs)
+	doTestsBlock(t, "PrefixMultipleHeaderExtensions.tests", parser.AutoHeadingIDs|parser.HeadingIDs)
 }
 
 func TestPrefixHeaderMmarkExtension(t *testing.T) {
-	tests := readTestFile2(t, "PrefixHeaderMmarkExtension.tests")
-	doTestsBlock(t, tests, parser.Mmark)
+	doTestsBlock(t, "PrefixHeaderMmarkExtension.tests", parser.Mmark)
 }
 
 func TestUnderlineHeaders(t *testing.T) {
-	tests := readTestFile2(t, "UnderlineHeaders.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "UnderlineHeaders.tests", 0)
 }
 
 func TestUnderlineHeadersAutoIDs(t *testing.T) {
-	tests := readTestFile2(t, "UnderlineHeadersAutoIDs.tests")
-	doTestsBlock(t, tests, parser.AutoHeadingIDs)
+	doTestsBlock(t, "UnderlineHeadersAutoIDs.tests", parser.AutoHeadingIDs)
 }
 
 func TestHorizontalRule(t *testing.T) {
-	tests := readTestFile2(t, "HorizontalRule.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "HorizontalRule.tests", 0)
 }
 
 func TestUnorderedList(t *testing.T) {
-	tests := readTestFile2(t, "UnorderedList.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "UnorderedList.tests", 0)
 }
 
 func TestOrderedList(t *testing.T) {
-	tests := readTestFile2(t, "OrderedList.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "OrderedList.tests", 0)
 }
 
 func TestDefinitionList(t *testing.T) {
-	tests := readTestFile2(t, "DefinitionList.tests")
-	doTestsBlock(t, tests, parser.DefinitionLists)
+	doTestsBlock(t, "DefinitionList.tests", parser.DefinitionLists)
 }
 
 func TestNestedDefinitionList(t *testing.T) {
-	tests := readTestFile2(t, "NestedDefinitionList.tests")
-	doTestsBlock(t, tests, parser.DefinitionLists)
+	doTestsBlock(t, "NestedDefinitionList.tests", parser.DefinitionLists)
 }
 
 func TestPreformattedHtml(t *testing.T) {
-	tests := readTestFile2(t, "PreformattedHtml.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "PreformattedHtml.tests", 0)
 }
 
 func TestPreformattedHtmlLax(t *testing.T) {
-	tests := readTestFile2(t, "PreformattedHtmlLax.tests")
-	doTestsBlock(t, tests, parser.LaxHTMLBlocks)
+	doTestsBlock(t, "PreformattedHtmlLax.tests", parser.LaxHTMLBlocks)
 }
 
 func TestFencedCodeBlock(t *testing.T) {
-	tests := readTestFile2(t, "FencedCodeBlock.tests")
-	doTestsBlock(t, tests, parser.FencedCode)
+	doTestsBlock(t, "FencedCodeBlock.tests", parser.FencedCode)
 }
 
 func TestFencedCodeInsideBlockquotes(t *testing.T) {
-	tests := readTestFile2(t, "FencedCodeInsideBlockquotes.tests")
-	doTestsBlock(t, tests, parser.FencedCode)
+	doTestsBlock(t, "FencedCodeInsideBlockquotes.tests", parser.FencedCode)
 }
 
 func TestTable(t *testing.T) {
-	tests := readTestFile2(t, "Table.tests")
-	doTestsBlock(t, tests, parser.Tables)
+	doTestsBlock(t, "Table.tests", parser.Tables)
 }
 
 func TestUnorderedListWith_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
-	tests := readTestFile2(t, "UnorderedListWith_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK.tests")
-	doTestsBlock(t, tests, parser.NoEmptyLineBeforeBlock)
+	doTestsBlock(t, "UnorderedListWith_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK.tests", parser.NoEmptyLineBeforeBlock)
 }
 
 func TestOrderedList_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
-	tests := readTestFile2(t, "OrderedList_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK.tests")
-	doTestsBlock(t, tests, parser.NoEmptyLineBeforeBlock)
+	doTestsBlock(t, "OrderedList_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK.tests", parser.NoEmptyLineBeforeBlock)
 }
 
 func TestFencedCodeBlock_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
-	tests := readTestFile2(t, "FencedCodeBlock_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK.tests")
-	doTestsBlock(t, tests, parser.FencedCode|parser.NoEmptyLineBeforeBlock)
+	doTestsBlock(t, "FencedCodeBlock_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK.tests", parser.FencedCode|parser.NoEmptyLineBeforeBlock)
 }
 
 func TestMathBlock(t *testing.T) {
-	tests := readTestFile2(t, "MathBlock.tests")
-	doTestsBlock(t, tests, parser.CommonExtensions)
+	doTestsBlock(t, "MathBlock.tests", parser.CommonExtensions)
 }
 
 func TestDefinitionListWithFencedCodeBlock(t *testing.T) {
-	tests := readTestFile2(t, "DefinitionListWithFencedCodeBlock.tests")
-	doTestsBlock(t, tests, parser.FencedCode|parser.DefinitionLists)
+	doTestsBlock(t, "DefinitionListWithFencedCodeBlock.tests", parser.FencedCode|parser.DefinitionLists)
 }
 
 func TestListWithFencedCodeBlockAndHeader(t *testing.T) {
-	tests := readTestFile2(t, "ListWithFencedCodeBlockAndHeader.tests")
-	doTestsBlock(t, tests, parser.FencedCode)
+	doTestsBlock(t, "ListWithFencedCodeBlockAndHeader.tests", parser.FencedCode)
 }
 
 func TestTitleBlock_EXTENSION_TITLEBLOCK(t *testing.T) {
-	tests := readTestFile2(t, "TitleBlock_EXTENSION_TITLEBLOCK.tests")
-	doTestsBlock(t, tests, parser.Titleblock)
+	doTestsBlock(t, "TitleBlock_EXTENSION_TITLEBLOCK.tests", parser.Titleblock)
 }
 
 func TestBlockComments(t *testing.T) {
-	tests := readTestFile2(t, "BlockComments.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "BlockComments.tests", 0)
 }
 
 func TestBug168(t *testing.T) {
-	tests := readTestFile2(t, "bug168.tests")
-	doTestsBlock(t, tests, 0)
+	doTestsBlock(t, "bug168.tests", 0)
 }
 
 func TestTOC(t *testing.T) {

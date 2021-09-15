@@ -38,7 +38,8 @@ func doTests(t *testing.T, tests []string) {
 	})
 }
 
-func doTestsBlock(t *testing.T, tests []string, extensions parser.Extensions) {
+func doTestsBlock(t *testing.T, path string, extensions parser.Extensions) {
+	tests := readTestFile2(t, path)
 	doTestsParam(t, tests, TestParams{
 		extensions: extensions,
 		Flags:      html.UseXHTML,
