@@ -7,53 +7,53 @@ import (
 
 func TestIsInclude(t *testing.T) {
 	tests := []struct {
-		data []byte
+		data string
 		file string
 		addr string
 		read int
 	}{
 		{
-			[]byte("{{foo}}"),
+			"{{foo}}",
 			"foo", "", 7,
 		},
 		{
-			[]byte("{{foo}}  "),
+			"{{foo}}  ",
 			"foo", "", 7,
 		},
 		{
-			[]byte("{{foo}}[a]"),
+			"{{foo}}[a]",
 			"foo", "a", 10,
 		},
 		{
-			[]byte("{{foo}}[a  ]  "),
+			"{{foo}}[a  ]  ",
 			"foo", "a  ", 12,
 		},
 		{
-			[]byte("{{foo}}a]"),
+			"{{foo}}a]",
 			"foo", "", 7,
 		},
 		{
-			[]byte("   {{foo}}"),
+			"   {{foo}}",
 			"foo", "", 10,
 		},
 		// fails
 		{
-			[]byte("{foo}}"),
+			"{foo}}",
 			"", "", 0,
 		},
 		{
-			[]byte("{foo}"),
+			"{foo}",
 			"", "", 0,
 		},
 		{
-			[]byte("{{foo}}[a"),
+			"{{foo}}[a",
 			"", "", 0,
 		},
 	}
 
 	p := New()
 	for i, test := range tests {
-		file, addr, read := p.isInclude(test.data)
+		file, addr, read := p.isInclude([]byte(test.data))
 		if file != test.file {
 			t.Errorf("test %d, want %s, got %s", i, test.file, file)
 		}
