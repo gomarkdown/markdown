@@ -422,12 +422,13 @@ func (p *Parser) prefixHeading(data []byte) int {
 		end--
 	}
 	if end > i {
-		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			id = sanitizeAnchorName(string(data[i:end]))
-		}
 		block := &ast.Heading{
 			HeadingID: id,
 			Level:     level,
+		}
+		if id == "" && p.extensions&AutoHeadingIDs != 0 {
+			block.HeadingID = sanitizeAnchorName(string(data[i:end]))
+			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 		}
 		block.Content = data[i:end]
 		p.addBlock(block)
@@ -492,13 +493,14 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 		end--
 	}
 	if end > i {
-		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			id = sanitizeAnchorName(string(data[i:end]))
-		}
 		block := &ast.Heading{
 			HeadingID: id,
 			IsSpecial: true,
 			Level:     1, // always level 1.
+		}
+		if id == "" && p.extensions&AutoHeadingIDs != 0 {
+			block.HeadingID = sanitizeAnchorName(string(data[i:end]))
+			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 		}
 		block.Literal = data[i:end]
 		block.Content = data[i:end]
@@ -1887,15 +1889,14 @@ func (p *Parser) paragraph(data []byte) int {
 					eol--
 				}
 
-				id := ""
+				block := &ast.Heading{
+					Level: level,
+				}
 				if p.extensions&AutoHeadingIDs != 0 {
-					id = sanitizeAnchorName(string(data[prev:eol]))
+					block.HeadingID = sanitizeAnchorName(string(data[prev:eol]))
+					p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 				}
 
-				block := &ast.Heading{
-					Level:     level,
-					HeadingID: id,
-				}
 				block.Content = data[prev:eol]
 				p.addBlock(block)
 
