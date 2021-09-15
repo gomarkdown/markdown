@@ -74,9 +74,9 @@ var (
 	}
 )
 
-// sanitizeAnchorName returns a sanitized anchor name for the given text.
+// sanitizeHeadingID returns a sanitized anchor name for the given text.
 // Taken from https://github.com/shurcooL/sanitized_anchor_name/blob/master/main.go#L14:1
-func sanitizeAnchorName(text string) string {
+func sanitizeHeadingID(text string) string {
 	var anchorName []rune
 	var futureDash = false
 	for _, r := range text {
@@ -90,6 +90,9 @@ func sanitizeAnchorName(text string) string {
 		default:
 			futureDash = true
 		}
+	}
+	if len(anchorName) == 0 {
+		return "empty"
 	}
 	return string(anchorName)
 }
@@ -427,7 +430,7 @@ func (p *Parser) prefixHeading(data []byte) int {
 			Level:     level,
 		}
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			block.HeadingID = sanitizeAnchorName(string(data[i:end]))
+			block.HeadingID = sanitizeHeadingID(string(data[i:end]))
 			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 		}
 		block.Content = data[i:end]
@@ -499,7 +502,7 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 			Level:     1, // always level 1.
 		}
 		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			block.HeadingID = sanitizeAnchorName(string(data[i:end]))
+			block.HeadingID = sanitizeHeadingID(string(data[i:end]))
 			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 		}
 		block.Literal = data[i:end]
@@ -1893,7 +1896,7 @@ func (p *Parser) paragraph(data []byte) int {
 					Level: level,
 				}
 				if p.extensions&AutoHeadingIDs != 0 {
-					block.HeadingID = sanitizeAnchorName(string(data[prev:eol]))
+					block.HeadingID = sanitizeHeadingID(string(data[prev:eol]))
 					p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 				}
 

@@ -10,3 +10,19 @@
 <h2 id="foo-1-1">foo-1</h2>
 
 <h1 id="foo-2">foo</h1>
++++
+### ⌥
+
+- For Windows and Linux, `⌥` is the `Alt` key.
+- For macOS, it's the `Option` key.
+
+# ⌥
++++
+<h3 id="empty">⌥</h3>
+
+<ul>
+<li>For Windows and Linux, <code>⌥</code> is the <code>Alt</code> key.</li>
+<li>For macOS, it's the <code>Option</code> key.</li>
+</ul>
+
+<h1 id="empty-1">⌥</h1>

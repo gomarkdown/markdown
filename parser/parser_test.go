@@ -68,42 +68,40 @@ func TestIsFenceLine(t *testing.T) {
 }
 
 func TestSanitizedAnchorName(t *testing.T) {
-	tests := []struct {
-		text string
-		want string
-	}{
-		{
-			text: "This is a header",
-			want: "this-is-a-header",
-		},
-		{
-			text: "This is also          a header",
-			want: "this-is-also-a-header",
-		},
-		{
-			text: "main.go",
-			want: "main-go",
-		},
-		{
-			text: "Article 123",
-			want: "article-123",
-		},
-		{
-			text: "<- Let's try this, shall we?",
-			want: "let-s-try-this-shall-we",
-		},
-		{
-			text: "        ",
-			want: "",
-		},
-		{
-			text: "Hello, 世界",
-			want: "hello-世界",
-		},
+	tests := []string{
+		"This is a header",
+		"this-is-a-header",
+
+		"This is also          a header",
+		"this-is-also-a-header",
+
+		"main.go",
+		"main-go",
+
+		"Article 123",
+		"article-123",
+
+		"<- Let's try this, shall we?",
+		"let-s-try-this-shall-we",
+
+		"        ",
+		"empty",
+
+		"Hello, 世界",
+		"hello-世界",
+
+		"世界",
+		"世界",
+
+		"⌥",
+		"empty",
 	}
-	for _, test := range tests {
-		if got := sanitizeAnchorName(test.text); got != test.want {
-			t.Errorf("SanitizedAnchorName(%q):\ngot %q\nwant %q", test.text, got, test.want)
+	n := len(tests)
+	for i := 0; i < n; i += 2 {
+		text := tests[i]
+		want := tests[i+1]
+		if got := sanitizeHeadingID(text); got != want {
+			t.Errorf("SanitizedAnchorName(%q):\ngot %q\nwant %q", text, got, want)
 		}
 	}
 }
