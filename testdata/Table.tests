@@ -315,3 +315,22 @@ h|i|j
 </tr>
 </tbody>
 </table>
++++
+|  |  |
+|---|---|
+| a | b |+++
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>a</td>
+<td>b</td>
+</tr>
+</tbody>
+</table>

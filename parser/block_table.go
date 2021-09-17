@@ -114,12 +114,16 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 	i := 0
 	colCount := 1
 	headerIsUnderline := true
+	headerIsWithEmptyFields := true
 	for i = 0; i < len(data) && data[i] != '\n'; i++ {
 		if data[i] == '|' && !isBackslashEscaped(data, i) {
 			colCount++
 		}
 		if data[i] != '-' && data[i] != ' ' && data[i] != ':' && data[i] != '|' {
 			headerIsUnderline = false
+		}
+		if data[i] != ' ' && data[i] != '|' {
+			headerIsWithEmptyFields = false
 		}
 	}
 
@@ -142,7 +146,7 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 
 	// if the header looks like a underline, then we omit the header
 	// and parse the first line again as underline
-	if headerIsUnderline {
+	if headerIsUnderline && !headerIsWithEmptyFields {
 		header = nil
 		i = 0
 	} else {
