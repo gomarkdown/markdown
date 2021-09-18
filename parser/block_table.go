@@ -13,19 +13,15 @@ func isBackslashEscaped(data []byte, i int) bool {
 
 func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool) {
 	p.addBlock(&ast.TableRow{})
-	i, col := 0, 0
+	col := 0
 
-	if data[i] == '|' && !isBackslashEscaped(data, i) {
-		i++
-	}
+	i := skipChar(data, 0, '|')
 
 	n := len(data)
 	colspans := 0 // keep track of total colspan in this row.
 	for col = 0; col < len(columns) && i < n; col++ {
 		colspan := 0
-		for i < n && data[i] == ' ' {
-			i++
-		}
+		i = skipChar(data, i, ' ')
 
 		cellStart := i
 
@@ -83,11 +79,10 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 // tableFooter parses the (optional) table footer.
 func (p *Parser) tableFooter(data []byte) bool {
 	colCount := 1
-	i := 0
+
+	// ignore up to 3 spaces
 	n := len(data)
-	for i < 3 && i < n && data[i] == ' ' { // ignore up to 3 spaces
-		i++
-	}
+	i := skipCharN(data, 0, ' ', 3)
 	for ; i < n && data[i] != '\n'; i++ {
 		if data[i] == '|' && !isBackslashEscaped(data, i) {
 			colCount++
