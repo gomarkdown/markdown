@@ -46,7 +46,7 @@ func (p *Parser) aside(data []byte) int {
 		// irregardless of any contents inside it
 		for end < len(data) && data[end] != '\n' {
 			if p.extensions&FencedCode != 0 {
-				if i := p.fencedCodeBlock(data[end:], false); i > 0 {
+				if i := p.fencedCodeBlock(data[end:], false, false); i > 0 {
 					// -1 to compensate for the extra end++ after the loop:
 					end += i - 1
 					break

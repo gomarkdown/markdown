@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"html"
 	"regexp"
 	"strconv"
@@ -226,7 +227,7 @@ func (p *Parser) block(data []byte) {
 		// }
 		// ```
 		if p.extensions&FencedCode != 0 {
-			if i := p.fencedCodeBlock(data, true); i > 0 {
+			if i := p.fencedCodeBlock(data, false, true); i > 0 {
 				data = data[i:]
 				continue
 			}
@@ -901,7 +902,7 @@ func isFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 // fencedCodeBlock returns the end index if data contains a fenced code block at the beginning,
 // or 0 otherwise. It writes to out if doRender is true, otherwise it has no side effects.
 // If doRender is true, a final newline is mandatory to recognize the fenced code block.
-func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
+func (p *Parser) fencedCodeBlock(data []byte, insideBlockquote bool, doRender bool) int {
 	var syntax string
 	beg, marker := isFenceLine(data, &syntax, "")
 	if beg == 0 || beg >= len(data) {
@@ -915,9 +916,19 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	for {
 		// safe to assume beg < len(data)
 
+		pre := 0
+		if insideBlockquote {
+			// skip '>' prefix
+			pre = p.quotePrefix(data[beg:])
+			if pre > 0 {
+				beg += pre
+			}
+		}
+
 		// check for the end of the code block
 		fenceEnd, _ := isFenceLine(data[beg:], nil, marker)
 		if fenceEnd != 0 {
+			fenceEnd += pre
 			beg += fenceEnd
 			break
 		}
@@ -1038,12 +1049,13 @@ func (p *Parser) quote(data []byte) int {
 	beg, end := 0, 0
 	for beg < len(data) {
 		end = beg
+		tmp := data[end:]
 		// Step over whole lines, collecting them. While doing that, check for
 		// fenced code and if one's found, incorporate it altogether,
 		// irregardless of any contents inside it
 		for end < len(data) && data[end] != '\n' {
 			if p.extensions&FencedCode != 0 {
-				if i := p.fencedCodeBlock(data[end:], false); i > 0 {
+				if i := p.fencedCodeBlock(data[end:], true, false); i > 0 {
 					// -1 to compensate for the extra end++ after the loop:
 					end += i - 1
 					break
@@ -1061,6 +1073,9 @@ func (p *Parser) quote(data []byte) int {
 		// this line is part of the blockquote
 		raw.Write(data[beg:end])
 		beg = end
+		if false {
+			fmt.Printf("%s\n", string(tmp))
+		}
 	}
 
 	if p.extensions&Mmark == 0 {
@@ -1631,7 +1646,7 @@ func (p *Parser) paragraph(data []byte) int {
 
 		// if there's a fenced code block, paragraph is over
 		if p.extensions&FencedCode != 0 {
-			if p.fencedCodeBlock(current, false) > 0 {
+			if p.fencedCodeBlock(current, false, false) > 0 {
 				p.renderParagraph(data[:i])
 				return i
 			}
