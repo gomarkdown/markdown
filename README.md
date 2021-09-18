@@ -134,17 +134,8 @@ html := bluemonday.UGCPolicy().SanitizeBytes(maybeUnsafeHTML)
 ## Windows / Mac newlines
 
 The library only supports Unix newlines. If you have markdown text with possibly
-Windows / Mac newlines, normalize newlines before caling this library. Use function like:
-
-```go
-func normalizeNewlines(s string) string {
-	// replace CR LF (windows) with LF (unix)
-	s = strings.Replace(s, string([]byte{13, 10}), "\n", -1)
-	// replace CF (mac) with LF (unix)
-	s = strings.Replace(s, string([]byte{13}), "\n", -1)
-	return s
-}
-```
+Windows / Mac newlines, normalize newlines before caling this librar using
+`d = markdown.NormalizeNewlines(d)`
 
 ## mdtohtml command-line tool
 
