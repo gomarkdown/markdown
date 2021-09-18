@@ -135,8 +135,21 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 	if data[0] == '|' {
 		colCount--
 	}
-	if i > 2 && data[i-1] == '|' && !isBackslashEscaped(data, i-1) {
-		colCount--
+	{
+		tmp := header
+		// remove whitespace from the end
+		for len(tmp) > 0 {
+			lastIdx := len(tmp) - 1
+			if tmp[lastIdx] == '\n' || tmp[lastIdx] == ' ' {
+				tmp = tmp[:lastIdx]
+			} else {
+				break
+			}
+		}
+		n := len(tmp)
+		if n > 2 && tmp[n-1] == '|' && !isBackslashEscaped(tmp, n-1) {
+			colCount--
+		}
 	}
 
 	// if the header looks like a underline, then we omit the header
