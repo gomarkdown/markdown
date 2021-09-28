@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/gomarkdown/markdown/ast"
+import (
+	"github.com/gomarkdown/markdown/ast"
+)
 
 // check if the specified position is preceded by an odd number of backslashes
 func isBackslashEscaped(data []byte, i int) bool {
@@ -244,6 +246,104 @@ func (p *Parser) tableHeader(data []byte) (size int, columns []ast.CellAlignFlag
 	}
 	size = skipCharN(data, i, '\n', 1)
 	return
+}
+
+func getLineIdx(d []byte) ([]byte, int) {
+	n := len(d)
+	for i := 0; i < n; i++ {
+		if d[i] == '\n' {
+			line := d[:i]
+			return line, i + 1
+		}
+	}
+	return d, -1
+}
+
+func isEmptyOrSpace(d []byte) bool {
+	for i := 0; i < len(d); i++ {
+		if d[i] == ' ' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+type tableRowInfo struct {
+	row     [][]byte
+	restIdx int
+	align   ast.CellAlignFlags
+}
+
+func (p *Parser) table2(data []byte) int {
+	parseRow := func(d []byte) *tableRowInfo {
+		line, restIdx := getLineIdx(d)
+		if isEmptyOrSpace(line) {
+			return nil
+		}
+
+		quotePos := -1 // track unclosed "`" char
+		n := len(line)
+		var col []byte
+		var row [][]byte
+		for i := 0; i < n; i++ {
+			c := d[i]
+			if c == '\\' {
+				var nc byte
+				if i+1 < n {
+					nc = d[i+1]
+				}
+				// backslash escapes | and itself
+				if nc == '\\' {
+					col = append(col, '\\')
+				} else if nc == '|' {
+					col = append(col, '|')
+				} else {
+					col = append(col, c, nc)
+				}
+				continue
+			}
+			if c == '`' {
+				if quotePos > 0 {
+					quotePos = -1
+				}
+			}
+			if quotePos != -1 {
+				col = append(col, c)
+				continue
+			}
+			if c != '|' {
+				col = append(col, c)
+				continue
+			}
+			// c == '|'
+			row = append(row, col)
+			col = nil
+		}
+		if len(row) == 0 {
+			return nil
+		}
+		return &tableRowInfo{
+			row:     row,
+			restIdx: restIdx,
+		}
+	}
+
+	var rows []*tableRowInfo
+	restIdx := 0
+	for {
+		d := data[restIdx:]
+		row := parseRow(d)
+		if row == nil {
+			break
+		}
+		rows = append(rows, row)
+		restIdx += row.restIdx
+	}
+	if len(rows) < 2 {
+		return 0
+	}
+	return 0
 }
 
 /*
