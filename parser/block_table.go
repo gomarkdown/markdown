@@ -272,7 +272,12 @@ func isEmptyOrSpace(d []byte) bool {
 type tableRowInfo struct {
 	row     [][]byte
 	restIdx int
-	align   ast.CellAlignFlags
+}
+
+type tableInfo struct {
+	header *tableRowInfo
+	align  []ast.CellAlignFlags
+	rows   []*tableRowInfo
 }
 
 func (p *Parser) table2(data []byte) int {
