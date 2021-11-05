@@ -17,6 +17,12 @@ const (
 	escapable  = "[!\"#$%&'()*+,./:;<=>?@[\\\\\\]^_`{|}~-]"
 )
 
+const (
+	captionTable  = "Table: "
+	captionFigure = "Figure: "
+	captionQuote  = "Quote: "
+)
+
 var (
 	reBackslashOrAmp      = regexp.MustCompile("[\\&]")
 	reEntityOrEscapedChar = regexp.MustCompile("(?i)\\\\" + escapable + "|" + charEntity)
@@ -125,6 +131,16 @@ func (p *Parser) block(data []byte) {
 			}
 			if consumed > 0 {
 				included := f(p.includeStack.Last(), path, address)
+
+				// if we find a caption below this, we need to include it in 'included', so
+				// that the caption will be part of the include text. (+1 to skip newline)
+				for _, caption := range []string{captionFigure, captionTable, captionQuote} {
+					if _, _, capcon := p.caption(data[consumed+1:], []byte(caption)); capcon > 0 {
+						included = append(included, data[consumed+1:consumed+1+capcon]...)
+						consumed += 1 + capcon
+						break // there can only be 1 caption.
+					}
+				}
 				p.includeStack.Push(path)
 				p.block(included)
 				p.includeStack.Pop()
@@ -950,7 +966,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 
 		// Check for caption and if found make it a figure.
-		if captionContent, id, consumed := p.caption(data[beg:], []byte("Figure: ")); consumed > 0 {
+		if captionContent, id, consumed := p.caption(data[beg:], []byte(captionFigure)); consumed > 0 {
 			figure := &ast.CaptionFigure{}
 			caption := &ast.Caption{}
 			figure.HeadingID = id
@@ -1070,7 +1086,7 @@ func (p *Parser) quote(data []byte) int {
 		return end
 	}
 
-	if captionContent, id, consumed := p.caption(data[end:], []byte("Quote: ")); consumed > 0 {
+	if captionContent, id, consumed := p.caption(data[end:], []byte(captionQuote)); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
 		figure.HeadingID = id

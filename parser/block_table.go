@@ -284,7 +284,7 @@ func (p *Parser) table(data []byte) int {
 
 		p.tableRow(data[rowStart:i], columns, false)
 	}
-	if captionContent, id, consumed := p.caption(data[i:], []byte("Table: ")); consumed > 0 {
+	if captionContent, id, consumed := p.caption(data[i:], []byte(captionTable)); consumed > 0 {
 		caption := &ast.Caption{}
 		p.Inline(caption, captionContent)
 
