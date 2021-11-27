@@ -1206,7 +1206,7 @@ func (p *Parser) oliPrefix(data []byte) int {
 	}
 
 	// we need >= 1 digits followed by a dot and a space or a tab
-	if data[i] != '.' || !(data[i+1] == ' ' || data[i+1] == '\t') {
+	if data[i] != '.' && data[i] != ')' || !(data[i+1] == ' ' || data[i+1] == '\t') {
 		return 0
 	}
 	return i + 2
@@ -1321,10 +1321,16 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 		}
 	}
 
-	var bulletChar byte = '*'
+	var (
+		bulletChar byte = '*'
+		delimiter  byte = '.'
+	)
 	i := p.uliPrefix(data)
 	if i == 0 {
 		i = p.oliPrefix(data)
+		if i > 0 {
+			delimiter = data[i-2]
+		}
 	} else {
 		bulletChar = data[i-2]
 	}
@@ -1484,7 +1490,7 @@ gatherlines:
 		ListFlags:  *flags,
 		Tight:      false,
 		BulletChar: bulletChar,
-		Delimiter:  '.', // Only '.' is possible in Markdown, but ')' will also be possible in CommonMark
+		Delimiter:  delimiter,
 	}
 	p.addBlock(listItem)
 
