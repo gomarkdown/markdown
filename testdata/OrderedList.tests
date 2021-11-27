@@ -53,14 +53,14 @@
 +++
 <p>1.Hello</p>
 +++
-1.  Hello 
+1.  Hello
 +++
 <ol>
 <li>Hello</li>
 </ol>
 +++
-1.  Hello 
-    Next line 
+1.  Hello
+    Next line
 +++
 <ol>
 <li>Hello
@@ -248,4 +248,12 @@ Second line</p>
 <ol>
 <li>numbers</li>
 <li>are ignored</li>
+</ol>
++++
+1) parentheses
+2) are supported
++++
+<ol>
+<li>parentheses</li>
+<li>are supported</li>
 </ol>
