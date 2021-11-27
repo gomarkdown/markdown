@@ -311,7 +311,7 @@ func (p *Parser) block(data []byte) {
 		//
 		// also works with + or -
 		if p.uliPrefix(data) > 0 {
-			data = data[p.list(data, 0, 0):]
+			data = data[p.list(data, 0, 0, '.'):]
 			continue
 		}
 
@@ -321,14 +321,18 @@ func (p *Parser) block(data []byte) {
 		// 2. Item 2
 		if i := p.oliPrefix(data); i > 0 {
 			start := 0
-			if i > 2 && p.extensions&OrderedListStart != 0 {
-				s := string(data[:i-2])
-				start, _ = strconv.Atoi(s)
-				if start == 1 {
-					start = 0
+			delim := byte('.')
+			if i > 2 {
+				if p.extensions&OrderedListStart != 0 {
+					s := string(data[:i-2])
+					start, _ = strconv.Atoi(s)
+					if start == 1 {
+						start = 0
+					}
 				}
+				delim = data[i-2]
 			}
-			data = data[p.list(data, ast.ListTypeOrdered, start):]
+			data = data[p.list(data, ast.ListTypeOrdered, start, delim):]
 			continue
 		}
 
@@ -342,7 +346,7 @@ func (p *Parser) block(data []byte) {
 		// :   Definition c
 		if p.extensions&DefinitionLists != 0 {
 			if p.dliPrefix(data) > 0 {
-				data = data[p.list(data, ast.ListTypeDefinition, 0):]
+				data = data[p.list(data, ast.ListTypeDefinition, 0, '.'):]
 				continue
 			}
 		}
@@ -1226,13 +1230,14 @@ func (p *Parser) dliPrefix(data []byte) int {
 }
 
 // parse ordered or unordered list block
-func (p *Parser) list(data []byte, flags ast.ListType, start int) int {
+func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) int {
 	i := 0
 	flags |= ast.ListItemBeginningOfList
 	list := &ast.List{
 		ListFlags: flags,
 		Tight:     true,
 		Start:     start,
+		Delimiter: delim,
 	}
 	block := p.addBlock(list)
 
@@ -1596,7 +1601,7 @@ func (p *Parser) paragraph(data []byte) int {
 			// did this blank line followed by a definition list item?
 			if p.extensions&DefinitionLists != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
-					listLen := p.list(data[prev:], ast.ListTypeDefinition, 0)
+					listLen := p.list(data[prev:], ast.ListTypeDefinition, 0, '.')
 					return prev + listLen
 				}
 			}
@@ -1670,7 +1675,7 @@ func (p *Parser) paragraph(data []byte) int {
 		// if there's a definition list item, prev line is a definition term
 		if p.extensions&DefinitionLists != 0 {
 			if p.dliPrefix(current) != 0 {
-				ret := p.list(data[prev:], ast.ListTypeDefinition, 0)
+				ret := p.list(data[prev:], ast.ListTypeDefinition, 0, '.')
 				return ret + prev
 			}
 		}
