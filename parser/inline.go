@@ -768,6 +768,10 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 	if bytes.Equal(ent, []byte("&amp;")) {
 		return end, newTextNode([]byte{'&'})
 	}
+	if len(ent) < 4 {
+		return end, newTextNode(ent)
+	}
+
 	// if ent consists solely out of numbers (hex or decimal) convert that unicode codepoint to actual rune
 	codepoint := uint64(0)
 	var err error
