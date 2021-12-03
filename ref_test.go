@@ -33,6 +33,8 @@ var (
 		"Strong and em together",
 		"Tabs",
 		"Tidyness",
+		// New tests added for gomarkdown
+		"Entities",
 	}
 )
 
