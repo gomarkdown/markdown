@@ -1672,6 +1672,14 @@ func (p *Parser) paragraph(data []byte) int {
 			}
 		}
 
+		// if there's a table, paragraph is over
+		if p.extensions&Tables != 0 {
+			if j, _, _ := p.tableHeader(current, false); j > 0 {
+				p.renderParagraph(data[:i])
+				return i
+			}
+		}
+
 		// if there's a definition list item, prev line is a definition term
 		if p.extensions&DefinitionLists != 0 {
 			if p.dliPrefix(current) != 0 {
