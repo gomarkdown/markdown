@@ -334,3 +334,25 @@ h|i|j
 </tr>
 </tbody>
 </table>
++++
+prefix text
+| a | b |
+|---|---|
+| | |+++
+<p>prefix text</p>
+
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
