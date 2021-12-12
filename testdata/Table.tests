@@ -356,3 +356,67 @@ prefix text
 </tr>
 </tbody>
 </table>
++++
+| a | `b|c` |
+|---|---|
+| | |+++
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th><code>b|c</code></th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
++++
+---|---
+c | `d|e`
++++
+<table>
+<tbody>
+<tr>
+<td>c</td>
+<td><code>d|e</code></td>
+</tr>
+</tbody>
+</table>
++++
+|---|--- |
+| c  | `d|e` |
++++
+<table>
+<tbody>
+<tr>
+<td>c</td>
+<td><code>d|e</code></td>
+</tr>
+</tbody>
+</table>
++++
+|---|--- |
+| c  | `d|e` |
+|===|====|
+| `f|g` | h |
++++
+<table>
+<tbody>
+<tr>
+<td>c</td>
+<td><code>d|e</code></td>
+</tr>
+</tbody>
+
+<tfoot>
+<tr>
+<td><code>f|g</code></td>
+<td>h</td>
+</tr>
+</tfoot>
+</table>
