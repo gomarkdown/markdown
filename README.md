@@ -77,7 +77,7 @@ md := []byte("markdown text")
 html := markdown.ToHTML(md, nil, renderer)
 ```
 
-HTML renderer also supports reusing most of the logic and overriding rendering of only specifc nodes.
+HTML renderer also supports reusing most of the logic and overriding rendering of only specific nodes.
 
 You can provide [RenderNodeFunc](https://pkg.go.dev/github.com/gomarkdown/markdown/html#RenderNodeFunc) in [RendererOptions](https://pkg.go.dev/github.com/gomarkdown/markdown/html#RendererOptions).
 
@@ -134,7 +134,7 @@ html := bluemonday.UGCPolicy().SanitizeBytes(maybeUnsafeHTML)
 ## Windows / Mac newlines
 
 The library only supports Unix newlines. If you have markdown text with possibly
-Windows / Mac newlines, normalize newlines before caling this librar using
+Windows / Mac newlines, normalize newlines before calling this library using
 `d = markdown.NormalizeNewlines(d)`
 
 ## mdtohtml command-line tool
