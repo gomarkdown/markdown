@@ -143,14 +143,14 @@
 +++
 <p>*Hello</p>
 +++
-*   Hello 
+*   Hello
 +++
 <ul>
 <li>Hello</li>
 </ul>
 +++
-*   Hello 
-    Next line 
+*   Hello
+    Next line
 +++
 <ul>
 <li>Hello
@@ -240,8 +240,9 @@ Second line</p>
  * shallow indent
   * part of second list
    * still second
-    * almost there
-     * third level
+    * third level
+     * also third level
+      * fourth level
 +++
 <ul>
 <li>List
@@ -249,11 +250,15 @@ Second line</p>
 <ul>
 <li>shallow indent</li>
 <li>part of second list</li>
-<li>still second</li>
-<li>almost there
+<li>still second
 
 <ul>
 <li>third level</li>
+<li>also third level
+
+<ul>
+<li>fourth level</li>
+</ul></li>
 </ul></li>
 </ul></li>
 </ul>

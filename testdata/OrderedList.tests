@@ -150,8 +150,9 @@ Second line</p>
  1. shallow indent
   2. part of second list
    3. still second
-    4. almost there
-     1. third level
+    4. third level
+     1. also third level
+      1. fourth level
 +++
 <ol>
 <li>List
@@ -159,11 +160,15 @@ Second line</p>
 <ol>
 <li>shallow indent</li>
 <li>part of second list</li>
-<li>still second</li>
-<li>almost there
+<li>still second
 
 <ol>
 <li>third level</li>
+<li>also third level
+
+<ol>
+<li>fourth level</li>
+</ol></li>
 </ol></li>
 </ol></li>
 </ol>
