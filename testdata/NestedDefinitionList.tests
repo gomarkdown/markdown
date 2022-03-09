@@ -43,11 +43,11 @@ Next line</p></dd>
 
 <dl>
 <dt>Term 11</dt>
-<dd>Definition c</dd>
-</dl>
+<dd><p>Definition c</p>
 
 <ul>
 <li>sublist1</li>
 <li>sublist2</li>
 </ul></dd>
+</dl></dd>
 </dl>
