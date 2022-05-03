@@ -781,7 +781,7 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 		codepoint, err = strconv.ParseUint(string(ent[2:len(ent)-1]), 10, 64)
 	}
 	if err == nil { // only if conversion was valid return here.
-		return end, newTextNode([]byte(string(codepoint)))
+		return end, newTextNode([]byte(string(rune(codepoint))))
 	}
 
 	return end, newTextNode(ent)
