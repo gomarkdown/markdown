@@ -52,7 +52,7 @@ func TestIsFenceLine(t *testing.T) {
 		if test.syntaxRequested {
 			syntax = new(string)
 		}
-		end, marker := isFenceLine(test.data, syntax, "```")
+		end, marker := isFenceLine(test.data, syntax, "")
 		if got, want := end, test.wantEnd; got != want {
 			t.Errorf("got end %v, want %v", got, want)
 		}
