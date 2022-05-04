@@ -810,9 +810,11 @@ No longer in the footnote
 
 <p>Paragraph 2</p>
 
-<p><code>
+<p>
+<pre><code>
 some code
-</code></p>
+</code></pre>
+</p>
 
 <p>Paragraph 3</p></li>
 </ol>
