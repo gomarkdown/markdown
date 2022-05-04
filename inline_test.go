@@ -270,6 +270,20 @@ func TestCodeSpan(t *testing.T) {
 	doTestsInlineParam(t, tests, tp)
 }
 
+func TestCodeBlock(t *testing.T) {
+	var tests = []string{
+		"1. This is an item\n" +
+			"   ```java\n" +
+			"   int a = 1;\n" +
+			"   ```\n" +
+			"1. This is another item\n",
+		"<ol>\n<li>This is an item\n\n<pre><code class=\"language-java\">\nint a = 1;\n</code></pre>\n</li>\n<li>This is another item</li>\n</ol>\n",
+	}
+	doTestsInlineParam(t, tests, TestParams{
+		extensions: parser.FencedCode,
+	})
+}
+
 func TestLineBreak(t *testing.T) {
 	var tests = []string{
 		"this line  \nhas a break\n",
