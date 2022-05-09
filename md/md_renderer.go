@@ -204,27 +204,16 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	//}
 }
 
-func (r *Renderer) del(w io.Writer, node *ast.Del) {
-	r.outs(w, "~~")
-	r.out(w, node.Literal)
-	r.outs(w, "~~")
+func (r *Renderer) surround(w io.Writer, symbol string) {
+	r.outs(w, symbol)
 }
 
-func (r *Renderer) strong(w io.Writer, node *ast.Strong) {
-	text := node.Literal
-	r.outs(w, "**")
-	r.out(w, text)
-	r.outs(w, "**")
-}
-
-func (r *Renderer) emphasis(w io.Writer, node *ast.Emph) {
-	text := node.Literal
-	if len(text) == 0 {
-		return
+func (r *Renderer) enclose(w io.Writer, entering bool, fst, snd string) {
+	if entering {
+		r.outs(w, fst)
+	} else {
+		r.outs(w, snd)
 	}
-	r.outs(w, "*")
-	r.out(w, text)
-	r.outs(w, "*")
 }
 
 func (r *Renderer) htmlSpan(w io.Writer, node *ast.HTMLSpan) {
@@ -261,50 +250,60 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 	}
 	r.outs(w, "\n")
 	r.out(w, text)
-	r.outs(w, "```\n")
+	r.outs(w, "\n```\n")
 }
 
 func (r *Renderer) code(w io.Writer, node *ast.Code) {
 	r.outs(w, "`")
 	r.out(w, node.Literal)
-	r.outs(w, "`\n")
+	r.outs(w, "`")
 }
 
-func (r *Renderer) heading(w io.Writer, node *ast.Heading) {
-	panic(fmt.Sprintf("node %T NYI", node))
-}
-
-func (r *Renderer) image(w io.Writer, node *ast.Image) {
-	link := node.Destination
-	title := node.Title
-	// alt := node. ??
-	var alt []byte
-	r.outs(w, "![")
-	r.out(w, alt)
-	r.outs(w, "](")
-	r.out(w, escape(link))
-	if len(title) != 0 {
-		r.outs(w, ` "`)
-		r.out(w, title)
-		r.outs(w, `"`)
+func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
+	if entering {
+		for i := 0; i < node.Level; i++ {
+			r.outs(w, "#")
+		}
+		r.outs(w, " ")
+		r.out(w, node.Literal)
 	}
-	r.outs(w, ")")
 }
 
-func (r *Renderer) link(w io.Writer, node *ast.Link) {
-	link := string(escape(node.Destination))
-	title := string(node.Title)
-	content := string(node.Literal)
-	r.outs(w, "[")
-	r.outs(w, content)
-	r.outs(w, "](")
-	r.outs(w, link)
-	if len(title) != 0 {
-		r.outs(w, ` "`)
-		r.outs(w, title)
-		r.outs(w, `"`)
+func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
+	if entering {
+		// alt := node. ??
+		var alt []byte
+		r.outs(w, "![")
+		r.out(w, alt)
+	} else {
+		link := node.Destination
+		title := node.Title
+		r.outs(w, "](")
+		r.out(w, escape(link))
+		if len(title) != 0 {
+			r.outs(w, ` "`)
+			r.out(w, title)
+			r.outs(w, `"`)
+		}
+		r.outs(w, ")")
 	}
-	r.outs(w, ")")
+}
+
+func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
+	if entering {
+		r.outs(w, "[")
+	} else {
+		link := string(escape(node.Destination))
+		title := string(node.Title)
+		r.outs(w, "](")
+		r.outs(w, link)
+		if len(title) != 0 {
+			r.outs(w, ` "`)
+			r.outs(w, title)
+			r.outs(w, `"`)
+		}
+		r.outs(w, ")")
+	}
 }
 
 // RenderNode renders markdown node
@@ -317,23 +316,23 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Hardbreak:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Emph:
-		r.emphasis(w, node)
+		r.surround(w, "*")
 	case *ast.Strong:
-		r.strong(w, node)
+		r.surround(w, "**")
 	case *ast.Del:
-		r.del(w, node)
+		r.surround(w, "~~")
 	case *ast.BlockQuote:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Aside:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Link:
-		r.link(w, node)
+		r.link(w, node, entering)
 	case *ast.CrossReference:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Citation:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Image:
-		r.image(w, node)
+		r.image(w, node, entering)
 	case *ast.Code:
 		r.code(w, node)
 	case *ast.CodeBlock:
@@ -351,7 +350,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.HTMLBlock:
 		r.htmlBlock(w, node)
 	case *ast.Heading:
-		r.heading(w, node)
+		r.heading(w, node, entering)
 	case *ast.HorizontalRule:
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.List:
@@ -390,6 +389,12 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
 	return ast.GoToNext
+}
+
+func ifThen(entering bool, w io.Writer, node *ast.Text, f func(w io.Writer, text *ast.Text)) {
+	if entering {
+		f(w, node)
+	}
 }
 
 // RenderHeader renders header
