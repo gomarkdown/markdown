@@ -73,7 +73,7 @@ func TestRenderCodeBlock(t *testing.T) {
 func TestRenderParagraph(t *testing.T) {
 	var input = &ast.Paragraph{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello World !"))}})
-        expected := "Hello World !"
+        expected := "Hello World !\n"
         testRendering(t, input, expected)
 }
 
@@ -95,6 +95,6 @@ func testRendering(t *testing.T, input ast.Node, expected string) {
 	renderer := NewRenderer()
 	result := string(markdown.Render(input, renderer))
 	if strings.Compare(result, expected) != 0 {
-		t.Errorf("%s is not equal to %s", result, expected)
+		t.Errorf("[%s] is not equal to [%s]", result, expected)
 	}
 }

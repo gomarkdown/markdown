@@ -98,7 +98,6 @@ func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
 		//r.doubleSpace(w)
 
 		r.paragraph[r.listDepth] = true
-		r.outs(w, " ")
 	} else {
 		r.cr(w)
 	}
