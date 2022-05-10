@@ -91,6 +91,43 @@ func TestRenderHTMLBlock(t *testing.T) {
         testRendering(t, input, expected)
 }
 
+func TestRenderList(t *testing.T) {
+        var source = []byte("* aaa\n* bbb\n* ccc\n* ddd\n")
+        var input = markdown.Parse(source, nil)
+        var expected = "* aaa\n* bbb\n* ccc\n* ddd\n"
+        testRendering(t, input, expected)
+
+        source = []byte("+ aaa\n+ bbb\n+ ccc\n+ ddd\n")
+        input = markdown.Parse(source, nil)
+        expected = "+ aaa\n+ bbb\n+ ccc\n+ ddd\n"
+        testRendering(t, input, expected)
+
+        source = []byte("- aaa\n- bbb\n- ccc\n- ddd\n")
+        input = markdown.Parse(source, nil)
+        expected = "- aaa\n- bbb\n- ccc\n- ddd\n"
+        testRendering(t, input, expected)
+
+        source = []byte("1. aaa\n2. bbb\n3. ccc\n4. ddd\n")
+        input = markdown.Parse(source, nil)
+        expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n"
+        testRendering(t, input, expected)
+
+        source = []byte("1. aaa\n1. bbb\n1. ccc\n1. ddd\n")
+        input = markdown.Parse(source, nil)
+        expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n"
+        testRendering(t, input, expected)
+
+        source = []byte("1. aaa\n3. bbb\n8. ccc\n1. ddd\n")
+        input = markdown.Parse(source, nil)
+        expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n"
+        testRendering(t, input, expected)
+
+        source = []byte("* aaa\n    * aaa1\n    * aaa2\n* bbb\n* ccc\n* ddd\n")
+        input = markdown.Parse(source, nil)
+        expected = "* aaa\n    * aaa1\n    * aaa2\n* bbb\n* ccc\n* ddd\n"
+        testRendering(t, input, expected)
+}
+
 func testRendering(t *testing.T, input ast.Node, expected string) {
 	renderer := NewRenderer()
 	result := string(markdown.Render(input, renderer))
