@@ -254,6 +254,8 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 		}
 		r.outs(w, " ")
 		r.out(w, node.Literal)
+	} else {
+		r.outs(w, "\n")
 	}
 }
 
