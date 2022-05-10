@@ -19,6 +19,7 @@ type Renderer struct {
 
 	lastOutputLen  int
 	listDepth      int
+	indentSize     int
 	lastNormalText string
 }
 
@@ -27,6 +28,7 @@ func NewRenderer() *Renderer {
 	return &Renderer{
 		orderedListCounter: map[int]int{},
 		paragraph:          map[int]bool{},
+		indentSize:         4,
 	}
 }
 
@@ -67,39 +69,26 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 
 func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 	flags := node.ListFlags
-	text := node.Literal
+	bullet := string(node.BulletChar)
 
 	if entering {
+		for i := 1; i < r.listDepth; i++ {
+			for i := 0; i < r.indentSize; i++ {
+				fmt.Fprintf(w, " ")
+			}
+		}
 		if flags&ast.ListTypeOrdered != 0 {
-			fmt.Fprintf(w, "%d.", r.orderedListCounter[r.listDepth])
-			//indentwriter.New(w, 1).Write(text)
-			fmt.Fprintf(w, "%s", text)
+			fmt.Fprintf(w, "%d. ", r.orderedListCounter[r.listDepth])
 			r.orderedListCounter[r.listDepth]++
 		} else {
-			r.outs(w, "-")
-			//indentwriter.New(w, 1).Write(text)
-			fmt.Fprintf(w, "%s", text)
-		}
-		if false && !node.Tight {
-			r.outs(w, "\n")
-		}
-		if r.paragraph[r.listDepth] {
-			if flags&ast.ListItemEndOfList == 0 {
-				r.outs(w, "\n")
-			}
-			r.paragraph[r.listDepth] = false
+			fmt.Fprintf(w, "%s ", bullet)
 		}
 	}
 }
 
 func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
-	if entering {
-		// marker := out.Len()
-		//r.doubleSpace(w)
-
-		r.paragraph[r.listDepth] = true
-	} else {
-		r.cr(w)
+	if !entering && r.lastOutputLen > 0 {
+		r.outs(w, "\n")
 	}
 }
 
