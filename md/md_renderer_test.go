@@ -8,6 +8,13 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
+func TestRenderDocument(t *testing.T)  {
+        var source = []byte("# title\n* aaa\n* bbb\n* ccc")
+        var input = markdown.Parse(source, nil)
+        var expected = "# title\n* aaa\n* bbb\n* ccc\n"
+        testRendering(t, input, expected)
+}
+
 func TestRenderText(t *testing.T) {
 	var input ast.Node = &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello"))}}
 	expected := "Hello"
@@ -24,7 +31,7 @@ func TestRenderStrong(t *testing.T) {
 func TestRenderHeading(t *testing.T) {
 	var input ast.Node = &ast.Heading{Level: 3}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello"))}})
-	expected := "### Hello"
+	expected := "### Hello\n"
         testRendering(t, input, expected)
 }
 
