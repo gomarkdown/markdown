@@ -1119,7 +1119,7 @@ func isMailtoAutoLink(data []byte) int {
 			nb++
 
 		case '-', '.', '_':
-			break
+			// no-op but not defult
 
 		case '>':
 			if nb == 1 {
