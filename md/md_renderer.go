@@ -211,7 +211,7 @@ func (r *Renderer) htmlSpan(w io.Writer, node *ast.HTMLSpan) {
 func (r *Renderer) htmlBlock(w io.Writer, node *ast.HTMLBlock) {
 	r.doubleSpace(w)
 	r.out(w, node.Literal)
-	r.outs(w, "\n")
+	r.outs(w, "\n\n")
 }
 
 func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
