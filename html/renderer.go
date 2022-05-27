@@ -211,70 +211,6 @@ func NewRenderer(opts RendererOptions) *Renderer {
 	}
 }
 
-func isHTMLTag(tag []byte, tagname string) bool {
-	found, _ := findHTMLTagPos(tag, tagname)
-	return found
-}
-
-// Look for a character, but ignore it when it's in any kind of quotes, it
-// might be JavaScript
-func skipUntilCharIgnoreQuotes(html []byte, start int, char byte) int {
-	inSingleQuote := false
-	inDoubleQuote := false
-	inGraveQuote := false
-	i := start
-	for i < len(html) {
-		switch {
-		case html[i] == char && !inSingleQuote && !inDoubleQuote && !inGraveQuote:
-			return i
-		case html[i] == '\'':
-			inSingleQuote = !inSingleQuote
-		case html[i] == '"':
-			inDoubleQuote = !inDoubleQuote
-		case html[i] == '`':
-			inGraveQuote = !inGraveQuote
-		}
-		i++
-	}
-	return start
-}
-
-func findHTMLTagPos(tag []byte, tagname string) (bool, int) {
-	i := 0
-	if i < len(tag) && tag[0] != '<' {
-		return false, -1
-	}
-	i++
-	i = skipSpace(tag, i)
-
-	if i < len(tag) && tag[i] == '/' {
-		i++
-	}
-
-	i = skipSpace(tag, i)
-	j := 0
-	for ; i < len(tag); i, j = i+1, j+1 {
-		if j >= len(tagname) {
-			break
-		}
-
-		if strings.ToLower(string(tag[i]))[0] != tagname[j] {
-			return false, -1
-		}
-	}
-
-	if i == len(tag) {
-		return false, -1
-	}
-
-	rightAngle := skipUntilCharIgnoreQuotes(tag, i, '>')
-	if rightAngle >= i {
-		return true, rightAngle
-	}
-
-	return false, -1
-}
-
 func isRelativeLink(link []byte) (yes bool) {
 	// a tag begin with '#'
 	if link[0] == '#' {
@@ -349,14 +285,6 @@ func needSkipLink(flags Flags, dest []byte) bool {
 		return true
 	}
 	return flags&Safelink != 0 && !isSafeLink(dest) && !isMailto(dest)
-}
-
-func isSmartypantable(node ast.Node) bool {
-	switch node.GetParent().(type) {
-	case *ast.Link, *ast.CodeBlock, *ast.Code:
-		return false
-	}
-	return true
 }
 
 func appendLanguageAttr(attrs []string, info []byte) []string {
@@ -1295,15 +1223,6 @@ func isListItem(node ast.Node) bool {
 func isListItemTerm(node ast.Node) bool {
 	data, ok := node.(*ast.ListItem)
 	return ok && data.ListFlags&ast.ListTypeTerm != 0
-}
-
-// TODO: move to internal package
-func skipSpace(data []byte, i int) int {
-	n := len(data)
-	for i < n && isSpace(data[i]) {
-		i++
-	}
-	return i
 }
 
 // TODO: move to internal package

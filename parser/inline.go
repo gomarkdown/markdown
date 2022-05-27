@@ -1118,6 +1118,7 @@ func isMailtoAutoLink(data []byte) int {
 		case '@':
 			nb++
 
+		/* TODO: was this supposed to be return 0? */
 		case '-', '.', '_':
 			break
 

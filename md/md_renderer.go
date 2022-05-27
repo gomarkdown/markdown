@@ -42,12 +42,6 @@ func (r *Renderer) outs(w io.Writer, s string) {
 	io.WriteString(w, s)
 }
 
-func (r *Renderer) cr(w io.Writer) {
-	if r.lastOutputLen > 0 {
-		r.outs(w, "\n")
-	}
-}
-
 func (r *Renderer) doubleSpace(w io.Writer) {
 	// TODO: need to remember number of written bytes
 	//if out.Len() > 0 {
@@ -194,14 +188,6 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 
 func (r *Renderer) surround(w io.Writer, symbol string) {
 	r.outs(w, symbol)
-}
-
-func (r *Renderer) enclose(w io.Writer, entering bool, fst, snd string) {
-	if entering {
-		r.outs(w, fst)
-	} else {
-		r.outs(w, snd)
-	}
 }
 
 func (r *Renderer) htmlSpan(w io.Writer, node *ast.HTMLSpan) {
@@ -379,12 +365,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
 	return ast.GoToNext
-}
-
-func ifThen(entering bool, w io.Writer, node *ast.Text, f func(w io.Writer, text *ast.Text)) {
-	if entering {
-		f(w, node)
-	}
 }
 
 // RenderHeader renders header
