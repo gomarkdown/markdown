@@ -94,7 +94,7 @@ func TestRenderHTMLSpan(t *testing.T) {
 func TestRenderHTMLBlock(t *testing.T) {
 	var input = &ast.HTMLBlock{}
         input.Literal = []byte(string("hello"))
-        expected := "\nhello\n"
+        expected := "\nhello\n\n"
         testRendering(t, input, expected)
 }
 
