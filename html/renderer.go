@@ -3,6 +3,7 @@ package html
 import (
 	"bytes"
 	"fmt"
+	"github.com/gomarkdown/markdown/internal/valid"
 	"html"
 	"io"
 	"regexp"
@@ -1225,12 +1226,8 @@ func isListItemTerm(node ast.Node) bool {
 	return ok && data.ListFlags&ast.ListTypeTerm != 0
 }
 
-// TODO: move to internal package
-var validUris = [][]byte{[]byte("http://"), []byte("https://"), []byte("ftp://"), []byte("mailto://")}
-var validPaths = [][]byte{[]byte("/"), []byte("./"), []byte("../")}
-
 func isSafeLink(link []byte) bool {
-	for _, path := range validPaths {
+	for _, path := range valid.Paths {
 		if len(link) >= len(path) && bytes.Equal(link[:len(path)], path) {
 			if len(link) == len(path) {
 				return true
@@ -1240,7 +1237,7 @@ func isSafeLink(link []byte) bool {
 		}
 	}
 
-	for _, prefix := range validUris {
+	for _, prefix := range valid.URIs {
 		// TODO: handle unicode here
 		// case-insensitive prefix test
 		if len(link) > len(prefix) && bytes.Equal(bytes.ToLower(link[:len(prefix)]), prefix) && isAlnum(link[len(prefix)]) {
