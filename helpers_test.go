@@ -18,10 +18,16 @@ type TestParams struct {
 }
 
 func runMarkdown(input string, params TestParams) string {
+	extraUris := [][]byte{
+		[]byte("bitcoin:"),
+		[]byte("monero:"),
+	}
 	params.RendererOptions.Flags = params.Flags
 	parser := parser.NewWithExtensions(params.extensions)
 	parser.ReferenceOverride = params.referenceOverride
+	parser.AutoLinkExtraSafeURIs = extraUris
 	renderer := html.NewRenderer(params.RendererOptions)
+	renderer.AutoLinkExtraSafeURIs = extraUris
 
 	d := ToHTML([]byte(input), parser, renderer)
 	return string(d)

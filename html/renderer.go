@@ -123,6 +123,9 @@ type RendererOptions struct {
 type Renderer struct {
 	opts RendererOptions
 
+	// AutoLinkExtraSafeURIs adds extra entries to the list of URIs, which auto linker considers as safe and allows them to be rendered as links.
+	AutoLinkExtraSafeURIs [][]byte
+
 	closeTag string // how to end singleton tags: either " />" or ">"
 
 	// Track heading IDs to prevent ID collision in a single generation.
@@ -281,11 +284,15 @@ func isMailto(link []byte) bool {
 	return bytes.HasPrefix(link, []byte("mailto:"))
 }
 
-func needSkipLink(flags Flags, dest []byte) bool {
-	if flags&SkipLinks != 0 {
+func needSkipLink(r *Renderer, dest []byte) bool {
+	if r.opts.Flags&SkipLinks != 0 {
 		return true
 	}
-	return flags&Safelink != 0 && !isSafeLink(dest) && !isMailto(dest)
+	if r.opts.Flags&Safelink != 0 {
+		safeURIs := append(valid.URIs, r.AutoLinkExtraSafeURIs...)
+		return !isSafeLink(dest, safeURIs) && !isMailto(dest)
+	}
+	return false
 }
 
 func appendLanguageAttr(attrs []string, info []byte) []string {
@@ -481,7 +488,7 @@ func (r *Renderer) linkExit(w io.Writer, link *ast.Link) {
 // Link writes ast.Link node
 func (r *Renderer) Link(w io.Writer, link *ast.Link, entering bool) {
 	// mark it but don't link it if it is not a safe link: no smartypants
-	if needSkipLink(r.opts.Flags, link.Destination) {
+	if needSkipLink(r, link.Destination) {
 		r.OutOneOf(w, entering, "<tt>", "</tt>")
 		return
 	}
@@ -1226,7 +1233,7 @@ func isListItemTerm(node ast.Node) bool {
 	return ok && data.ListFlags&ast.ListTypeTerm != 0
 }
 
-func isSafeLink(link []byte) bool {
+func isSafeLink(link []byte, validURIs [][]byte) bool {
 	for _, path := range valid.Paths {
 		if len(link) >= len(path) && bytes.Equal(link[:len(path)], path) {
 			if len(link) == len(path) {
@@ -1237,7 +1244,7 @@ func isSafeLink(link []byte) bool {
 		}
 	}
 
-	for _, prefix := range valid.URIs {
+	for _, prefix := range validURIs {
 		// TODO: handle unicode here
 		// case-insensitive prefix test
 		if len(link) > len(prefix) && bytes.Equal(bytes.ToLower(link[:len(prefix)]), prefix) && isAlnum(link[len(prefix)]) {

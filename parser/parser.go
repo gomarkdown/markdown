@@ -84,6 +84,9 @@ type Parser struct {
 	// the bottom will be used to fill in the link details.
 	ReferenceOverride ReferenceOverrideFunc
 
+	// AutoLinkExtraSafeURIs adds extra entries to the list of URIs, which auto linker considers as safe and allows them to be converted to markdown links.
+	AutoLinkExtraSafeURIs [][]byte
+
 	Opts Options
 
 	// after parsing, this is AST root of parsed markdown text

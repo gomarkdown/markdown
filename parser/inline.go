@@ -899,7 +899,8 @@ func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 	origData := data
 	data = data[offset-rewind:]
 
-	if !isSafeLink(data) {
+	safeURIs := append(valid.URIs, p.AutoLinkExtraSafeURIs...)
+	if !isSafeLink(data, safeURIs) {
 		return 0, nil
 	}
 
@@ -995,7 +996,7 @@ func isEndOfLink(char byte) bool {
 	return isSpace(char) || char == '<'
 }
 
-func isSafeLink(link []byte) bool {
+func isSafeLink(link []byte, validURIs [][]byte) bool {
 	nLink := len(link)
 	for _, path := range valid.Paths {
 		nPath := len(path)
@@ -1009,7 +1010,7 @@ func isSafeLink(link []byte) bool {
 		}
 	}
 
-	for _, prefix := range valid.URIs {
+	for _, prefix := range validURIs {
 		// TODO: handle unicode here
 		// case-insensitive prefix test
 		nPrefix := len(prefix)
