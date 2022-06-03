@@ -3,7 +3,6 @@ package html
 import (
 	"bytes"
 	"fmt"
-	"github.com/gomarkdown/markdown/internal/valid"
 	"html"
 	"io"
 	"regexp"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/valid"
 	"github.com/gomarkdown/markdown/parser"
 )
 
