@@ -4,7 +4,7 @@ var URIs = [][]byte{
 	[]byte("http://"),
 	[]byte("https://"),
 	[]byte("ftp://"),
-	[]byte("mailto://"),
+	[]byte("mailto:"),
 }
 
 var Paths = [][]byte{

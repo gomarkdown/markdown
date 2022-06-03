@@ -553,8 +553,8 @@ func TestSafeInlineLink(t *testing.T) {
 		"[foo](ftp://bar/)\n",
 		"<p><a href=\"ftp://bar/\">foo</a></p>\n",
 
-		"[foo](mailto://bar/)\n",
-		"<p><a href=\"mailto://bar/\">foo</a></p>\n",
+		"[foo](mailto:bar/)\n",
+		"<p><a href=\"mailto:bar/\">foo</a></p>\n",
 
 		// Not considered safe
 		"[foo](baz://bar/)\n",
@@ -707,8 +707,8 @@ func TestAutoLink(t *testing.T) {
 		"an email <mailto:some@one.com>\n",
 		"<p>an email <a href=\"mailto:some@one.com\">some@one.com</a></p>\n",
 
-		"an email <mailto://some@one.com>\n",
-		"<p>an email <a href=\"mailto://some@one.com\">some@one.com</a></p>\n",
+		"an email <mailto:some@one.com>\n",
+		"<p>an email <a href=\"mailto:some@one.com\">some@one.com</a></p>\n",
 
 		"an email <some@one.com>\n",
 		"<p>an email <a href=\"mailto:some@one.com\">some@one.com</a></p>\n",
@@ -1212,7 +1212,7 @@ func TestSkipLinks(t *testing.T) {
 		"[foo](gopher://foo.bar)",
 		"<p><tt>foo</tt></p>\n",
 
-		"[foo](mailto://bar/)\n",
+		"[foo](mailto:bar/)\n",
 		"<p><tt>foo</tt></p>\n",
 	}, TestParams{
 		Flags: html.SkipLinks,
