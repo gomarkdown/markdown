@@ -71,7 +71,7 @@ func TestRenderNodeHookLinkAttrs(t *testing.T) {
 		},
 	}
 	params := TestParams{
-		Flags:          html.HrefTargetBlank,
+		Flags:           html.HrefTargetBlank,
 		RendererOptions: opts,
 		extensions:      parser.CommonExtensions,
 	}

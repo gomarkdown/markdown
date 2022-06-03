@@ -2,11 +2,11 @@ package parser
 
 import (
 	"bytes"
-	"github.com/gomarkdown/markdown/internal/valid"
 	"regexp"
 	"strconv"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/valid"
 )
 
 // Parsing of inline elements
