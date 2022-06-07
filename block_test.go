@@ -151,6 +151,11 @@ func TestBug196(t *testing.T) {
 	doTestsBlock(t, "bug196.tests", extensions)
 }
 
+func TestBug242(t *testing.T) {
+	extensions := parser.AutoHeadingIDs
+	doTestsBlock(t, "bug242.tests", extensions)
+}
+
 func TestTOC(t *testing.T) {
 	tests := readTestFile2(t, "TOC.tests")
 	doTestsParam(t, tests, TestParams{
