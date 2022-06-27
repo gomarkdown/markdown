@@ -2,9 +2,11 @@
 
 [![pkg.go.dev](https://pkg.go.dev/badge/github.com/gomarkdown/markdown)](https://pkg.go.dev/github.com/gomarkdown/markdown)
 
-Package `github.com/gomarkdown/markdown` is a very fast Go library for parsing [Markdown](https://daringfireball.net/projects/markdown/) documents and rendering them to HTML.
+Package `github.com/gomarkdown/markdown` is a Go library for parsing Markdown text and rendering as HTML.
 
-It's fast and supports common extensions.
+It's very fast and supports common extensions.
+
+Try code examples online: https://replit.com/@kjk1?path=folder/gomarkdown
 
 ## API Docs:
 
@@ -26,7 +28,7 @@ md := []byte("## markdown document")
 output := markdown.ToHTML(md, nil, nil)
 ```
 
-Try in repl.it: https://replit.com/@kjk1/gomarkdown-basic#main.go
+Try it online: https://replit.com/@kjk1/gomarkdown-basic
 
 ## Customizing markdown parser
 
@@ -49,6 +51,8 @@ md := []byte("markdown text")
 html := markdown.ToHTML(md, parser, nil)
 ```
 
+Try it online: https://replit.com/@kjk1/gomarkdown-customized-html-renderer
+
 ## Customizing HTML renderer
 
 Similarly, HTML renderer can be configured with different [options](https://pkg.go.dev/github.com/gomarkdown/markdown/html#RendererOptions)
@@ -68,6 +72,8 @@ renderer := html.NewRenderer(opts)
 md := []byte("markdown text")
 html := markdown.ToHTML(md, nil, renderer)
 ```
+
+Try it online: https://replit.com/@kjk1/gomarkdown-customized-html-renderer
 
 HTML renderer also supports reusing most of the logic and overriding rendering of only specific nodes.
 
