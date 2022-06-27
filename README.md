@@ -15,17 +15,7 @@ It's fast and supports common extensions.
 
 ## Users
 
-Some tools using this package:
-
-- https://github.com/MichaelMure/go-term-markdown : markdown renderer for the terminal
-- https://github.com/artyom/mdserver : web server that serves markdown files
-- https://github.com/rsdoiel/mkpage : content management system generating static websites
-- https://github.com/cugu/dashboard : creates a badge dashboard from a yaml file
-- https://github.com/ieyasu/go-bwiki : simple wiki
-- https://github.com/romanyx/mdopen : view markdown files in the default browser
-- https://github.com/ystyle/sqlmanager : a library for manager sql with markdown like beetsql
-- https://gitlab.com/kendellfab/fazer : library for making templates
-- https://github.com/blmayer/tasker : a simple task list web app
+Some tools using this package: https://pkg.go.dev/github.com/gomarkdown/markdown?tab=importedby
 
 ## Usage
 
@@ -35,6 +25,8 @@ To convert markdown text to HTML using reasonable defaults:
 md := []byte("## markdown document")
 output := markdown.ToHTML(md, nil, nil)
 ```
+
+Try in repl.it: https://replit.com/@kjk1/gomarkdown-basic#main.go
 
 ## Customizing markdown parser
 
