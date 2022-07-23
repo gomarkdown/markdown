@@ -1,6 +1,9 @@
 package utils
 
-import "github.com/gomarkdown/markdown/ast"
+import (
+	"bytes"
+	"github.com/gomarkdown/markdown/ast"
+)
 
 // IsAlnum returns true if c is a digit or letter
 // TODO: check when this is looking for ASCII alnum and when it should use unicode
@@ -31,6 +34,11 @@ func IsPunctuation(c byte) bool {
 		}
 	}
 	return false
+}
+
+// IsMailto returns true if link starts with "mailto:".
+func IsMailto(link []byte) bool {
+	return bytes.HasPrefix(link, []byte("mailto:"))
 }
 
 func IsListItem(node ast.Node) bool {

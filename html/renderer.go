@@ -278,15 +278,11 @@ func appendLinkAttrs(attrs []string, flags Flags, link []byte) []string {
 	return append(attrs, attr)
 }
 
-func isMailto(link []byte) bool {
-	return bytes.HasPrefix(link, []byte("mailto:"))
-}
-
 func needSkipLink(flags Flags, dest []byte) bool {
 	if flags&SkipLinks != 0 {
 		return true
 	}
-	return flags&Safelink != 0 && !isSafeLink(dest) && !isMailto(dest)
+	return flags&Safelink != 0 && !isSafeLink(dest) && !utils.IsMailto(dest)
 }
 
 func appendLanguageAttr(attrs []string, info []byte) []string {

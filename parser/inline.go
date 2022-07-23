@@ -676,10 +676,12 @@ func (p *Parser) inlineHTMLComment(data []byte) int {
 }
 
 func stripMailto(link []byte) []byte {
-	if bytes.HasPrefix(link, []byte("mailto://")) {
-		return link[9:]
-	} else if bytes.HasPrefix(link, []byte("mailto:")) {
-		return link[7:]
+	if utils.IsMailto(link) {
+		l := link[7:]
+		if bytes.HasPrefix(l, []byte("//")) {
+			return l[2:]
+		}
+		return l
 	} else {
 		return link
 	}
