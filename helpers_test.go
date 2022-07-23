@@ -1,12 +1,14 @@
 package markdown
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
 	"testing"
 
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/internal/valid"
 	"github.com/gomarkdown/markdown/parser"
 )
 
@@ -18,10 +20,14 @@ type TestParams struct {
 }
 
 func runMarkdown(input string, params TestParams) string {
+	isSafeURL := newSafeURLOverride([]string{"monero:", "bitcoin:"})
+
 	params.RendererOptions.Flags = params.Flags
 	parser := parser.NewWithExtensions(params.extensions)
+	parser.IsSafeURLOverride = isSafeURL
 	parser.ReferenceOverride = params.referenceOverride
 	renderer := html.NewRenderer(params.RendererOptions)
+	renderer.IsSafeURLOverride = isSafeURL
 
 	d := ToHTML([]byte(input), parser, renderer)
 	return string(d)
@@ -108,6 +114,20 @@ func transformLinks(tests []string, prefix string) []string {
 		newTests[i] = test
 	}
 	return newTests
+}
+
+func newSafeURLOverride(uris []string) func(url []byte) bool {
+	return func(url []byte) bool {
+		if valid.IsSafeURL(url) {
+			return true
+		}
+		for _, prefix := range uris {
+			if bytes.HasPrefix(url, []byte(prefix)) {
+				return true
+			}
+		}
+		return false
+	}
 }
 
 func doTestsReference(t *testing.T, files []string, flag parser.Extensions) {

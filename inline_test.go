@@ -556,6 +556,12 @@ func TestSafeInlineLink(t *testing.T) {
 		"[foo](mailto:bar/)\n",
 		"<p><a href=\"mailto:bar/\">foo</a></p>\n",
 
+		"[foo](monero:4AfUP827TeRZ1cck3tZThgZbRCEwBrpcJTkA1LCiyFVuMH4b5y59bKMZHGb9y58K3gSjWDCBsB4RkGsGDhsmMG5R2qmbLeW)\n",
+		"<p><a href=\"monero:4AfUP827TeRZ1cck3tZThgZbRCEwBrpcJTkA1LCiyFVuMH4b5y59bKMZHGb9y58K3gSjWDCBsB4RkGsGDhsmMG5R2qmbLeW\">foo</a></p>\n",
+
+		"[foo](bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh)\n",
+		"<p><a href=\"bitcoin:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\">foo</a></p>\n",
+
 		// Not considered safe
 		"[foo](baz://bar/)\n",
 		"<p><tt>foo</tt></p>\n",
