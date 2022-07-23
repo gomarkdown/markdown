@@ -6,6 +6,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"github.com/gomarkdown/markdown/internal/utils"
 	"strconv"
 	"strings"
 
@@ -217,9 +218,9 @@ func (p *Parser) addChild(node ast.Node) ast.Node {
 func canNodeContain(n ast.Node, v ast.Node) bool {
 	switch n.(type) {
 	case *ast.List:
-		return isListItem(v)
+		return utils.IsListItem(v)
 	case *ast.Document, *ast.BlockQuote, *ast.Aside, *ast.ListItem, *ast.CaptionFigure:
-		return !isListItem(v)
+		return !utils.IsListItem(v)
 	case *ast.Table:
 		switch v.(type) {
 		case *ast.TableHeader, *ast.TableBody, *ast.TableFooter:
@@ -690,32 +691,6 @@ gatherLines:
 	return
 }
 
-// isPunctuation returns true if c is a punctuation symbol.
-func isPunctuation(c byte) bool {
-	for _, r := range []byte("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~") {
-		if c == r {
-			return true
-		}
-	}
-	return false
-}
-
-// isSpace returns true if c is a white-space charactr
-func isSpace(c byte) bool {
-	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'
-}
-
-// isLetter returns true if c is ascii letter
-func isLetter(c byte) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-}
-
-// isAlnum returns true if c is a digit or letter
-// TODO: check when this is looking for ASCII alnum and when it should use unicode
-func isAlnum(c byte) bool {
-	return (c >= '0' && c <= '9') || isLetter(c)
-}
-
 // TODO: this is not used
 // Replace tab characters with spaces, aligning to the next TAB_SIZE column.
 // always ends output with a newline
@@ -806,7 +781,7 @@ func slugify(in []byte) []byte {
 	sym := false
 
 	for _, ch := range in {
-		if isAlnum(ch) {
+		if utils.IsAlnum(ch) {
 			sym = false
 			out = append(out, ch)
 		} else if sym {
@@ -829,9 +804,4 @@ func slugify(in []byte) []byte {
 		}
 	}
 	return out[a : b+1]
-}
-
-func isListItem(d ast.Node) bool {
-	_, ok := d.(*ast.ListItem)
-	return ok
 }

@@ -3,6 +3,8 @@ package html
 import (
 	"bytes"
 	"fmt"
+	"github.com/gomarkdown/markdown/internal/utils"
+	"github.com/gomarkdown/markdown/internal/valid"
 	"html"
 	"io"
 	"regexp"
@@ -11,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
-	"github.com/gomarkdown/markdown/internal/valid"
 	"github.com/gomarkdown/markdown/parser"
 )
 
@@ -335,10 +336,10 @@ func listItemOpenCR(listItem *ast.ListItem) bool {
 func skipParagraphTags(para *ast.Paragraph) bool {
 	parent := para.Parent
 	grandparent := parent.GetParent()
-	if grandparent == nil || !isList(grandparent) {
+	if grandparent == nil || !utils.IsList(grandparent) {
 		return false
 	}
-	isParentTerm := isListItemTerm(parent)
+	isParentTerm := utils.IsListItemTerm(parent)
 	grandparentListData := grandparent.(*ast.List)
 	tightOrTerm := grandparentListData.Tight || isParentTerm
 	return tightOrTerm
@@ -560,7 +561,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 
 func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
 	r.Outs(w, "</p>")
-	if !(isListItem(para.Parent) && ast.GetNextNode(para) == nil) {
+	if !(utils.IsListItem(para.Parent) && ast.GetNextNode(para) == nil) {
 		r.CR(w)
 	}
 }
@@ -649,7 +650,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 
 func (r *Renderer) headingExit(w io.Writer, heading *ast.Heading) {
 	r.Outs(w, headingCloseTagFromLevel(heading.Level))
-	if !(isListItem(heading.Parent) && ast.GetNextNode(heading) == nil) {
+	if !(utils.IsListItem(heading.Parent) && ast.GetNextNode(heading) == nil) {
 		r.CR(w)
 	}
 }
@@ -682,9 +683,9 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 		}
 	}
 	r.CR(w)
-	if isListItem(nodeData.Parent) {
+	if utils.IsListItem(nodeData.Parent) {
 		grand := nodeData.Parent.GetParent()
-		if isListTight(grand) {
+		if utils.IsListTight(grand) {
 			r.CR(w)
 		}
 	}
@@ -843,7 +844,7 @@ func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	}
 	r.Outs(w, "</code>")
 	r.Outs(w, "</pre>")
-	if !isListItem(codeBlock.Parent) {
+	if !utils.IsListItem(codeBlock.Parent) {
 		r.CR(w)
 	}
 }
@@ -1204,34 +1205,12 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 	r.lastOutputLen = buf.Len()
 }
 
-func isList(node ast.Node) bool {
-	_, ok := node.(*ast.List)
-	return ok
-}
-
-func isListTight(node ast.Node) bool {
-	if list, ok := node.(*ast.List); ok {
-		return list.Tight
-	}
-	return false
-}
-
-func isListItem(node ast.Node) bool {
-	_, ok := node.(*ast.ListItem)
-	return ok
-}
-
-func isListItemTerm(node ast.Node) bool {
-	data, ok := node.(*ast.ListItem)
-	return ok && data.ListFlags&ast.ListTypeTerm != 0
-}
-
 func isSafeLink(link []byte) bool {
 	for _, path := range valid.Paths {
 		if len(link) >= len(path) && bytes.Equal(link[:len(path)], path) {
 			if len(link) == len(path) {
 				return true
-			} else if isAlnum(link[len(path)]) {
+			} else if utils.IsAlnum(link[len(path)]) {
 				return true
 			}
 		}
@@ -1240,7 +1219,7 @@ func isSafeLink(link []byte) bool {
 	for _, prefix := range valid.URIs {
 		// TODO: handle unicode here
 		// case-insensitive prefix test
-		if len(link) > len(prefix) && bytes.Equal(bytes.ToLower(link[:len(prefix)]), prefix) && isAlnum(link[len(prefix)]) {
+		if len(link) > len(prefix) && bytes.Equal(bytes.ToLower(link[:len(prefix)]), prefix) && utils.IsAlnum(link[len(prefix)]) {
 			return true
 		}
 	}
@@ -1258,7 +1237,7 @@ func slugify(in []byte) []byte {
 	sym := false
 
 	for _, ch := range in {
-		if isAlnum(ch) {
+		if utils.IsAlnum(ch) {
 			sym = false
 			out = append(out, ch)
 		} else if sym {
@@ -1281,33 +1260,6 @@ func slugify(in []byte) []byte {
 		}
 	}
 	return out[a : b+1]
-}
-
-// TODO: move to internal package
-// isAlnum returns true if c is a digit or letter
-// TODO: check when this is looking for ASCII alnum and when it should use unicode
-func isAlnum(c byte) bool {
-	return (c >= '0' && c <= '9') || isLetter(c)
-}
-
-// isSpace returns true if c is a white-space charactr
-func isSpace(c byte) bool {
-	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'
-}
-
-// isLetter returns true if c is ascii letter
-func isLetter(c byte) bool {
-	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-}
-
-// isPunctuation returns true if c is a punctuation symbol.
-func isPunctuation(c byte) bool {
-	for _, r := range []byte("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~") {
-		if c == r {
-			return true
-		}
-	}
-	return false
 }
 
 // BlockAttrs takes a node and checks if it has block level attributes set. If so it

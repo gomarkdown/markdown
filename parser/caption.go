@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"github.com/gomarkdown/markdown/internal/utils"
 )
 
 // caption checks for a caption, it returns the caption data and a potential "headingID".
@@ -58,7 +59,7 @@ func captionID(data []byte) (string, int) {
 	}
 	// remains must be whitespace.
 	for l := k + 1; l < end; l++ {
-		if !isSpace(data[l]) {
+		if !utils.IsSpace(data[l]) {
 			return "", 0
 		}
 	}

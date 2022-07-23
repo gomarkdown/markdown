@@ -2,6 +2,7 @@ package html
 
 import (
 	"bytes"
+	"github.com/gomarkdown/markdown/internal/utils"
 	"io"
 )
 
@@ -15,7 +16,7 @@ type SPRenderer struct {
 }
 
 func wordBoundary(c byte) bool {
-	return c == 0 || isSpace(c) || isPunctuation(c)
+	return c == 0 || utils.IsSpace(c) || utils.IsPunctuation(c)
 }
 
 func tolower(c byte) byte {
@@ -23,10 +24,6 @@ func tolower(c byte) byte {
 		return c - 'A' + 'a'
 	}
 	return c
-}
-
-func isdigit(c byte) bool {
-	return c >= '0' && c <= '9'
 }
 
 func smartQuoteHelper(out *bytes.Buffer, previousChar byte, nextChar byte, quote byte, isOpen *bool, addNBSP bool) bool {
@@ -39,46 +36,46 @@ func smartQuoteHelper(out *bytes.Buffer, previousChar byte, nextChar byte, quote
 	case previousChar == 0 && nextChar == 0:
 		// context is not any help here, so toggle
 		*isOpen = !*isOpen
-	case isSpace(previousChar) && nextChar == 0:
+	case utils.IsSpace(previousChar) && nextChar == 0:
 		// [ "] might be [ "<code>foo...]
 		*isOpen = true
-	case isPunctuation(previousChar) && nextChar == 0:
+	case utils.IsPunctuation(previousChar) && nextChar == 0:
 		// [!"] hmm... could be [Run!"] or [("<code>...]
 		*isOpen = false
 	case /* isnormal(previousChar) && */ nextChar == 0:
 		// [a"] is probably a close
 		*isOpen = false
-	case previousChar == 0 && isSpace(nextChar):
+	case previousChar == 0 && utils.IsSpace(nextChar):
 		// [" ] might be [...foo</code>" ]
 		*isOpen = false
-	case isSpace(previousChar) && isSpace(nextChar):
+	case utils.IsSpace(previousChar) && utils.IsSpace(nextChar):
 		// [ " ] context is not any help here, so toggle
 		*isOpen = !*isOpen
-	case isPunctuation(previousChar) && isSpace(nextChar):
+	case utils.IsPunctuation(previousChar) && utils.IsSpace(nextChar):
 		// [!" ] is probably a close
 		*isOpen = false
-	case /* isnormal(previousChar) && */ isSpace(nextChar):
+	case /* isnormal(previousChar) && */ utils.IsSpace(nextChar):
 		// [a" ] this is one of the easy cases
 		*isOpen = false
-	case previousChar == 0 && isPunctuation(nextChar):
+	case previousChar == 0 && utils.IsPunctuation(nextChar):
 		// ["!] hmm... could be ["$1.95] or [</code>"!...]
 		*isOpen = false
-	case isSpace(previousChar) && isPunctuation(nextChar):
+	case utils.IsSpace(previousChar) && utils.IsPunctuation(nextChar):
 		// [ "!] looks more like [ "$1.95]
 		*isOpen = true
-	case isPunctuation(previousChar) && isPunctuation(nextChar):
+	case utils.IsPunctuation(previousChar) && utils.IsPunctuation(nextChar):
 		// [!"!] context is not any help here, so toggle
 		*isOpen = !*isOpen
-	case /* isnormal(previousChar) && */ isPunctuation(nextChar):
+	case /* isnormal(previousChar) && */ utils.IsPunctuation(nextChar):
 		// [a"!] is probably a close
 		*isOpen = false
 	case previousChar == 0 /* && isnormal(nextChar) */ :
 		// ["a] is probably an open
 		*isOpen = true
-	case isSpace(previousChar) /* && isnormal(nextChar) */ :
+	case utils.IsSpace(previousChar) /* && isnormal(nextChar) */ :
 		// [ "a] this is one of the easy cases
 		*isOpen = true
-	case isPunctuation(previousChar) /* && isnormal(nextChar) */ :
+	case utils.IsPunctuation(previousChar) /* && isnormal(nextChar) */ :
 		// [!"a] is probably an open
 		*isOpen = true
 	default:
@@ -272,7 +269,7 @@ func (r *SPRenderer) smartNumberGeneric(out *bytes.Buffer, previousChar byte, te
 		// note: check for regular slash (/) or fraction slash (⁄, 0x2044, or 0xe2 81 84 in utf-8)
 		//       and avoid changing dates like 1/23/2005 into fractions.
 		numEnd := 0
-		for len(text) > numEnd && isdigit(text[numEnd]) {
+		for len(text) > numEnd && utils.IsDigit(text[numEnd]) {
 			numEnd++
 		}
 		if numEnd == 0 {
@@ -287,7 +284,7 @@ func (r *SPRenderer) smartNumberGeneric(out *bytes.Buffer, previousChar byte, te
 			return 0
 		}
 		denEnd := denStart
-		for len(text) > denEnd && isdigit(text[denEnd]) {
+		for len(text) > denEnd && utils.IsDigit(text[denEnd]) {
 			denEnd++
 		}
 		if denEnd == denStart {

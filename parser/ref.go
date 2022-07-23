@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"github.com/gomarkdown/markdown/internal/utils"
 
 	"github.com/gomarkdown/markdown/ast"
 )
@@ -25,7 +26,7 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 			switch {
 			case c == ')':
 				break Loop
-			case !isAlnum(c):
+			case !utils.IsAlnum(c):
 				if c == '_' || c == '-' || c == ':' {
 					i++
 					continue
