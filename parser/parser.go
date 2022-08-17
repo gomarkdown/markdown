@@ -84,7 +84,9 @@ type Parser struct {
 	// the bottom will be used to fill in the link details.
 	ReferenceOverride ReferenceOverrideFunc
 
-	// TODO: documentation
+	// IsSafeURLOverride allows overriding the default URL matcher. URL is
+	// safe if the overriding function returns true. Can be used to extend
+	// the default list of safe URLs.
 	IsSafeURLOverride func(url []byte) bool
 
 	Opts Options
