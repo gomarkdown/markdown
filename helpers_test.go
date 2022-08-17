@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/gomarkdown/markdown/html"
-	"github.com/gomarkdown/markdown/internal/valid"
 	"github.com/gomarkdown/markdown/parser"
 )
 
@@ -118,7 +117,7 @@ func transformLinks(tests []string, prefix string) []string {
 
 func newSafeURLOverride(uris []string) func(url []byte) bool {
 	return func(url []byte) bool {
-		if valid.IsSafeURL(url) {
+		if parser.IsSafeURL(url) {
 			return true
 		}
 		for _, prefix := range uris {

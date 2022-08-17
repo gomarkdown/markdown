@@ -25,7 +25,7 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 			switch {
 			case c == ')':
 				break Loop
-			case !isAlnum(c):
+			case !IsAlnum(c):
 				if c == '_' || c == '-' || c == ':' {
 					i++
 					continue
