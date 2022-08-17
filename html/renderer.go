@@ -133,7 +133,9 @@ type Renderer struct {
 	// if > 0, will strip html tags in Out and Outs
 	DisableTags int
 
-	// TODO: documentation
+	// IsSafeURLOverride allows overriding the default URL matcher. URL is
+	// safe if the overriding function returns true. Can be used to extend
+	// the default list of safe URLs.
 	IsSafeURLOverride func(url []byte) bool
 
 	sr *SPRenderer
