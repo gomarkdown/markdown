@@ -17,7 +17,7 @@ var Paths = [][]byte{
 	[]byte("../"),
 }
 
-// TODO: documentation
+// IsSafeURL returns true if url starts with one of the valid schemes or is a relative path.
 func IsSafeURL(url []byte) bool {
 	nLink := len(url)
 	for _, path := range Paths {
