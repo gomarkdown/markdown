@@ -341,7 +341,7 @@ func TestInlineLink(t *testing.T) {
 		"<p><a href=\"/bar/ title with no quotes\">foo with a title</a></p>\n",
 
 		"[foo]()\n",
-		"<p>[foo]()</p>\n",
+		"<p><a href=\"\">foo</a></p>\n",
 
 		"![foo](/bar/)\n",
 		"<p><img src=\"/bar/\" alt=\"foo\" /></p>\n",
@@ -365,7 +365,7 @@ func TestInlineLink(t *testing.T) {
 		"<p><a href=\"url\">link</a></p>\n",
 
 		"![foo]()\n",
-		"<p>![foo]()</p>\n",
+		"<p><img src=\"\" alt=\"foo\" /></p>\n",
 
 		"[a link]\t(/with_a_tab/)\n",
 		"<p><a href=\"/with_a_tab/\">a link</a></p>\n",

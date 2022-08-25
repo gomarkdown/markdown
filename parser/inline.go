@@ -602,9 +602,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 		// links need something to click on and somewhere to go
 		// [](http://bla) is legal in CommonMark, so allow txtE <=1 for linkNormal
-		if len(uLink) == 0 {
-			return 0, nil
-		}
+		// [bla]() is also legal in CommonMark, so allow empty uLink
 	}
 
 	// call the relevant rendering function
