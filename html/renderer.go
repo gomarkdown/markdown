@@ -217,6 +217,11 @@ func NewRenderer(opts RendererOptions) *Renderer {
 }
 
 func isRelativeLink(link []byte) (yes bool) {
+	// empty links considerd relative
+	if len(link) == 0 {
+		return true
+	}
+
 	// a tag begin with '#'
 	if link[0] == '#' {
 		return true
@@ -246,6 +251,9 @@ func isRelativeLink(link []byte) (yes bool) {
 }
 
 func (r *Renderer) addAbsPrefix(link []byte) []byte {
+	if len(link) == 0 {
+		return link
+	}
 	if r.opts.AbsolutePrefix != "" && isRelativeLink(link) && link[0] != '.' {
 		newDest := r.opts.AbsolutePrefix
 		if link[0] != '/' {
