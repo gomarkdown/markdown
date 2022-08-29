@@ -19,14 +19,18 @@ func TestCrossReference(t *testing.T) {
 			data: []byte("(#yes)"),
 			r:    &ast.CrossReference{Destination: []byte("yes")},
 		},
-		// ok
 		{
 			data: []byte("(#y:es)"),
 			r:    &ast.CrossReference{Destination: []byte("y:es")},
 		},
+		{
+			data: []byte("(#id, random text)"),
+			r:    &ast.CrossReference{Destination: []byte("id"), Suffix: []byte("random text")},
+		},
 		// fails
 		{data: []byte("(#y es)"), r: nil, fail: true},
 		{data: []byte("(#yes"), r: nil, fail: true},
+		{data: []byte("(#y es, random text"), r: nil, fail: true},
 	}
 
 	for i, test := range tests {
