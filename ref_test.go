@@ -92,6 +92,10 @@ func BenchmarkReferenceCodeSpans(b *testing.B) {
 	benchFile(b, "Code Spans")
 }
 
+func BenchmarkIssue265(b *testing.B) {
+	benchFile(b, "issue265-slow-binary")
+}
+
 func BenchmarkReferenceHardWrappedPara(b *testing.B) {
 	benchFile(b, "Hard-wrapped paragraphs with list-like lines")
 }
