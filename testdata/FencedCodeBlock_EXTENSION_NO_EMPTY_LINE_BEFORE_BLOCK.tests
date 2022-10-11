@@ -37,7 +37,7 @@ language in braces
 <pre><code class="language-ocaml">language in braces
 </code></pre>
 +++
-```    {ocaml}
+```    {ocaml}      
 with extra whitespace
 ```
 +++
@@ -166,40 +166,3 @@ leading spaces
 
 <pre><code>```
 </code></pre>
-+++
-1. Ordered list item above it without new line:
-```go
- fmt.Println("some code")
-
- fmt.Println("some more code")
-```
-+++
-<ol>
-<li>Ordered list item above it without new line:</li>
-</ol>
-
-<pre><code class="language-go"> fmt.Println(&quot;some code&quot;)
-
- fmt.Println(&quot;some more code&quot;)
-</code></pre>
-+++
-* Unordered list item above it without new line
-```go
- fmt.Println("some code")
-
- fmt.Println("some more code")
-```
-* Another unordered list
-+++
-<ul>
-<li>Unordered list item above it without new line</li>
-</ul>
-
-<pre><code class="language-go"> fmt.Println(&quot;some code&quot;)
-
- fmt.Println(&quot;some more code&quot;)
-</code></pre>
-
-<ul>
-<li>Another unordered list</li>
-</ul>
