@@ -17,3 +17,31 @@ two:
 <pre><code>code
 </code></pre></dd>
 </dl>
++++
+Paragraph
+
+one:
+: def1
+
+two:
+: def2
+
+~~~
+ <some-code>Code Example</some-code>
+~~~
+
+One more paragraph
++++
+<p>Paragraph</p>
+
+<dl>
+<dt>one:</dt>
+<dd>def1</dd>
+<dt>two:</dt>
+<dd>def2</dd>
+</dl>
+
+<pre><code> &lt;some-code&gt;Code Example&lt;/some-code&gt;
+</code></pre>
+
+<p>One more paragraph</p>

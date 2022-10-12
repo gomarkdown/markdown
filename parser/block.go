@@ -1424,6 +1424,7 @@ gatherlines:
 		if p.extensions&FencedCode != 0 {
 			fenceLineEnd, _ := isFenceLine(chunk, nil, "")
 			if fenceLineEnd > 0 && indent == 0 {
+				*flags |= ast.ListItemEndOfList
 				break gatherlines
 			}
 		}
