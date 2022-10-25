@@ -1,6 +1,8 @@
 package notion
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
@@ -12,7 +14,7 @@ import (
 // rendering of some nodes. If it returns false, Renderer.RenderNode
 // will execute its logic. If it returns true, Renderer.RenderNode will
 // skip rendering this node and will return WalkStatus
-type RenderNodeFunc func(w io.Writer, node ast.Node) (ast.WalkStatus, bool)
+type RenderNodeFunc func(w io.Writer, node ast.Node, render *Renderer) (ast.WalkStatus, bool)
 
 // RendererOptions is a collection of supplementary parameters tweaking
 // the behavior of various parts of HTML renderer.
@@ -30,6 +32,7 @@ type Renderer struct {
 	TableHolster    TableBlockBlock
 	TableRowHolster TableRowBlockBlock
 	BlocksFinal     []interface{}
+	InternalWriter  io.Writer
 	documentMatter  ast.DocumentMatters // keep track of front/main/back matter.
 }
 
@@ -46,137 +49,201 @@ func (r *Renderer) AddBlock(inputBlock interface{}) {
 	r.BlocksFinal = append(r.BlocksFinal, inputBlock)
 }
 
+// Render returns a formatted json string with the blocks array available under the key "blocks"
+func Render(doc ast.Node, renderer Renderer) string {
+	var buf bytes.Buffer
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		return renderer.RenderNode(&buf, node)
+	})
+	return fmt.Sprintf("{\n\"blocks\": [%s]\n}", buf.Bytes())
+}
+
 // Text writes ast.Text node
 func (r *Renderer) Text(w io.Writer, text *ast.Text) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(text.Literal))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // HardBreak writes ast.Hardbreak node
 func (r *Renderer) HardBreak(w io.Writer, node *ast.Hardbreak) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string("\n"))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // NonBlockingSpace writes ast.NonBlockingSpace node
 func (r *Renderer) NonBlockingSpace(w io.Writer, node *ast.NonBlockingSpace) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(" "))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) Softbreak(w io.Writer, node *ast.Softbreak) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(" "))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // HTMLSpan writes ast.HTMLSpan node
 func (r *Renderer) HTMLSpan(w io.Writer, span *ast.HTMLSpan) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(span.Literal))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // Link writes ast.Link node
 func (r *Renderer) Link(w io.Writer, link *ast.Link) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(link.Literal))
 	nodeContentAsRichText.Text.Link.URL = string(link.Destination)
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
 }
 
 // Image writes ast.Image node
 func (r *Renderer) Image(w io.Writer, node *ast.Image) {
-	textBlock, err := GetBlock[ImageBlockBlock]("image")
+	builtBlock, err := GetBlock[ImageBlockBlock](ImageBlockType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
-	textBlock.ImageBlock.External.URL = string(node.Destination)
-	textBlock.ImageBlock.Caption = append(textBlock.ImageBlock.Caption, RichTextFromString(string(node.Literal)))
-	r.AddBlock(textBlock)
+	builtBlock.ImageBlock.External.URL = string(node.Destination)
+	builtBlock.ImageBlock.Caption = append(builtBlock.ImageBlock.Caption, RichTextFromString(string(node.Literal)))
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // Paragraph writes ast.Paragraph node
 func (r *Renderer) Paragraph(w io.Writer, para *ast.Paragraph) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(para.Literal))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // Code writes ast.Code node
 func (r *Renderer) Code(w io.Writer, node *ast.Code) {
-	textBlock, err := GetBlock[CodeBlock]("code")
+	builtBlock, err := GetBlock[CodeBlock](CodeType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(node.Literal))
 	nodeContentAsRichText.Annotations.code = true
-	textBlock.Code.RichText = append(textBlock.Code.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Code.RichText = append(builtBlock.Code.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) Math(w io.Writer, node *ast.Math) {
-	textBlock, err := GetBlock[CodeBlock]("code")
+	builtBlock, err := GetBlock[CodeBlock](CodeType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(node.Literal))
 	nodeContentAsRichText.Annotations.code = true
-	textBlock.Code.RichText = append(textBlock.Code.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Code.RichText = append(builtBlock.Code.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) MathBlock(w io.Writer, node *ast.MathBlock) {
-	textBlock, err := GetBlock[CodeBlock]("code")
+	builtBlock, err := GetBlock[CodeBlock](CodeType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(node.Literal))
 	nodeContentAsRichText.Annotations.code = true
-	textBlock.Code.RichText = append(textBlock.Code.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Code.RichText = append(builtBlock.Code.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // HTMLBlock write ast.HTMLBlock node
 func (r *Renderer) HTMLBlock(w io.Writer, node *ast.HTMLBlock) {
-	textBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(node.Literal))
-	textBlock.Paragraph.RichText = append(textBlock.Paragraph.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // Heading writes ast.Heading node
@@ -184,105 +251,155 @@ func (r *Renderer) Heading(w io.Writer, node *ast.Heading) {
 	level := node.Level
 	switch level {
 	case 1:
-		headerBlock, err := GetBlock[Heading1Block]("heading_1")
+		headerBlock, err := GetBlock[Heading1Block](Heading1Type)
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		textContent := RichTextFromString(string(node.Literal))
 		textContent.Annotations.bold = true
 		headerBlock.Heading1.RichText = append(headerBlock.Heading1.RichText, textContent)
 		r.AddBlock(headerBlock)
-	case 2:
-		headerBlock, err := GetBlock[Heading2Block]("heading_2")
+		out, err := json.MarshalIndent(headerBlock, "", "  ")
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
+	case 2:
+		headerBlock, err := GetBlock[Heading2Block](Heading2Type)
+		if err != nil {
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		textContent := RichTextFromString(string(node.Literal))
 		textContent.Annotations.bold = true
 		headerBlock.Heading2.RichText = append(headerBlock.Heading2.RichText, textContent)
 		r.AddBlock(headerBlock)
-	default:
-		headerBlock, err := GetBlock[Heading3Block]("heading_3")
+		out, err := json.MarshalIndent(headerBlock, "", "  ")
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
+	default:
+		headerBlock, err := GetBlock[Heading3Block](Heading3Type)
+		if err != nil {
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		textContent := RichTextFromString(string(node.Literal))
 		textContent.Annotations.bold = true
 		headerBlock.Heading3.RichText = append(headerBlock.Heading3.RichText, textContent)
 		r.AddBlock(headerBlock)
+		out, err := json.MarshalIndent(headerBlock, "", "  ")
+		if err != nil {
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
 	}
 }
 
 // HorizontalRule writes ast.HorizontalRule node
 func (r *Renderer) HorizontalRule(w io.Writer, node *ast.HorizontalRule) {
-	builtBlock, err := GetBlock[DividerBlockBlock]("divider")
+	builtBlock, err := GetBlock[DividerBlockBlock](DividerBlockType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) AddQuote(w io.Writer, node *ast.BlockQuote) {
-	builtBlock, err := GetBlock[QuoteBlock]("quote")
+	builtBlock, err := GetBlock[QuoteBlock](QuoteType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	textContent := RichTextFromString(string(node.Literal))
 	textContent.Annotations.underline = true
 	builtBlock.Quote.RichText = append(builtBlock.Quote.RichText, textContent)
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) AddEmp(w io.Writer, node *ast.Emph) {
-	builtBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	textContent := RichTextFromString(string(node.Literal))
 	textContent.Annotations.italic = true
 	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, textContent)
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) AddStrong(w io.Writer, node *ast.Strong) {
-	builtBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	textContent := RichTextFromString(string(node.Literal))
 	textContent.Annotations.bold = true
 	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, textContent)
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) AddDel(w io.Writer, node *ast.Del) {
-	builtBlock, err := GetBlock[ParagraphBlock]("paragraph")
+	builtBlock, err := GetBlock[ParagraphBlock](ParagraphType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	textContent := RichTextFromString(string(node.Literal))
 	textContent.Annotations.strikethrough = true
 	builtBlock.Paragraph.RichText = append(builtBlock.Paragraph.RichText, textContent)
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // List writes ast.List node
 func (r *Renderer) List(w io.Writer, list *ast.List) {
 	switch ast.ListType(list.ListFlags) {
 	case ast.ListTypeOrdered:
-		builtBlock, err := GetBlock[NumberedListItemBlock]("numbered_list_item")
+		builtBlock, err := GetBlock[NumberedListItemBlock](NumberedListItemType)
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		builtBlock.NumberedListItem.RichText = append(builtBlock.NumberedListItem.RichText, RichTextFromString(string(list.Literal)))
 		r.AddBlock(builtBlock)
-	default:
-		builtBlock, err := GetBlock[BulletedListItemBlock]("bulleted_list_item")
+		out, err := json.MarshalIndent(builtBlock, "", "  ")
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
+	default:
+		builtBlock, err := GetBlock[BulletedListItemBlock](BulletedListItemType)
+		if err != nil {
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		builtBlock.BulletedListItem.RichText = append(builtBlock.BulletedListItem.RichText, RichTextFromString(string(list.Literal)))
 		r.AddBlock(builtBlock)
+		out, err := json.MarshalIndent(builtBlock, "", "  ")
+		if err != nil {
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
 	}
 }
 
@@ -290,31 +407,46 @@ func (r *Renderer) List(w io.Writer, list *ast.List) {
 func (r *Renderer) ListItem(w io.Writer, list *ast.ListItem) {
 	switch ast.ListType(list.ListFlags) {
 	case ast.ListTypeOrdered:
-		builtBlock, err := GetBlock[NumberedListItemBlock]("numbered_list_item")
+		builtBlock, err := GetBlock[NumberedListItemBlock](NumberedListItemType)
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		builtBlock.NumberedListItem.RichText = append(builtBlock.NumberedListItem.RichText, RichTextFromString(string(list.Literal)))
 		r.AddBlock(builtBlock)
-	default:
-		builtBlock, err := GetBlock[BulletedListItemBlock]("bulleted_list_item")
+		out, err := json.MarshalIndent(builtBlock, "", "  ")
 		if err != nil {
-			fmt.Println("i can't do shit here")
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
+	default:
+		builtBlock, err := GetBlock[BulletedListItemBlock](BulletedListItemType)
+		if err != nil {
+			fmt.Printf("i can't do shit here: %v", err)
 		}
 		builtBlock.BulletedListItem.RichText = append(builtBlock.BulletedListItem.RichText, RichTextFromString(string(list.Literal)))
 		r.AddBlock(builtBlock)
+		out, err := json.MarshalIndent(builtBlock, "", "  ")
+		if err != nil {
+			fmt.Printf("i can't do marshall here: %v", err)
+		}
+		io.WriteString(w, string(out)+",\n")
 	}
 }
 
 // CodeBlock writes ast.CodeBlock node
 func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
-	textBlock, err := GetBlock[CodeBlock]("code")
+	builtBlock, err := GetBlock[CodeBlock](CodeType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	nodeContentAsRichText := RichTextFromString(string(codeBlock.Literal))
-	textBlock.Code.RichText = append(textBlock.Code.RichText, nodeContentAsRichText)
-	r.AddBlock(textBlock)
+	builtBlock.Code.RichText = append(builtBlock.Code.RichText, nodeContentAsRichText)
+	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // Caption writes ast.Caption node
@@ -327,9 +459,9 @@ func (r *Renderer) CaptionFigure(w io.Writer, figure *ast.CaptionFigure) {
 
 // TableRow writes ast.TableRow node
 func (r *Renderer) TableRow(w io.Writer, tableCell *ast.TableRow) {
-	builtBlock, err := GetBlock[TableRowBlockBlock]("table_row")
+	builtBlock, err := GetBlock[TableRowBlockBlock](TableRowBlockType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	rowcount := len(builtBlock.TableRowBlock.Cells)
 	for _, childNode := range tableCell.Children {
@@ -337,15 +469,25 @@ func (r *Renderer) TableRow(w io.Writer, tableCell *ast.TableRow) {
 		builtBlock.TableRowBlock.Cells[rowcount] = append(builtBlock.TableRowBlock.Cells[rowcount], builtCell)
 	}
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // TableBody writes ast.TableBody node
 func (r *Renderer) TableBody(w io.Writer, node *ast.TableBody) {
-	builtBlock, err := GetBlock[TableBlockBlock]("table")
+	builtBlock, err := GetBlock[TableBlockBlock](TableBlockType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // DocumentMatter writes ast.DocumentMatter
@@ -355,29 +497,37 @@ func (r *Renderer) DocumentMatter(w io.Writer, node *ast.DocumentMatter) {
 
 // Citation writes ast.Citation node
 func (r *Renderer) Citation(w io.Writer, node *ast.Citation) {
-	// for i, c := range node.Destination {
-	// }
 }
 
 // Callout writes ast.Callout node
 func (r *Renderer) Callout(w io.Writer, node *ast.Callout) {
-	builtBlock, err := GetBlock[CalloutBlock]("callout")
+	builtBlock, err := GetBlock[CalloutBlock](CalloutType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	textContent := RichTextFromString(string(node.Literal))
 	builtBlock.Callout.RichText = append(builtBlock.Callout.RichText, textContent)
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 func (r *Renderer) Aside(w io.Writer, node *ast.Aside) {
-	builtBlock, err := GetBlock[CalloutBlock]("callout")
+	builtBlock, err := GetBlock[CalloutBlock](CalloutType)
 	if err != nil {
-		fmt.Println("i can't do shit here")
+		fmt.Printf("i can't do shit here: %v", err)
 	}
 	textContent := RichTextFromString(string(node.Literal))
 	builtBlock.Callout.RichText = append(builtBlock.Callout.RichText, textContent)
 	r.AddBlock(builtBlock)
+	out, err := json.MarshalIndent(builtBlock, "", "  ")
+	if err != nil {
+		fmt.Printf("i can't do marshall here: %v", err)
+	}
+	io.WriteString(w, string(out)+",\n")
 }
 
 // Index writes ast.Index node
@@ -428,7 +578,7 @@ func BlockAttrs(node ast.Node) []string {
 // RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node) ast.WalkStatus {
 	if r.opts.RenderNodeHook != nil {
-		status, didHandle := r.opts.RenderNodeHook(w, node)
+		status, didHandle := r.opts.RenderNodeHook(w, node, r)
 		if didHandle {
 			return status
 		}

@@ -20,14 +20,20 @@ links or code blocks.
 		"github.com/gomarkdown/markdown/ast"
 	)
 
-	// a very dummy render hook that will output "code_replacements" instead of
-	// <code>${content}</code> emitted by notion.Renderer
-	func renderHookCodeBlock(w io.Writer, node ast.Node) (ast.WalkStatus, bool) {
+	// a very dummy render hook that will output "> rendered in a custom func!" to each code block
+	// it renders, and then adds that block to the internal block slice! (needed to post values to notion)
+	func renderHookCodeBlock(w io.Writer, node ast.Node, render *Renderer) (ast.WalkStatus, bool) {
 		_, ok := node.(*ast.CodeBlock)
 		if !ok {
 			return ast.GoToNext, false
 		}
-		io.WriteString(w, "code_replacement")
+		if err != nil {
+		  fmt.Println("i can't do shit here")
+	  }
+		textBlock, err := GetBlock[CodeBlock](CodeType)
+		nodeContentAsRichText := RichTextFromString(string(codeBlock.Literal) + "\n> rendered in a custom func!")
+		textBlock.Code.RichText = append(textBlock.Code.RichText, nodeContentAsRichText)
+		r.AddBlock(textBlock)
 		return ast.GoToNext, true
 	}
 

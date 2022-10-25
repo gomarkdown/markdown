@@ -1,7 +1,6 @@
 package notion
 
 import (
-	"errors"
 	"time"
 )
 
@@ -48,10 +47,14 @@ type RichTextTextContent struct {
 	} `json:"link"`
 }
 
-const RichTextType string = "rich_text"
+type RichTextTypeString string
+
+const RichTextType RichTextTypeString = "rich_text"
 
 type RichText struct {
 	BlockBase
+	Type        RichTextTypeString  `json:"type"`
+	ID          BlockID             `json:"id,omitempty"`
 	Text        RichTextTextContent `json:"rich_text"`
 	PlaintText  string              `json:"plain_text"`
 	Annotations AnnotationResponse  `json:"annotations"`
@@ -59,7 +62,7 @@ type RichText struct {
 }
 
 func (rt RichText) TypeInternal() string {
-	return RichTextType
+	return string(RichTextType)
 }
 func (rt RichText) ActualBlock() interface{} {
 	return rt
@@ -79,17 +82,21 @@ type Paragraph struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const ParagraphType string = "paragraph"
+type ParagraphTypeString string
+
+const ParagraphType ParagraphTypeString = "paragraph"
 
 type ParagraphBlock struct {
 	BlockBase
-	Paragraph Paragraph    `json:"paragraph"`
-	Parent    BlockHolster `json:"parent"`
-	Object    BlockType    `json:"object"`
+	Type      ParagraphTypeString `json:"type"`
+	ID        BlockID             `json:"id,omitempty"`
+	Paragraph Paragraph           `json:"paragraph"`
+	Parent    BlockHolster        `json:"parent"`
+	Object    BlockType           `json:"object"`
 }
 
 func (pb ParagraphBlock) TypeInternal() string {
-	return ParagraphType
+	return string(ParagraphType)
 }
 func (pb ParagraphBlock) ActualBlock() interface{} {
 	return pb
@@ -98,21 +105,29 @@ func (pb ParagraphBlock) ActualBlock() interface{} {
 // parent block stubs
 type DataBaseBlock struct {
 	BlockBase
+	Type     string     `json:"type"`
+	ID       BlockID    `json:"id,omitempty"`
 	DataBase DataBaseID `json:"database_id"`
 }
 
 type PageBlock struct {
 	BlockBase
-	PageID PageID `json:"page_id"`
+	Type   string  `json:"type"`
+	ID     BlockID `json:"id,omitempty"`
+	PageID PageID  `json:"page_id"`
 }
 
 type BlockBlock struct {
 	BlockBase
+	Type    string  `json:"type"`
+	ID      BlockID `json:"id,omitempty"`
 	BlockID BlockID `json:"block_id"`
 }
 
 type WorkspaceBlock struct {
 	BlockBase
+	Type      string    `json:"type"`
+	ID        BlockID   `json:"id,omitempty"`
 	WorkSpace WorkSpace `json:"workspace"`
 }
 
@@ -122,17 +137,21 @@ type Heading1 struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const Heading1Type string = "heading_1"
+type Heading1TypeString string
+
+const Heading1Type Heading1TypeString = "heading_1"
 
 type Heading1Block struct {
 	BlockBase
-	Heading1 Heading1     `json:"heading_1"`
-	Parent   BlockHolster `json:"parent"`
-	Object   BlockType    `json:"object"`
+	Type     Heading1TypeString `json:"type"`
+	ID       BlockID            `json:"id,omitempty"`
+	Heading1 Heading1           `json:"heading_1"`
+	Parent   BlockHolster       `json:"parent"`
+	Object   BlockType          `json:"object"`
 }
 
 func (bI Heading1Block) TypeInternal() string {
-	return Heading1Type
+	return string(Heading1Type)
 }
 func (bI Heading1Block) ActualBlock() interface{} {
 	return bI
@@ -143,17 +162,21 @@ type Heading2 struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const Heading2Type string = "heading_2"
+type Heading2TypeString string
+
+const Heading2Type Heading2TypeString = "heading_2"
 
 type Heading2Block struct {
 	BlockBase
-	Heading2 Heading2     `json:"heading_2"`
-	Parent   BlockHolster `json:"parent"`
-	Object   BlockType    `json:"object"`
+	Type     Heading2TypeString `json:"type"`
+	ID       BlockID            `json:"id,omitempty"`
+	Heading2 Heading2           `json:"heading_2"`
+	Parent   BlockHolster       `json:"parent"`
+	Object   BlockType          `json:"object"`
 }
 
 func (bI Heading2Block) TypeInternal() string {
-	return Heading2Type
+	return string(Heading2Type)
 }
 func (bI Heading2Block) ActualBlock() interface{} {
 	return bI
@@ -164,17 +187,21 @@ type Heading3 struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const Heading3Type string = "heading_3"
+type Heading3TypeString string
+
+const Heading3Type Heading3TypeString = "heading_3"
 
 type Heading3Block struct {
 	BlockBase
-	Heading3 Heading3     `json:"heading_3"`
-	Parent   BlockHolster `json:"parent"`
-	Object   BlockType    `json:"object"`
+	Type     Heading3TypeString `json:"type"`
+	ID       BlockID            `json:"id,omitempty"`
+	Heading3 Heading3           `json:"heading_3"`
+	Parent   BlockHolster       `json:"parent"`
+	Object   BlockType          `json:"object"`
 }
 
 func (bI Heading3Block) TypeInternal() string {
-	return Heading3Type
+	return string(Heading3Type)
 }
 func (bI Heading3Block) ActualBlock() interface{} {
 	return bI
@@ -185,17 +212,21 @@ type BulletedListItem struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const BulletedListItemType string = "bulleted_list_item"
+type BulletedListItemTypeString string
+
+const BulletedListItemType BulletedListItemTypeString = "bulleted_list_item"
 
 type BulletedListItemBlock struct {
 	BlockBase
-	BulletedListItem BulletedListItem `json:"bulleted_list_item"`
-	Parent           BlockHolster     `json:"parent"`
-	Object           BlockType        `json:"object"`
+	Type             BulletedListItemTypeString `json:"type"`
+	ID               BlockID                    `json:"id,omitempty"`
+	BulletedListItem BulletedListItem           `json:"bulleted_list_item"`
+	Parent           BlockHolster               `json:"parent"`
+	Object           BlockType                  `json:"object"`
 }
 
 func (bI BulletedListItemBlock) TypeInternal() string {
-	return BulletedListItemType
+	return string(BulletedListItemType)
 }
 func (bI BulletedListItemBlock) ActualBlock() interface{} {
 	return bI
@@ -206,17 +237,21 @@ type NumberedListItem struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const NumberedListItemType string = "numbered_list_item"
+type NumberedListItemTypeString string
+
+const NumberedListItemType NumberedListItemTypeString = "numbered_list_item"
 
 type NumberedListItemBlock struct {
 	BlockBase
-	NumberedListItem NumberedListItem `json:"numbered_list_item"`
-	Parent           BlockHolster     `json:"parent"`
-	Object           BlockType        `json:"object"`
+	Type             NumberedListItemTypeString `json:"type"`
+	ID               BlockID                    `json:"id,omitempty"`
+	NumberedListItem NumberedListItem           `json:"numbered_list_item"`
+	Parent           BlockHolster               `json:"parent"`
+	Object           BlockType                  `json:"object"`
 }
 
 func (bI NumberedListItemBlock) TypeInternal() string {
-	return NumberedListItemType
+	return string(NumberedListItemType)
 }
 func (bI NumberedListItemBlock) ActualBlock() interface{} {
 	return bI
@@ -227,17 +262,21 @@ type Quote struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const QuoteType string = "quote"
+type QuoteTypeString string
+
+const QuoteType QuoteTypeString = "quote"
 
 type QuoteBlock struct {
 	BlockBase
-	Quote  Quote        `json:"quote"`
-	Parent BlockHolster `json:"parent"`
-	Object BlockType    `json:"object"`
+	Type   QuoteTypeString `json:"type"`
+	ID     BlockID         `json:"id,omitempty"`
+	Quote  Quote           `json:"quote"`
+	Parent BlockHolster    `json:"parent"`
+	Object BlockType       `json:"object"`
 }
 
 func (bI QuoteBlock) TypeInternal() string {
-	return QuoteType
+	return string(QuoteType)
 }
 func (bI QuoteBlock) ActualBlock() interface{} {
 	return bI
@@ -249,17 +288,21 @@ type ToDo struct {
 	Checked  bool       `json:"checked"`
 }
 
-const ToDoType string = "to_do"
+type ToDoTypeString string
+
+const ToDoType ToDoTypeString = "to_do"
 
 type ToDoBlock struct {
 	BlockBase
-	ToDo   ToDo         `json:"to_do"`
-	Parent BlockHolster `json:"parent"`
-	Object BlockType    `json:"object"`
+	Type   ToDoTypeString `json:"type"`
+	ID     BlockID        `json:"id,omitempty"`
+	ToDo   ToDo           `json:"to_do"`
+	Parent BlockHolster   `json:"parent"`
+	Object BlockType      `json:"object"`
 }
 
 func (bI ToDoBlock) TypeInternal() string {
-	return ToDoType
+	return string(ToDoType)
 }
 func (bI ToDoBlock) ActualBlock() interface{} {
 	return bI
@@ -270,17 +313,21 @@ type Toggle struct {
 	Color    ApiColor   `json:"color"`
 }
 
-const ToggleType string = "toggle"
+type ToggleTypeString string
+
+const ToggleType ToggleTypeString = "toggle"
 
 type ToggleBlock struct {
 	BlockBase
-	Toggle Toggle       `json:"toggle"`
-	Parent BlockHolster `json:"parent"`
-	Object BlockType    `json:"object"`
+	Type   ToggleTypeString `json:"type"`
+	ID     BlockID          `json:"id,omitempty"`
+	Toggle Toggle           `json:"toggle"`
+	Parent BlockHolster     `json:"parent"`
+	Object BlockType        `json:"object"`
 }
 
 func (bI ToggleBlock) TypeInternal() string {
-	return ToggleType
+	return string(ToggleType)
 }
 func (bI ToggleBlock) ActualBlock() interface{} {
 	return bI
@@ -290,17 +337,21 @@ type Template struct {
 	RichText []RichText `json:"rich_text"`
 }
 
-const TemplateType string = "template"
+type TemplateTypeString string
+
+const TemplateType TemplateTypeString = "template"
 
 type TemplateBlock struct {
 	BlockBase
-	Template Template     `json:"template"`
-	Parent   BlockHolster `json:"parent"`
-	Object   BlockType    `json:"object"`
+	Type     TemplateTypeString `json:"type"`
+	ID       BlockID            `json:"id,omitempty"`
+	Template Template           `json:"template"`
+	Parent   BlockHolster       `json:"parent"`
+	Object   BlockType          `json:"object"`
 }
 
 func (bI TemplateBlock) TypeInternal() string {
-	return TemplateType
+	return string(TemplateType)
 }
 func (bI TemplateBlock) ActualBlock() interface{} {
 	return bI
@@ -313,17 +364,21 @@ type SyncedBlock struct {
 	} `json:"synced_from"`
 }
 
-const SyncedBlockType string = "synced_block"
+type SyncedBlockTypeString string
+
+const SyncedBlockType SyncedBlockTypeString = "synced_block"
 
 type SyncedBlockBlock struct {
 	BlockBase
-	SyncedBlock SyncedBlock  `json:"synced_block"`
-	Parent      BlockHolster `json:"parent"`
-	Object      BlockType    `json:"object"`
+	Type        SyncedBlockTypeString `json:"type"`
+	ID          BlockID               `json:"id,omitempty"`
+	SyncedBlock SyncedBlock           `json:"synced_block"`
+	Parent      BlockHolster          `json:"parent"`
+	Object      BlockType             `json:"object"`
 }
 
 func (bI SyncedBlockBlock) TypeInternal() string {
-	return SyncedBlockType
+	return string(SyncedBlockType)
 }
 func (bI SyncedBlockBlock) ActualBlock() interface{} {
 	return bI
@@ -333,17 +388,21 @@ type ChildPage struct {
 	Title string `json:"title"`
 }
 
-const ChildPageType string = "child_page"
+type ChildPageTypeString string
+
+const ChildPageType ChildPageTypeString = "child_page"
 
 type ChildPageBlock struct {
 	BlockBase
-	ChildPage ChildPage    `json:"child_page"`
-	Parent    BlockHolster `json:"parent"`
-	Object    BlockType    `json:"object"`
+	Type      ChildPageTypeString `json:"type"`
+	ID        BlockID             `json:"id,omitempty"`
+	ChildPage ChildPage           `json:"child_page"`
+	Parent    BlockHolster        `json:"parent"`
+	Object    BlockType           `json:"object"`
 }
 
 func (bI ChildPageBlock) TypeInternal() string {
-	return ChildPageType
+	return string(ChildPageType)
 }
 func (bI ChildPageBlock) ActualBlock() interface{} {
 	return bI
@@ -353,17 +412,21 @@ type ChildDatabase struct {
 	Title string `json:"title"`
 }
 
-const ChildDatabaseType string = "child_database"
+type ChildDatabaseTypeString string
+
+const ChildDatabaseType ChildDatabaseTypeString = "child_database"
 
 type ChildDatabaseBlock struct {
 	BlockBase
-	ChildDatabase ChildDatabase `json:"child_database"`
-	Parent        BlockHolster  `json:"parent"`
-	Object        BlockType     `json:"object"`
+	Type          ChildDatabaseTypeString `json:"type"`
+	ID            BlockID                 `json:"id,omitempty"`
+	ChildDatabase ChildDatabase           `json:"child_database"`
+	Parent        BlockHolster            `json:"parent"`
+	Object        BlockType               `json:"object"`
 }
 
 func (bI ChildDatabaseBlock) TypeInternal() string {
-	return ChildDatabaseType
+	return string(ChildDatabaseType)
 }
 func (bI ChildDatabaseBlock) ActualBlock() interface{} {
 	return bI
@@ -373,17 +436,21 @@ type Equation struct {
 	Expression string `json:"expression"`
 }
 
-const EquationType string = "equation"
+type EquationTypeString string
+
+const EquationType EquationTypeString = "equation"
 
 type EquationBlock struct {
 	BlockBase
-	Equation Equation     `json:"equation"`
-	Parent   BlockHolster `json:"parent"`
-	Object   BlockType    `json:"object"`
+	Type     EquationTypeString `json:"type"`
+	ID       BlockID            `json:"id,omitempty"`
+	Equation Equation           `json:"equation"`
+	Parent   BlockHolster       `json:"parent"`
+	Object   BlockType          `json:"object"`
 }
 
 func (bI EquationBlock) TypeInternal() string {
-	return EquationType
+	return string(EquationType)
 }
 func (bI EquationBlock) ActualBlock() interface{} {
 	return bI
@@ -395,17 +462,21 @@ type Code struct {
 	Language string     `json:"language"`
 }
 
-const CodeType string = "code"
+type CodeTypeString string
+
+const CodeType CodeTypeString = "code"
 
 type CodeBlock struct {
 	BlockBase
-	Code   Code         `json:"code"`
-	Parent BlockHolster `json:"parent"`
-	Object BlockType    `json:"object"`
+	Type   CodeTypeString `json:"type"`
+	ID     BlockID        `json:"id,omitempty"`
+	Code   Code           `json:"code"`
+	Parent BlockHolster   `json:"parent"`
+	Object BlockType      `json:"object"`
 }
 
 func (bI CodeBlock) TypeInternal() string {
-	return CodeType
+	return string(CodeType)
 }
 func (bI CodeBlock) ActualBlock() interface{} {
 	return bI
@@ -413,21 +484,25 @@ func (bI CodeBlock) ActualBlock() interface{} {
 
 type Callout struct {
 	RichText []RichText  `json:"rich_text"`
-	color    ApiColor    `json:"color"`
+	Color    ApiColor    `json:"color"`
 	Icon     interface{} `json:"icon"`
 }
 
-const CalloutType string = "callout"
+type CalloutTypeString string
+
+const CalloutType CalloutTypeString = "callout"
 
 type CalloutBlock struct {
 	BlockBase
-	Callout Callout      `json:"callout"`
-	Parent  BlockHolster `json:"parent"`
-	Object  BlockType    `json:"object"`
+	Type    CalloutTypeString `json:"type"`
+	ID      BlockID           `json:"id,omitempty"`
+	Callout Callout           `json:"callout"`
+	Parent  BlockHolster      `json:"parent"`
+	Object  BlockType         `json:"object"`
 }
 
 func (bI CalloutBlock) TypeInternal() string {
-	return CalloutType
+	return string(CalloutType)
 }
 func (bI CalloutBlock) ActualBlock() interface{} {
 	return bI
@@ -436,17 +511,21 @@ func (bI CalloutBlock) ActualBlock() interface{} {
 type DividerBlock struct {
 }
 
-const DividerBlockType string = "divider"
+type DividerBlockTypeString string
+
+const DividerBlockType DividerBlockTypeString = "divider"
 
 type DividerBlockBlock struct {
 	BlockBase
-	DividerBlock DividerBlock `json:"divider"`
-	Parent       BlockHolster `json:"parent"`
-	Object       BlockType    `json:"object"`
+	Type         DividerBlockTypeString `json:"type"`
+	ID           BlockID                `json:"id,omitempty"`
+	DividerBlock DividerBlock           `json:"divider"`
+	Parent       BlockHolster           `json:"parent"`
+	Object       BlockType              `json:"object"`
 }
 
 func (bI DividerBlockBlock) TypeInternal() string {
-	return DividerBlockType
+	return string(DividerBlockType)
 }
 func (bI DividerBlockBlock) ActualBlock() interface{} {
 	return bI
@@ -455,37 +534,45 @@ func (bI DividerBlockBlock) ActualBlock() interface{} {
 type Breadcrumb struct {
 }
 
-const BreadcrumbType string = "breadcrumb"
+type BreadcrumbTypeString string
+
+const BreadcrumbType BreadcrumbTypeString = "breadcrumb"
 
 type BreadcrumbBlock struct {
 	BlockBase
-	Breadcrumb Breadcrumb   `json:"breadcrumb"`
-	Parent     BlockHolster `json:"parent"`
-	Object     BlockType    `json:"object"`
+	Type       BreadcrumbTypeString `json:"type"`
+	ID         BlockID              `json:"id,omitempty"`
+	Breadcrumb Breadcrumb           `json:"breadcrumb"`
+	Parent     BlockHolster         `json:"parent"`
+	Object     BlockType            `json:"object"`
 }
 
 func (pb BreadcrumbBlock) TypeInternal() string {
-	return BreadcrumbType
+	return string(BreadcrumbType)
 }
 func (pb BreadcrumbBlock) ActualBlock() interface{} {
 	return pb
 }
 
 type TableOfContentsBlock struct {
-	color ApiColor `json:"color"`
+	Color ApiColor `json:"color"`
 }
 
-const TableOfContentsBlockType string = "table_of_contents"
+type TableOfContentsBlockTypeString string
+
+const TableOfContentsBlockType TableOfContentsBlockTypeString = "table_of_contents"
 
 type TableOfContentsBlockBlock struct {
 	BlockBase
-	TableOfContentsBlock TableOfContentsBlock `json:"table_of_contents"`
-	Parent               BlockHolster         `json:"parent"`
-	Object               BlockType            `json:"object"`
+	Type                 TableOfContentsBlockTypeString `json:"type"`
+	ID                   BlockID                        `json:"id,omitempty"`
+	TableOfContentsBlock TableOfContentsBlock           `json:"table_of_contents"`
+	Parent               BlockHolster                   `json:"parent"`
+	Object               BlockType                      `json:"object"`
 }
 
 func (pb TableOfContentsBlockBlock) TypeInternal() string {
-	return TableOfContentsBlockType
+	return string(TableOfContentsBlockType)
 }
 func (pb TableOfContentsBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -494,17 +581,21 @@ func (pb TableOfContentsBlockBlock) ActualBlock() interface{} {
 type ColumnListBlock struct {
 }
 
-const ColumnListBlockType string = "column_list"
+type ColumnListBlockTypeString string
+
+const ColumnListBlockType ColumnListBlockTypeString = "column_list"
 
 type ColumnListBlockBlock struct {
 	BlockBase
-	ColumnListBlock ColumnListBlock `json:"column_list"`
-	Parent          BlockHolster    `json:"parent"`
-	Object          BlockType       `json:"object"`
+	Type            ColumnListBlockTypeString `json:"type"`
+	ID              BlockID                   `json:"id,omitempty"`
+	ColumnListBlock ColumnListBlock           `json:"column_list"`
+	Parent          BlockHolster              `json:"parent"`
+	Object          BlockType                 `json:"object"`
 }
 
 func (pb ColumnListBlockBlock) TypeInternal() string {
-	return ColumnListBlockType
+	return string(ColumnListBlockType)
 }
 func (pb ColumnListBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -513,17 +604,21 @@ func (pb ColumnListBlockBlock) ActualBlock() interface{} {
 type ColumnBlock struct {
 }
 
-const ColumnBlockType string = "column"
+type ColumnBlockTypeString string
+
+const ColumnBlockType ColumnBlockTypeString = "column"
 
 type ColumnBlockBlock struct {
 	BlockBase
-	ColumnBlock ColumnBlock  `json:"column"`
-	Parent      BlockHolster `json:"parent"`
-	Object      BlockType    `json:"object"`
+	Type        ColumnBlockTypeString `json:"type"`
+	ID          BlockID               `json:"id,omitempty"`
+	ColumnBlock ColumnBlock           `json:"column"`
+	Parent      BlockHolster          `json:"parent"`
+	Object      BlockType             `json:"object"`
 }
 
 func (pb ColumnBlockBlock) TypeInternal() string {
-	return ColumnBlockType
+	return string(ColumnBlockType)
 }
 func (pb ColumnBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -536,17 +631,21 @@ type LinkToPageBlock struct {
 	CommentID  string `json:"comment_id"`
 }
 
-const LinkToPageBlockType string = "link_to_page"
+type LinkToPageBlockTypeString string
+
+const LinkToPageBlockType LinkToPageBlockTypeString = "link_to_page"
 
 type LinkToPageBlockBlock struct {
 	BlockBase
-	LinkToPageBlock LinkToPageBlock `json:"link_to_page"`
-	Parent          BlockHolster    `json:"parent"`
-	Object          BlockType       `json:"object"`
+	Type            LinkToPageBlockTypeString `json:"type"`
+	ID              BlockID                   `json:"id,omitempty"`
+	LinkToPageBlock LinkToPageBlock           `json:"link_to_page"`
+	Parent          BlockHolster              `json:"parent"`
+	Object          BlockType                 `json:"object"`
 }
 
 func (pb LinkToPageBlockBlock) TypeInternal() string {
-	return LinkToPageBlockType
+	return string(LinkToPageBlockType)
 }
 func (pb LinkToPageBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -558,17 +657,21 @@ type TableBlock struct {
 	TableWidth      bool
 }
 
-const TableBlockType string = "table"
+type TableBlockTypeString string
+
+const TableBlockType TableBlockTypeString = "table"
 
 type TableBlockBlock struct {
 	BlockBase
-	TableBlock TableBlock   `json:"table"`
-	Parent     BlockHolster `json:"parent"`
-	Object     BlockType    `json:"object"`
+	Type       TableBlockTypeString `json:"type"`
+	ID         BlockID              `json:"id,omitempty"`
+	TableBlock TableBlock           `json:"table"`
+	Parent     BlockHolster         `json:"parent"`
+	Object     BlockType            `json:"object"`
 }
 
 func (pb TableBlockBlock) TypeInternal() string {
-	return TableBlockType
+	return string(TableBlockType)
 }
 func (pb TableBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -578,17 +681,21 @@ type TableRowBlock struct {
 	Cells [][]RichText
 }
 
-const TableRowBlockType string = "table_row"
+type TableRowBlockTypeString string
+
+const TableRowBlockType TableRowBlockTypeString = "table_row"
 
 type TableRowBlockBlock struct {
 	BlockBase
-	TableRowBlock TableRowBlock `json:"table_row"`
-	Parent        BlockHolster  `json:"parent"`
-	Object        BlockType     `json:"object"`
+	Type          TableRowBlockTypeString `json:"type"`
+	ID            BlockID                 `json:"id,omitempty"`
+	TableRowBlock TableRowBlock           `json:"table_row"`
+	Parent        BlockHolster            `json:"parent"`
+	Object        BlockType               `json:"object"`
 }
 
 func (pb TableRowBlockBlock) TypeInternal() string {
-	return TableRowBlockType
+	return string(TableRowBlockType)
 }
 func (pb TableRowBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -599,17 +706,21 @@ type EmbedBlock struct {
 	Caption []RichText
 }
 
-const EmbedBlockType string = "embed"
+type EmbedBlockTypeString string
+
+const EmbedBlockType EmbedBlockTypeString = "embed"
 
 type EmbedBlockBlock struct {
 	BlockBase
-	EmbedBlock EmbedBlock   `json:"embed"`
-	Parent     BlockHolster `json:"parent"`
-	Object     BlockType    `json:"object"`
+	Type       EmbedBlockTypeString `json:"type"`
+	ID         BlockID              `json:"id,omitempty"`
+	EmbedBlock EmbedBlock           `json:"embed"`
+	Parent     BlockHolster         `json:"parent"`
+	Object     BlockType            `json:"object"`
 }
 
 func (pb EmbedBlockBlock) TypeInternal() string {
-	return EmbedBlockType
+	return string(EmbedBlockType)
 }
 func (pb EmbedBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -620,17 +731,21 @@ type BookmarkBlock struct {
 	Caption []RichText
 }
 
-const BookmarkBlockType string = "bookmark"
+type BookmarkBlockTypeString string
+
+const BookmarkBlockType BookmarkBlockTypeString = "bookmark"
 
 type BookmarkBlockBlock struct {
 	BlockBase
-	BookmarkBlock BookmarkBlock `json:"bookmark"`
-	Parent        BlockHolster  `json:"parent"`
-	Object        BlockType     `json:"object"`
+	Type          BookmarkBlockTypeString `json:"type"`
+	ID            BlockID                 `json:"id,omitempty"`
+	BookmarkBlock BookmarkBlock           `json:"bookmark"`
+	Parent        BlockHolster            `json:"parent"`
+	Object        BlockType               `json:"object"`
 }
 
 func (pb BookmarkBlockBlock) TypeInternal() string {
-	return BookmarkBlockType
+	return string(BookmarkBlockType)
 }
 func (pb BookmarkBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -648,17 +763,21 @@ type ImageBlock struct {
 	Caption []RichText `json:"caption"`
 }
 
-const ImageBlockType string = "image"
+type ImageBlockTypeString string
+
+const ImageBlockType ImageBlockTypeString = "image"
 
 type ImageBlockBlock struct {
 	BlockBase
-	ImageBlock ImageBlock   `json:"image"`
-	Parent     BlockHolster `json:"parent"`
-	Object     BlockType    `json:"object"`
+	Type       ImageBlockTypeString `json:"type"`
+	ID         BlockID              `json:"id,omitempty"`
+	ImageBlock ImageBlock           `json:"image"`
+	Parent     BlockHolster         `json:"parent"`
+	Object     BlockType            `json:"object"`
 }
 
 func (pb ImageBlockBlock) TypeInternal() string {
-	return ImageBlockType
+	return string(ImageBlockType)
 }
 func (pb ImageBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -676,17 +795,21 @@ type VideBlock struct {
 	Caption []RichText
 }
 
-const VideBlockType string = "video"
+type VideBlockTypeString string
+
+const VideBlockType VideBlockTypeString = "video"
 
 type VideBlockBlock struct {
 	BlockBase
-	VideBlock VideBlock    `json:"video"`
-	Parent    BlockHolster `json:"parent"`
-	Object    BlockType    `json:"object"`
+	Type      VideBlockTypeString `json:"type"`
+	ID        BlockID             `json:"id,omitempty"`
+	VideBlock VideBlock           `json:"video"`
+	Parent    BlockHolster        `json:"parent"`
+	Object    BlockType           `json:"object"`
 }
 
 func (pb VideBlockBlock) TypeInternal() string {
-	return VideBlockType
+	return string(VideBlockType)
 }
 func (pb VideBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -704,17 +827,21 @@ type PdfBlock struct {
 	Caption []RichText
 }
 
-const PdfBlockType string = "pdf"
+type PdfBlockTypeString string
+
+const PdfBlockType PdfBlockTypeString = "pdf"
 
 type PdfBlockBlock struct {
 	BlockBase
-	PdfBlock PdfBlock     `json:"pdf"`
-	Parent   BlockHolster `json:"parent"`
-	Object   BlockType    `json:"object"`
+	Type     PdfBlockTypeString `json:"type"`
+	ID       BlockID            `json:"id,omitempty"`
+	PdfBlock PdfBlock           `json:"pdf"`
+	Parent   BlockHolster       `json:"parent"`
+	Object   BlockType          `json:"object"`
 }
 
 func (pb PdfBlockBlock) TypeInternal() string {
-	return PdfBlockType
+	return string(PdfBlockType)
 }
 func (pb PdfBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -732,17 +859,21 @@ type FileBlock struct {
 	Caption []RichText
 }
 
-const FileBlockType string = "file"
+type FileBlockTypeString string
+
+const FileBlockType FileBlockTypeString = "file"
 
 type FileBlockBlock struct {
 	BlockBase
-	FileBlock FileBlock    `json:"file"`
-	Parent    BlockHolster `json:"parent"`
-	Object    BlockType    `json:"object"`
+	Type      FileBlockTypeString `json:"type"`
+	ID        BlockID             `json:"id,omitempty"`
+	FileBlock FileBlock           `json:"file"`
+	Parent    BlockHolster        `json:"parent"`
+	Object    BlockType           `json:"object"`
 }
 
 func (pb FileBlockBlock) TypeInternal() string {
-	return FileBlockType
+	return string(FileBlockType)
 }
 func (pb FileBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -760,17 +891,21 @@ type AudioBlock struct {
 	Caption []RichText
 }
 
-const AudioBlockType string = "audio"
+type AudioBlockTypeString string
+
+const AudioBlockType AudioBlockTypeString = "audio"
 
 type AudioBlockBlock struct {
 	BlockBase
-	AudioBlock AudioBlock   `json:"audio"`
-	Parent     BlockHolster `json:"parent"`
-	Object     BlockType    `json:"object"`
+	Type       AudioBlockTypeString `json:"type"`
+	ID         BlockID              `json:"id,omitempty"`
+	AudioBlock AudioBlock           `json:"audio"`
+	Parent     BlockHolster         `json:"parent"`
+	Object     BlockType            `json:"object"`
 }
 
 func (pb AudioBlockBlock) TypeInternal() string {
-	return AudioBlockType
+	return string(AudioBlockType)
 }
 func (pb AudioBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -780,17 +915,21 @@ type LinkPreviewBlock struct {
 	URL string
 }
 
-const LinkPreviewBlockType string = "link_preview"
+type LinkPreviewBlockTypeString string
+
+const LinkPreviewBlockType LinkPreviewBlockTypeString = "link_preview"
 
 type LinkPreviewBlockBlock struct {
 	BlockBase
-	LinkPreviewBlock LinkPreviewBlock `json:"link_preview"`
-	Parent           BlockHolster     `json:"parent"`
-	Object           BlockType        `json:"object"`
+	Type             LinkPreviewBlockTypeString `json:"type"`
+	ID               BlockID                    `json:"id,omitempty"`
+	LinkPreviewBlock LinkPreviewBlock           `json:"link_preview"`
+	Parent           BlockHolster               `json:"parent"`
+	Object           BlockType                  `json:"object"`
 }
 
 func (pb LinkPreviewBlockBlock) TypeInternal() string {
-	return LinkPreviewBlockType
+	return string(LinkPreviewBlockType)
 }
 func (pb LinkPreviewBlockBlock) ActualBlock() interface{} {
 	return pb
@@ -799,9 +938,13 @@ func (pb LinkPreviewBlockBlock) ActualBlock() interface{} {
 type UnsupportedBlock struct {
 }
 
-const UnsupportedBlockType string = "unsupported"
+type UnsupportedBlockTypeString string
+
+const UnsupportedBlockType UnsupportedBlockTypeString = "unsupported"
 
 type UnsupportedBlockBlock struct {
+	Type string                     `json:"type"`
+	ID   UnsupportedBlockTypeString `json:"id,omitempty"`
 	BlockBase
 	UnsupportedBlock UnsupportedBlock `json:"unsupported"`
 	Parent           BlockHolster     `json:"parent"`
@@ -809,91 +952,8 @@ type UnsupportedBlockBlock struct {
 }
 
 func (pb UnsupportedBlockBlock) TypeInternal() string {
-	return UnsupportedBlockType
+	return string(UnsupportedBlockType)
 }
 func (pb UnsupportedBlockBlock) ActualBlock() interface{} {
 	return pb
-}
-
-type AnyBlock interface {
-	ParagraphBlock | Heading1Block | Heading2Block | ImageBlockBlock | UnsupportedBlockBlock | VideBlockBlock | LinkPreviewBlockBlock | AudioBlockBlock | FileBlockBlock | PdfBlockBlock | BookmarkBlockBlock | EmbedBlockBlock | TableBlockBlock | TableOfContentsBlockBlock | TableRowBlockBlock | LinkToPageBlockBlock | ColumnBlockBlock | ColumnListBlockBlock | CalloutBlock | DividerBlockBlock | EquationBlock | CodeBlock | ChildDatabaseBlock | ChildPageBlock | SyncedBlockBlock | TemplateBlock | ToggleBlock | ToDoBlock | QuoteBlock | NumberedListItemBlock | BulletedListItemBlock | Heading3Block
-}
-
-// block returning interface builder
-func GetBlock[BTR AnyBlock](typeOfBlock string) (BTR, error) {
-	var calcVal interface{}
-	switch typeOfBlock {
-	case ImageBlockType:
-		calcVal = ImageBlockBlock{}
-	case VideBlockType:
-		calcVal = VideBlockBlock{}
-	case UnsupportedBlockType:
-		calcVal = UnsupportedBlockBlock{}
-	case LinkPreviewBlockType:
-		calcVal = LinkPreviewBlockBlock{}
-	case AudioBlockType:
-		calcVal = AudioBlockBlock{}
-	case FileBlockType:
-		calcVal = FileBlockBlock{}
-	case PdfBlockType:
-		calcVal = PdfBlockBlock{}
-	case BookmarkBlockType:
-		calcVal = BookmarkBlockBlock{}
-	case EmbedBlockType:
-		calcVal = EmbedBlockBlock{}
-	case TableRowBlockType:
-		calcVal = TableRowBlockBlock{}
-	case TableBlockType:
-		calcVal = TableBlockBlock{}
-	case LinkToPageBlockType:
-		calcVal = LinkToPageBlockBlock{}
-	case ColumnBlockType:
-		calcVal = ColumnBlockBlock{}
-	case ColumnListBlockType:
-		calcVal = ColumnListBlockBlock{}
-	case TableOfContentsBlockType:
-		calcVal = TableOfContentsBlockBlock{}
-	case CalloutType:
-		calcVal = CalloutBlock{}
-	case DividerBlockType:
-		calcVal = DividerBlockBlock{}
-	case EquationType:
-		calcVal = EquationBlock{}
-	case CodeType:
-		calcVal = CodeBlock{}
-	case ChildDatabaseType:
-		calcVal = ChildDatabaseBlock{}
-	case ChildPageType:
-		calcVal = ChildPageBlock{}
-	case SyncedBlockType:
-		calcVal = SyncedBlockBlock{}
-	case TemplateType:
-		calcVal = TemplateBlock{}
-	case ParagraphType:
-		calcVal = ParagraphBlock{}
-	case ToggleType:
-		calcVal = ToggleBlock{}
-	case ToDoType:
-		calcVal = ToDoBlock{}
-	case QuoteType:
-		calcVal = QuoteBlock{}
-	case NumberedListItemType:
-		calcVal = NumberedListItemBlock{}
-	case BulletedListItemType:
-		calcVal = BulletedListItemBlock{}
-	case Heading3Type:
-		calcVal = Heading3Block{}
-	case Heading2Type:
-		calcVal = Heading2Block{}
-	case Heading1Type:
-		calcVal = Heading1Block{}
-	default:
-		calcVal = UnsupportedBlockBlock{}
-	}
-	block, ok := calcVal.(BTR)
-	if ok {
-		return block, nil
-	} else {
-		return block, errors.New("fudge city")
-	}
 }
