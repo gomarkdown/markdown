@@ -329,7 +329,7 @@ func (r *Renderer) outTag(w io.Writer, name string, attrs []string) {
 }
 
 func footnoteRef(prefix string, node *ast.Link) string {
-	urlFrag := prefix + string(slugify(node.Destination))
+	urlFrag := prefix + string(Slugify(node.Destination))
 	nStr := strconv.Itoa(node.NoteID)
 	anchor := `<a href="#fn:` + urlFrag + `">` + nStr + `</a>`
 	return `<sup class="footnote-ref" id="fnref:` + urlFrag + `">` + anchor + `</sup>`
@@ -354,10 +354,10 @@ func listItemOpenCR(listItem *ast.ListItem) bool {
 func SkipParagraphTags(para *ast.Paragraph) bool {
 	parent := para.Parent
 	grandparent := parent.GetParent()
-	if grandparent == nil || !isList(grandparent) {
+	if grandparent == nil || !IsList(grandparent) {
 		return false
 	}
-	isParentTerm := isListItemTerm(parent)
+	isParentTerm := IsListItemTerm(parent)
 	grandparentListData := grandparent.(*ast.List)
 	tightOrTerm := grandparentListData.Tight || isParentTerm
 	return tightOrTerm
@@ -587,7 +587,7 @@ func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
 		ptag = "</" + r.opts.ParagraphTag + ">"
 	}
 	r.Outs(w, ptag)
-	if !(isListItem(para.Parent) && ast.GetNextNode(para) == nil) {
+	if !(IsListItem(para.Parent) && ast.GetNextNode(para) == nil) {
 		r.CR(w)
 	}
 }
@@ -676,7 +676,7 @@ func (r *Renderer) headingEnter(w io.Writer, nodeData *ast.Heading) {
 
 func (r *Renderer) headingExit(w io.Writer, heading *ast.Heading) {
 	r.Outs(w, headingCloseTagFromLevel(heading.Level))
-	if !(isListItem(heading.Parent) && ast.GetNextNode(heading) == nil) {
+	if !(IsListItem(heading.Parent) && ast.GetNextNode(heading) == nil) {
 		r.CR(w)
 	}
 }
@@ -709,9 +709,9 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 		}
 	}
 	r.CR(w)
-	if isListItem(nodeData.Parent) {
+	if IsListItem(nodeData.Parent) {
 		grand := nodeData.Parent.GetParent()
-		if isListTight(grand) {
+		if IsListTight(grand) {
 			r.CR(w)
 		}
 	}
@@ -774,7 +774,7 @@ func (r *Renderer) listItemEnter(w io.Writer, listItem *ast.ListItem) {
 		r.CR(w)
 	}
 	if listItem.RefLink != nil {
-		slug := slugify(listItem.RefLink)
+		slug := Slugify(listItem.RefLink)
 		r.Outs(w, footnoteItem(r.opts.FootnoteAnchorPrefix, slug))
 		return
 	}
@@ -791,7 +791,7 @@ func (r *Renderer) listItemEnter(w io.Writer, listItem *ast.ListItem) {
 
 func (r *Renderer) listItemExit(w io.Writer, listItem *ast.ListItem) {
 	if listItem.RefLink != nil && r.opts.Flags&FootnoteReturnLinks != 0 {
-		slug := slugify(listItem.RefLink)
+		slug := Slugify(listItem.RefLink)
 		prefix := r.opts.FootnoteAnchorPrefix
 		link := r.opts.FootnoteReturnLinkContents
 		s := footnoteReturnLink(prefix, link, slug)
@@ -870,7 +870,7 @@ func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	}
 	r.Outs(w, "</code>")
 	r.Outs(w, "</pre>")
-	if !isListItem(codeBlock.Parent) {
+	if !IsListItem(codeBlock.Parent) {
 		r.CR(w)
 	}
 }
@@ -1231,31 +1231,31 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 	r.lastOutputLen = buf.Len()
 }
 
-func isList(node ast.Node) bool {
+func IsList(node ast.Node) bool {
 	_, ok := node.(*ast.List)
 	return ok
 }
 
-func isListTight(node ast.Node) bool {
+func IsListTight(node ast.Node) bool {
 	if list, ok := node.(*ast.List); ok {
 		return list.Tight
 	}
 	return false
 }
 
-func isListItem(node ast.Node) bool {
+func IsListItem(node ast.Node) bool {
 	_, ok := node.(*ast.ListItem)
 	return ok
 }
 
-func isListItemTerm(node ast.Node) bool {
+func IsListItemTerm(node ast.Node) bool {
 	data, ok := node.(*ast.ListItem)
 	return ok && data.ListFlags&ast.ListTypeTerm != 0
 }
 
 // TODO: move to internal package
 // Create a url-safe slug for fragments
-func slugify(in []byte) []byte {
+func Slugify(in []byte) []byte {
 	if len(in) == 0 {
 		return in
 	}
