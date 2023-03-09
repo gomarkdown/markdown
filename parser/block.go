@@ -156,10 +156,10 @@ func (p *Parser) Block(data []byte) {
 				data = data[consumed:]
 
 				if node != nil {
-					p.addBlock(node)
+					p.AddBlock(node)
 					if blockdata != nil {
 						p.Block(blockdata)
-						p.finalize(node)
+						p.Finalize(node)
 					}
 				}
 				continue
@@ -259,7 +259,7 @@ func (p *Parser) Block(data []byte) {
 			i := skipUntilChar(data, 0, '\n')
 			hr := ast.HorizontalRule{}
 			hr.Literal = bytes.Trim(data[:i], " \n")
-			p.addBlock(&hr)
+			p.AddBlock(&hr)
 			data = data[i:]
 			continue
 		}
@@ -377,7 +377,7 @@ func (p *Parser) Block(data []byte) {
 	p.nesting--
 }
 
-func (p *Parser) addBlock(n ast.Node) ast.Node {
+func (p *Parser) AddBlock(n ast.Node) ast.Node {
 	p.closeUnmatchedBlocks()
 
 	if p.attr != nil {
@@ -448,7 +448,7 @@ func (p *Parser) prefixHeading(data []byte) int {
 			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 		}
 		block.Content = data[i:end]
-		p.addBlock(block)
+		p.AddBlock(block)
 	}
 	return skip
 }
@@ -521,7 +521,7 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 		}
 		block.Literal = data[i:end]
 		block.Content = data[i:end]
-		p.addBlock(block)
+		p.AddBlock(block)
 	}
 	return skip
 }
@@ -572,7 +572,7 @@ func (p *Parser) titleBlock(data []byte, doRender bool) int {
 		IsTitleblock: true,
 	}
 	block.Content = data
-	p.addBlock(block)
+	p.AddBlock(block)
 
 	return consumed
 }
@@ -667,7 +667,7 @@ func (p *Parser) html(data []byte, doRender bool) int {
 		// trim newlines
 		end := backChar(data, i, '\n')
 		htmlBLock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
-		p.addBlock(htmlBLock)
+		p.AddBlock(htmlBLock)
 		finalizeHTMLBlock(htmlBLock)
 	}
 
@@ -689,7 +689,7 @@ func (p *Parser) htmlComment(data []byte, doRender bool) int {
 			// trim trailing newlines
 			end := backChar(data, size, '\n')
 			htmlBLock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
-			p.addBlock(htmlBLock)
+			p.AddBlock(htmlBLock)
 			finalizeHTMLBlock(htmlBLock)
 		}
 		return size
@@ -721,7 +721,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 				// trim newlines
 				end := backChar(data, size, '\n')
 				htmlBlock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
-				p.addBlock(htmlBlock)
+				p.AddBlock(htmlBlock)
 				finalizeHTMLBlock(htmlBlock)
 			}
 			return size
@@ -976,7 +976,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
 
 		if p.extensions&Mmark == 0 {
-			p.addBlock(codeBlock)
+			p.AddBlock(codeBlock)
 			finalizeCodeBlock(codeBlock)
 			return beg
 		}
@@ -988,12 +988,12 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 			figure.HeadingID = id
 			p.Inline(caption, captionContent)
 
-			p.addBlock(figure)
+			p.AddBlock(figure)
 			codeBlock.AsLeaf().Attribute = figure.AsContainer().Attribute
 			p.addChild(codeBlock)
 			finalizeCodeBlock(codeBlock)
 			p.addChild(caption)
-			p.finalize(figure)
+			p.Finalize(figure)
 
 			beg += consumed
 
@@ -1001,7 +1001,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		}
 
 		// Still here, normal block
-		p.addBlock(codeBlock)
+		p.AddBlock(codeBlock)
 		finalizeCodeBlock(codeBlock)
 	}
 
@@ -1096,9 +1096,9 @@ func (p *Parser) quote(data []byte) int {
 	}
 
 	if p.extensions&Mmark == 0 {
-		block := p.addBlock(&ast.BlockQuote{})
+		block := p.AddBlock(&ast.BlockQuote{})
 		p.Block(raw.Bytes())
-		p.finalize(block)
+		p.Finalize(block)
 		return end
 	}
 
@@ -1108,24 +1108,24 @@ func (p *Parser) quote(data []byte) int {
 		figure.HeadingID = id
 		p.Inline(caption, captionContent)
 
-		p.addBlock(figure) // this discard any attributes
+		p.AddBlock(figure) // this discard any attributes
 		block := &ast.BlockQuote{}
 		block.AsContainer().Attribute = figure.AsContainer().Attribute
 		p.addChild(block)
 		p.Block(raw.Bytes())
-		p.finalize(block)
+		p.Finalize(block)
 
 		p.addChild(caption)
-		p.finalize(figure)
+		p.Finalize(figure)
 
 		end += consumed
 
 		return end
 	}
 
-	block := p.addBlock(&ast.BlockQuote{})
+	block := p.AddBlock(&ast.BlockQuote{})
 	p.Block(raw.Bytes())
-	p.finalize(block)
+	p.Finalize(block)
 
 	return end
 }
@@ -1185,7 +1185,7 @@ func (p *Parser) code(data []byte) int {
 	}
 	// TODO: get rid of temp buffer
 	codeBlock.Content = work.Bytes()
-	p.addBlock(codeBlock)
+	p.AddBlock(codeBlock)
 	finalizeCodeBlock(codeBlock)
 
 	return i
@@ -1251,7 +1251,7 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) in
 		Start:     start,
 		Delimiter: delim,
 	}
-	block := p.addBlock(list)
+	block := p.AddBlock(list)
 
 	for i < len(data) {
 		skip := p.listItem(data[i:], &flags)
@@ -1526,7 +1526,7 @@ gatherlines:
 		BulletChar: bulletChar,
 		Delimiter:  delimiter,
 	}
-	p.addBlock(listItem)
+	p.AddBlock(listItem)
 
 	// render the contents of the list item
 	if *flags&ast.ListItemContainsBlock != 0 && *flags&ast.ListTypeTerm == 0 {
@@ -1574,7 +1574,7 @@ func (p *Parser) renderParagraph(data []byte) {
 	}
 	para := &ast.Paragraph{}
 	para.Content = data[beg:end]
-	p.addBlock(para)
+	p.AddBlock(para)
 }
 
 // blockMath handle block surround with $$
@@ -1596,7 +1596,7 @@ func (p *Parser) blockMath(data []byte) int {
 	// render the display math
 	mathBlock := &ast.MathBlock{}
 	mathBlock.Literal = data[2:end]
-	p.addBlock(mathBlock)
+	p.AddBlock(mathBlock)
 
 	return end + 2
 }
@@ -1663,7 +1663,7 @@ func (p *Parser) paragraph(data []byte) int {
 				}
 
 				block.Content = data[prev:eol]
-				p.addBlock(block)
+				p.AddBlock(block)
 
 				// find the end of the underline
 				return skipUntilChar(data, i, '\n')

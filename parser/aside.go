@@ -66,8 +66,8 @@ func (p *Parser) aside(data []byte) int {
 		beg = end
 	}
 
-	block := p.addBlock(&ast.Aside{})
+	block := p.AddBlock(&ast.Aside{})
 	p.Block(raw.Bytes())
-	p.finalize(block)
+	p.Finalize(block)
 	return end
 }

@@ -206,13 +206,13 @@ func (p *Parser) isFootnote(ref *reference) bool {
 	return ok
 }
 
-func (p *Parser) finalize(block ast.Node) {
+func (p *Parser) Finalize(block ast.Node) {
 	p.tip = block.GetParent()
 }
 
 func (p *Parser) addChild(node ast.Node) ast.Node {
 	for !canNodeContain(p.tip, node) {
-		p.finalize(p.tip)
+		p.Finalize(p.tip)
 	}
 	ast.AppendChild(p.tip, node)
 	p.tip = node
@@ -248,7 +248,7 @@ func (p *Parser) closeUnmatchedBlocks() {
 	}
 	for p.oldTip != p.lastMatchedContainer {
 		parent := p.oldTip.GetParent()
-		p.finalize(p.oldTip)
+		p.Finalize(p.oldTip)
 		p.oldTip = parent
 	}
 	p.allClosed = true
@@ -276,7 +276,7 @@ func (p *Parser) Parse(input []byte) ast.Node {
 	p.Block(input)
 	// Walk the tree and finish up some of unfinished blocks
 	for p.tip != nil {
-		p.finalize(p.tip)
+		p.Finalize(p.tip)
 	}
 	// Walk the tree again and process inline markdown in each block
 	ast.WalkFunc(p.Doc, func(node ast.Node, entering bool) ast.WalkStatus {
@@ -322,8 +322,8 @@ func (p *Parser) parseRefsToAST() {
 		IsFootnotesList: true,
 		ListFlags:       ast.ListTypeOrdered,
 	}
-	p.addBlock(&ast.Footnotes{})
-	block := p.addBlock(list)
+	p.AddBlock(&ast.Footnotes{})
+	block := p.AddBlock(list)
 	flags := ast.ListItemBeginningOfList
 	// Note: this loop is intentionally explicit, not range-form. This is
 	// because the body of the loop will append nested footnotes to p.notes and
