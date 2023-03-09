@@ -8,7 +8,7 @@ foo bar
 
 first text after empty line`
 
-	l := New().LinesUntilEmpty([]byte(data))
+	l := LinesUntilEmpty([]byte(data))
 	if l != 33 {
 		t.Errorf("want %d, got %d", 33, l)
 	}
@@ -16,7 +16,7 @@ first text after empty line`
 	data = `Figure: foo bar bar foo
 foo bar
 `
-	l = New().LinesUntilEmpty([]byte(data))
+	l = LinesUntilEmpty([]byte(data))
 	if l != 32 {
 		t.Errorf("want %d, got %d", 33, l)
 	}

@@ -213,7 +213,7 @@ func (p *Parser) Block(data []byte) {
 		}
 
 		// blank lines.  note: returns the # of bytes to skip
-		if i := p.isEmpty(data); i > 0 {
+		if i := IsEmpty(data); i > 0 {
 			data = data[i:]
 			continue
 		}
@@ -255,7 +255,7 @@ func (p *Parser) Block(data []byte) {
 		// ******
 		// or
 		// ______
-		if p.isHRule(data) {
+		if isHRule(data) {
 			i := skipUntilChar(data, 0, '\n')
 			hr := ast.HorizontalRule{}
 			hr.Literal = bytes.Trim(data[:i], " \n")
@@ -617,14 +617,14 @@ func (p *Parser) html(data []byte, doRender bool) int {
 			}
 
 			// see if it is the only thing on the line
-			if skip := p.isEmpty(data[j:]); skip > 0 {
+			if skip := IsEmpty(data[j:]); skip > 0 {
 				// see if it is followed by a blank line/eof
 				j += skip
 				if j >= len(data) {
 					found = true
 					i = j
 				} else {
-					if skip := p.isEmpty(data[j:]); skip > 0 {
+					if skip := IsEmpty(data[j:]); skip > 0 {
 						j += skip
 						found = true
 						i = j
@@ -683,7 +683,7 @@ func finalizeHTMLBlock(block *ast.HTMLBlock) {
 func (p *Parser) htmlComment(data []byte, doRender bool) int {
 	i := p.inlineHTMLComment(data)
 	// needs to end with a blank line
-	if j := p.isEmpty(data[i:]); j > 0 {
+	if j := IsEmpty(data[i:]); j > 0 {
 		size := i + j
 		if doRender {
 			// trim trailing newlines
@@ -715,7 +715,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 	}
 	if i < len(data) && data[i] == '>' {
 		i++
-		if j := p.isEmpty(data[i:]); j > 0 {
+		if j := IsEmpty(data[i:]); j > 0 {
 			size := i + j
 			if doRender {
 				// trim newlines
@@ -753,7 +753,7 @@ func (p *Parser) htmlFindEnd(tag string, data []byte) int {
 
 	// check that the rest of the line is blank
 	skip := 0
-	if skip = p.isEmpty(data[i:]); skip == 0 {
+	if skip = IsEmpty(data[i:]); skip == 0 {
 		return 0
 	}
 	i += skip
@@ -766,7 +766,7 @@ func (p *Parser) htmlFindEnd(tag string, data []byte) int {
 	if p.extensions&LaxHTMLBlocks != 0 {
 		return i
 	}
-	if skip = p.isEmpty(data[i:]); skip == 0 {
+	if skip = IsEmpty(data[i:]); skip == 0 {
 		// following line must be blank
 		return 0
 	}
@@ -774,7 +774,7 @@ func (p *Parser) htmlFindEnd(tag string, data []byte) int {
 	return i + skip
 }
 
-func (*Parser) isEmpty(data []byte) int {
+func IsEmpty(data []byte) int {
 	// it is okay to call isEmpty on an empty buffer
 	if len(data) == 0 {
 		return 0
@@ -790,7 +790,7 @@ func (*Parser) isEmpty(data []byte) int {
 	return i
 }
 
-func (*Parser) isHRule(data []byte) bool {
+func isHRule(data []byte) bool {
 	i := 0
 
 	// skip up to three spaces
@@ -1055,13 +1055,13 @@ func (p *Parser) quotePrefix(data []byte) int {
 // blockquote ends with at least one blank line
 // followed by something without a blockquote prefix
 func (p *Parser) terminateBlockquote(data []byte, beg, end int) bool {
-	if p.isEmpty(data[beg:]) <= 0 {
+	if IsEmpty(data[beg:]) <= 0 {
 		return false
 	}
 	if end >= len(data) {
 		return true
 	}
-	return p.quotePrefix(data[end:]) == 0 && p.isEmpty(data[end:]) == 0
+	return p.quotePrefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0
 }
 
 // parse a blockquote fragment
@@ -1152,7 +1152,7 @@ func (p *Parser) code(data []byte) int {
 		i = skipUntilChar(data, i, '\n')
 		i = skipCharN(data, i, '\n', 1)
 
-		blankline := p.isEmpty(data[beg:i]) > 0
+		blankline := IsEmpty(data[beg:i]) > 0
 		if pre := p.codePrefix(data[beg:i]); pre > 0 {
 			beg += pre
 		} else if !blankline {
@@ -1398,7 +1398,7 @@ gatherlines:
 
 		// if it is an empty line, guess that it is part of this item
 		// and move on to the next line
-		if p.isEmpty(data[line:i]) > 0 {
+		if IsEmpty(data[line:i]) > 0 {
 			containsBlankLine = true
 			line = i
 			continue
@@ -1432,7 +1432,7 @@ gatherlines:
 		// evaluate how this line fits in
 		switch {
 		// is this a nested list item?
-		case (p.uliPrefix(chunk) > 0 && !p.isHRule(chunk)) || p.oliPrefix(chunk) > 0 || p.dliPrefix(chunk) > 0:
+		case (p.uliPrefix(chunk) > 0 && !isHRule(chunk)) || p.oliPrefix(chunk) > 0 || p.dliPrefix(chunk) > 0:
 
 			// if indent is 4 or more spaces on unordered or ordered lists
 			// we need to add leadingWhiteSpaces + 1 spaces in the beginning of the chunk
@@ -1626,7 +1626,7 @@ func (p *Parser) paragraph(data []byte) int {
 		}
 
 		// did we find a blank line marking the end of the paragraph?
-		if n := p.isEmpty(current); n > 0 {
+		if n := IsEmpty(current); n > 0 {
 			// did this blank line followed by a definition list item?
 			if p.extensions&DefinitionLists != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
@@ -1680,7 +1680,7 @@ func (p *Parser) paragraph(data []byte) int {
 		}
 
 		// if there's a prefixed heading or a horizontal rule after this, paragraph is over
-		if p.isPrefixHeading(current) || p.isPrefixSpecialHeading(current) || p.isHRule(current) {
+		if p.isPrefixHeading(current) || p.isPrefixSpecialHeading(current) || isHRule(current) {
 			p.renderParagraph(data[:i])
 			return i
 		}

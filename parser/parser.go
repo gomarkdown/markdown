@@ -660,7 +660,7 @@ gatherLines:
 
 		// if it is an empty line, guess that it is part of this item
 		// and move on to the next line
-		if p.isEmpty(data[blockEnd:i]) > 0 {
+		if IsEmpty(data[blockEnd:i]) > 0 {
 			containsBlankLine = true
 			blockEnd = i
 			continue

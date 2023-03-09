@@ -25,13 +25,13 @@ func (p *Parser) asidePrefix(data []byte) int {
 // aside ends with at least one blank line
 // followed by something without a aside prefix
 func (p *Parser) terminateAside(data []byte, beg, end int) bool {
-	if p.isEmpty(data[beg:]) <= 0 {
+	if IsEmpty(data[beg:]) <= 0 {
 		return false
 	}
 	if end >= len(data) {
 		return true
 	}
-	return p.asidePrefix(data[end:]) == 0 && p.isEmpty(data[end:]) == 0
+	return p.asidePrefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0
 }
 
 // parse a aside fragment
