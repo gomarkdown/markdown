@@ -55,6 +55,21 @@ func TestRenderNodeHookCode(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
+func TestTagParagraphCode(t *testing.T) {
+	tests := []string{
+		"test",
+		"<div>test</div>\n",
+	}
+	opts := html.RendererOptions{
+		ParagraphTag: "div",
+	}
+	params := TestParams{
+		RendererOptions: opts,
+		extensions:      parser.CommonExtensions,
+	}
+	doTestsParam(t, tests, params)
+}
+
 func TestRenderNodeHookLinkAttrs(t *testing.T) {
 	tests := []string{
 		`[Click Me](gopher://foo.bar "Click Me")`,

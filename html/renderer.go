@@ -95,6 +95,8 @@ type RendererOptions struct {
 	HeadingIDPrefix string
 	// If set, add this text to the back of each Heading ID, to ensure uniqueness.
 	HeadingIDSuffix string
+	// can over-write <p> for paragraph tag
+	ParagraphTag string
 
 	Title string // Document title (used if CompletePage is set)
 	CSS   string // Optional CSS file URL (used if CompletePage is set)
@@ -349,7 +351,7 @@ func listItemOpenCR(listItem *ast.ListItem) bool {
 	return !ld.Tight && ld.ListFlags&ast.ListTypeDefinition == 0
 }
 
-func skipParagraphTags(para *ast.Paragraph) bool {
+func SkipParagraphTags(para *ast.Paragraph) bool {
 	parent := para.Parent
 	grandparent := parent.GetParent()
 	if grandparent == nil || !isList(grandparent) {
@@ -571,12 +573,20 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 		}
 	}
 
-	tag := TagWithAttributes("<p", BlockAttrs(para))
+	ptag := "<p"
+	if r.opts.ParagraphTag != "" {
+		ptag = "<" + r.opts.ParagraphTag
+	}
+	tag := TagWithAttributes(ptag, BlockAttrs(para))
 	r.Outs(w, tag)
 }
 
 func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
-	r.Outs(w, "</p>")
+	ptag := "</p>"
+	if r.opts.ParagraphTag != "" {
+		ptag = "</" + r.opts.ParagraphTag + ">"
+	}
+	r.Outs(w, ptag)
 	if !(isListItem(para.Parent) && ast.GetNextNode(para) == nil) {
 		r.CR(w)
 	}
@@ -584,7 +594,7 @@ func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
 
 // Paragraph writes ast.Paragraph node
 func (r *Renderer) Paragraph(w io.Writer, para *ast.Paragraph, entering bool) {
-	if skipParagraphTags(para) {
+	if SkipParagraphTags(para) {
 		return
 	}
 	if entering {
