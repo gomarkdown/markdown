@@ -170,7 +170,7 @@ func EscapeHTML(w io.Writer, d []byte) {
 	}
 }
 
-func escLink(w io.Writer, text []byte) {
+func EscLink(w io.Writer, text []byte) {
 	unesc := html.UnescapeString(string(text))
 	EscapeHTML(w, []byte(unesc))
 }
@@ -252,12 +252,12 @@ func isRelativeLink(link []byte) (yes bool) {
 	return false
 }
 
-func (r *Renderer) addAbsPrefix(link []byte) []byte {
-	if len(link) == 0 {
+func AddAbsPrefix(link []byte, prefix string) []byte {
+	if len(link) == 0 || len(prefix) == 0 {
 		return link
 	}
-	if r.opts.AbsolutePrefix != "" && isRelativeLink(link) && link[0] != '.' {
-		newDest := r.opts.AbsolutePrefix
+	if isRelativeLink(link) && link[0] != '.' {
+		newDest := prefix
 		if link[0] != '/' {
 			newDest += "/"
 		}
@@ -421,7 +421,7 @@ func (r *Renderer) Text(w io.Writer, text *ast.Text) {
 	} else {
 		_, parentIsLink := text.Parent.(*ast.Link)
 		if parentIsLink {
-			escLink(w, text.Literal)
+			EscLink(w, text.Literal)
 		} else {
 			EscapeHTML(w, text.Literal)
 		}
@@ -469,10 +469,10 @@ func (r *Renderer) HTMLSpan(w io.Writer, span *ast.HTMLSpan) {
 func (r *Renderer) linkEnter(w io.Writer, link *ast.Link) {
 	attrs := link.AdditionalAttributes
 	dest := link.Destination
-	dest = r.addAbsPrefix(dest)
+	dest = AddAbsPrefix(dest, r.opts.AbsolutePrefix)
 	var hrefBuf bytes.Buffer
 	hrefBuf.WriteString("href=\"")
-	escLink(&hrefBuf, dest)
+	EscLink(&hrefBuf, dest)
 	hrefBuf.WriteByte('"')
 	attrs = append(attrs, hrefBuf.String())
 	if link.NoteID != 0 {
@@ -513,33 +513,34 @@ func (r *Renderer) Link(w io.Writer, link *ast.Link, entering bool) {
 }
 
 func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
-	dest := image.Destination
-	dest = r.addAbsPrefix(dest)
-	if r.DisableTags == 0 {
-		//if options.safe && potentiallyUnsafe(dest) {
-		//out(w, `<img src="" alt="`)
-		//} else {
-		if r.opts.Flags&LazyLoadImages != 0 {
-			r.Outs(w, `<img loading="lazy" src="`)
-		} else {
-			r.Outs(w, `<img src="`)
-		}
-		escLink(w, dest)
-		r.Outs(w, `" alt="`)
-		//}
-	}
 	r.DisableTags++
+	if r.DisableTags > 1 {
+		return
+	}
+	src := image.Destination
+	src = AddAbsPrefix(src, r.opts.AbsolutePrefix)
+	attrs := BlockAttrs(image)
+	if r.opts.Flags&LazyLoadImages != 0 {
+		attrs = append(attrs, `loading="lazy"`)
+	}
+
+	s := TagWithAttributes("<img", attrs)
+	s = s[:len(s)-1] // hackish: strip off ">" from end
+	r.Outs(w, s+` src="`)
+	EscLink(w, src)
+	r.Outs(w, `" alt="`)
 }
 
 func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {
 	r.DisableTags--
-	if r.DisableTags == 0 {
-		if image.Title != nil {
-			r.Outs(w, `" title="`)
-			EscapeHTML(w, image.Title)
-		}
-		r.Outs(w, `" />`)
+	if r.DisableTags > 0 {
+		return
 	}
+	if image.Title != nil {
+		r.Outs(w, `" title="`)
+		EscapeHTML(w, image.Title)
+	}
+	r.Outs(w, `" />`)
 }
 
 // Image writes ast.Image node
