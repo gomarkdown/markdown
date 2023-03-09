@@ -7,6 +7,14 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
+type CustomNode struct {
+	ast.Container
+}
+
+func (n *CustomNode) CanContain(ast.Node) bool {
+	return true
+}
+
 func blockTitleHook(data []byte) (ast.Node, []byte, int) {
 	sep := []byte(`%%%`)
 	// parse text between %%% and %%% and return it as a blockQuote.
@@ -19,7 +27,7 @@ func blockTitleHook(data []byte) (ast.Node, []byte, int) {
 		return nil, data, 0
 	}
 	end += 3
-	node := &ast.BlockQuote{}
+	node := &CustomNode{}
 	return node, data[4:end], end + 3
 }
 
@@ -34,7 +42,7 @@ func TestOptions(t *testing.T) {
 hallo
 %%%
 `),
-			want: []byte(`BlockQuote
+			want: []byte(`CustomNode
   Paragraph 'hallo'
 `),
 		},

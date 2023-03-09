@@ -239,6 +239,9 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 		_, ok := v.(*ast.TableCell)
 		return ok
 	}
+	if o, ok := n.(ast.CanContain); ok {
+		return o.CanContain(v)
+	}
 	return false
 }
 
