@@ -8,25 +8,19 @@ import (
 )
 
 func blockTitleHook(data []byte) (ast.Node, []byte, int) {
+	sep := []byte(`%%%`)
 	// parse text between %%% and %%% and return it as a blockQuote.
-	i := 0
-	if len(data) < 3 {
-		return nil, data, 0
-	}
-	if data[i] != '%' && data[i+1] != '%' && data[i+2] != '%' {
+	if !bytes.HasPrefix(data, sep) {
 		return nil, data, 0
 	}
 
-	i += 3
-	// search for end.
-	for i < len(data) {
-		if data[i] == '%' && data[i+1] == '%' && data[i+2] == '%' {
-			break
-		}
-		i++
+	end := bytes.Index(data[3:], sep)
+	if end < 0 {
+		return nil, data, 0
 	}
+	end += 3
 	node := &ast.BlockQuote{}
-	return node, data[4:i], i + 3
+	return node, data[4:end], end + 3
 }
 
 func TestOptions(t *testing.T) {
