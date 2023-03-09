@@ -273,7 +273,7 @@ type Reference struct {
 // You can then convert AST to html using html.Renderer, to some other format
 // using a custom renderer or transform the tree.
 func (p *Parser) Parse(input []byte) ast.Node {
-	p.block(input)
+	p.Block(input)
 	// Walk the tree and finish up some of unfinished blocks
 	for p.tip != nil {
 		p.finalize(p.tip)
@@ -338,7 +338,7 @@ func (p *Parser) parseRefsToAST() {
 		listItem.RefLink = ref.link
 		if ref.hasBlock {
 			flags |= ast.ListItemContainsBlock
-			p.block(ref.title)
+			p.Block(ref.title)
 		} else {
 			p.Inline(block, ref.title)
 		}

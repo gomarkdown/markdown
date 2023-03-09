@@ -51,7 +51,7 @@ hallo
 	buf := &bytes.Buffer{}
 
 	for _, test := range tests {
-		p.block(test.data)
+		p.Block(test.data)
 		ast.Print(buf, p.Doc)
 		data := buf.Bytes()
 		data = bytes.Replace(data, []byte(" "), []byte("_"), -1)

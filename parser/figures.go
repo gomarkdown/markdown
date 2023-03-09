@@ -99,7 +99,7 @@ func (p *Parser) figureBlock(data []byte, doRender bool) int {
 
 	figure := &ast.CaptionFigure{}
 	p.addBlock(figure)
-	p.block(raw.Bytes())
+	p.Block(raw.Bytes())
 
 	defer p.finalize(figure)
 

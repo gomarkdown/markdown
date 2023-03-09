@@ -103,10 +103,10 @@ func sanitizeHeadingID(text string) string {
 	return string(anchorName)
 }
 
-// Parse block-level data.
+// Parse Block-level data.
 // Note: this function and many that it calls assume that
 // the input buffer ends with a newline.
-func (p *Parser) block(data []byte) {
+func (p *Parser) Block(data []byte) {
 	// this is called recursively: enforce a maximum depth
 	if p.nesting >= p.maxNesting {
 		return
@@ -142,7 +142,7 @@ func (p *Parser) block(data []byte) {
 					}
 				}
 				p.includeStack.Push(path)
-				p.block(included)
+				p.Block(included)
 				p.includeStack.Pop()
 				data = data[consumed:]
 				continue
@@ -158,7 +158,7 @@ func (p *Parser) block(data []byte) {
 				if node != nil {
 					p.addBlock(node)
 					if blockdata != nil {
-						p.block(blockdata)
+						p.Block(blockdata)
 						p.finalize(node)
 					}
 				}
@@ -1097,7 +1097,7 @@ func (p *Parser) quote(data []byte) int {
 
 	if p.extensions&Mmark == 0 {
 		block := p.addBlock(&ast.BlockQuote{})
-		p.block(raw.Bytes())
+		p.Block(raw.Bytes())
 		p.finalize(block)
 		return end
 	}
@@ -1112,7 +1112,7 @@ func (p *Parser) quote(data []byte) int {
 		block := &ast.BlockQuote{}
 		block.AsContainer().Attribute = figure.AsContainer().Attribute
 		p.addChild(block)
-		p.block(raw.Bytes())
+		p.Block(raw.Bytes())
 		p.finalize(block)
 
 		p.addChild(caption)
@@ -1124,7 +1124,7 @@ func (p *Parser) quote(data []byte) int {
 	}
 
 	block := p.addBlock(&ast.BlockQuote{})
-	p.block(raw.Bytes())
+	p.Block(raw.Bytes())
 	p.finalize(block)
 
 	return end
@@ -1532,10 +1532,10 @@ gatherlines:
 	if *flags&ast.ListItemContainsBlock != 0 && *flags&ast.ListTypeTerm == 0 {
 		// intermediate render of block item, except for definition term
 		if sublist > 0 {
-			p.block(rawBytes[:sublist])
-			p.block(rawBytes[sublist:])
+			p.Block(rawBytes[:sublist])
+			p.Block(rawBytes[sublist:])
 		} else {
-			p.block(rawBytes)
+			p.Block(rawBytes)
 		}
 	} else {
 		// intermediate render of inline item
@@ -1547,7 +1547,7 @@ gatherlines:
 		}
 		p.addChild(para)
 		if sublist > 0 {
-			p.block(rawBytes[sublist:])
+			p.Block(rawBytes[sublist:])
 		}
 	}
 	return line
