@@ -11,7 +11,7 @@ func (p *Parser) caption(data, caption []byte) ([]byte, string, int) {
 	}
 	j := len(caption)
 	data = data[j:]
-	end := p.linesUntilEmpty(data)
+	end := p.LinesUntilEmpty(data)
 
 	data = data[:end]
 
@@ -23,8 +23,8 @@ func (p *Parser) caption(data, caption []byte) ([]byte, string, int) {
 	return data, "", end + j
 }
 
-// linesUntilEmpty scans lines up to the first empty line.
-func (p *Parser) linesUntilEmpty(data []byte) int {
+// LinesUntilEmpty scans lines up to the first empty line.
+func (p *Parser) LinesUntilEmpty(data []byte) int {
 	line, i := 0, 0
 
 	for line < len(data) {
