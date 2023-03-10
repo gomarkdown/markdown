@@ -53,11 +53,12 @@ func TestIssue274(t *testing.T){
 	}
 	p2 := NewWithExtensions(CommonExtensions | SingleDashSep)
 	doc2 := p2.Parse([]byte(input))
-	ast.Print(&buf, doc2)
-	got2 := buf.String()
-	exp2 := "Paragraph\n  Text '| a | b |\\n| - | - |\\n|\\tfoo | bar |'\nTable\n  TableHeader\n    TableRow\n      TableCell\n        Text 'a'\n      TableCell\n        Text 'b'\n  TableBody\n    TableRow\n      TableCell\n        Text '\\tfoo'\n      TableCell\n        Text 'bar'\n"
+	var buf2 bytes.Buffer
+	ast.Print(&buf2, doc2)
+	got2 := buf2.String()
+	exp2 := "Table\n  TableHeader\n    TableRow\n      TableCell\n        Text 'a'\n      TableCell\n        Text 'b'\n  TableBody\n    TableRow\n      TableCell\n        Text '\\tfoo'\n      TableCell\n        Text 'bar'\n"
 	if got2 != exp2 {
 		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
-			input, exp, got)
+			input, exp2, got2)
 	}
 }
