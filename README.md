@@ -19,6 +19,8 @@ Try code examples online: https://replit.com/@kjk1?path=folder/gomarkdown
 
 Some tools using this package: https://pkg.go.dev/github.com/gomarkdown/markdown?tab=importedby
 
+Comparing to other renderers: https://babelmark.github.io/
+
 ## Usage
 
 To convert markdown text to HTML using reasonable defaults:
@@ -323,26 +325,11 @@ implements the following extensions:
 
 - **Mmark support**, see <https://mmark.miek.nl/post/syntax/> for all new syntax elements this adds.
 
-## Todo
-
-- port https://github.com/russross/blackfriday/issues/348
-- port [LaTeX output](https://github.com/Ambrevar/Blackfriday-LaTeX):
-  renders output as LaTeX.
-- port https://github.com/shurcooL/github_flavored_markdown to markdown
-- port [markdownfmt](https://github.com/shurcooL/markdownfmt): like gofmt,
-  but for markdown.
-- More unit testing
-- Improve unicode support. It does not understand all unicode
-  rules (about what constitutes a letter, a punctuation symbol,
-  etc.), so it may fail to detect word boundaries correctly in
-  some instances. It is safe on all utf-8 input.
-
 ## History
 
-markdown is a fork of v2 of https://github.com/russross/blackfriday that is:
+markdown is a fork of v2 of https://github.com/russross/blackfriday.
 
-- actively maintained (sadly in Feb 2018 blackfriday was inactive for 5 months with many bugs and pull requests accumulated)
-- refactored API (split into ast/parser/html sub-packages)
+I refactored the API (split into ast/parser/html sub-packages).
 
 Blackfriday itself was based on C implementation [sundown](https://github.com/vmg/sundown) which in turn was based on [libsoldout](http://fossil.instinctive.eu/libsoldout/home).
 
