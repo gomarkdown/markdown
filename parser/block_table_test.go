@@ -38,3 +38,26 @@ func TestBug198(t *testing.T) {
 			input, exp, got)
 	}
 }
+
+func TestIssue274(t *testing.T){
+	input := "| a | b |\n| - | - |\n|	foo | bar |\n"
+	p := NewWithExtensions(CommonExtensions)
+	doc := p.Parse([]byte(input))
+	var buf bytes.Buffer
+	ast.Print(&buf, doc)
+	got := buf.String()
+	exp := "Paragraph\n  Text '| a | b |\\n| - | - |\\n|\\tfoo | bar |'\n"
+	if got != exp {
+		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
+			input, exp, got)
+	}
+	p2 := NewWithExtensions(CommonExtensions | SingleDashSep)
+	doc2 := p2.Parse([]byte(input))
+	ast.Print(&buf, doc2)
+	got2 := buf.String()
+	exp2 := "Paragraph\n  Text '| a | b |\\n| - | - |\\n|\\tfoo | bar |'\nTable\n  TableHeader\n    TableRow\n      TableCell\n        Text 'a'\n      TableCell\n        Text 'b'\n  TableBody\n    TableRow\n      TableCell\n        Text '\\tfoo'\n      TableCell\n        Text 'bar'\n"
+	if got2 != exp2 {
+		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
+			input, exp, got)
+	}
+}

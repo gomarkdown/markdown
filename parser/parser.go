@@ -43,6 +43,7 @@ const (
 	EmptyLinesBreakList                           // 2 empty lines break out of list
 	Includes                                      // Support including other files.
 	Mmark                                         // Support Mmark syntax, see https://mmark.nl/syntax
+	SingleDashSep                                 // Support signle dash to separate table header.
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
