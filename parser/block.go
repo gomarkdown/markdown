@@ -1484,10 +1484,7 @@ gatherlines:
 		case containsBlankLine && indent < 4:
 			if *flags&ast.ListTypeDefinition != 0 && i < len(data)-1 {
 				// is the next item still a part of this list?
-				next := i
-				for next < len(data) && data[next] != '\n' {
-					next++
-				}
+				next := skipUntilChar(data, i, '\n')
 				for next < len(data)-1 && data[next] == '\n' {
 					next++
 				}
