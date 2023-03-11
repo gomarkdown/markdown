@@ -1237,9 +1237,28 @@ func (p *Parser) dliPrefix(data []byte) int {
 	if data[0] != ':' || !(data[1] == ' ' || data[1] == '\t') {
 		return 0
 	}
+	// TODO: this is a no-op (data[0] is ':' so not ' ').
+	// Maybe the intent was to eat spaces before ':' ?
+	// either way, no change in tests
 	i := skipChar(data, 0, ' ')
 	return i + 2
 }
+
+// TODO: maybe it was meant to be like below
+// either way, no change in tests
+/*
+func (p *Parser) dliPrefix(data []byte) int {
+	i := skipChar(data, 0, ' ')
+	if i+len(data) < 2 {
+		return 0
+	}
+	// need a ':' followed by a space or a tab
+	if data[i] != ':' || !(data[i+1] == ' ' || data[i+1] == '\t') {
+		return 0
+	}
+	return i + 2
+}
+*/
 
 // parse ordered or unordered list block
 func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) int {
