@@ -239,10 +239,15 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 		_, ok := v.(*ast.TableCell)
 		return ok
 	}
+	// for nodes implemented outside of ast package, allow them
+	// to implement this logic via CanContain interface
 	if o, ok := n.(ast.CanContain); ok {
 		return o.CanContain(v)
 	}
-	return false
+	// for container nodes outside of ast package default to true
+	// because false is a bad default
+	typ := fmt.Sprintf("%T", n)
+	return !strings.HasPrefix(typ, "*ast.")
 }
 
 func (p *Parser) closeUnmatchedBlocks() {
