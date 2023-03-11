@@ -247,7 +247,11 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	// for container nodes outside of ast package default to true
 	// because false is a bad default
 	typ := fmt.Sprintf("%T", n)
-	return !strings.HasPrefix(typ, "*ast.")
+	customNode := !strings.HasPrefix(typ, "*ast.")
+	if customNode {
+		return n.AsLeaf() == nil
+	}
+	return false
 }
 
 func (p *Parser) closeUnmatchedBlocks() {
