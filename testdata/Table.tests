@@ -22,9 +22,21 @@ a | b
 ---|--
 c | d
 +++
-<p>a | b
----|--
-c | d</p>
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>c</td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
 +++
 |a|b|c|d|
 |----|----|----|---|

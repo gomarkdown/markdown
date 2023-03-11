@@ -217,7 +217,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 		}
 		// end of column test is messy
 		switch {
-		case dashes < 3:
+		case dashes < 1:
 			// not a valid column
 			return
 
