@@ -6,6 +6,8 @@ Package `github.com/gomarkdown/markdown` is a Go library for parsing Markdown te
 
 It's very fast and supports common extensions.
 
+Documentation: https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html
+
 Try code examples online: https://replit.com/@kjk1?path=folder/gomarkdown
 
 ## API Docs:
@@ -27,91 +29,17 @@ To convert markdown text to HTML using reasonable defaults:
 
 ```go
 md := []byte("## markdown document")
+md = markdown.NormalizeNewlines(md)
 output := markdown.ToHTML(md, nil, nil)
 ```
 
 Try it online: https://replit.com/@kjk1/gomarkdown-basic
 
-## Customizing markdown parser
+For more documentation read [this guide](https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html)
 
-Markdown format is loosely specified and there are multiple extensions invented after original specification was created.
+## Always normalize newlines
 
-The parser supports several [extensions](https://pkg.go.dev/github.com/gomarkdown/markdown/parser#Extensions).
-
-Default parser uses most common `parser.CommonExtensions` but you can easily use parser with custom extension:
-
-```go
-import (
-    "github.com/gomarkdown/markdown"
-    "github.com/gomarkdown/markdown/parser"
-)
-
-extensions := parser.CommonExtensions | parser.AutoHeadingIDs
-parser := parser.NewWithExtensions(extensions)
-
-md := []byte("markdown text")
-html := markdown.ToHTML(md, parser, nil)
-```
-
-Try it online: https://replit.com/@kjk1/gomarkdown-customized-html-renderer
-
-## Customizing HTML renderer
-
-Similarly, HTML renderer can be configured with different [options](https://pkg.go.dev/github.com/gomarkdown/markdown/html#RendererOptions)
-
-Here's how to use a custom renderer:
-
-```go
-import (
-    "github.com/gomarkdown/markdown"
-    "github.com/gomarkdown/markdown/html"
-)
-
-htmlFlags := html.CommonFlags | html.HrefTargetBlank
-opts := html.RendererOptions{Flags: htmlFlags}
-renderer := html.NewRenderer(opts)
-
-md := []byte("markdown text")
-html := markdown.ToHTML(md, nil, renderer)
-```
-
-Try it online: https://replit.com/@kjk1/gomarkdown-customized-html-renderer
-
-HTML renderer also supports reusing most of the logic and overriding rendering of only specific nodes.
-
-You can provide [RenderNodeFunc](https://pkg.go.dev/github.com/gomarkdown/markdown/html#RenderNodeFunc) in [RendererOptions](https://pkg.go.dev/github.com/gomarkdown/markdown/html#RendererOptions).
-
-The function is called for each node in AST, you can implement custom rendering logic and tell HTML renderer to skip rendering this node.
-
-Here's the simplest example that drops all code blocks from the output:
-
-````go
-import (
-    "github.com/gomarkdown/markdown"
-    "github.com/gomarkdown/markdown/ast"
-    "github.com/gomarkdown/markdown/html"
-)
-
-// return (ast.GoToNext, true) to tell html renderer to skip rendering this node
-// (because you've rendered it)
-func renderHookDropCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
-    // skip all nodes that are not CodeBlock nodes
-	if _, ok := node.(*ast.CodeBlock); !ok {
-		return ast.GoToNext, false
-    }
-    // custom rendering logic for ast.CodeBlock. By doing nothing it won't be
-    // present in the output
-	return ast.GoToNext, true
-}
-
-opts := html.RendererOptions{
-    Flags: html.CommonFlags,
-    RenderNodeHook: renderHookDropCodeBlock,
-}
-renderer := html.NewRenderer(opts)
-md := "test\n```\nthis code block will be dropped from output\n```\ntext"
-html := markdown.ToHTML([]byte(md), nil, renderer)
-````
+The library only supports Unix newlines. For peace of mind, always normalize markdown content with `md = markdown.NormalizeNewlines(md)`.
 
 ## Sanitize untrusted content
 
@@ -130,12 +58,6 @@ import (
 maybeUnsafeHTML := markdown.ToHTML(md, nil, nil)
 html := bluemonday.UGCPolicy().SanitizeBytes(maybeUnsafeHTML)
 ```
-
-## Windows / Mac newlines
-
-The library only supports Unix newlines. If you have markdown text with possibly
-Windows / Mac newlines, normalize newlines before calling this library using
-`d = markdown.NormalizeNewlines(d)`
 
 ## mdtohtml command-line tool
 
