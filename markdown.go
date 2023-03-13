@@ -84,8 +84,8 @@ func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
 	return Render(doc, renderer)
 }
 
-// NormalizeNewlines converts Windows and Mac newlines to Unix newlines
-// The parser only supports Unix newlines. If your mardown content
+// NormalizeNewlines converts Windows and Mac newlines to Unix newlines.
+// The parser only supports Unix newlines. If your markdown content
 // might contain Windows or Mac newlines, use this function to convert to Unix newlines
 func NormalizeNewlines(d []byte) []byte {
 	wi := 0
