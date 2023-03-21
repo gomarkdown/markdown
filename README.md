@@ -14,18 +14,12 @@ Code examples:
 * https://onlinetool.io/goplayground/#2yV5-HDKBUV : modify AST
 * https://onlinetool.io/goplayground/#9fqKwRbuJ04 : customize parser
 
-Comparing to other markdown parsers: https://babelmark.github.io/
-
 ## API Docs:
 
 - https://pkg.go.dev/github.com/gomarkdown/markdown : top level package
 - https://pkg.go.dev/github.com/gomarkdown/markdown/ast : defines abstract syntax tree of parsed markdown document
 - https://pkg.go.dev/github.com/gomarkdown/markdown/parser : parser
 - https://pkg.go.dev/github.com/gomarkdown/markdown/html : html renderer
-
-## Users
-
-Some tools using this package: https://pkg.go.dev/github.com/gomarkdown/markdown?tab=importedby
 
 ## Usage
 
@@ -77,6 +71,8 @@ func main() {
 Try it online: https://onlinetool.io/goplayground/#txO7hJ-ibeU
 
 For more documentation read [this guide](https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html)
+
+Comparing to other markdown parsers: https://babelmark.github.io/
 
 ## Sanitize untrusted content
 
@@ -283,6 +279,10 @@ implements the following extensions:
   Will convert into `<h1 id="id3" class="myclass" fontsize="tiny">Header 1</h1>`.
 
 - **Mmark support**, see <https://mmark.miek.nl/post/syntax/> for all new syntax elements this adds.
+
+## Users
+
+Some tools using this package: https://pkg.go.dev/github.com/gomarkdown/markdown?tab=importedby
 
 ## History
 
