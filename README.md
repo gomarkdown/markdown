@@ -9,8 +9,10 @@ It's very fast and supports common extensions.
 Documentation: https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html
 
 Try code examples online:
-* https://goplay.tools/snippet/r24urTNwrPC : basic parse markdown and render as HTML plus print AST tree
-* https://replit.com/@kjk1?path=folder/gomarkdown : few examples in replit
+* https://onlinetool.io/goplayground/#txO7hJ-ibeU : basic markdown => HTML
+* https://onlinetool.io/goplayground/#yFRIWRiu-KL : customize HTML renderer
+* https://onlinetool.io/goplayground/#2yV5-HDKBUV : modify AST
+* https://onlinetool.io/goplayground/#9fqKwRbuJ04 : customize parser
 
 Comparing to other markdown parsers: https://babelmark.github.io/
 
@@ -33,54 +35,46 @@ To convert markdown text to HTML using reasonable defaults:
 package main
 
 import (
+	"os"
+
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
 
 	"fmt"
-	"os"
 )
 
-var mdStr = `
-# header
+var mds = `# header
 
 Sample text.
 
 [link](http://example.com)
 `
 
-func main() {
-	md := []byte(mdStr)
-
-	// create markdown parser
-	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
+func mdToHTML(md []byte) []byte {
+	// create markdown parser with extensions
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
 	p := parser.NewWithExtensions(extensions)
-
-	// parse markdown into AST tree
 	doc := p.Parse(md)
 
-  // optional: see AST tree
-  if false {
-    fmt.Printf("%s", "--- AST tree:\n")
-    ast.Print(os.Stdout, doc)
-  }
-
-	// create HTML renderer
+	// create HTML renderer with extensions
 	htmlFlags := html.CommonFlags | html.HrefTargetBlank
 	opts := html.RendererOptions{Flags: htmlFlags}
 	renderer := html.NewRenderer(opts)
 
-	html := markdown.Render(doc, renderer)
-
-	fmt.Printf("\n--- Markdown:\n%s\n\n--- HTML:\n%s\n", md, html)
+	return markdown.Render(doc, renderer)
 }
 
+func main() {
+	md := []byte(mds)
+	html := mdToHTML(md)
+
+	fmt.Printf("--- Markdown:\n%s\n\n--- HTML:\n%s\n", md, html)
+}
 ```
 
-Try it online:
-* https://goplay.tools/snippet/r24urTNwrPC
-* https://replit.com/@kjk1/gomarkdown-basic
+Try it online: https://onlinetool.io/goplayground/#txO7hJ-ibeU
 
 For more documentation read [this guide](https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html)
 
