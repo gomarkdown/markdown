@@ -52,8 +52,6 @@ Sample text.
 
 func main() {
 	md := []byte(mdStr)
-	// always normalize newlines, this library only supports Unix LF newlines
-	md = markdown.NormalizeNewlines(md)
 
 	// create markdown parser
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs
@@ -85,10 +83,6 @@ Try it online:
 * https://replit.com/@kjk1/gomarkdown-basic
 
 For more documentation read [this guide](https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html)
-
-## Always normalize newlines
-
-The library only supports Unix newlines. For peace of mind, always normalize markdown content with `md = markdown.NormalizeNewlines(md)`.
 
 ## Sanitize untrusted content
 
