@@ -6,9 +6,9 @@ Package `github.com/gomarkdown/markdown` is a Go library for parsing Markdown te
 
 It's very fast and supports common extensions.
 
-Documentation: https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html
+Tutorial: https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html
 
-Try code examples online:
+Code examples:
 * https://onlinetool.io/goplayground/#txO7hJ-ibeU : basic markdown => HTML
 * https://onlinetool.io/goplayground/#yFRIWRiu-KL : customize HTML renderer
 * https://onlinetool.io/goplayground/#2yV5-HDKBUV : modify AST
