@@ -13,6 +13,9 @@ Code examples:
 * https://onlinetool.io/goplayground/#yFRIWRiu-KL : customize HTML renderer
 * https://onlinetool.io/goplayground/#2yV5-HDKBUV : modify AST
 * https://onlinetool.io/goplayground/#9fqKwRbuJ04 : customize parser
+* https://onlinetool.io/goplayground/#Bk0zTvrzUDR : syntax highlight
+
+Those examples are also in [examples](./examples) directory.
 
 ## API Docs:
 
