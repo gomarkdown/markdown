@@ -19,7 +19,8 @@ jobs:
       - name: Benchmark
         run: go test -run=^$ -bench=BenchmarkReference -benchmem
 
-      - name: Staticcheck
-        uses: dominikh/staticcheck-action@v1.2.0
-        with:
-          version: "2022.1"
+      # not compatible with examples directory and no way to exclude it (?)
+      # - name: Staticcheck
+      #   uses: dominikh/staticcheck-action@v1.3.0
+      #   with:
+      #     version: "2022.1.3"
