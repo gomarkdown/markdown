@@ -1,2 +1,5 @@
 go clean -testcache
-go test ./...
+go test -race -v .
+go test -race -v ./ast
+go test -race -v ./html
+go test -race -v ./parser

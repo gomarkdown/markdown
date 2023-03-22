@@ -5,7 +5,7 @@
 set -e
 
 # List of packages to test
-pkgs=$(go list ./... | grep -v /cmd)
+pkgs=$(go list ./... | grep -v /cmd | grep -v /examples)
 # list of packages in a format suitable for -coverpkg
 cover_pkgs=$(go list ./... | grep -v /cmd | tr "\n" ",")
 
