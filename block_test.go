@@ -200,3 +200,19 @@ func TestBug126(t *testing.T) {
 			input, exp, got)
 	}
 }
+
+func TestPull288(t *testing.T) {
+	// there's a space after end of table header, which used to break table parsing
+	input := "```go\nfmt.Println(\"Hello world!\")\n```\n"
+	p := parser.NewWithExtensions(parser.CommonExtensions)
+	doc := p.Parse([]byte(input))
+	var buf bytes.Buffer
+	ast.Print(&buf, doc)
+	got := buf.String()
+	// TODO: needs fixing https://github.com/gomarkdown/markdown/issues/126 
+	exp := "CodeBlock:go 'fmt.Println(\"Hello world!\")\\n'\n"
+	if got != exp {
+		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
+			input, exp, got)
+	}
+}
