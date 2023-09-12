@@ -54,3 +54,34 @@ func TestMd(t *testing.T) {
 		}
 	}
 }
+
+func hashtag(p *parser.Parser, data []byte, offset int) (int, ast.Node) {
+	data = data[offset:]
+	i := 0
+	n := len(data)
+	for i < n && !parser.IsSpace(data[i]) {
+		i++
+	}
+	if i == 0 {
+		return 0, nil
+	}
+	link := &ast.Link{
+		Destination: append([]byte("/search?q=%23"), data[1:i]...),
+		Title: data[0:i],
+	}
+	ast.AppendChild(link, &ast.Text{Leaf: ast.Leaf{Literal: data[0:i]}})
+	return i + 1, link
+}
+
+func TestInlineParser(t *testing.T) {
+	md := []byte(`#Haiku`)
+	p := parser.New()
+	p.RegisterInline('#', hashtag)
+	html := ToHTML(md, p, nil)
+
+	r := `<p><a href="/search?q=%23Haiku" title="#Haiku">#Haiku</a></p>
+`
+	if r != string(html) {
+		t.Errorf("`%s`\n!=\n`%s`\n", string(html), r)
+	}
+}
