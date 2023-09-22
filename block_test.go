@@ -2,10 +2,10 @@ package markdown
 
 import (
 	"bytes"
-	"testing"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
+	"testing"
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
@@ -193,7 +193,7 @@ func TestBug126(t *testing.T) {
 	var buf bytes.Buffer
 	ast.Print(&buf, doc)
 	got := buf.String()
-	// TODO: needs fixing https://github.com/gomarkdown/markdown/issues/126 
+	// TODO: needs fixing https://github.com/gomarkdown/markdown/issues/126
 	exp := "BlockQuote\n  CodeBlock: '> fenced pre block 1\\n> ```\\n\\n'\n  Paragraph\n    Text 'fenced pre block 2\\n````'\n"
 	if got != exp {
 		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
@@ -212,5 +212,22 @@ func TestPull288(t *testing.T) {
 	if got != exp {
 		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
 			input, exp, got)
+	}
+}
+
+func TestSec1(t *testing.T) {
+	ext := parser.CommonExtensions |
+		parser.Attributes |
+		parser.OrderedListStart |
+		parser.SuperSubscript |
+		parser.Mmark
+
+	tests := []string{
+		"[@]", "[#]", "[@", "[#", "[@@]", "[@#]",
+	}
+	for _, test := range tests {
+		p := parser.NewWithExtensions(ext)
+		inp := []byte(test)
+		ToHTML(inp, p, nil)
 	}
 }
