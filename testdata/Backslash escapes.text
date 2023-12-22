@@ -34,7 +34,7 @@ Minus: \-
 
 Tilde: \~
 
-
+Dollar: \$
 
 These should not, because they occur within a code block:
 
@@ -72,6 +72,8 @@ These should not, because they occur within a code block:
 
 	Tilde: \~
 
+	Dollar: \$
+
 
 Nor should these, which occur in code spans:
 
@@ -108,6 +110,8 @@ Plus: `\+`
 Minus: `\-`
 
 Tilde: `\~`
+
+Dollar: `\$`
 
 
 These should get escaped, even though they're matching pairs for
