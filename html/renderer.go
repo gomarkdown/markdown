@@ -320,12 +320,16 @@ func appendLanguageAttr(attrs []string, info []byte) []string {
 }
 
 func (r *Renderer) OutTag(w io.Writer, name string, attrs []string) {
+	r.lastOutputLen = 1
 	s := name
 	if len(attrs) > 0 {
 		s += " " + strings.Join(attrs, " ")
 	}
-	io.WriteString(w, s+">")
-	r.lastOutputLen = 1
+	s = s + ">"
+	if r.DisableTags > 0 {
+		s = htmlTagRe.ReplaceAllString(s, "")
+	}
+	io.WriteString(w, s)
 }
 
 func FootnoteRef(prefix string, node *ast.Link) string {
