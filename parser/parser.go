@@ -907,7 +907,7 @@ func isListItem(d ast.Node) bool {
 }
 
 func NormalizeNewlines(d []byte) []byte {
-	res := make([]byte, 0, len(d))
+	res := make([]byte, len(d))
 	copy(res, d)
 	d = res
 	wi := 0
