@@ -24,7 +24,7 @@ var mds = `This is a [[wiki link]].
 // wikiLink returns an inline parser function. This indirection is
 // required because we want to call the previous definition in case
 // this is not a wikiLink.
-func wikiLink(p *parser.Parser,	fn func(p *parser.Parser, data []byte, offset int) (int, ast.Node)) func(p *parser.Parser, data []byte, offset int) (int, ast.Node) {
+func wikiLink(p *parser.Parser,	fn parser.InlineParser) parser.InlineParser {
 	return func (p *parser.Parser, original []byte, offset int) (int, ast.Node) {
 		data := original[offset:]
 		n := len(data)
