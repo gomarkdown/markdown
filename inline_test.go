@@ -166,6 +166,9 @@ func TestEmphasisMix(t *testing.T) {
 		"*italics **and bold** end*\n",
 		"<p><em>italics <strong>and bold</strong> end</em></p>\n",
 
+		"*italics **and bold***\n",
+		"<p><em>italics <strong>and bold</strong></em></p>\n",
+
 		"*__triple emphasis__*\n",
 		"<p><em><strong>triple emphasis</strong></em></p>\n",
 

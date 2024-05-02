@@ -1192,9 +1192,6 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 
 	for i < len(data) {
 		length := helperFindEmphChar(data[i:], c)
-		if length == 0 {
-			return 0, nil
-		}
 		i += length
 		if i >= len(data) {
 			return 0, nil
@@ -1216,6 +1213,11 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 			emph := &ast.Emph{}
 			p.Inline(emph, data[:i])
 			return i + 1, emph
+		}
+
+		// We have to check this at the end, otherwise the scenario where we find repeated c's will get skipped
+		if length == 0 {
+			return 0, nil
 		}
 	}
 
