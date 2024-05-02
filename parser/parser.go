@@ -727,7 +727,7 @@ func IsPunctuation(c byte) bool {
 	return false
 }
 
-// IsSpace returns true if c is a white-space charactr
+// IsSpace returns true if c is a white-space character
 func IsSpace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'
 }
