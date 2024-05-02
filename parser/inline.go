@@ -1201,7 +1201,7 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 		}
 
 		if i+1 < len(data) && data[i+1] == c {
-			i++
+			i += 2
 			continue
 		}
 
