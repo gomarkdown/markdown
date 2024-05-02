@@ -1185,9 +1185,9 @@ func helperFindEmphChar(data []byte, c byte) int {
 func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 	i := 0
 
-	// skip one symbol if coming from emph3
+	// skip two symbols if coming from emph3, as it detected a double emphasis case
 	if len(data) > 1 && data[0] == c && data[1] == c {
-		i = 1
+		i += 2
 	}
 
 	for i < len(data) {
