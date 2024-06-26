@@ -15,10 +15,7 @@ func TestEmphasis(t *testing.T) {
 	doTestsInlineParam(t, tests, TestParams{})
 }
 
-// TODO: to fix this we would have to update IsPunctuation() to handle
-// `—` which looks like `-` but is a unicode 3-byte thingy and
-// currently IsPunctuation() only handles 1-byte ascii
-func Disabled_TestBug309(t *testing.T) {
+func TestBug309(t *testing.T) {
 	var tests = []string{
 		`*f*—`,
 		"<p><em>f</em>—</p>\n",
