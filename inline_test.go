@@ -15,6 +15,16 @@ func TestEmphasis(t *testing.T) {
 	doTestsInlineParam(t, tests, TestParams{})
 }
 
+func TestBug309(t *testing.T) {
+	var tests = []string{
+		`*f*—`,
+		"<p><em>f</em>—</p>\n",
+	}
+	p := TestParams{}
+	p.extensions = parser.NoIntraEmphasis
+	doTestsInlineParam(t, tests, p)
+}
+
 func TestReferenceOverride(t *testing.T) {
 	var tests = []string{
 		"test [ref1][]\n",

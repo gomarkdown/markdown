@@ -1652,7 +1652,9 @@ func (p *Parser) paragraph(data []byte) int {
 			if p.extensions&DefinitionLists != 0 {
 				if i < len(data)-1 && data[i+1] == ':' {
 					listLen := p.list(data[prev:], ast.ListTypeDefinition, 0, '.')
-					return prev + listLen
+					if listLen > 0 {
+						return prev + listLen
+					}
 				}
 			}
 
