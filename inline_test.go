@@ -173,6 +173,18 @@ func TestEmphasisMix(t *testing.T) {
 		"***triple emphasis___\n",
 		"<p>***triple emphasis___</p>\n",
 
+		"*italics **and bold** end*\n",
+		"<p><em>italics <strong>and bold</strong> end</em></p>\n",
+
+		"*italics **and bold***\n",
+		"<p><em>italics <strong>and bold</strong></em></p>\n",
+
+		"***bold** and italics*\n",
+		"<p><em><strong>bold</strong> and italics</em></p>\n",
+
+		"*start **bold** and italics*\n",
+		"<p><em>start <strong>bold</strong> and italics</em></p>\n",
+
 		"*__triple emphasis__*\n",
 		"<p><em><strong>triple emphasis</strong></em></p>\n",
 
@@ -183,7 +195,7 @@ func TestEmphasisMix(t *testing.T) {
 		"<p><strong>improper *nesting</strong> is* bad</p>\n",
 
 		"*improper **nesting* is** bad\n",
-		"<p>*improper <strong>nesting* is</strong> bad</p>\n",
+		"<p><em>improper **nesting</em> is** bad</p>\n",
 	}
 	doTestsInline(t, tests)
 }
