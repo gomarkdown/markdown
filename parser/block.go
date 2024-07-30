@@ -76,6 +76,7 @@ var (
 		"output":     {},
 		"progress":   {},
 		"section":    {},
+		"svg":        {},
 		"video":      {},
 	}
 )
