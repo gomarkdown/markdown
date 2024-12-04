@@ -950,9 +950,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	work.WriteString(syntax)
 	work.WriteByte('\n')
 
-	for {
-		// safe to assume beg < len(data)
-
+	for beg < len(data) {
 		// check for the end of the code block
 		fenceEnd, _ := isFenceLine(data[beg:], nil, marker)
 		if fenceEnd != 0 {
@@ -965,51 +963,50 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 
 		// did we reach the end of the buffer without a closing marker?
 		if end >= len(data) {
-			return 0
+			end = len(data)
 		}
 
 		// verbatim copy to the working buffer
-		if doRender {
-			work.Write(data[beg:end])
-		}
+		work.Write(data[beg:end])
 		beg = end
 	}
 
-	if doRender {
-		codeBlock := &ast.CodeBlock{
-			IsFenced: true,
-		}
-		codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
+	if !doRender {
+		return beg
+	}
+	codeBlock := &ast.CodeBlock{
+		IsFenced: true,
+	}
+	codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
 
-		if p.extensions&Mmark == 0 {
-			p.AddBlock(codeBlock)
-			finalizeCodeBlock(codeBlock)
-			return beg
-		}
-
-		// Check for caption and if found make it a figure.
-		if captionContent, id, consumed := p.caption(data[beg:], []byte(captionFigure)); consumed > 0 {
-			figure := &ast.CaptionFigure{}
-			caption := &ast.Caption{}
-			figure.HeadingID = id
-			p.Inline(caption, captionContent)
-
-			p.AddBlock(figure)
-			codeBlock.AsLeaf().Attribute = figure.AsContainer().Attribute
-			p.addChild(codeBlock)
-			finalizeCodeBlock(codeBlock)
-			p.addChild(caption)
-			p.Finalize(figure)
-
-			beg += consumed
-
-			return beg
-		}
-
-		// Still here, normal block
+	if p.extensions&Mmark == 0 {
 		p.AddBlock(codeBlock)
 		finalizeCodeBlock(codeBlock)
+		return beg
 	}
+
+	// Check for caption and if found make it a figure.
+	if captionContent, id, consumed := p.caption(data[beg:], []byte(captionFigure)); consumed > 0 {
+		figure := &ast.CaptionFigure{}
+		caption := &ast.Caption{}
+		figure.HeadingID = id
+		p.Inline(caption, captionContent)
+
+		p.AddBlock(figure)
+		codeBlock.AsLeaf().Attribute = figure.AsContainer().Attribute
+		p.addChild(codeBlock)
+		finalizeCodeBlock(codeBlock)
+		p.addChild(caption)
+		p.Finalize(figure)
+
+		beg += consumed
+
+		return beg
+	}
+
+	// Still here, normal block
+	p.AddBlock(codeBlock)
+	finalizeCodeBlock(codeBlock)
 
 	return beg
 }
