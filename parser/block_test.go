@@ -78,10 +78,11 @@ func TestRect(t *testing.T) {
 
 // https://github.com/gomarkdown/markdown/issues/326
 func TestInfiniteLoopFix(t *testing.T) {
-	input := "```\n: "
+	input := "```\n: la"
 	p := NewWithExtensions(CommonExtensions)
 	doc := p.Parse([]byte(input))
 	if doc == nil {
 		t.Errorf("Expected non-nil AST")
 	}
+	//ast.Print(os.Stdout, doc)
 }

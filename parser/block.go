@@ -950,7 +950,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	work.WriteString(syntax)
 	work.WriteByte('\n')
 
-	for beg < len(data) {
+	for {
 		// check for the end of the code block
 		fenceEnd, _ := isFenceLine(data[beg:], nil, marker)
 		if fenceEnd != 0 {
@@ -963,7 +963,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 
 		// did we reach the end of the buffer without a closing marker?
 		if end >= len(data) {
-			end = len(data)
+			return 0
 		}
 
 		// verbatim copy to the working buffer
@@ -1350,6 +1350,7 @@ func finalizeList(list *ast.List) {
 // Parse a single list item.
 // Assumes initial prefix is already removed if this is a sublist.
 func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
+	isDefinitionList := *flags&ast.ListTypeDefinition != 0
 	// keep track of the indentation of the first line
 	itemIndent := 0
 	if data[0] == '\t' {
@@ -1382,7 +1383,7 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 	}
 	if i == 0 {
 		// if in definition list, set term flag and continue
-		if *flags&ast.ListTypeDefinition != 0 {
+		if isDefinitionList {
 			*flags |= ast.ListTypeTerm
 		} else {
 			return 0
@@ -1443,7 +1444,14 @@ gatherlines:
 
 		// If there is a fence line (marking starting of a code block)
 		// without indent do not process it as part of the list.
-		if p.extensions&FencedCode != 0 {
+		//
+		// does not apply for definition lists because it causes infinite
+		// loop if text before defintion term is fenced code block start
+		// marker but not part of actual fenced code block
+		// for defnition lists we're called after parsing fence code blocks
+		// so we kno this cannot be a fenced block
+		// https://github.com/gomarkdown/markdown/issues/326
+		if !isDefinitionList && p.extensions&FencedCode != 0 {
 			fenceLineEnd, _ := isFenceLine(chunk, nil, "")
 			if fenceLineEnd > 0 && indent == 0 {
 				*flags |= ast.ListItemEndOfList
