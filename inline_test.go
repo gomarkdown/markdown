@@ -1294,6 +1294,16 @@ func TestInlineMath(t *testing.T) {
 	}, TestParams{Flags: html.SkipHTML, extensions: parser.CommonExtensions})
 }
 
+// TODO: not fixed yet. Need to change the logic and update the tests.
+// https://github.com/gomarkdown/markdown/issues/327
+func TestBug327(t *testing.T) {
+	doTestsParam(t, []string{
+		`[site](https://somesite.com/?"s"(b)h)`,
+		`<p><a href="https://somesite.com/?&quot;s&quot;(b">site</a>h)</p>
+`,
+	}, TestParams{extensions: parser.CommonExtensions})
+}
+
 func TestSubSuper(t *testing.T) {
 	var tests = []string{
 		"H~2~O is a liquid, 2^10^ is 1024\n",
