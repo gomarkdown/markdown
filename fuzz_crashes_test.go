@@ -1,6 +1,8 @@
 package markdown
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -53,4 +55,13 @@ func TestInfinite2(t *testing.T) {
 func TestInfinite3(t *testing.T) {
 	test := "\xa2 \n\t: \n: "
 	parseWithShortTimeout(t, test)
+}
+
+func TestBug330(t *testing.T) {
+	path := filepath.Join("testdata", "bug330-fuzz-crash.md")
+	d, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("os.ReadFile('%s') failed with %s", path, err)
+	}
+	Parse(d, nil)
 }
