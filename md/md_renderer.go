@@ -232,7 +232,7 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 	}
 	r.outs(w, "\n")
 	r.out(w, text)
-	r.outs(w, "\n```\n")
+	r.outs(w, "```\n\n")
 }
 
 func (r *Renderer) code(w io.Writer, node *ast.Code) {

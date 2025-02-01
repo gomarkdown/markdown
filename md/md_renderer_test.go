@@ -92,6 +92,14 @@ func TestRenderDoubleParagraph(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderCodeWithParagraph(t *testing.T) {
+	input := markdown.Parse([]byte("```\nnpm run build\nnpm run test:e2e:dev\n```"), nil)
+
+	expected := "\n```\nnpm run build\nnpm run test:e2e:dev\n```\n\n"
+
+	testRendering(t, input, expected)
+}
+
 func TestRenderHTMLSpan(t *testing.T) {
 	var input = &ast.HTMLSpan{}
 	input.Literal = []byte(string("hello"))
