@@ -11,7 +11,7 @@ import (
 func TestRenderDocument(t *testing.T) {
 	var source = []byte("# title\n* aaa\n* bbb\n* ccc")
 	var input = markdown.Parse(source, nil)
-	var expected = "# title\n* aaa\n* bbb\n* ccc\n"
+	var expected = "# title\n\n* aaa\n* bbb\n* ccc\n\n"
 	testRendering(t, input, expected)
 }
 
@@ -31,7 +31,7 @@ func TestRenderStrong(t *testing.T) {
 func TestRenderHeading(t *testing.T) {
 	var input ast.Node = &ast.Heading{Level: 3}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello"))}})
-	expected := "### Hello\n"
+	expected := "### Hello\n\n"
 	testRendering(t, input, expected)
 }
 
@@ -80,7 +80,15 @@ func TestRenderCodeBlock(t *testing.T) {
 func TestRenderParagraph(t *testing.T) {
 	var input = &ast.Paragraph{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello World !"))}})
-	expected := "Hello World !\n"
+	expected := "Hello World !\n\n"
+	testRendering(t, input, expected)
+}
+
+func TestRenderDoubleParagraph(t *testing.T) {
+	input := markdown.Parse([]byte("Paragraph 1\n\nParagraph 2"), nil)
+
+	expected := "Paragraph 1\n\nParagraph 2\n\n"
+
 	testRendering(t, input, expected)
 }
 
@@ -101,37 +109,37 @@ func TestRenderHTMLBlock(t *testing.T) {
 func TestRenderList(t *testing.T) {
 	var source = []byte("* aaa\n* bbb\n* ccc\n* ddd\n")
 	var input = markdown.Parse(source, nil)
-	var expected = "* aaa\n* bbb\n* ccc\n* ddd\n"
+	var expected = "* aaa\n* bbb\n* ccc\n* ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("+ aaa\n+ bbb\n+ ccc\n+ ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "+ aaa\n+ bbb\n+ ccc\n+ ddd\n"
+	expected = "+ aaa\n+ bbb\n+ ccc\n+ ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("- aaa\n- bbb\n- ccc\n- ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "- aaa\n- bbb\n- ccc\n- ddd\n"
+	expected = "- aaa\n- bbb\n- ccc\n- ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("1. aaa\n2. bbb\n3. ccc\n4. ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n"
+	expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("1. aaa\n1. bbb\n1. ccc\n1. ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n"
+	expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("1. aaa\n3. bbb\n8. ccc\n1. ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n"
+	expected = "1. aaa\n2. bbb\n3. ccc\n4. ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("* aaa\n    * aaa1\n    * aaa2\n* bbb\n* ccc\n* ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "* aaa\n    * aaa1\n    * aaa2\n* bbb\n* ccc\n* ddd\n"
+	expected = "* aaa\n    * aaa1\n    * aaa2\n\n* bbb\n* ccc\n* ddd\n\n"
 	testRendering(t, input, expected)
 }
 
