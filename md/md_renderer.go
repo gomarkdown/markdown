@@ -58,6 +58,7 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 		}
 	} else {
 		r.listDepth--
+		fmt.Fprintf(w, "\n")
 	}
 }
 
@@ -82,7 +83,14 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 
 func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
 	if !entering && r.lastOutputLen > 0 {
-		r.outs(w, "\n")
+		var br = "\n\n"
+
+		// List items don't need the extra line-break.
+		if _, ok := node.Parent.(*ast.ListItem); ok {
+			br = "\n"
+		}
+
+		r.outs(w, br)
 	}
 }
 
@@ -241,7 +249,7 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 		r.outs(w, " ")
 		r.out(w, node.Literal)
 	} else {
-		r.outs(w, "\n")
+		r.outs(w, "\n\n")
 	}
 }
 
