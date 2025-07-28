@@ -150,6 +150,26 @@ func TestRenderList(t *testing.T) {
 	expected = "* aaa\n    * aaa1\n    * aaa2\n\n* bbb\n* ccc\n* ddd\n\n"
 	testRendering(t, input, expected)
 
+	source = []byte("* aaa\n    * aaa1\n\n")
+	input = markdown.Parse(source, nil)
+	expected = "* aaa\n    * aaa1\n\n"
+	testRendering(t, input, expected)
+
+	source = []byte("* aaa\n    * aaa1\n        * aaa1.1\n\n")
+	input = markdown.Parse(source, nil)
+	expected = "* aaa\n    * aaa1\n        * aaa1.1\n\n"
+	testRendering(t, input, expected)
+
+	source = []byte("1. aaa\n    1. aaa1\n\n")
+	input = markdown.Parse(source, nil)
+	expected = "1. aaa\n    1. aaa1\n\n"
+	testRendering(t, input, expected)
+
+	source = []byte("1. aaa\n    1. aaa1\n        1. aaa1.1\n\n")
+	input = markdown.Parse(source, nil)
+	expected = "1. aaa\n    1. aaa1\n        1. aaa1.1\n\n"
+	testRendering(t, input, expected)
+
 	source = []byte("This is an [example](https://example.com) and another [website](https://github.com).")
 	input = markdown.Parse(source, nil)
 	rendererOpts := []RendererOpt{WithRenderInFooter(true)}
