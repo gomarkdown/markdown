@@ -88,7 +88,9 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 		}
 	} else {
 		r.listDepth--
-		fmt.Fprintf(w, "\n")
+		if _, ok := node.Parent.(*ast.ListItem); !ok {
+			fmt.Fprintf(w, "\n")
+		}
 	}
 }
 
