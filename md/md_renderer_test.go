@@ -9,9 +9,9 @@ import (
 )
 
 func TestRenderDocument(t *testing.T) {
-	var source = []byte("# title\n* aaa\n* bbb\n* ccc")
-	var input = markdown.Parse(source, nil)
-	var expected = "# title\n\n* aaa\n* bbb\n* ccc\n\n"
+	source := []byte("# title\n* aaa\n* bbb\n* ccc")
+	input := markdown.Parse(source, nil)
+	expected := "# title\n\n* aaa\n* bbb\n* ccc\n\n"
 	testRendering(t, input, expected)
 }
 
@@ -64,21 +64,21 @@ func TestRenderImage(t *testing.T) {
 }
 
 func TestRenderCode(t *testing.T) {
-	var input = &ast.Code{}
+	input := &ast.Code{}
 	input.Literal = []byte(string("val x : Int = 42"))
 	expected := "`val x : Int = 42`"
 	testRendering(t, input, expected)
 }
 
 func TestRenderCodeBlock(t *testing.T) {
-	var input = &ast.CodeBlock{Info: []byte(string("scala"))}
+	input := &ast.CodeBlock{Info: []byte(string("scala"))}
 	input.Literal = []byte(string("val x : Int = 42"))
 	expected := "\n```scala\nval x : Int = 42\n```\n"
 	testRendering(t, input, expected)
 }
 
 func TestRenderParagraph(t *testing.T) {
-	var input = &ast.Paragraph{}
+	input := &ast.Paragraph{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello World !"))}})
 	expected := "Hello World !\n\n"
 	testRendering(t, input, expected)
@@ -101,23 +101,23 @@ func TestRenderCodeWithParagraph(t *testing.T) {
 }
 
 func TestRenderHTMLSpan(t *testing.T) {
-	var input = &ast.HTMLSpan{}
+	input := &ast.HTMLSpan{}
 	input.Literal = []byte(string("hello"))
 	expected := "hello"
 	testRendering(t, input, expected)
 }
 
 func TestRenderHTMLBlock(t *testing.T) {
-	var input = &ast.HTMLBlock{}
+	input := &ast.HTMLBlock{}
 	input.Literal = []byte(string("hello"))
 	expected := "\nhello\n\n"
 	testRendering(t, input, expected)
 }
 
 func TestRenderList(t *testing.T) {
-	var source = []byte("* aaa\n* bbb\n* ccc\n* ddd\n")
-	var input = markdown.Parse(source, nil)
-	var expected = "* aaa\n* bbb\n* ccc\n* ddd\n\n"
+	source := []byte("* aaa\n* bbb\n* ccc\n* ddd\n")
+	input := markdown.Parse(source, nil)
+	expected := "* aaa\n* bbb\n* ccc\n* ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("+ aaa\n+ bbb\n+ ccc\n+ ddd\n")
@@ -153,6 +153,23 @@ func TestRenderList(t *testing.T) {
 
 func testRendering(t *testing.T, input ast.Node, expected string) {
 	renderer := NewRenderer()
+	result := string(markdown.Render(input, renderer))
+	if strings.Compare(result, expected) != 0 {
+		t.Errorf("[%s] is not equal to [%s]", result, expected)
+	}
+}
+
+func TestRenderLinksInFooter(t *testing.T) {
+	source := []byte("This is an [example](https://example.com) and another [website](https://github.com).")
+	input := markdown.Parse(source, nil)
+	flags := renderLinksInFooter
+	expected := "This is an [example] and another [website].\n\n\n[example]: https://example.com\n[website]: https://github.com\n"
+	testRenderingWithFlags(t, input, expected, flags)
+}
+
+func testRenderingWithFlags(t *testing.T, input ast.Node, expected string, flags Flags) {
+	renderer := NewRenderer()
+	renderer.WithOpts(&RendererOptions{Flags: flags})
 	result := string(markdown.Render(input, renderer))
 	if strings.Compare(result, expected) != 0 {
 		t.Errorf("[%s] is not equal to [%s]", result, expected)
