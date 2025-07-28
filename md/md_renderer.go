@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
@@ -21,6 +22,24 @@ type Renderer struct {
 	listDepth      int
 	indentSize     int
 	lastNormalText string
+
+	Opts *RendererOptions
+
+	linkcache map[string]bool // cache for link definitions to write in the footer, if renderLinksInFooter is set
+}
+
+type RendererOptions struct {
+	Flags Flags
+}
+
+type Flags int
+
+const renderLinksInFooter Flags = 1 << iota
+
+func (r *Renderer) WithOpts(opts *RendererOptions) {
+	if opts != nil {
+		r.Opts = opts
+	}
 }
 
 // NewRenderer returns a Markdown renderer.
@@ -44,7 +63,7 @@ func (r *Renderer) outs(w io.Writer, s string) {
 
 func (r *Renderer) doubleSpace(w io.Writer) {
 	// TODO: need to remember number of written bytes
-	//if out.Len() > 0 {
+	// if out.Len() > 0 {
 	r.outs(w, "\n")
 	//}
 }
@@ -83,7 +102,7 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 
 func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
 	if !entering && r.lastOutputLen > 0 {
-		var br = "\n\n"
+		br := "\n\n"
 
 		// List items don't need the extra line-break.
 		if _, ok := node.Parent.(*ast.ListItem); ok {
@@ -279,14 +298,27 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 	} else {
 		link := string(escape(node.Destination))
 		title := string(node.Title)
-		r.outs(w, "](")
-		r.outs(w, link)
-		if len(title) != 0 {
-			r.outs(w, ` "`)
-			r.outs(w, title)
-			r.outs(w, `"`)
+		if r.Opts == nil || r.Opts.Flags&renderLinksInFooter == 0 {
+			r.outs(w, "](")
+			r.outs(w, link)
+			if len(title) != 0 {
+				r.outs(w, ` "`)
+				r.outs(w, title)
+				r.outs(w, `"`)
+			}
+			r.outs(w, ")")
+		} else {
+			r.outs(w, "]")
+			child, _ := ast.GetFirstChild(node).(*ast.Text)
+			linkdefn := fmt.Sprintf("[%s]: %s", string(escape(child.Leaf.Literal)), link)
+			if len(title) != 0 {
+				linkdefn += fmt.Sprintf(" \"%s\"", title)
+			}
+			if r.linkcache == nil {
+				r.linkcache = make(map[string]bool)
+			}
+			r.linkcache[linkdefn] = true
 		}
-		r.outs(w, ")")
 	}
 }
 
@@ -382,5 +414,23 @@ func (r *Renderer) RenderHeader(w io.Writer, ast ast.Node) {
 
 // RenderFooter renders footer
 func (r *Renderer) RenderFooter(w io.Writer, ast ast.Node) {
-	// do nothing
+	if r.Opts != nil && r.Opts.Flags&renderLinksInFooter != 0 {
+		if r.linkcache == nil {
+			return
+		}
+
+		// Extract links so we can write links in a predictable order.
+		links := make([]string, 0, len(r.linkcache))
+		for k := range r.linkcache {
+			links = append(links, k)
+		}
+		// Sort the keys to ensure consistent order.
+		sort.Strings(links)
+
+		for _, linkdefn := range links {
+			r.outs(w, "\n")
+			r.outs(w, linkdefn)
+		}
+		r.outs(w, "\n")
+	}
 }
