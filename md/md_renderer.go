@@ -318,18 +318,20 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 				r.outs(w, `"`)
 			}
 			r.outs(w, ")")
-		} else {
-			r.outs(w, "]")
-			child, _ := ast.GetFirstChild(node).(*ast.Text)
-			linkdefn := fmt.Sprintf("[%s]: %s", string(escape(child.Leaf.Literal)), link)
-			if len(title) != 0 {
-				linkdefn += fmt.Sprintf(" \"%s\"", title)
-			}
-			if r.linkcache == nil {
-				r.linkcache = make(map[string]bool)
-			}
-			r.linkcache[linkdefn] = true
+			return
 		}
+
+		r.outs(w, "]")
+		child, _ := ast.GetFirstChild(node).(*ast.Text)
+		linkdefn := fmt.Sprintf("[%s]: %s", string(escape(child.Leaf.Literal)), link)
+		if len(title) != 0 {
+			linkdefn += fmt.Sprintf(" \"%s\"", title)
+		}
+		if r.linkcache == nil {
+			r.linkcache = make(map[string]bool)
+		}
+		r.linkcache[linkdefn] = true
+
 	}
 }
 

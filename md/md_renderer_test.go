@@ -149,26 +149,16 @@ func TestRenderList(t *testing.T) {
 	input = markdown.Parse(source, nil)
 	expected = "* aaa\n    * aaa1\n    * aaa2\n\n* bbb\n* ccc\n* ddd\n\n"
 	testRendering(t, input, expected)
+
+	source = []byte("This is an [example](https://example.com) and another [website](https://github.com).")
+	input = markdown.Parse(source, nil)
+	rendererOpts := []RendererOpt{WithRenderInFooter(true)}
+	expected = "This is an [example] and another [website].\n\n\n[example]: https://example.com\n[website]: https://github.com\n"
+	testRendering(t, input, expected, rendererOpts...)
 }
 
-func testRendering(t *testing.T, input ast.Node, expected string) {
-	renderer := NewRenderer()
-	result := string(markdown.Render(input, renderer))
-	if strings.Compare(result, expected) != 0 {
-		t.Errorf("[%s] is not equal to [%s]", result, expected)
-	}
-}
-
-func TestRenderLinksInFooter(t *testing.T) {
-	source := []byte("This is an [example](https://example.com) and another [website](https://github.com).")
-	input := markdown.Parse(source, nil)
-	flags := renderLinksInFooter
-	expected := "This is an [example] and another [website].\n\n\n[example]: https://example.com\n[website]: https://github.com\n"
-	testRenderingWithFlags(t, input, expected, flags)
-}
-
-func testRenderingWithFlags(t *testing.T, input ast.Node, expected string, flags Flags) {
-	renderer := NewRenderer(WithRenderInFooter(true))
+func testRendering(t *testing.T, input ast.Node, expected string, opts ...RendererOpt) {
+	renderer := NewRenderer(opts...)
 	result := string(markdown.Render(input, renderer))
 	if strings.Compare(result, expected) != 0 {
 		t.Errorf("[%s] is not equal to [%s]", result, expected)
