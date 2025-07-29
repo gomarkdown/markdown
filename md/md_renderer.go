@@ -23,12 +23,12 @@ type Renderer struct {
 	indentSize     int
 	lastNormalText string
 
-	Opts *RendererOptions
+	C *RendererConfig
 
 	linkcache map[string]bool // cache for link definitions to write in the footer, if renderLinksInFooter is set
 }
 
-type RendererOptions struct {
+type RendererConfig struct {
 	Flags Flags
 }
 
@@ -36,18 +36,29 @@ type Flags int
 
 const renderLinksInFooter Flags = 1 << iota
 
-func (r *Renderer) WithOpts(opts *RendererOptions) {
-	if opts != nil {
-		r.Opts = opts
-	}
-}
+type RendererOpt func(c *RendererConfig)
 
 // NewRenderer returns a Markdown renderer.
-func NewRenderer() *Renderer {
+func NewRenderer(opts ...RendererOpt) *Renderer {
+	c := &RendererConfig{}
+	for _, opt := range opts {
+		opt(c)
+	}
 	return &Renderer{
 		orderedListCounter: map[int]int{},
 		paragraph:          map[int]bool{},
 		indentSize:         4,
+		C:                  c,
+	}
+}
+
+func WithRenderInFooter(renderInFooter bool) RendererOpt {
+	return func(c *RendererConfig) {
+		if renderInFooter {
+			c.Flags |= renderLinksInFooter
+		} else {
+			c.Flags &^= renderLinksInFooter
+		}
 	}
 }
 
@@ -298,7 +309,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 	} else {
 		link := string(escape(node.Destination))
 		title := string(node.Title)
-		if r.Opts == nil || r.Opts.Flags&renderLinksInFooter == 0 {
+		if r.C == nil || r.C.Flags&renderLinksInFooter == 0 {
 			r.outs(w, "](")
 			r.outs(w, link)
 			if len(title) != 0 {
@@ -414,7 +425,7 @@ func (r *Renderer) RenderHeader(w io.Writer, ast ast.Node) {
 
 // RenderFooter renders footer
 func (r *Renderer) RenderFooter(w io.Writer, ast ast.Node) {
-	if r.Opts != nil && r.Opts.Flags&renderLinksInFooter != 0 {
+	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 {
 		if r.linkcache == nil {
 			return
 		}

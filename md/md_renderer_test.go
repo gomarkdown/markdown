@@ -168,8 +168,7 @@ func TestRenderLinksInFooter(t *testing.T) {
 }
 
 func testRenderingWithFlags(t *testing.T, input ast.Node, expected string, flags Flags) {
-	renderer := NewRenderer()
-	renderer.WithOpts(&RendererOptions{Flags: flags})
+	renderer := NewRenderer(WithRenderInFooter(true))
 	result := string(markdown.Render(input, renderer))
 	if strings.Compare(result, expected) != 0 {
 		t.Errorf("[%s] is not equal to [%s]", result, expected)
