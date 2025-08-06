@@ -147,7 +147,7 @@ func TestRenderList(t *testing.T) {
 
 	source = []byte("* aaa\n    * aaa1\n    * aaa2\n* bbb\n* ccc\n* ddd\n")
 	input = markdown.Parse(source, nil)
-	expected = "* aaa\n    * aaa1\n    * aaa2\n\n* bbb\n* ccc\n* ddd\n\n"
+	expected = "* aaa\n    * aaa1\n    * aaa2\n* bbb\n* ccc\n* ddd\n\n"
 	testRendering(t, input, expected)
 
 	source = []byte("* aaa\n    * aaa1\n\n")
