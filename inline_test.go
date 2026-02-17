@@ -1325,3 +1325,11 @@ func BenchmarkSmartDoubleQuotes(b *testing.B) {
 		runMarkdown("this should be normal \"quoted\" text.\n", params)
 	}
 }
+
+func TestEntityNullByte(t *testing.T) {
+	// &#0; should produce U+FFFD per CommonMark spec section 6.2
+	doTestsInlineParam(t, []string{
+		"&#0;",
+		"<p>\uFFFD</p>\n",
+	}, TestParams{})
+}

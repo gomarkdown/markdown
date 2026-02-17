@@ -817,7 +817,12 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 		codepoint, err = strconv.ParseUint(string(ent[2:len(ent)-1]), 10, 64)
 	}
 	if err == nil { // only if conversion was valid return here.
-		return end, newTextNode([]byte(string(rune(codepoint))))
+		r := rune(codepoint)
+		// Replace invalid codepoints with U+FFFD per CommonMark spec section 6.2
+		if r == 0 || (r >= 0xD800 && r <= 0xDFFF) || r > 0x10FFFF {
+			r = '\uFFFD'
+		}
+		return end, newTextNode([]byte(string(r)))
 	}
 
 	return end, newTextNode(ent)
