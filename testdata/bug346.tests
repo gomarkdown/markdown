@@ -1,0 +1,86 @@
+- test1
+
+    ```
+    - test
+    ```
+- test2
+
+    ```
+      - test
+    ```
+- test3
+
+    ```
+        - test
+    ```
++++
+<ul>
+<li><p>test1</p>
+
+<pre><code>- test
+</code></pre></li>
+
+<li><p>test2</p>
+
+<pre><code>  - test
+</code></pre></li>
+
+<li><p>test3</p>
+
+<pre><code>    - test
+</code></pre></li>
+</ul>
++++
+- item
+
+    ```
+    1. not a list
+    ```
++++
+<ul>
+<li><p>item</p>
+
+<pre><code>1. not a list
+</code></pre></li>
+</ul>
++++
+- item
+
+    ```
+    # not a heading
+    ```
++++
+<ul>
+<li><p>item</p>
+
+<pre><code># not a heading
+</code></pre></li>
+</ul>
++++
+- item
+
+    ~~~
+    - dash in tilde fence
+    ~~~
++++
+<ul>
+<li><p>item</p>
+
+<pre><code>- dash in tilde fence
+</code></pre></li>
+</ul>
++++
+- item1
+
+    ```
+    - should be code
+- item2
++++
+<ul>
+<li><p>item1</p>
+
+<p>```
+- should be code</p></li>
+
+<li><p>item2</p></li>
+</ul>
