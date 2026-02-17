@@ -1247,16 +1247,51 @@ func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 		i += length
 
 		if i+1 < len(data) && data[i] == c && data[i+1] == c && i > 0 && !IsSpace(data[i-1]) {
+			// When the closing delimiter is *** (3+ chars) and there is an
+			// unclosed single emphasis opener inside the content, include
+			// one extra char in the content so that the inner emphasis can
+			// pair with it. For example: **bold *ital*** should produce
+			// <strong>bold <em>ital</em></strong>, not <strong>bold *ital</strong>*.
+			// See https://github.com/gomarkdown/markdown/issues/279
+			contentEnd := i
+			if i+2 < len(data) && data[i+2] == c && c != '~' {
+				if hasTrailingEmphOpener(data[:i], c) {
+					contentEnd = i + 1
+				}
+			}
+
 			var node ast.Node = &ast.Strong{}
 			if c == '~' {
 				node = &ast.Del{}
 			}
-			p.Inline(node, data[:i])
-			return i + 2, node
+			p.Inline(node, data[:contentEnd])
+			return contentEnd + 2, node
 		}
 		i++
 	}
 	return 0, nil
+}
+
+// hasTrailingEmphOpener checks if the last occurrence of c in data is an
+// unclosed opener. An opener is c preceded by whitespace or start of data,
+// followed by non-whitespace. If the last c is a closer (preceded by
+// non-whitespace), the emphasis pair is balanced and we should not shift
+// the content boundary.
+func hasTrailingEmphOpener(data []byte, c byte) bool {
+	// find the last c in data
+	last := -1
+	for j := len(data) - 1; j >= 0; j-- {
+		if data[j] == c {
+			last = j
+			break
+		}
+	}
+	if last < 0 {
+		return false
+	}
+	// opener: preceded by space/start, followed by non-space
+	return (last == 0 || IsSpace(data[last-1])) &&
+		last+1 < len(data) && !IsSpace(data[last+1])
 }
 
 func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, ast.Node) {

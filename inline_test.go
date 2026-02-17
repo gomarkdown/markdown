@@ -15,6 +15,20 @@ func TestEmphasis(t *testing.T) {
 	doTestsInlineParam(t, tests, TestParams{})
 }
 
+func TestBug279(t *testing.T) {
+	var tests = []string{
+		"**bold *ital***\n",
+		"<p><strong>bold <em>ital</em></strong></p>\n",
+		"**bold *ital* more**\n",
+		"<p><strong>bold <em>ital</em> more</strong></p>\n",
+		"*ital **bold***\n",
+		"<p><em>ital <strong>bold</strong></em></p>\n",
+		"**no inner star**\n",
+		"<p><strong>no inner star</strong></p>\n",
+	}
+	doTestsInlineParam(t, tests, TestParams{})
+}
+
 func TestBug309(t *testing.T) {
 	var tests = []string{
 		`*f*—`,
