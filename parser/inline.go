@@ -1073,10 +1073,11 @@ func tagLength(data []byte) (autolink autolinkType, end int) {
 		// one of the forbidden chars has been found
 		autolink = notAutolink
 	}
-	i += bytes.IndexByte(data[i:], '>')
-	if i < 0 {
+	j = bytes.IndexByte(data[i:], '>')
+	if j < 0 {
 		return autolink, 0
 	}
+	i += j
 	return autolink, i + 1
 }
 

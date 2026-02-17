@@ -1286,6 +1286,14 @@ func TestSkipHTML(t *testing.T) {
 	}, TestParams{Flags: html.SkipHTML})
 }
 
+func TestTagLengthUnclosedAngle(t *testing.T) {
+	// Unclosed angle brackets with short tag names should not lose content
+	doTestsParam(t, []string{
+		"click <a href content",
+		"<p>click &lt;a href content</p>\n",
+	}, TestParams{Flags: html.SkipHTML})
+}
+
 func TestInlineMath(t *testing.T) {
 	doTestsParam(t, []string{
 		"$a_b$",
