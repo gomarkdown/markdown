@@ -43,6 +43,23 @@ func TestCitationSuffix(t *testing.T) {
 	}
 }
 
+func TestCitationEmptySegment(t *testing.T) {
+	p := New()
+	p.extensions |= Mmark
+
+	// These inputs should not panic
+	inputs := [][]byte{
+		[]byte(`[@;]`),
+		[]byte(`[@ref;]`),
+		[]byte(`[@ref1;;@ref2]`),
+	}
+	for _, data := range inputs {
+		_, node := citation(p, data, 0)
+		// empty segments are skipped; result depends on remaining valid citations
+		_ = node
+	}
+}
+
 func TestCitationSuffixMultiple(t *testing.T) {
 	data := []byte(`[@?RFC1034; @!RFC1035, p. 144, more]`)
 
