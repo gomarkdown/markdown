@@ -659,7 +659,6 @@ func (r *Renderer) MakeUniqueHeadingID(hdr *ast.Heading) string {
 func (r *Renderer) HeadingEnter(w io.Writer, hdr *ast.Heading) {
 	var attrs []string
 	var class string
-	// TODO(miek): add helper functions for coalescing these classes.
 	if hdr.IsTitleblock {
 		class = "title"
 	}
@@ -680,6 +679,7 @@ func (r *Renderer) HeadingEnter(w io.Writer, hdr *ast.Heading) {
 		attrs = append(attrs, attrID)
 	}
 	attrs = append(attrs, BlockAttrs(hdr)...)
+	attrs = coalesceClassAttrs(attrs)
 	r.CR(w)
 	r.OutTag(w, HeadingOpenTagFromLevel(hdr.Level), attrs)
 }
@@ -864,10 +864,9 @@ Parse:
 // CodeBlock writes ast.CodeBlock node
 func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	var attrs []string
-	// TODO(miek): this can add multiple class= attribute, they should be coalesced into one.
-	// This is probably true for some other elements as well
 	attrs = appendLanguageAttr(attrs, codeBlock.Info)
 	attrs = append(attrs, BlockAttrs(codeBlock)...)
+	attrs = coalesceClassAttrs(attrs)
 	r.CR(w)
 
 	r.Outs(w, "<pre>")
@@ -1336,6 +1335,30 @@ func BlockAttrs(node ast.Node) []string {
 	}
 
 	return s
+}
+
+// coalesceClassAttrs merges multiple class="..." attributes into a single one.
+// For example, class="language-go" and class="my-class" become class="language-go my-class".
+func coalesceClassAttrs(attrs []string) []string {
+	const prefix = `class="`
+	var classes []string
+	var other []string
+	for _, a := range attrs {
+		if strings.HasPrefix(a, prefix) && strings.HasSuffix(a, `"`) {
+			// extract the value between class=" and trailing "
+			val := a[len(prefix) : len(a)-1]
+			if val != "" {
+				classes = append(classes, val)
+			}
+		} else {
+			other = append(other, a)
+		}
+	}
+	if len(classes) == 0 {
+		return attrs
+	}
+	merged := fmt.Sprintf(`class="%s"`, strings.Join(classes, " "))
+	return append([]string{merged}, other...)
 }
 
 // TagWithAttributes creates a HTML tag with a given name and attributes
