@@ -140,7 +140,7 @@ A> This is an aside
 {.myclass3}
 .# Preface section
 +++
-<h1 class="special" class="myclass3">Preface section</h1>
+<h1 class="special myclass3">Preface section</h1>
 +++
 {.myclass4}
 A> hello

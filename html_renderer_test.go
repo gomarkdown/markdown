@@ -70,6 +70,40 @@ func TestTagParagraphCode(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
+// TestCodeBlockClassCoalescing verifies that when a code block has both
+// a language annotation and a custom class attribute, they are merged into
+// a single class attribute. See https://github.com/gomarkdown/markdown/issues/209.
+func TestCodeBlockClassCoalescing(t *testing.T) {
+	input := "``` yml\ntext: something\n```\n"
+
+	p := parser.NewWithExtensions(parser.FencedCode)
+	doc := p.Parse([]byte(input))
+
+	// Walk the AST and add a custom class to the CodeBlock node.
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		if cb, ok := node.(*ast.CodeBlock); ok {
+			cb.Attribute = &ast.Attribute{
+				Classes: [][]byte{[]byte("my-class")},
+			}
+		}
+		return ast.GoToNext
+	})
+
+	renderer := html.NewRenderer(html.RendererOptions{})
+	got := string(Render(doc, renderer))
+
+	// Before the fix, this produced two separate class= attributes:
+	//   <code class="language-yml" class="my-class">
+	// After the fix, they should be coalesced:
+	//   <code class="language-yml my-class">
+	expected := `<pre><code class="language-yml my-class">text: something
+</code></pre>
+`
+	if got != expected {
+		t.Errorf("CodeBlock class coalescing failed.\nExpected:\n%s\nGot:\n%s", expected, got)
+	}
+}
+
 func TestRenderNodeHookLinkAttrs(t *testing.T) {
 	tests := []string{
 		`[Click Me](gopher://foo.bar "Click Me")`,
