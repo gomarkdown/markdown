@@ -1342,23 +1342,37 @@ func BlockAttrs(node ast.Node) []string {
 func coalesceClassAttrs(attrs []string) []string {
 	const prefix = `class="`
 	var classes []string
-	var other []string
-	for _, a := range attrs {
+	firstClassIdx := -1
+	for i, a := range attrs {
 		if strings.HasPrefix(a, prefix) && strings.HasSuffix(a, `"`) {
+			if firstClassIdx == -1 {
+				firstClassIdx = i
+			}
 			// extract the value between class=" and trailing "
 			val := a[len(prefix) : len(a)-1]
 			if val != "" {
 				classes = append(classes, val)
 			}
-		} else {
-			other = append(other, a)
 		}
 	}
-	if len(classes) == 0 {
+	if firstClassIdx == -1 {
 		return attrs
 	}
+
 	merged := fmt.Sprintf(`class="%s"`, strings.Join(classes, " "))
-	return append([]string{merged}, other...)
+	out := make([]string, 0, len(attrs))
+	seenClass := false
+	for i, a := range attrs {
+		if strings.HasPrefix(a, prefix) && strings.HasSuffix(a, `"`) {
+			if !seenClass && i == firstClassIdx {
+				out = append(out, merged)
+				seenClass = true
+			}
+			continue
+		}
+		out = append(out, a)
+	}
+	return out
 }
 
 // TagWithAttributes creates a HTML tag with a given name and attributes
