@@ -68,8 +68,6 @@ func main() {
 }
 ```
 
-Try it online: https://onlinetool.io/goplayground/#txO7hJ-ibeU
-
 For more documentation read [this guide](https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html)
 
 Comparing to other markdown parsers: https://babelmark.github.io/
