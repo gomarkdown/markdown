@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -53,4 +54,12 @@ func TestInfinite2(t *testing.T) {
 func TestInfinite3(t *testing.T) {
 	test := "\xa2 \n\t: \n: "
 	parseWithShortTimeout(t, test)
+}
+
+func TestIssue330FuzzCrasher(t *testing.T) {
+	data, err := os.ReadFile("testdata/issue330-crasher.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parseWithShortTimeout(t, string(data))
 }
