@@ -126,3 +126,14 @@ func TestRenderNodeHookLinkAttrs(t *testing.T) {
 	}
 	doTestsParam(t, tests, params)
 }
+
+func TestHardLineBreakDoesNotApplyInsideHTMLBlock(t *testing.T) {
+	tests := []string{
+		"<div>\n  <a href=\"#\">\n    <img src=\"logo.png\" alt=\"Logo\">\n  </a>\n</div>\n\nHello\nWorld",
+		"<div>\n  <a href=\"#\">\n    <img src=\"logo.png\" alt=\"Logo\">\n  </a>\n</div>\n\n<p>Hello<br>\nWorld</p>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions | parser.HardLineBreak,
+	}
+	doTestsParam(t, tests, params)
+}
