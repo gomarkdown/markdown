@@ -408,12 +408,13 @@ func (p *Parser) isPrefixHeading(data []byte) bool {
 	return true
 }
 
-func (p *Parser) prefixHeading(data []byte) int {
-	level := skipCharN(data, 0, '#', 6)
-	i := skipChar(data, level, ' ')
-	end := skipUntilChar(data, i, '\n')
-	skip := end
-	id := ""
+// parseHeadingContent extracts the text range and optional {#id} for a heading
+// whose content starts at i and whose line ends just before the newline at end.
+// It returns the heading id ("" if none), the index where the heading text ends
+// (after trimming a trailing {#id} and any closing '#' markers and spaces), and
+// the number of bytes the whole heading line occupies.
+func (p *Parser) parseHeadingContent(data []byte, i, end int) (id string, contentEnd, skip int) {
+	skip = end
 	if p.extensions&HeadingIDs != 0 {
 		j, k := 0, 0
 		// find start/end of heading id
@@ -426,29 +427,40 @@ func (p *Parser) prefixHeading(data []byte) int {
 			id = string(data[j+2 : k])
 			end = j
 			skip = k + 1
-			for end > 0 && data[end-1] == ' ' {
-				end--
-			}
+			end = backChar(data, end, ' ')
 		}
 	}
+	// strip trailing closing '#' markers and surrounding spaces
 	for end > 0 && data[end-1] == '#' {
 		if isBackslashEscaped(data, end-1) {
 			break
 		}
 		end--
 	}
-	for end > 0 && data[end-1] == ' ' {
-		end--
+	end = backChar(data, end, ' ')
+	return id, end, skip
+}
+
+// setHeadingID assigns block's id, auto-generating one from text when id is
+// empty and AutoHeadingIDs is enabled (recording it for later uniquification).
+func (p *Parser) setHeadingID(block *ast.Heading, id string, text []byte) {
+	block.HeadingID = id
+	if id == "" && p.extensions&AutoHeadingIDs != 0 {
+		block.HeadingID = sanitizeHeadingID(string(text))
+		p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 	}
+}
+
+func (p *Parser) prefixHeading(data []byte) int {
+	level := skipCharN(data, 0, '#', 6)
+	i := skipChar(data, level, ' ')
+	end := skipUntilChar(data, i, '\n')
+	id, end, skip := p.parseHeadingContent(data, i, end)
 	if end > i {
 		block := &ast.Heading{
-			HeadingID: id,
-			Level:     level,
+			Level: level,
 		}
-		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			block.HeadingID = sanitizeHeadingID(string(data[i:end]))
-			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
-		}
+		p.setHeadingID(block, id, data[i:end])
 		block.Content = data[i:end]
 		p.AddBlock(block)
 	}
@@ -483,44 +495,13 @@ func (p *Parser) isPrefixSpecialHeading(data []byte) bool {
 func (p *Parser) prefixSpecialHeading(data []byte) int {
 	i := skipChar(data, 2, ' ') // ".#" skipped
 	end := skipUntilChar(data, i, '\n')
-	skip := end
-	id := ""
-	if p.extensions&HeadingIDs != 0 {
-		j, k := 0, 0
-		// find start/end of heading id
-		for j = i; j < end-1 && (data[j] != '{' || data[j+1] != '#'); j++ {
-		}
-		for k = j + 1; k < end && data[k] != '}'; k++ {
-		}
-		// extract heading id iff found
-		if j < end && k < end {
-			id = string(data[j+2 : k])
-			end = j
-			skip = k + 1
-			for end > 0 && data[end-1] == ' ' {
-				end--
-			}
-		}
-	}
-	for end > 0 && data[end-1] == '#' {
-		if isBackslashEscaped(data, end-1) {
-			break
-		}
-		end--
-	}
-	for end > 0 && data[end-1] == ' ' {
-		end--
-	}
+	id, end, skip := p.parseHeadingContent(data, i, end)
 	if end > i {
 		block := &ast.Heading{
-			HeadingID: id,
 			IsSpecial: true,
 			Level:     1, // always level 1.
 		}
-		if id == "" && p.extensions&AutoHeadingIDs != 0 {
-			block.HeadingID = sanitizeHeadingID(string(data[i:end]))
-			p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
-		}
+		p.setHeadingID(block, id, data[i:end])
 		block.Literal = data[i:end]
 		block.Content = data[i:end]
 		p.AddBlock(block)
@@ -1902,10 +1883,7 @@ func (p *Parser) paragraph(data []byte) int {
 				block := &ast.Heading{
 					Level: level,
 				}
-				if p.extensions&AutoHeadingIDs != 0 {
-					block.HeadingID = sanitizeHeadingID(string(data[prev:eol]))
-					p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
-				}
+				p.setHeadingID(block, "", data[prev:eol])
 
 				block.Content = data[prev:eol]
 				p.AddBlock(block)
