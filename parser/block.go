@@ -79,6 +79,10 @@ var (
 		"svg":        {},
 		"video":      {},
 	}
+
+	markdownHTMLBlockTags = map[string]struct{}{
+		"details": {},
+	}
 )
 
 // sanitizeHeadingID returns a sanitized anchor name for the given text.
@@ -608,6 +612,12 @@ func (p *Parser) html(data []byte, doRender bool) int {
 		return 0
 	}
 
+	if _, ok := markdownHTMLBlockTags[curtag]; ok {
+		if size := p.htmlMarkdownBlock(data, curtag, doRender); size > 0 {
+			return size
+		}
+	}
+
 	// look for an unindented matching closing tag
 	// followed by a blank line
 	found := false
@@ -678,6 +688,56 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	}
 
 	return i
+}
+
+func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
+	openEnd := bytes.IndexByte(data, '>')
+	if openEnd < 0 {
+		return 0
+	}
+	openEnd++
+
+	closeStart, consumed := p.findHTMLCloseTag(data, tag, openEnd)
+	if consumed == 0 {
+		return 0
+	}
+
+	closeEnd := closeStart + len("</"+tag+">")
+	if doRender {
+		open := bytes.TrimRight(data[:openEnd], "\n")
+		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: open}})
+
+		innerStart := openEnd
+		if innerStart < len(data) && data[innerStart] == '\n' {
+			innerStart++
+		}
+		inner := data[innerStart:closeStart]
+		if len(inner) > 0 {
+			p.Block(inner)
+		}
+
+		close := bytes.TrimRight(data[closeStart:closeEnd], "\n")
+		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: close}})
+	}
+
+	return consumed
+}
+
+func (p *Parser) findHTMLCloseTag(data []byte, tag string, start int) (closeStart int, consumed int) {
+	for i := start; i < len(data); i++ {
+		for i < len(data) && !(data[i-1] == '<' && data[i] == '/') {
+			i++
+		}
+		if i+2+len(tag) >= len(data) {
+			return 0, 0
+		}
+
+		j := p.htmlFindEnd(tag, data[i-1:])
+		if j > 0 {
+			return i - 1, i + j - 1
+		}
+	}
+	return 0, 0
 }
 
 func finalizeHTMLBlock(block *ast.HTMLBlock) {
