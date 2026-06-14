@@ -127,6 +127,17 @@ func TestRenderNodeHookLinkAttrs(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
+func TestBlockquoteAfterListWithInsufficientIndent(t *testing.T) {
+	tests := []string{
+		"1. list\n  > blockquote\n",
+		"<ol>\n<li>list</li>\n</ol>\n\n<blockquote>\n<p>blockquote</p>\n</blockquote>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions,
+	}
+	doTestsParam(t, tests, params)
+}
+
 func TestHardLineBreakDoesNotApplyInsideHTMLBlock(t *testing.T) {
 	tests := []string{
 		"<div>\n  <a href=\"#\">\n    <img src=\"logo.png\" alt=\"Logo\">\n  </a>\n</div>\n\nHello\nWorld",

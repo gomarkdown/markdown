@@ -1548,6 +1548,10 @@ gatherlines:
 			}
 			*flags |= ast.ListItemContainsBlock
 
+		case p.quotePrefix(chunk) > 0 && indent < 4:
+			*flags |= ast.ListItemEndOfList
+			break gatherlines
+
 		// anything following an empty line is only part
 		// of this item if it is indented 4 spaces
 		// (regardless of the indentation of the beginning of the item)
