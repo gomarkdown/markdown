@@ -82,6 +82,7 @@ var (
 
 	markdownHTMLBlockTags = map[string]struct{}{
 		"details": {},
+		"div":     {},
 	}
 )
 
@@ -701,6 +702,9 @@ func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 	if consumed == 0 {
 		return 0
 	}
+	if !hasBlankLineAfter(data, openEnd) || !hasBlankLineBefore(data, closeStart) {
+		return 0
+	}
 
 	closeEnd := closeStart + len("</"+tag+">")
 	if doRender {
@@ -721,6 +725,31 @@ func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 	}
 
 	return consumed
+}
+
+func hasBlankLineAfter(data []byte, pos int) bool {
+	first := IsEmpty(data[pos:])
+	if first == 0 {
+		return false
+	}
+	return IsEmpty(data[pos+first:]) > 0
+}
+
+func hasBlankLineBefore(data []byte, pos int) bool {
+	if pos < 2 || data[pos-1] != '\n' {
+		return false
+	}
+	lineEnd := pos - 1
+	lineStart := lineEnd
+	for lineStart > 0 && data[lineStart-1] != '\n' {
+		lineStart--
+	}
+	for _, b := range data[lineStart:lineEnd] {
+		if b != ' ' && b != '\t' {
+			return false
+		}
+	}
+	return true
 }
 
 func (p *Parser) findHTMLCloseTag(data []byte, tag string, start int) (closeStart int, consumed int) {
