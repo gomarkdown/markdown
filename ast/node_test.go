@@ -83,3 +83,36 @@ func TestRemoveLeaveFromTree(t *testing.T) {
 		t.Errorf("Unexpectedly modified parent of removed node to: %v", toBeRemoved.Parent)
 	}
 }
+
+func TestSiblingLinks(t *testing.T) {
+	parent := &Document{}
+	first := &Paragraph{}
+	second := &Paragraph{}
+	third := &Paragraph{}
+
+	AppendChild(parent, first)
+	AppendChild(parent, second)
+	AppendChild(parent, third)
+
+	if got := GetPrevNode(second); got != first {
+		t.Fatalf("GetPrevNode(second) = %v, want first", got)
+	}
+	if got := GetNextNode(second); got != third {
+		t.Fatalf("GetNextNode(second) = %v, want third", got)
+	}
+
+	RemoveFromTree(second)
+
+	if got := GetNextNode(first); got != third {
+		t.Fatalf("GetNextNode(first) after remove = %v, want third", got)
+	}
+	if got := GetPrevNode(third); got != first {
+		t.Fatalf("GetPrevNode(third) after remove = %v, want first", got)
+	}
+	if got := GetPrevNode(second); got != nil {
+		t.Fatalf("GetPrevNode(removed) = %v, want nil", got)
+	}
+	if got := GetNextNode(second); got != nil {
+		t.Fatalf("GetNextNode(removed) = %v, want nil", got)
+	}
+}

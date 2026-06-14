@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"html"
-	"regexp"
 	"strconv"
 	"unicode"
 
@@ -13,20 +12,12 @@ import (
 // Parsing block-level elements.
 
 const (
-	charEntity = "&(?:#x[a-f0-9]{1,8}|#[0-9]{1,8}|[a-z][a-z0-9]{1,31});"
-	escapable  = "[!\"#$%&'()*+,./:;<=>?@[\\\\\\]^_`{|}~-]"
-)
-
-const (
 	captionTable  = "Table: "
 	captionFigure = "Figure: "
 	captionQuote  = "Quote: "
 )
 
 var (
-	reBackslashOrAmp      = regexp.MustCompile(`[\&]`)
-	reEntityOrEscapedChar = regexp.MustCompile(`(?i)\\` + escapable + "|" + charEntity)
-
 	// blockTags is a set of tags that are recognized as HTML block tags.
 	// Any of these can be included in markdown text without special escaping.
 	blockTags = map[string]struct{}{
@@ -1100,18 +1091,110 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	return beg
 }
 
-func unescapeChar(str []byte) []byte {
-	if str[0] == '\\' {
-		return []byte{str[1]}
-	}
-	return []byte(html.UnescapeString(string(str)))
-}
-
 func unescapeString(str []byte) []byte {
-	if reBackslashOrAmp.Match(str) {
-		return reEntityOrEscapedChar.ReplaceAllFunc(str, unescapeChar)
+	var out []byte
+	for i := 0; i < len(str); i++ {
+		switch str[i] {
+		case '\\':
+			if i+1 < len(str) && isEscapable(str[i+1]) {
+				if out == nil {
+					out = make([]byte, 0, len(str))
+					out = append(out, str[:i]...)
+				}
+				out = append(out, str[i+1])
+				i++
+				continue
+			}
+		case '&':
+			entityEnd := findEntityEnd(str, i)
+			if entityEnd > i {
+				replacement := html.UnescapeString(string(str[i:entityEnd]))
+				if replacement != string(str[i:entityEnd]) {
+					if out == nil {
+						out = make([]byte, 0, len(str))
+						out = append(out, str[:i]...)
+					}
+					out = append(out, replacement...)
+					i = entityEnd - 1
+					continue
+				}
+			}
+		}
+		if out != nil {
+			out = append(out, str[i])
+		}
+	}
+	if out != nil {
+		return out
 	}
 	return str
+}
+
+func isEscapable(c byte) bool {
+	switch c {
+	case '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '.', '/', ':',
+		';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '-':
+		return true
+	default:
+		return false
+	}
+}
+
+func findEntityEnd(str []byte, start int) int {
+	i := start + 1
+	if i >= len(str) {
+		return 0
+	}
+	if str[i] == '#' {
+		i++
+		if i >= len(str) {
+			return 0
+		}
+		if str[i] == 'x' || str[i] == 'X' {
+			i++
+			digits := 0
+			for i < len(str) && digits < 8 && isHexDigit(str[i]) {
+				i++
+				digits++
+			}
+			if digits == 0 || i >= len(str) || str[i] != ';' {
+				return 0
+			}
+			return i + 1
+		}
+		digits := 0
+		for i < len(str) && digits < 8 && str[i] >= '0' && str[i] <= '9' {
+			i++
+			digits++
+		}
+		if digits == 0 || i >= len(str) || str[i] != ';' {
+			return 0
+		}
+		return i + 1
+	}
+	if !isAlpha(str[i]) {
+		return 0
+	}
+	i++
+	for i < len(str) && i-start <= 32 && isAlnum(str[i]) {
+		i++
+	}
+	if i >= len(str) || str[i] != ';' {
+		return 0
+	}
+	return i + 1
+}
+
+func isAlpha(c byte) bool {
+	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+}
+
+func isAlnum(c byte) bool {
+	return isAlpha(c) || c >= '0' && c <= '9'
+}
+
+func isHexDigit(c byte) bool {
+	return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F'
 }
 
 func finalizeCodeBlock(code *ast.CodeBlock) {
