@@ -105,10 +105,12 @@ func transformLinks(tests []string, prefix string) []string {
 	newTests := make([]string, len(tests))
 	anchorRe := regexp.MustCompile(`<a href="/(.*?)"`)
 	imgRe := regexp.MustCompile(`<img src="/(.*?)"`)
+	bareImgRe := regexp.MustCompile(`<img src="([^#/" ][^":]*)"`)
 	for i, test := range tests {
 		if i%2 == 1 {
 			test = anchorRe.ReplaceAllString(test, `<a href="`+prefix+`/$1"`)
 			test = imgRe.ReplaceAllString(test, `<img src="`+prefix+`/$1"`)
+			test = bareImgRe.ReplaceAllString(test, `<img src="`+prefix+`/$1"`)
 		}
 		newTests[i] = test
 	}

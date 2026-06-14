@@ -127,6 +127,21 @@ func TestRenderNodeHookLinkAttrs(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
+func TestAbsolutePrefixRelativeImagePath(t *testing.T) {
+	tests := []string{
+		`![](image.png)`,
+		`<p><img src="/public/image.png" alt="" /></p>` + "\n",
+	}
+	opts := html.RendererOptions{
+		AbsolutePrefix: "/public",
+	}
+	params := TestParams{
+		RendererOptions: opts,
+		extensions:      parser.CommonExtensions,
+	}
+	doTestsParam(t, tests, params)
+}
+
 func TestBlockquoteAfterListWithInsufficientIndent(t *testing.T) {
 	tests := []string{
 		"1. list\n  > blockquote\n",
