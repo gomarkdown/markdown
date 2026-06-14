@@ -1,0 +1,23 @@
+Bug demo:
+
+> quoted block 1 start
+>
+> ```
+> fenced pre block 1
+> ```
+>
+> quoted block 2 end
+
+Paragraph
+
+```
+fenced pre block 2
+```
+
+> quoted block 2 start
+>
+> ```
+> fenced pre block 3
+> ```
+>
+> quoted block 2 end

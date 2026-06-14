@@ -1071,30 +1071,34 @@ func (p *Parser) terminateBlockquote(data []byte, beg, end int) bool {
 func (p *Parser) quote(data []byte) int {
 	var raw bytes.Buffer
 	beg, end := 0, 0
+	fenceMarker := ""
 	for beg < len(data) {
 		end = beg
-		// Step over whole lines, collecting them. While doing that, check for
-		// fenced code and if one's found, incorporate it altogether,
-		// irregardless of any contents inside it
 		for end < len(data) && data[end] != '\n' {
-			if p.extensions&FencedCode != 0 {
-				if i := p.fencedCodeBlock(data[end:], false); i > 0 {
-					// -1 to compensate for the extra end++ after the loop:
-					end += i - 1
-					break
-				}
-			}
 			end++
 		}
 		end = skipCharN(data, end, '\n', 1)
+		contentBeg := beg
 		if pre := p.quotePrefix(data[beg:]); pre > 0 {
 			// skip the prefix
-			beg += pre
+			contentBeg += pre
+		} else if fenceMarker != "" {
+			// Lines inside a quoted fenced code block may omit the quote
+			// prefix. Keep them in the quote until the fence closes.
 		} else if p.terminateBlockquote(data, beg, end) {
 			break
 		}
 		// this line is part of the blockquote
-		raw.Write(data[beg:end])
+		raw.Write(data[contentBeg:end])
+		if p.extensions&FencedCode != 0 {
+			if _, marker := isFenceLine(data[contentBeg:end], nil, fenceMarker); marker != "" {
+				if fenceMarker == "" {
+					fenceMarker = marker
+				} else {
+					fenceMarker = ""
+				}
+			}
+		}
 		beg = end
 	}
 

@@ -98,10 +98,7 @@ func TestBug325(t *testing.T) {
 	p := NewWithExtensions(CommonExtensions)
 	doc := p.Parse([]byte(input))
 	got := astToString(doc)
-	// TODO: currently it sees the last `~~~` as a code block end
-	// should see `> ~~~` as a code block end
-	exp := "BlockQuote\n  CodeBlock: '> // comment\\n> ~~~\\n\\n'\n"
-	//exp := "BlockQuote\n  CodeBlock: '// comment\\n'\nParagraph\n  Text '~~~'\n"
+	exp := "BlockQuote\n  CodeBlock: '// comment\\n'\nParagraph\n  Text '~~~'\n"
 	if got != exp {
 		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
 			input, exp, got)
