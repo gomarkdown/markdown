@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 // example for https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html

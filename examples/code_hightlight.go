@@ -1,6 +1,10 @@
+//go:build ignore
+
 package main
 
 // example for https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html
+//
+// requires chroma: go get github.com/alecthomas/chroma/v2
 
 import (
 	"fmt"
@@ -10,10 +14,10 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 	mdhtml "github.com/gomarkdown/markdown/html"
 
-	"github.com/alecthomas/chroma"
-	"github.com/alecthomas/chroma/formatters/html"
-	"github.com/alecthomas/chroma/lexers"
-	"github.com/alecthomas/chroma/styles"
+	"github.com/alecthomas/chroma/v2"
+	"github.com/alecthomas/chroma/v2/formatters/html"
+	"github.com/alecthomas/chroma/v2/lexers"
+	"github.com/alecthomas/chroma/v2/styles"
 )
 
 var (
