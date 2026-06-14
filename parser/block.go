@@ -1324,7 +1324,7 @@ func endsWithBlankLine(block ast.Node) bool {
 }
 
 func finalizeList(list *ast.List) {
-	items := list.Parent.GetChildren()
+	items := list.GetChildren()
 	lastItemIdx := len(items) - 1
 	for i, item := range items {
 		isLastItem := i == lastItemIdx
@@ -1335,7 +1335,7 @@ func finalizeList(list *ast.List) {
 		}
 		// recurse into children of list item, to see if there are spaces
 		// between any of them:
-		subItems := item.GetParent().GetChildren()
+		subItems := item.GetChildren()
 		lastSubItemIdx := len(subItems) - 1
 		for j, subItem := range subItems {
 			isLastSubItem := j == lastSubItemIdx
