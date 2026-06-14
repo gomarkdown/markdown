@@ -400,6 +400,9 @@ func TestInlineLink(t *testing.T) {
 		"[link](url)\n",
 		"<p><a href=\"url\">link</a></p>\n",
 
+		"[Some site](https://somesite.com/?\"something%20in%20quotes\"(blah)harp)\n",
+		"<p><a href=\"https://somesite.com/?&quot;something%20in%20quotes&quot;(blah)harp\">Some site</a></p>\n",
+
 		"![foo]()\n",
 		"<p><img src=\"\" alt=\"foo\" /></p>\n",
 
@@ -1316,12 +1319,10 @@ func TestInlineMath(t *testing.T) {
 	}, TestParams{Flags: html.SkipHTML, extensions: parser.CommonExtensions})
 }
 
-// TODO: not fixed yet. Need to change the logic and update the tests.
-// https://github.com/gomarkdown/markdown/issues/327
 func TestBug327(t *testing.T) {
 	doTestsParam(t, []string{
 		`[site](https://somesite.com/?"s"(b)h)`,
-		`<p><a href="https://somesite.com/?&quot;s&quot;(b">site</a>h)</p>
+		`<p><a href="https://somesite.com/?&quot;s&quot;(b)h">site</a></p>
 `,
 	}, TestParams{extensions: parser.CommonExtensions})
 }
