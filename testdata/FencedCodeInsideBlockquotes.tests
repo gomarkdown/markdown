@@ -87,6 +87,43 @@ okay
 <p>rest of quoted text</p>
 </blockquote>
 +++
+# Test
+
+> ``` javascript
+> let a = 2;
+> const b = 3;
+> ```
+>
+
+ok
+
+	``` go
+	func fact(n int) int {
+		return n
+	}
+	```
+
+Quote break.
++++
+<h1>Test</h1>
+
+<blockquote>
+<pre><code class="language-javascript">let a = 2;
+const b = 3;
+</code></pre>
+</blockquote>
+
+<p>ok</p>
+
+<pre><code>``` go
+func fact(n int) int {
+	return n
+}
+```
+</code></pre>
+
+<p>Quote break.</p>
++++
 > plain quoted text
 > ```fenced
 > code
