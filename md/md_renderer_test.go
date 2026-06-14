@@ -6,6 +6,7 @@ import (
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 func TestRenderDocument(t *testing.T) {
@@ -13,6 +14,23 @@ func TestRenderDocument(t *testing.T) {
 	input := markdown.Parse(source, nil)
 	expected := "# title\n\n* aaa\n* bbb\n* ccc\n\n"
 	testRendering(t, input, expected)
+}
+
+func TestRenderListFollowedByHeadingRoundTrip(t *testing.T) {
+	source := []byte("# Header1\n* list item\n\n# Header2\n")
+	p := parser.NewWithExtensions(parser.CommonExtensions)
+	input := p.Parse(source)
+
+	expected := "# Header1\n\n* list item\n\n# Header2\n\n"
+	testRendering(t, input, expected)
+
+	output := markdown.Render(input, NewRenderer())
+	p = parser.NewWithExtensions(parser.CommonExtensions)
+	roundTripped := p.Parse(output)
+	if len(input.GetChildren()) != len(roundTripped.GetChildren()) {
+		t.Fatalf("round-trip changed top-level node count: got %d, want %d\n%s",
+			len(roundTripped.GetChildren()), len(input.GetChildren()), output)
+	}
 }
 
 func TestRenderText(t *testing.T) {
