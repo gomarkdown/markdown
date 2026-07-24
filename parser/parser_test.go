@@ -4,6 +4,40 @@ import (
 	"testing"
 )
 
+// GHSA-cv23-7vc5-jfh7: IsSafeURL must not panic on short URLs.
+// Empty, ".", and ".." are shorter than some path prefixes ("/", "./", "../"),
+// so slicing url[:nPath] before checking len(url) panics.
+func TestIsSafeURLShortURLNoPanic(t *testing.T) {
+	cases := []struct {
+		url  string
+		want bool
+	}{
+		{"", false},
+		{".", false},
+		{"..", false},
+		{"/", true},
+		{"./", true},
+		{"../", true},
+		{"/path", true},
+		{"./path", true},
+		{"../path", true},
+		{"http://example.com", true},
+		{"https://example.com", true},
+		{"javascript:alert(1)", false},
+		{"ftp://example.com", true},
+		{"mailto:user@example.com", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.url, func(t *testing.T) {
+			got := IsSafeURL([]byte(tc.url))
+			if got != tc.want {
+				t.Errorf("IsSafeURL(%q) = %v, want %v", tc.url, got, tc.want)
+			}
+		})
+	}
+}
+
+
 func TestBug311(t *testing.T) {
 	str := "~~~~\xb4~\x94~\x94~\xd1\r\r:\xb4\x94\x94~\x9f~\xb4~\x94~\x94\x94"
 	p := New()

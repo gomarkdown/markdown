@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/gomarkdown/markdown/html"
 )
 
 // crashes found with go-fuzz
@@ -62,4 +64,24 @@ func TestIssue330FuzzCrasher(t *testing.T) {
 		t.Fatal(err)
 	}
 	parseWithShortTimeout(t, string(data))
+}
+
+// GHSA-cv23-7vc5-jfh7: empty/short link destinations panic IsSafeURL when Safelink is on.
+func TestGHSA_cv23_7vc5_jfh7_SafelinkEmptyDestination(t *testing.T) {
+	opts := html.RendererOptions{Flags: html.CommonFlags | html.Safelink}
+	renderer := html.NewRenderer(opts)
+	inputs := []string{
+		"[x]()",
+		"[x](.)",
+		"[x](..)",
+		"[x](/)",
+		"[x](http://example.com)",
+		"[x](javascript:alert(1))",
+	}
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			// Must not panic.
+			_ = ToHTML([]byte(input), nil, renderer)
+		})
+	}
 }
