@@ -130,3 +130,34 @@ func TestPop(t *testing.T) {
 		t.Errorf("after pop, want %d, got %d", 0, len(i.stack))
 	}
 }
+
+// Include directives at EOF used to panic: caption look-ahead did data[consumed+1:]
+// even when consumed == len(data).
+func TestIncludeAtEOFNoPanic(t *testing.T) {
+	inputs := []string{
+		"{{foo}}",
+		"{{foo.md}}",
+		"<{{foo}}",
+		"  {{foo}}",
+		"{{foo}}[a]",
+		"<{{foo}}[a]",
+		"{{a}}\n{{b}}",
+		"para\n\n{{foo}}",
+		"{{foo}}\n",
+		"{{foo}}\nFigure: caption text\n",
+		"{{foo}}\nTable: caption text\n",
+		"{{foo}}\nQuote: caption text\n",
+	}
+	for _, input := range inputs {
+		t.Run(input, func(t *testing.T) {
+			p := NewWithExtensions(CommonExtensions | Includes)
+			p.Opts = Options{
+				ReadIncludeFn: func(from, path string, address []byte) []byte {
+					return []byte("included line\n")
+				},
+			}
+			// Must not panic.
+			p.Parse([]byte(input))
+		})
+	}
+}
