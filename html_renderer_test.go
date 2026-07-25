@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"bytes"
 	"io"
 	"testing"
 
@@ -68,6 +69,48 @@ func TestTagParagraphCode(t *testing.T) {
 		extensions:      parser.CommonExtensions,
 	}
 	doTestsParam(t, tests, params)
+}
+
+// GHSA-gc99-qr5c-98ff: heading IDs and fenced-code info must be HTML-escaped
+// when emitted into attributes so untrusted markdown cannot inject attributes.
+func TestAttributeEscapeHeadingIDAndFencedInfo(t *testing.T) {
+	cases := []struct {
+		name    string
+		input   string
+		want    string
+		wantNot string
+	}{
+		{
+			name:    "heading-id-quote-breakout",
+			input:   `# Heading {#x" onclick="alert(1)}` + "\n",
+			want:    `id="x&quot; onclick=&quot;alert(1)"`,
+			wantNot: `onclick="alert(1)"`,
+		},
+		{
+			name:    "fenced-info-quote-breakout",
+			input:   "```x\"onclick=\"alert(1)\ncode\n```\n",
+			want:    `class="language-x&quot;onclick=&quot;alert(1)"`,
+			wantNot: `onclick="alert(1)"`,
+		},
+		{
+			name:    "fenced-info-entity-bypass",
+			input:   "```x&#x22;onclick=&#x22;alert(1)\ncode\n```\n",
+			want:    `class="language-x&quot;onclick=&quot;alert(1)"`,
+			wantNot: `onclick="alert(1)"`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Default ToHTML path (CommonExtensions + CommonFlags).
+			got := string(ToHTML([]byte(tc.input), nil, nil))
+			if tc.want != "" && !bytes.Contains([]byte(got), []byte(tc.want)) {
+				t.Errorf("expected output to contain %q\ngot:\n%s", tc.want, got)
+			}
+			if tc.wantNot != "" && bytes.Contains([]byte(got), []byte(tc.wantNot)) {
+				t.Errorf("expected output not to contain raw %q\ngot:\n%s", tc.wantNot, got)
+			}
+		})
+	}
 }
 
 // TestCodeBlockClassCoalescing verifies that when a code block has both
