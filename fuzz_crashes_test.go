@@ -85,3 +85,17 @@ func TestGHSA_cv23_7vc5_jfh7_SafelinkEmptyDestination(t *testing.T) {
 		})
 	}
 }
+
+// tableRow indexed data[i] after skipChar advanced i to len(data) on a row
+// whose cell is only whitespace, panicking with index out of range.
+func TestTableRowTrailingSpaceCrasher(t *testing.T) {
+	inputs := []string{
+		" -|\n| ",
+		"a|b\n-|-\n| ",
+		" -|\n|  \t",
+	}
+	for _, input := range inputs {
+		// Must not panic (Tables is enabled via the default CommonExtensions).
+		_ = ToHTML([]byte(input), nil, nil)
+	}
+}
