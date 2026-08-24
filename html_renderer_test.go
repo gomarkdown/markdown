@@ -196,6 +196,37 @@ func TestBlockquoteAfterListWithInsufficientIndent(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
+func TestMarkdownInHTMLTableCell(t *testing.T) {
+	tests := []string{
+		"<table>\n<tr>\n<td>\n\n**bold**\n\n</td>\n</tr>\n</table>\n",
+		"<table>\n\n<tr>\n\n<td>\n\n<p><strong>bold</strong></p>\n\n</td>\n\n</tr>\n\n</table>\n",
+
+		"<table>\n<tr>\n<td>\n\n```\ncode\n```\n\n</td>\n</tr>\n</table>\n",
+		"<table>\n\n<tr>\n\n<td>\n\n<pre><code>code\n</code></pre>\n\n</td>\n\n</tr>\n\n</table>\n",
+
+		"<table>\n<tr>\n<td>\n\n| a | b |\n| - | - |\n| 1 | 2 |\n\n</td>\n</tr>\n</table>\n",
+		"<table>\n\n<tr>\n\n<td>\n\n<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b</th>\n</tr>\n</thead>\n\n<tbody>\n<tr>\n<td>1</td>\n<td>2</td>\n</tr>\n</tbody>\n</table>\n\n</td>\n\n</tr>\n\n</table>\n",
+
+		"<table>\n<thead>\n<tr>\n<td>Input</td>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>\n\n*em*\n\n</td>\n</tr>\n</tbody>\n</table>\n",
+		"<table>\n\n<thead>\n\n<tr>\n\n<td>Input</td>\n\n</tr>\n\n</thead>\n\n<tbody>\n\n<tr>\n\n<td>\n\n<p><em>em</em></p>\n\n</td>\n\n</tr>\n\n</tbody>\n\n</table>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions | parser.MarkdownInHTML,
+	}
+	doTestsParam(t, tests, params)
+}
+
+func TestMarkdownInHTMLOffLeavesTableRaw(t *testing.T) {
+	tests := []string{
+		"<table>\n<tr>\n<td>\n\n**bold**\n\n</td>\n</tr>\n</table>\n",
+		"<table>\n<tr>\n<td>\n\n**bold**\n\n</td>\n</tr>\n</table>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions,
+	}
+	doTestsParam(t, tests, params)
+}
+
 func TestHardLineBreakDoesNotApplyInsideHTMLBlock(t *testing.T) {
 	tests := []string{
 		"<div>\n  <a href=\"#\">\n    <img src=\"logo.png\" alt=\"Logo\">\n  </a>\n</div>\n\nHello\nWorld",

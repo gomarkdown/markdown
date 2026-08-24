@@ -64,6 +64,26 @@ var (
 		"details": {},
 		"div":     {},
 	}
+
+	// Tags whose interiors are walked as nested HTML when MarkdownInHTML is set.
+	htmlStructureTags = map[string]struct{}{
+		"table": {},
+		"thead": {},
+		"tbody": {},
+		"tfoot": {},
+		"tr":    {},
+	}
+
+	// Extra block tags recognized only with MarkdownInHTML.
+	markdownInHTMLTags = map[string]struct{}{
+		"table": {},
+		"thead": {},
+		"tbody": {},
+		"tfoot": {},
+		"tr":    {},
+		"td":    {},
+		"th":    {},
+	}
 )
 
 func (p *Parser) html(data []byte, doRender bool) int {
@@ -91,7 +111,12 @@ func (p *Parser) html(data []byte, doRender bool) int {
 		return 0
 	}
 
-	if _, ok := markdownHTMLBlockTags[curtag]; ok {
+	if p.markdownHTMLTag(curtag) {
+		if p.extensions&MarkdownInHTML != 0 && isHTMLStructureTag(curtag) {
+			if size := p.htmlStructuredBlock(data, curtag, doRender); size > 0 {
+				return size
+			}
+		}
 		if size := p.htmlMarkdownBlock(data, curtag, doRender); size > 0 {
 			return size
 		}
@@ -169,6 +194,22 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	return i
 }
 
+func (p *Parser) markdownHTMLTag(tag string) bool {
+	if _, ok := markdownHTMLBlockTags[tag]; ok {
+		return true
+	}
+	if p.extensions&MarkdownInHTML != 0 {
+		_, ok := markdownInHTMLTags[tag]
+		return ok
+	}
+	return false
+}
+
+func isHTMLStructureTag(tag string) bool {
+	_, ok := htmlStructureTags[tag]
+	return ok
+}
+
 func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 	openEnd := bytes.IndexByte(data, '>')
 	if openEnd < 0 {
@@ -176,11 +217,12 @@ func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 	}
 	openEnd++
 
-	closeStart, consumed := p.findHTMLCloseTag(data, tag, openEnd)
+	loose := p.extensions&MarkdownInHTML != 0
+	closeStart, consumed := p.findHTMLCloseTag(data, tag, openEnd, loose)
 	if consumed == 0 {
 		return 0
 	}
-	if !hasBlankLineAfter(data, openEnd) || !hasBlankLineBefore(data, closeStart) {
+	if !hasBlankLineAfter(data, openEnd) || !hasBlankLineBefore(data, closeStart, loose) {
 		return 0
 	}
 
@@ -213,7 +255,12 @@ func hasBlankLineAfter(data []byte, pos int) bool {
 	return IsEmpty(data[pos+first:]) > 0
 }
 
-func hasBlankLineBefore(data []byte, pos int) bool {
+func hasBlankLineBefore(data []byte, pos int, skipIndent bool) bool {
+	if skipIndent {
+		for pos > 0 && (data[pos-1] == ' ' || data[pos-1] == '\t') {
+			pos--
+		}
+	}
 	if pos < 2 || data[pos-1] != '\n' {
 		return false
 	}
@@ -230,21 +277,98 @@ func hasBlankLineBefore(data []byte, pos int) bool {
 	return true
 }
 
-func (p *Parser) findHTMLCloseTag(data []byte, tag string, start int) (closeStart int, consumed int) {
+func (p *Parser) findHTMLCloseTag(data []byte, tag string, start int, loose bool) (closeStart int, consumed int) {
 	for i := start; i < len(data); i++ {
 		for i < len(data) && !(data[i-1] == '<' && data[i] == '/') {
 			i++
 		}
-		if i+2+len(tag) >= len(data) {
+		if i+2+len(tag) > len(data) {
 			return 0, 0
 		}
 
-		j := p.htmlFindEnd(tag, data[i-1:])
+		var j int
+		if loose {
+			j = htmlFindEndLoose(tag, data[i-1:])
+		} else {
+			j = p.htmlFindEnd(tag, data[i-1:])
+		}
 		if j > 0 {
 			return i - 1, i + j - 1
 		}
 	}
 	return 0, 0
+}
+
+func htmlFindEndLoose(tag string, data []byte) int {
+	closetag := []byte("</" + tag + ">")
+	if !bytes.HasPrefix(data, closetag) {
+		return 0
+	}
+	i := len(closetag)
+	for i < len(data) && data[i] != '\n' {
+		if data[i] != ' ' && data[i] != '\t' {
+			return 0
+		}
+		i++
+	}
+	if i < len(data) && data[i] == '\n' {
+		i++
+	}
+	return i
+}
+
+func (p *Parser) htmlStructuredBlock(data []byte, tag string, doRender bool) int {
+	openEnd := bytes.IndexByte(data, '>')
+	if openEnd < 0 {
+		return 0
+	}
+	openEnd++
+
+	closeStart, consumed := p.findHTMLCloseTag(data, tag, openEnd, true)
+	if consumed == 0 {
+		return 0
+	}
+
+	closeEnd := closeStart + len("</"+tag+">")
+	if doRender {
+		open := bytes.TrimRight(data[:openEnd], "\n")
+		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: open}})
+		p.parseHTMLInterior(data[openEnd:closeStart])
+		close := bytes.TrimRight(data[closeStart:closeEnd], "\n")
+		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: close}})
+	}
+	return consumed
+}
+
+func (p *Parser) parseHTMLInterior(data []byte) {
+	for len(data) > 0 {
+		if data[0] == '\n' {
+			data = data[1:]
+			continue
+		}
+		i := 0
+		for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
+			i++
+		}
+		if i < len(data) && data[i] == '<' {
+			if n := p.html(data[i:], true); n > 0 {
+				data = data[i+n:]
+				continue
+			}
+		}
+		nl := bytes.IndexByte(data, '\n')
+		if nl < 0 {
+			if len(bytes.TrimSpace(data)) > 0 {
+				p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: bytes.TrimRight(data, "\n")}})
+			}
+			return
+		}
+		chunk := data[:nl]
+		if len(bytes.TrimSpace(chunk)) > 0 {
+			p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: chunk}})
+		}
+		data = data[nl+1:]
+	}
 }
 
 func finalizeHTMLBlock(block *ast.HTMLBlock) {
@@ -308,6 +432,11 @@ func (p *Parser) htmlFindTag(data []byte) (string, bool) {
 	key := string(data[:i])
 	if _, ok := blockTags[key]; ok {
 		return key, true
+	}
+	if p.extensions&MarkdownInHTML != 0 {
+		if _, ok := markdownInHTMLTags[key]; ok {
+			return key, true
+		}
 	}
 	return "", false
 }

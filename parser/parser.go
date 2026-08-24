@@ -42,6 +42,7 @@ const (
 	Includes                                      // Support including other files.
 	Mmark                                         // Support Mmark syntax, see https://mmark.miek.nl/post/syntax/
 	InlineAttributes                              // Parse {: key="value"} after links and images
+	MarkdownInHTML                                // Parse markdown inside HTML table cells and similar tags
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
