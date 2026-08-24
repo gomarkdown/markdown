@@ -1,5 +1,5 @@
 /*
-Package parser implements parser for markdown text that generates AST (abstract syntax tree).
+Package parser implements a parser for markdown text that generates an AST (abstract syntax tree).
 */
 package parser
 
@@ -29,11 +29,11 @@ const (
 	LaxHTMLBlocks                                 // Loosen up HTML block parsing rules
 	SpaceHeadings                                 // Be strict about prefix heading rules
 	HardLineBreak                                 // Translate newlines into line breaks
-	NonBlockingSpace                              // Translate backspace spaces into line non-blocking spaces
+	NonBlockingSpace                              // Translate backslash-space into a non-breaking space
 	TabSizeEight                                  // Expand tabs to eight spaces instead of four
 	Footnotes                                     // Pandoc-style footnotes
 	NoEmptyLineBeforeBlock                        // No need to insert an empty line to start a (code, quote, ordered list, unordered list) block
-	HeadingIDs                                    // specify heading IDs  with {#id}
+	HeadingIDs                                    // Specify heading IDs with {#id}
 	Titleblock                                    // Titleblock ala pandoc
 	AutoHeadingIDs                                // Create the heading ID from the text
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
@@ -67,7 +67,7 @@ type InlineParser func(p *Parser, data []byte, offset int) (int, ast.Node)
 type ReferenceOverrideFunc func(reference string) (ref *Reference, overridden bool)
 
 // Parser is a type that holds extensions and the runtime state used by
-// Parse, and the renderer. You can not use it directly, construct it with New.
+// Parse. You cannot use it directly; construct it with New.
 type Parser struct {
 
 	// ReferenceOverride is an optional function callback that is called every
@@ -137,7 +137,7 @@ type Parser struct {
 
 // New creates a markdown parser with CommonExtensions.
 //
-// You can then call `doc := p.Parse(markdown)` to parse markdown document
+// You can then call `doc := p.Parse(markdown)` to parse a markdown document
 // and `markdown.Render(doc, renderer)` to convert it to another format with
 // a renderer.
 func New() *Parser {

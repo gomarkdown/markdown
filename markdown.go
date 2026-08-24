@@ -41,11 +41,11 @@ type Renderer interface {
 	RenderFooter(w io.Writer, ast ast.Node)
 }
 
-// Parse parsers a markdown document using provided parser. If parser is nil,
-// we use parser configured with parser.CommonExtensions.
+// Parse parses a markdown document using provided parser. If parser is nil,
+// we use a parser configured with parser.CommonExtensions.
 //
-// It returns AST (abstract syntax tree) that can be converted to another
-// format using Render function.
+// It returns an AST (abstract syntax tree) that can be converted to another
+// format using Render.
 func Parse(markdown []byte, p *parser.Parser) ast.Node {
 	if p == nil {
 		p = parser.New()
@@ -68,11 +68,11 @@ func Render(doc ast.Node, renderer Renderer) []byte {
 
 // ToHTML converts markdownDoc to HTML.
 //
-// You can optionally pass a parser and renderer. This allows to customize
-// a parser, use a customized html render or use completely custom renderer.
+// You can optionally pass a parser and renderer. This allows customizing
+// a parser, using a customized HTML renderer, or using a completely custom renderer.
 //
-// If you pass nil for both, we use parser configured with parser.CommonExtensions
-// and html.Renderer configured with html.CommonFlags.
+// If you pass nil for both, we use a parser configured with parser.CommonExtensions
+// and an html.Renderer configured with html.CommonFlags.
 func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
 	doc := Parse(markdown, p)
 	if renderer == nil {
@@ -86,5 +86,5 @@ func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
 
 // NormalizeNewlines converts Windows and Mac newlines to Unix newlines.
 // The parser only supports Unix newlines. If your markdown content
-// might contain Windows or Mac newlines, use this function to convert to Unix newlines
+// might contain Windows or Mac newlines, use this function to convert to Unix newlines.
 var NormalizeNewlines = parser.NormalizeNewlines

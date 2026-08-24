@@ -1,7 +1,7 @@
 package ast
 
 // An attribute can be attached to block elements. They are specified as
-// {#id .classs key="value"} where quotes for values are mandatory, multiple
+// {#id .class key="value"} where quotes for values are mandatory, multiple
 // key/value pairs are separated by whitespace.
 type Attribute struct {
 	ID      []byte
@@ -339,7 +339,7 @@ type Hardbreak struct {
 	Leaf
 }
 
-// NonBlockingSpace represents markdown non-blocking space node
+// NonBlockingSpace represents a markdown non-breaking space node
 type NonBlockingSpace struct {
 	Leaf
 }

@@ -74,7 +74,7 @@ const (
 // RenderNodeFunc allows reusing most of Renderer logic and replacing
 // rendering of some nodes. If it returns false, Renderer.RenderNode
 // will execute its logic. If it returns true, Renderer.RenderNode will
-// skip rendering this node and will return WalkStatus
+// skip rendering this node and will return WalkStatus.
 type RenderNodeFunc func(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool)
 
 // RendererOptions is a collection of supplementary parameters tweaking
@@ -95,7 +95,7 @@ type RendererOptions struct {
 	HeadingIDPrefix string
 	// If set, add this text to the back of each Heading ID, to ensure uniqueness.
 	HeadingIDSuffix string
-	// can over-write <p> for paragraph tag
+	// can overwrite <p> for paragraph tag
 	ParagraphTag string
 
 	Title string // Document title (used if CompletePage is set)
@@ -113,7 +113,7 @@ type RendererOptions struct {
 	// parsing code blocks and detecting callouts.
 	Comments [][]byte
 
-	// Generator is a meta tag that is inserted in the generated HTML so show what rendered it. It should not include the closing tag.
+	// Generator is a meta tag inserted in the generated HTML to show what rendered it. It should not include the closing tag.
 	// Defaults (note content quote is not closed) to `  <meta name="GENERATOR" content="github.com/gomarkdown/markdown markdown processor for Go`
 	Generator string
 }

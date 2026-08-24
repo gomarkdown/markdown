@@ -10,8 +10,8 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// Renderer renders to markdown. Allows to convert to a canonnical
-// form
+// Renderer renders to markdown. Allows converting to a canonical
+// form.
 type Renderer struct {
 	orderedListCounter map[int]int
 	// used to keep track of whether a given list item uses a paragraph

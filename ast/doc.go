@@ -1,4 +1,4 @@
 /*
-Package ast defines tree representation of a parsed markdown document.
+Package ast defines the tree representation of a parsed markdown document.
 */
 package ast
