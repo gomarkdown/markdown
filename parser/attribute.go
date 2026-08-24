@@ -162,6 +162,62 @@ func promoteParagraphImageAttrs(doc ast.Node) {
 	})
 }
 
+// applyAfterBlockAttribute parses a kramdown-style IAL on the line after
+// a block (`{: key="value"}`) and merges it onto the preceding block.
+// `{#id}` without a colon is left for prefix attributes so existing
+// Attributes documents keep applying those to the next block.
+func (p *Parser) applyAfterBlockAttribute(data []byte) int {
+	prev := p.lastBlock()
+	if prev == nil {
+		return 0
+	}
+	i := 0
+	if i < len(data) && data[i] == '\n' {
+		i++
+	}
+	i = skipCharN(data, i, ' ', 3)
+	if i >= len(data) || data[i] != '{' {
+		return 0
+	}
+	if i+1 >= len(data) || data[i+1] != ':' {
+		return 0
+	}
+	attr, n := parseAttributeList(data[i:], true)
+	if n == 0 {
+		return 0
+	}
+	j := i + n
+	if j < len(data) && data[j] == '\n' {
+		j++
+	}
+	applyAttribute(prev, attr)
+	return j
+}
+
+func isAfterBlockIAL(data []byte) bool {
+	i := skipCharN(data, 0, ' ', 3)
+	if i+1 >= len(data) || data[i] != '{' || data[i+1] != ':' {
+		return false
+	}
+	_, n := parseAttributeList(data[i:], true)
+	return n > 0
+}
+
+func (p *Parser) lastBlock() ast.Node {
+	n := p.tip
+	if n == nil {
+		return nil
+	}
+	if _, ok := n.(*ast.Document); ok {
+		ch := n.GetChildren()
+		if len(ch) == 0 {
+			return nil
+		}
+		return ch[len(ch)-1]
+	}
+	return n
+}
+
 func firstImageChild(n ast.Node) *ast.Image {
 	for _, c := range n.GetChildren() {
 		if t, ok := c.(*ast.Text); ok && len(bytes.TrimSpace(t.Literal)) == 0 {

@@ -57,6 +57,11 @@ func (p *Parser) paragraph(data []byte) int {
 			return i + refEnd
 		}
 
+		if p.extensions&Attributes != 0 && isAfterBlockIAL(current) {
+			p.renderParagraph(data[:i])
+			return i
+		}
+
 		// did we find a blank line marking the end of the paragraph?
 		if n := IsEmpty(current); n > 0 {
 			// did this blank line followed by a definition list item?

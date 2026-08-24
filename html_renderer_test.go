@@ -227,6 +227,43 @@ func TestMarkdownInHTMLOffLeavesTableRaw(t *testing.T) {
 	doTestsParam(t, tests, params)
 }
 
+func TestAfterBlockAttributes(t *testing.T) {
+	tests := []string{
+		"## foo\n{: data-line=\"1\"}\n",
+		"<h2 data-line=\"1\">foo</h2>\n",
+
+		"hello\n{: .cls}\n",
+		"<p class=\"cls\">hello</p>\n",
+
+		"{#myid}\n## foo\n",
+		"<h2 id=\"myid\">foo</h2>\n",
+
+		"## foo\n{#next}\n## bar\n",
+		"<h2>foo</h2>\n\n<h2 id=\"next\">bar</h2>\n",
+
+		"{#id}\n## foo\n{: data-line=\"1\"}\n",
+		"<h2 id=\"id\" data-line=\"1\">foo</h2>\n",
+
+		"{: data-line=\"1\"}\n## foo\n",
+		"<h2 data-line=\"1\">foo</h2>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions | parser.Attributes,
+	}
+	doTestsParam(t, tests, params)
+}
+
+func TestAfterBlockAttributesAutoHeadingID(t *testing.T) {
+	tests := []string{
+		"## foo\n{: data-line=\"1\"}\n",
+		"<h2 id=\"foo\" data-line=\"1\">foo</h2>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions | parser.Attributes | parser.AutoHeadingIDs,
+	}
+	doTestsParam(t, tests, params)
+}
+
 func TestHardLineBreakDoesNotApplyInsideHTMLBlock(t *testing.T) {
 	tests := []string{
 		"<div>\n  <a href=\"#\">\n    <img src=\"logo.png\" alt=\"Logo\">\n  </a>\n</div>\n\nHello\nWorld",

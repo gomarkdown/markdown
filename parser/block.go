@@ -51,10 +51,19 @@ func (p *Parser) Block(data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
-		// attributes that can be specific before a block element:
+		// attributes that can be specified before a block element:
 		//
 		// {#id .class1 .class2 key="value"}
+		//
+		// kramdown also allows an IAL on the line after a block:
+		//
+		// ## foo
+		// {: data-line="1"}
 		if p.extensions&Attributes != 0 {
+			if n := p.applyAfterBlockAttribute(data); n > 0 {
+				data = data[n:]
+				continue
+			}
 			data = p.attribute(data)
 		}
 
