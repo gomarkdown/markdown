@@ -343,3 +343,21 @@ gatherLines:
 
 	return
 }
+
+func isIndented(data []byte, indentSize int) int {
+	if len(data) == 0 {
+		return 0
+	}
+	if data[0] == '\t' {
+		return 1
+	}
+	if len(data) < indentSize {
+		return 0
+	}
+	for i := 0; i < indentSize; i++ {
+		if data[i] != ' ' {
+			return 0
+		}
+	}
+	return indentSize
+}
