@@ -126,6 +126,13 @@ type Parser struct {
 	allHeadingsWithAutoID []*ast.Heading
 
 	didParse bool
+
+	// Matching ']' for each '[' in the current Inline() buffer, lazily filled
+	// so a run of unmatched '[' is scanned once instead of once per '['
+	// (GHSA-85vw-wvf9-r522).
+	inlineBuf     []byte
+	bracketClose  []int
+	bracketNested []bool
 }
 
 // New creates a markdown parser with CommonExtensions.

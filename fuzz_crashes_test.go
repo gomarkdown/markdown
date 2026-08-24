@@ -2,6 +2,7 @@ package markdown
 
 import (
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -97,5 +98,49 @@ func TestTableRowTrailingSpaceCrasher(t *testing.T) {
 	for _, input := range inputs {
 		// Must not panic (Tables is enabled via the default CommonExtensions).
 		_ = ToHTML([]byte(input), nil, nil)
+	}
+}
+
+// GHSA-85vw-wvf9-r522: a run of unmatched '[' made link() rescan the rest of
+// the buffer from each '[', which is quadratic. Same for a balanced run of
+// '[' ... ']' that does not resolve to a reference.
+func TestGHSA_85vw_wvf9_r522_UnmatchedOpenBrackets(t *testing.T) {
+	n := 32 * 1024
+	input := strings.Repeat("[", n)
+	parseWithShortTimeout(t, input)
+	got := string(ToHTML([]byte(input), nil, nil))
+	want := "<p>" + strings.Repeat("[", n) + "</p>\n"
+	if got != want {
+		t.Fatalf("got %d bytes, want %d", len(got), len(want))
+	}
+}
+
+func TestGHSA_85vw_wvf9_r522_BalancedBrackets(t *testing.T) {
+	n := 16 * 1024
+	input := strings.Repeat("[", n) + strings.Repeat("]", n)
+	parseWithShortTimeout(t, input)
+}
+
+func TestGHSA_85vw_wvf9_r522_InnerShortcutStillResolves(t *testing.T) {
+	input := "[[[foo]]]\n\n[foo]: /url\n"
+	got := string(ToHTML([]byte(input), nil, nil))
+	if !strings.Contains(got, `<a href="/url">foo</a>`) {
+		t.Fatalf("inner shortcut was not resolved:\n%s", got)
+	}
+}
+
+func TestGHSA_85vw_wvf9_r522_InnerInlineStillResolves(t *testing.T) {
+	input := "[[foo](/url)]\n"
+	got := string(ToHTML([]byte(input), nil, nil))
+	if !strings.Contains(got, `<a href="/url">foo</a>`) {
+		t.Fatalf("inner inline link was not resolved:\n%s", got)
+	}
+}
+
+func TestGHSA_85vw_wvf9_r522_NestedReferenceStyle(t *testing.T) {
+	input := "[foo [bar] baz][ref]\n\n[ref]: /url\n"
+	got := string(ToHTML([]byte(input), nil, nil))
+	if !strings.Contains(got, `<a href="/url">`) {
+		t.Fatalf("nested reference-style link was not resolved:\n%s", got)
 	}
 }
