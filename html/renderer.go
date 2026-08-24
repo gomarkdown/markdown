@@ -517,6 +517,8 @@ func (r *Renderer) linkEnter(w io.Writer, link *ast.Link) {
 		titleBuff.WriteByte('"')
 		attrs = append(attrs, titleBuff.String())
 	}
+	attrs = append(attrs, BlockAttrs(link)...)
+	attrs = coalesceClassAttrs(attrs)
 	r.OutTag(w, "<a", attrs)
 }
 

@@ -51,6 +51,18 @@ func TestBlockAttribute(t *testing.T) {
 			},
 		},
 		{
+			data: []byte(`{:target="_blank"}`),
+			attr: &ast.Attribute{
+				Attrs: map[string][]byte{"target": []byte("_blank")},
+			},
+		},
+		{
+			data: []byte(`{: data-line="1"}`),
+			attr: &ast.Attribute{
+				Attrs: map[string][]byte{"data-line": []byte("1")},
+			},
+		},
+		{
 			data: []byte(`{key="value" #myid .myclass}`),
 			attr: &ast.Attribute{
 				ID:      []byte("myid"),

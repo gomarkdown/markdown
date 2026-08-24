@@ -41,6 +41,7 @@ const (
 	EmptyLinesBreakList                           // 2 empty lines break out of list
 	Includes                                      // Support including other files.
 	Mmark                                         // Support Mmark syntax, see https://mmark.miek.nl/post/syntax/
+	InlineAttributes                              // Parse {: key="value"} after links and images
 
 	CommonExtensions Extensions = NoIntraEmphasis | Tables | FencedCode |
 		Autolink | Strikethrough | SpaceHeadings | HeadingIDs |
@@ -323,6 +324,10 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		}
 		return ast.GoToNext
 	})
+
+	if p.extensions&Attributes != 0 {
+		promoteParagraphImageAttrs(p.Doc)
+	}
 
 	if p.Opts.Flags&SkipFootnoteList == 0 {
 		p.parseRefsToAST()

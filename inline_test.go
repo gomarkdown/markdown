@@ -1257,6 +1257,36 @@ func TestDisableSmartDashes(t *testing.T) {
 	}, TestParams{Flags: html.Smartypants | html.SmartypantsLatexDashes})
 }
 
+func TestInlineAttributes(t *testing.T) {
+	doTestsInlineParam(t, []string{
+		`[text](url){:target="_blank"}`,
+		"<p><a href=\"url\" target=\"_blank\">text</a></p>\n",
+
+		`[text](url){:.btn}`,
+		"<p><a href=\"url\" class=\"btn\">text</a></p>\n",
+
+		`![alt](/img.png){:align="left"}`,
+		"<p><img align=\"left\" src=\"/img.png\" alt=\"alt\" /></p>\n",
+	}, TestParams{extensions: parser.InlineAttributes})
+}
+
+func TestInlineAttributesOff(t *testing.T) {
+	doTestsInlineParam(t, []string{
+		`[text](url){:target="_blank"}`,
+		"<p><a href=\"url\">text</a>{:target=&quot;_blank&quot;}</p>\n",
+	}, TestParams{})
+}
+
+func TestAttributeOnImageNotParagraph(t *testing.T) {
+	doTestsParam(t, []string{
+		"{align=\"left\"}\n![alt](/img.png)\n",
+		"<p><img align=\"left\" src=\"/img.png\" alt=\"alt\" /></p>\n",
+
+		"{align=\"left\" style=\"object-fit:scale-down\"}\n![alt](/img.png)Having\n",
+		"<p><img align=\"left\" style=\"object-fit:scale-down\" src=\"/img.png\" alt=\"alt\" />Having</p>\n",
+	}, TestParams{extensions: parser.CommonExtensions | parser.Attributes})
+}
+
 func TestSkipLinks(t *testing.T) {
 	doTestsInlineParam(t, []string{
 		"[foo](gopher://foo.bar)",

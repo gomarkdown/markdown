@@ -357,6 +357,14 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		// [bla]() is also legal in CommonMark, so allow empty uLink
 	}
 
+	var inlineAttr *ast.Attribute
+	if p.extensions&InlineAttributes != 0 && (t == linkNormal || t == linkImg) {
+		if attr, n := parseAttributeList(data[i:], false); n > 0 {
+			inlineAttr = attr
+			i += n
+		}
+	}
+
 	// call the relevant rendering function
 	switch t {
 	case linkNormal:
@@ -365,6 +373,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			Title:       title,
 			DeferredID:  linkID,
 		}
+		applyAttribute(link, inlineAttr)
 		if len(altContent) > 0 {
 			ast.AppendChild(link, newTextNode(altContent))
 		} else {
@@ -382,6 +391,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			Destination: uLink,
 			Title:       title,
 		}
+		applyAttribute(image, inlineAttr)
 		ast.AppendChild(image, newTextNode(data[1:txtE]))
 		return i + 1, image
 
