@@ -26,10 +26,12 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 		return
 	}
 	p.nesting++
-	prevBuf, prevClose, prevNested := p.inlineBuf, p.bracketClose, p.bracketNested
-	p.inlineBuf = data
-	p.bracketClose = nil
-	p.bracketNested = nil
+	prev := p.brackets
+	p.brackets = bracketTable{data: data}
+	defer func() {
+		p.brackets = prev
+		p.nesting--
+	}()
 	beg, end := 0, 0
 
 	n := len(data)
@@ -60,10 +62,6 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 		}
 		ast.AppendChild(currBlock, newTextNode(data[beg:end]))
 	}
-	p.inlineBuf = prevBuf
-	p.bracketClose = prevClose
-	p.bracketNested = prevNested
-	p.nesting--
 }
 
 // single and double emphasis parsing
@@ -275,62 +273,6 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 	return 0, nil
 }
 
-// lookupBracket returns the index in data of the ']' matching a '[' at open,
-// whether that pair contains a nested bracket pair, and whether a match exists.
-func (p *Parser) lookupBracket(data []byte, open int) (closeAt int, nested bool, ok bool) {
-	p.ensureBracketTable(data)
-	if open < 0 || open >= len(p.bracketClose) {
-		return 0, false, false
-	}
-	closeAt = p.bracketClose[open]
-	if closeAt < 0 {
-		return 0, false, false
-	}
-	return closeAt, p.bracketNested[open], true
-}
-
-func sameBuf(a, b []byte) bool {
-	return len(a) == len(b) && (len(a) == 0 || &a[0] == &b[0])
-}
-
-// ensureBracketTable fills bracketClose/bracketNested for data, matching the
-// escape rules of the old linear scan in link(): a '[' or ']' is ignored when
-// the previous byte is a backslash (the backslash is not itself unescaped).
-func (p *Parser) ensureBracketTable(data []byte) {
-	if p.bracketClose != nil && sameBuf(p.inlineBuf, data) {
-		return
-	}
-	n := len(data)
-	closeAt := make([]int, n)
-	nested := make([]bool, n)
-	for i := 0; i < n; i++ {
-		closeAt[i] = -1
-	}
-	stack := make([]int, 0, 16)
-	for i := 0; i < n; i++ {
-		if i > 0 && data[i-1] == '\\' {
-			continue
-		}
-		switch data[i] {
-		case '[':
-			stack = append(stack, i)
-		case ']':
-			if len(stack) == 0 {
-				continue
-			}
-			open := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			closeAt[open] = i
-			if len(stack) > 0 {
-				nested[stack[len(stack)-1]] = true
-			}
-		}
-	}
-	p.inlineBuf = data
-	p.bracketClose = closeAt
-	p.bracketNested = nested
-}
-
 // '[': parse a link or an image or a footnote or a citation
 func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// no links allowed inside regular links, footnote, and deferred footnotes
@@ -366,7 +308,6 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	}
 
 	open := offset
-	orig := data
 	data = data[offset:]
 
 	if t == linkCitation {
@@ -380,9 +321,9 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 		textHasNl                       = false
 	)
 
-	// Match ']' from a table computed once per Inline() buffer so a run of
-	// unmatched '[' is O(n) instead of O(n²) (GHSA-85vw-wvf9-r522).
-	closeAt, nested, found := p.lookupBracket(orig, open)
+	// Match ']' from the Inline() buffer table so a run of unmatched '[' is
+	// O(n) instead of O(n²) (GHSA-85vw-wvf9-r522).
+	closeAt, nested, found := p.brackets.lookup(open)
 	if !found {
 		return 0, nil
 	}
@@ -617,9 +558,10 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			title = ref.title
 		} else {
 			// Nested [...] cannot be a stored reference label (labels end at
-			// the first ']'). Skip the lookup: it cannot match, and doing it
-			// for every nested '[' is quadratic (GHSA-85vw-wvf9-r522).
-			if nested {
+			// the first ']'). Skip the map lookup: it cannot match, and doing
+			// it for every nested '[' is quadratic (GHSA-85vw-wvf9-r522).
+			// Still consult ReferenceOverride, which sees the full inner text.
+			if nested && p.ReferenceOverride == nil {
 				return 0, nil
 			}
 			// find the reference with matching id

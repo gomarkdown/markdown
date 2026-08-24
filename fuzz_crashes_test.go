@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 )
 
 // crashes found with go-fuzz
@@ -142,5 +143,19 @@ func TestGHSA_85vw_wvf9_r522_NestedReferenceStyle(t *testing.T) {
 	got := string(ToHTML([]byte(input), nil, nil))
 	if !strings.Contains(got, `<a href="/url">`) {
 		t.Fatalf("nested reference-style link was not resolved:\n%s", got)
+	}
+}
+
+func TestGHSA_85vw_wvf9_r522_NestedReferenceOverride(t *testing.T) {
+	p := parser.New()
+	p.ReferenceOverride = func(reference string) (*parser.Reference, bool) {
+		if reference == "[foo]" {
+			return &parser.Reference{Link: "/url"}, true
+		}
+		return nil, false
+	}
+	got := string(ToHTML([]byte("[[foo]]\n"), p, nil))
+	if !strings.Contains(got, `<a href="/url">`) {
+		t.Fatalf("ReferenceOverride was not applied to nested label:\n%s", got)
 	}
 }
