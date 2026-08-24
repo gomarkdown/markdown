@@ -193,6 +193,14 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 
 	p.refs[id] = ref
 
+	if noteID == 0 {
+		p.pendingRefDef = &ast.ReferenceDefinition{
+			Label:       data[idOffset:idEnd],
+			Destination: ref.link,
+			Title:       ref.title,
+		}
+	}
+
 	return lineEnd
 }
 

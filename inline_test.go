@@ -642,6 +642,11 @@ func TestReferenceLink(t *testing.T) {
 
 		"[link][ref]\n   [ref]: /url/",
 		"<p><a href=\"/url/\">link</a></p>\n",
+
+		// Issue #244: reference definitions stay in the AST but must not
+		// change HTML output.
+		"Hello [world][wiki-world]\n\n[wiki-world]: https://wikipedia.com/blah-blah-blah\n",
+		"<p>Hello <a href=\"https://wikipedia.com/blah-blah-blah\">world</a></p>\n",
 	}
 	doLinkTestsInline(t, tests)
 }

@@ -115,6 +115,11 @@ type Parser struct {
 	// Attributes are attached to block level elements.
 	attr *ast.Attribute
 
+	// pendingRefDef is a reference definition detected at the start of a
+	// paragraph line. It is added after the preceding paragraph so source
+	// order is preserved.
+	pendingRefDef *ast.ReferenceDefinition
+
 	includeStack *incStack
 
 	// collect headings where we auto-generated id so that we can
@@ -252,7 +257,7 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 		*ast.CrossReference, *ast.Citation, *ast.Index, *ast.Footnotes,
 		*ast.HorizontalRule, *ast.Math, *ast.Text, *ast.HTMLBlock, *ast.CodeBlock,
 		*ast.Softbreak, *ast.Hardbreak, *ast.NonBlockingSpace, *ast.Code, *ast.HTMLSpan,
-		*ast.Callout, *ast.Subscript, *ast.Superscript:
+		*ast.Callout, *ast.Subscript, *ast.Superscript, *ast.ReferenceDefinition:
 		return false
 	}
 	if o, ok := n.(ast.CanContain); ok {

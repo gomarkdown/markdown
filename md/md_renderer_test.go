@@ -195,6 +195,22 @@ func TestRenderList(t *testing.T) {
 	testRendering(t, input, expected, rendererOpts...)
 }
 
+func TestRenderReferenceDefinitionRoundTrip(t *testing.T) {
+	source := []byte("Hello [world][wiki-world]\n\n[wiki-world]: https://wikipedia.com/blah-blah-blah \"Wiki\"\n")
+	p := parser.NewWithExtensions(parser.CommonExtensions)
+	input := p.Parse(source)
+	expected := "Hello [world][wiki-world]\n\n[wiki-world]: https://wikipedia.com/blah-blah-blah \"Wiki\"\n"
+	testRendering(t, input, expected)
+}
+
+func TestRenderShortcutReferenceRoundTrip(t *testing.T) {
+	source := []byte("[ref]\n\n[ref]: /url/\n")
+	p := parser.NewWithExtensions(parser.CommonExtensions)
+	input := p.Parse(source)
+	expected := "[ref]\n\n[ref]: /url/\n"
+	testRendering(t, input, expected)
+}
+
 func testRendering(t *testing.T, input ast.Node, expected string, opts ...RendererOpt) {
 	renderer := NewRenderer(opts...)
 	result := string(markdown.Render(input, renderer))

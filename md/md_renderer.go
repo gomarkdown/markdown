@@ -308,9 +308,29 @@ func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 	}
 }
 
+func linkPlainText(node *ast.Link) []byte {
+	var b []byte
+	for _, c := range node.GetChildren() {
+		t, ok := c.(*ast.Text)
+		if !ok {
+			return nil
+		}
+		b = append(b, t.Literal...)
+	}
+	return b
+}
+
 func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 	if entering {
 		r.outs(w, "[")
+	} else if len(node.DeferredID) > 0 && (r.C == nil || r.C.Flags&renderLinksInFooter == 0) {
+		if bytes.EqualFold(linkPlainText(node), node.DeferredID) {
+			r.outs(w, "]")
+		} else {
+			r.outs(w, "][")
+			r.out(w, escape(node.DeferredID))
+			r.outs(w, "]")
+		}
 	} else {
 		link := string(escape(node.Destination))
 		title := string(node.Title)
@@ -419,6 +439,19 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Footnotes:
 		// nothing by default; just output the list.
+	case *ast.ReferenceDefinition:
+		if entering {
+			r.outs(w, "[")
+			r.out(w, node.Label)
+			r.outs(w, "]: ")
+			r.out(w, node.Destination)
+			if len(node.Title) > 0 {
+				r.outs(w, " \"")
+				r.out(w, node.Title)
+				r.outs(w, "\"")
+			}
+			r.outs(w, "\n")
+		}
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}

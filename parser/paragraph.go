@@ -50,6 +50,10 @@ func (p *Parser) paragraph(data []byte) int {
 		// reference:
 		if refEnd := isReference(p, current, tabSize); refEnd > 0 {
 			p.renderParagraph(data[:i])
+			if p.pendingRefDef != nil {
+				p.AddBlock(p.pendingRefDef)
+				p.pendingRefDef = nil
+			}
 			return i + refEnd
 		}
 

@@ -335,6 +335,9 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 			if len(lr.text) > 0 {
 				altContent = lr.text
 			}
+			if len(linkID) == 0 && noteID == 0 {
+				linkID = id
+			}
 		}
 
 		// rewind the whitespace

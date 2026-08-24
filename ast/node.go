@@ -432,6 +432,17 @@ type Footnotes struct {
 	Container
 }
 
+// ReferenceDefinition is a [label]: destination "title" definition.
+// Links still resolve Destination at parse time; this node is additive so
+// round-trippers can recover the original reference syntax.
+type ReferenceDefinition struct {
+	Leaf
+
+	Label       []byte
+	Destination []byte
+	Title       []byte
+}
+
 func removeNodeFromArray(a []Node, node Node) []Node {
 	n := len(a)
 	for i := 0; i < n; i++ {

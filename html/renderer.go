@@ -581,10 +581,24 @@ func (r *Renderer) Image(w io.Writer, node *ast.Image, entering bool) {
 	}
 }
 
+// prevVisibleBlock skips siblings that emit no HTML, such as
+// reference definitions, so inter-block spacing stays stable.
+func prevVisibleBlock(n ast.Node) ast.Node {
+	prev := ast.GetPrevNode(n)
+	for prev != nil {
+		if _, ok := prev.(*ast.ReferenceDefinition); ok {
+			prev = ast.GetPrevNode(prev)
+			continue
+		}
+		return prev
+	}
+	return nil
+}
+
 func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	// TODO: untangle this clusterfuck about when the newlines need
 	// to be added and when not.
-	prev := ast.GetPrevNode(para)
+	prev := prevVisibleBlock(para)
 	if prev != nil {
 		switch prev.(type) {
 		case *ast.HTMLBlock, *ast.List, *ast.Paragraph, *ast.Heading, *ast.CaptionFigure, *ast.CodeBlock, *ast.BlockQuote, *ast.Aside, *ast.HorizontalRule:
@@ -1142,6 +1156,8 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.OutOneOf(w, false, "<sup>", "</sup>")
 	case *ast.Footnotes:
 		// nothing by default; just output the list.
+	case *ast.ReferenceDefinition:
+		// Definitions are resolved onto links at parse time; omit from HTML.
 	default:
 		panic(fmt.Sprintf("Unknown node %T", node))
 	}
