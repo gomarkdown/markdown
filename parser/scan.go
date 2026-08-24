@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"unicode"
 	"unicode/utf8"
 )
@@ -121,6 +122,9 @@ func IsAlnum(c byte) bool {
 }
 
 func NormalizeNewlines(d []byte) []byte {
+	if bytes.IndexByte(d, '\r') < 0 {
+		return d
+	}
 	res := make([]byte, len(d))
 	copy(res, d)
 	d = res

@@ -468,6 +468,22 @@ func maybeAutoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 	if p.InsideLink || len(data) < offset+shortestPrefix {
 		return 0, nil
 	}
+	// Handler is registered on h/m/f. Almost all hits are words like "the"/"from".
+	c1 := data[offset+1] | 0x20
+	switch data[offset] | 0x20 {
+	case 'h':
+		if c1 != 't' { // http(s)
+			return 0, nil
+		}
+	case 'm':
+		if c1 != 'a' { // mailto
+			return 0, nil
+		}
+	case 'f':
+		if c1 != 't' && c1 != 'i' { // ftp, file
+			return 0, nil
+		}
+	}
 	for _, prefix := range protocolPrefixes {
 		endOfHead := offset + 8 // 8 is the len() of the longest prefix
 		if endOfHead > len(data) {

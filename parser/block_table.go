@@ -1,6 +1,10 @@
 package parser
 
-import "github.com/gomarkdown/markdown/ast"
+import (
+	"bytes"
+
+	"github.com/gomarkdown/markdown/ast"
+)
 
 // check if the specified position is preceded by an odd number of backslashes
 func isBackslashEscaped(data []byte, i int) bool {
@@ -124,6 +128,15 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 	colCount := 1
 	headerIsUnderline := true
 	headerIsWithEmptyFields := true
+	// Most lines are not table headers. A header needs a '|', so reject
+	// the first line with a SIMD IndexByte before the per-byte scan.
+	lineEnd := bytes.IndexByte(data, '\n')
+	if lineEnd < 0 {
+		lineEnd = len(data)
+	}
+	if bytes.IndexByte(data[:lineEnd], '|') < 0 {
+		return
+	}
 	for i = 0; i < len(data) && data[i] != '\n'; i++ {
 		// If we are in a codespan we should discount any | we see, check for that here and skip ahead.
 		if data[i] == '`' {

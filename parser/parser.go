@@ -4,7 +4,6 @@ Package parser implements a parser for markdown text that generates an AST (abst
 package parser
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -248,20 +247,19 @@ func canNodeContain(n ast.Node, v ast.Node) bool {
 	case *ast.TableRow:
 		_, ok := v.(*ast.TableCell)
 		return ok
+	case *ast.Paragraph, *ast.Heading, *ast.MathBlock, *ast.TableCell, *ast.Caption,
+		*ast.DocumentMatter, *ast.Emph, *ast.Strong, *ast.Del, *ast.Link, *ast.Image,
+		*ast.CrossReference, *ast.Citation, *ast.Index, *ast.Footnotes,
+		*ast.HorizontalRule, *ast.Math, *ast.Text, *ast.HTMLBlock, *ast.CodeBlock,
+		*ast.Softbreak, *ast.Hardbreak, *ast.NonBlockingSpace, *ast.Code, *ast.HTMLSpan,
+		*ast.Callout, *ast.Subscript, *ast.Superscript:
+		return false
 	}
-	// for nodes implemented outside of ast package, allow them
-	// to implement this logic via CanContain interface
 	if o, ok := n.(ast.CanContain); ok {
 		return o.CanContain(v)
 	}
-	// for container nodes outside of ast package default to true
-	// because false is a bad default
-	typ := fmt.Sprintf("%T", n)
-	customNode := !strings.HasPrefix(typ, "*ast.")
-	if customNode {
-		return n.AsLeaf() == nil
-	}
-	return false
+	// Custom container nodes (not in package ast) default to true.
+	return n.AsLeaf() == nil
 }
 
 func (p *Parser) closeUnmatchedBlocks() {
