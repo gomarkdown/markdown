@@ -1,0 +1,5 @@
+# Testdata is split and compared as Unix text. Keep LF on all checkouts so
+# Windows core.autocrlf does not turn "+++\n" into "+++\r\n".
+testdata/** text eol=lf
+*.go text eol=lf
+

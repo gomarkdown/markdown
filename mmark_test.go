@@ -34,6 +34,9 @@ func readTestFile(t *testing.T, fileName string) []*testData {
 	if err != nil {
 		t.Fatalf("ioutil.ReadFile('%s') failed with %s", path, err)
 	}
+	// Working copies may be CRLF (core.autocrlf). Split on "+++\n", so
+	// normalize first or the file is one unmatched part.
+	d = NormalizeNewlines(d)
 	parts := bytes.Split(d, []byte("+++\n"))
 	if len(parts)%2 != 0 {
 		t.Fatalf("odd test tuples in file %s: %d", path, len(parts))
