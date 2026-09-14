@@ -79,6 +79,11 @@ Comparing to other markdown parsers: https://babelmark.github.io/
 We don't protect against malicious content. When dealing with user-provided
 markdown, run the rendered HTML through an HTML sanitizer such as [Bluemonday](https://github.com/microcosm-cc/bluemonday).
 
+In particular, the `parser.Attributes` and `parser.InlineAttributes`
+extensions let the markdown author set arbitrary HTML attributes such as
+`onclick` via `{: key="value"}`. That is by design, so never enable them for
+untrusted input, even with `html.SkipHTML`.
+
 Here's an example of simple usage with Bluemonday:
 
 ```go
