@@ -1277,14 +1277,25 @@ func TestInlineAttributesOff(t *testing.T) {
 	}, TestParams{})
 }
 
-func TestAttributeOnImageNotParagraph(t *testing.T) {
+// A block attribute before a paragraph stays on the <p> even when the
+// paragraph starts with an image (issue #363). Use the InlineAttributes
+// syntax `![alt](x){:.cls}` to put attributes on the <img> itself.
+func TestBlockAttributeStaysOnParagraphWithImage(t *testing.T) {
 	doTestsParam(t, []string{
-		"{align=\"left\"}\n![alt](/img.png)\n",
-		"<p><img align=\"left\" src=\"/img.png\" alt=\"alt\" /></p>\n",
+		"{.the-class}\n![alt](/img.png)\n",
+		"<p class=\"the-class\"><img src=\"/img.png\" alt=\"alt\" /></p>\n",
 
-		"{align=\"left\" style=\"object-fit:scale-down\"}\n![alt](/img.png)Having\n",
-		"<p><img align=\"left\" style=\"object-fit:scale-down\" src=\"/img.png\" alt=\"alt\" />Having</p>\n",
+		"{align=\"left\"}\n![alt](/img.png)Having\n",
+		"<p align=\"left\"><img src=\"/img.png\" alt=\"alt\" />Having</p>\n",
+
+		"{.the-class}\nSample text.\n",
+		"<p class=\"the-class\">Sample text.</p>\n",
 	}, TestParams{extensions: parser.CommonExtensions | parser.Attributes})
+
+	doTestsParam(t, []string{
+		"{.the-class}\n![alt](/img.png){:.img-class}\n",
+		"<p class=\"the-class\"><img class=\"img-class\" src=\"/img.png\" alt=\"alt\" /></p>\n",
+	}, TestParams{extensions: parser.CommonExtensions | parser.Attributes | parser.InlineAttributes})
 }
 
 func TestSkipLinks(t *testing.T) {

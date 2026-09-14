@@ -326,10 +326,6 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		return ast.GoToNext
 	})
 
-	if p.extensions&Attributes != 0 {
-		promoteParagraphImageAttrs(p.Doc)
-	}
-
 	if p.Opts.Flags&SkipFootnoteList == 0 {
 		p.parseRefsToAST()
 	}

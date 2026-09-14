@@ -140,28 +140,6 @@ func applyAttribute(n ast.Node, attr *ast.Attribute) {
 	}
 }
 
-// promoteParagraphImageAttrs moves block attributes from a paragraph onto
-// the image it wraps. `{align="left"}\n![x](y)` would otherwise put the
-// attributes on the <p> instead of the <img> (issue #278).
-func promoteParagraphImageAttrs(doc ast.Node) {
-	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
-		if !entering {
-			return ast.GoToNext
-		}
-		para, ok := node.(*ast.Paragraph)
-		if !ok || para.Attribute == nil {
-			return ast.GoToNext
-		}
-		img := firstImageChild(para)
-		if img == nil {
-			return ast.GoToNext
-		}
-		applyAttribute(img, para.Attribute)
-		para.Attribute = nil
-		return ast.GoToNext
-	})
-}
-
 // applyAfterBlockAttribute parses a kramdown-style IAL on the line after
 // a block (`{: key="value"}`) and merges it onto the preceding block.
 // `{#id}` without a colon is left for prefix attributes so existing
@@ -216,19 +194,6 @@ func (p *Parser) lastBlock() ast.Node {
 		return ch[len(ch)-1]
 	}
 	return n
-}
-
-func firstImageChild(n ast.Node) *ast.Image {
-	for _, c := range n.GetChildren() {
-		if t, ok := c.(*ast.Text); ok && len(bytes.TrimSpace(t.Literal)) == 0 {
-			continue
-		}
-		if img, ok := c.(*ast.Image); ok {
-			return img
-		}
-		return nil
-	}
-	return nil
 }
 
 // key="value" quotes are mandatory.
