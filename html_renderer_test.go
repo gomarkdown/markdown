@@ -113,6 +113,122 @@ func TestAttributeEscapeHeadingIDAndFencedInfo(t *testing.T) {
 	}
 }
 
+// GHSA-g6w5-3rhc-c379: the same unrestricted values reach the table of
+// contents, figure IDs, citation links and kramdown block attributes, and
+// must be escaped there too.
+func TestAttributeEscapeTOCFigureCitationAttrs(t *testing.T) {
+	cases := []struct {
+		name    string
+		input   string
+		exts    parser.Extensions
+		flags   html.Flags
+		want    string
+		wantNot string
+	}{
+		{
+			name:    "toc-heading-id-tag-breakout",
+			input:   "# T {#x\"><script>alert(1)</script>}\n\nbody\n",
+			exts:    parser.CommonExtensions,
+			flags:   html.CommonFlags | html.TOC,
+			want:    `<a href="#x&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;">T</a>`,
+			wantNot: `<script>`,
+		},
+		{
+			name:    "toc-heading-id-attr-injection",
+			input:   "# T {#\" onmouseover=\"alert(1)}\n",
+			exts:    parser.CommonExtensions,
+			flags:   html.CommonFlags | html.TOC,
+			want:    `<a href="#&quot; onmouseover=&quot;alert(1)">T</a>`,
+			wantNot: `onmouseover="alert(1)"`,
+		},
+		{
+			name:    "toc-skiphtml-safelink",
+			input:   "# T {#x\"><script>alert(1)</script>}\n",
+			exts:    parser.CommonExtensions,
+			flags:   html.SkipHTML | html.Safelink | html.TOC,
+			want:    `<a href="#x&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;">T</a>`,
+			wantNot: `<script>`,
+		},
+		{
+			name:    "figure-fenced-caption-id",
+			input:   "```\ncode\n```\nFigure: cap {#x\"><script>alert(1)</script>}\n",
+			exts:    parser.CommonExtensions | parser.Mmark,
+			flags:   html.CommonFlags,
+			want:    `<figure id="x&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;">`,
+			wantNot: `<script>`,
+		},
+		{
+			name:    "figure-block-id",
+			input:   "!---\ntext\n!---\nFigure: cap {#x\" onclick=\"alert(1)}\n",
+			exts:    parser.CommonExtensions | parser.Mmark,
+			flags:   html.CommonFlags,
+			want:    `<figure id="x&quot; onclick=&quot;alert(1)">`,
+			wantNot: `onclick="alert(1)"`,
+		},
+		{
+			name:    "citation-destination",
+			input:   "see [@a\"><svg onload=alert(1) x=\"]\n",
+			exts:    parser.CommonExtensions | parser.Mmark,
+			flags:   html.CommonFlags,
+			want:    `<a href="#a&quot;&gt;&lt;svg onload=alert(1) x=&quot;">`,
+			wantNot: `<svg`,
+		},
+		{
+			name:  "block-attrs-id-class",
+			input: "para\n{: #x\"><script>alert(1)</script> .c\"><b>}\n",
+			exts:  parser.CommonExtensions | parser.Attributes,
+			flags: html.CommonFlags,
+			// The unbalanced quote makes the parser swallow the rest of the
+			// list into the id; what matters is that it is escaped.
+			want:    `<p id="x&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt; .c&quot;&gt;&lt;b&gt;">para</p>`,
+			wantNot: `<script>`,
+		},
+		{
+			name:    "block-attrs-class-breakout",
+			input:   "para\n{: .c<b>x .d}\n",
+			exts:    parser.CommonExtensions | parser.Attributes,
+			flags:   html.CommonFlags,
+			want:    `<p class="c&lt;b&gt;x d">para</p>`,
+			wantNot: `<b>`,
+		},
+		{
+			name:    "block-attrs-value-breakout",
+			input:   "para\n{: title=\"x\\\" onclick=\\\"alert(1)\"}\n",
+			exts:    parser.CommonExtensions | parser.Attributes,
+			flags:   html.CommonFlags,
+			wantNot: `onclick="alert(1)"`,
+		},
+		{
+			name:    "block-attrs-unsafe-key-dropped",
+			input:   "para\n{: a/b=\"1\" data-x=\"2\"}\n",
+			exts:    parser.CommonExtensions | parser.Attributes,
+			flags:   html.CommonFlags,
+			want:    `<p data-x="2">para</p>`,
+			wantNot: `a/b`,
+		},
+		{
+			name:  "ordinary-ids-unchanged",
+			input: "# T {#intro}\n\n```\ncode\n```\nFigure: cap {#fig:1}\n\nsee [@rfc1]\n\npara\n{: #p1 .cls data-x=\"1\"}\n",
+			exts:  parser.CommonExtensions | parser.Mmark | parser.Attributes,
+			flags: html.CommonFlags | html.TOC,
+			want:  `<a href="#intro">T</a>`,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := parser.NewWithExtensions(tc.exts)
+			r := html.NewRenderer(html.RendererOptions{Flags: tc.flags})
+			got := string(ToHTML([]byte(tc.input), p, r))
+			if tc.want != "" && !bytes.Contains([]byte(got), []byte(tc.want)) {
+				t.Errorf("expected output to contain %q\ngot:\n%s", tc.want, got)
+			}
+			if tc.wantNot != "" && bytes.Contains([]byte(got), []byte(tc.wantNot)) {
+				t.Errorf("expected output not to contain raw %q\ngot:\n%s", tc.wantNot, got)
+			}
+		})
+	}
+}
+
 // TestCodeBlockClassCoalescing verifies that when a code block has both
 // a language annotation and a custom class attribute, they are merged into
 // a single class attribute. See https://github.com/gomarkdown/markdown/issues/209.

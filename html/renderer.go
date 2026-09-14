@@ -152,6 +152,32 @@ var Escaper = [256][]byte{
 	'"': []byte("&quot;"),
 }
 
+// escapeAttr returns s with &, <, > and " escaped so it can be embedded in
+// a double-quoted HTML attribute value (GHSA-gc99-qr5c-98ff, GHSA-g6w5-3rhc-c379).
+func escapeAttr(s string) string {
+	var buf bytes.Buffer
+	EscapeHTML(&buf, []byte(s))
+	return buf.String()
+}
+
+// isSafeAttrName reports whether name contains only characters that cannot
+// terminate an attribute or start a new one: ASCII letters, digits, '-', '_', ':'.
+func isSafeAttrName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		switch {
+		case 'a' <= c && c <= 'z', 'A' <= c && c <= 'Z', '0' <= c && c <= '9':
+		case c == '-', c == '_', c == ':':
+		default:
+			return false
+		}
+	}
+	return true
+}
+
 // EscapeHTML writes html-escaped d to w. It escapes &, <, > and " characters.
 func EscapeHTML(w io.Writer, d []byte) {
 	var start, end int
@@ -949,7 +975,7 @@ func (r *Renderer) CaptionFigure(w io.Writer, figure *ast.CaptionFigure, enterin
 	// TODO(miek): copy more generic ways of mmark over to here.
 	fig := "<figure"
 	if figure.HeadingID != "" {
-		fig += ` id="` + figure.HeadingID + `">`
+		fig += ` id="` + escapeAttr(figure.HeadingID) + `">`
 	} else {
 		fig += ">"
 	}
@@ -1030,7 +1056,10 @@ func (r *Renderer) Citation(w io.Writer, node *ast.Citation) {
 			attr[0] = `class="suppressed"`
 		}
 		r.OutTag(w, "<cite", attr)
-		r.Outs(w, fmt.Sprintf(`<a href="#%s">`+r.Opts.CitationFormatString+`</a>`, c, c))
+		// Escape the destination for both the href attribute and the visible
+		// text so untrusted [@dest] cannot inject markup (GHSA-g6w5-3rhc-c379).
+		dest := escapeAttr(string(c))
+		r.Outs(w, fmt.Sprintf(`<a href="#%s">`+r.Opts.CitationFormatString+`</a>`, dest, dest))
 		r.Outs(w, "</cite>")
 	}
 }
@@ -1269,7 +1298,9 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 				}
 			}
 
-			fmt.Fprintf(&buf, `<a href="#%s">`, nodeData.HeadingID)
+			// Escape like HeadingEnter does; explicit {#id} values are
+			// unrestricted (GHSA-g6w5-3rhc-c379).
+			fmt.Fprintf(&buf, `<a href="#%s">`, escapeAttr(nodeData.HeadingID))
 			headingCount++
 			return ast.GoToNext
 		}
@@ -1364,14 +1395,18 @@ func BlockAttrs(node ast.Node) []string {
 		return nil
 	}
 
+	// Values come from untrusted markdown ({#id .class key="value"}), so
+	// escape them and drop keys that could break out of the attribute list
+	// (GHSA-g6w5-3rhc-c379). Note that this feature lets the author set
+	// arbitrary attributes by design; do not enable it for untrusted input.
 	var s []string
 	if attr.ID != nil {
-		s = append(s, fmt.Sprintf(`%s="%s"`, IDTag, attr.ID))
+		s = append(s, fmt.Sprintf(`%s="%s"`, IDTag, escapeAttr(string(attr.ID))))
 	}
 
 	classes := ""
 	for _, c := range attr.Classes {
-		classes += " " + string(c)
+		classes += " " + escapeAttr(string(c))
 	}
 	if classes != "" {
 		s = append(s, fmt.Sprintf(`class="%s"`, classes[1:])) // skip space we added.
@@ -1380,11 +1415,13 @@ func BlockAttrs(node ast.Node) []string {
 	// sort the attributes so it remain stable between runs
 	var keys = []string{}
 	for k := range attr.Attrs {
-		keys = append(keys, k)
+		if isSafeAttrName(k) {
+			keys = append(keys, k)
+		}
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		s = append(s, fmt.Sprintf(`%s="%s"`, k, attr.Attrs[k]))
+		s = append(s, fmt.Sprintf(`%s="%s"`, k, escapeAttr(string(attr.Attrs[k]))))
 	}
 
 	return s
