@@ -1418,14 +1418,12 @@ func TestEntityNullByte(t *testing.T) {
 
 func TestEntityNumericOnly(t *testing.T) {
 	doTestsInlineParam(t, []string{
-		// only &#...; is a numeric reference; other names pass through as
+		// only &#...; is a numeric reference; an unknown name is literal
 		// text, which the HTML renderer then escapes
 		"&z1234;\n",
 		"<p>&amp;z1234;</p>\n",
 		"&a41;\n",
 		"<p>&amp;a41;</p>\n",
-		"&hellip;\n",
-		"<p>&amp;hellip;</p>\n",
 		"&#65; &#x41;\n",
 		"<p>A A</p>\n",
 		// values past the Unicode range are invalid even when they would
@@ -1469,6 +1467,29 @@ func TestLinkAfterEscapedBackslash(t *testing.T) {
 		// an escaped closing bracket does not end the link text
 		"[a\\]b](http://x)\n",
 		"<p><a href=\"http://x\">a]b</a></p>\n",
+	}, TestParams{})
+}
+
+func TestNamedEntities(t *testing.T) {
+	// A known named entity becomes its character, which the renderer then
+	// escapes if it has to; it is never double-escaped.
+	doTestsInlineParam(t, []string{
+		"&hellip;\n",
+		"<p>…</p>\n",
+		"&copy; 2004\n",
+		"<p>© 2004</p>\n",
+		"AT&amp;T\n",
+		"<p>AT&amp;T</p>\n",
+		"&lt;b&gt; &quot;x&quot;\n",
+		"<p>&lt;b&gt; &quot;x&quot;</p>\n",
+		"a&nbsp;b\n",
+		"<p>a b</p>\n",
+		// names are case sensitive in the HTML5 table
+		"&Hellip;\n",
+		"<p>&amp;Hellip;</p>\n",
+		// inside a code span the reference is literal
+		"`&hellip;`\n",
+		"<p><code>&amp;hellip;</code></p>\n",
 	}, TestParams{})
 }
 

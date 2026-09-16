@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"html"
 	"regexp"
 	"strconv"
 
@@ -548,14 +549,17 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 	}
 
 	ent := data[:end]
-	// undo &amp; escaping or it will be converted to &amp;amp; by another
-	// escaper in the renderer
-	if bytes.Equal(ent, []byte("&amp;")) {
-		return end, newTextNode([]byte{'&'})
+	if ent[1] != '#' {
+		// A named entity becomes the character it names, so the renderer
+		// escapes the result rather than the ampersand of the reference
+		// (&amp; round-trips as &amp; instead of &amp;amp;). A name the
+		// HTML5 table does not know stays literal text.
+		if s := html.UnescapeString(string(ent)); s != string(ent) {
+			return end, newTextNode([]byte(s))
+		}
+		return end, newTextNode(ent)
 	}
-	// only numeric references, &#NNN; and &#xHHH;, are decoded here; named
-	// entities pass through for the renderer
-	if len(ent) < 4 || ent[1] != '#' {
+	if len(ent) < 4 {
 		return end, newTextNode(ent)
 	}
 
