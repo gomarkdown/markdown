@@ -817,8 +817,9 @@ func helperFindEmphChar(data []byte, c byte) int {
 		if i >= len(data) {
 			return 0
 		}
-		// do not count escaped chars
-		if i != 0 && data[i-1] == '\\' {
+		// do not count escaped chars; an even run of backslashes escapes
+		// itself, not the delimiter
+		if isEscape(data, i) {
 			i++
 			continue
 		}

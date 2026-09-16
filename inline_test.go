@@ -1439,6 +1439,23 @@ func TestEntityNumericOnly(t *testing.T) {
 	}, TestParams{})
 }
 
+func TestEmphasisAfterEscapedBackslash(t *testing.T) {
+	// "\\" is an escaped backslash, so the delimiter after it is live
+	doTestsInlineParam(t, []string{
+		"*foo\\\\*\n",
+		"<p><em>foo\\</em></p>\n",
+		"**foo\\\\**\n",
+		"<p><strong>foo\\</strong></p>\n",
+		"_foo\\\\_\n",
+		"<p><em>foo\\</em></p>\n",
+		// a single backslash still escapes the delimiter
+		"*foo\\*\n",
+		"<p>*foo*</p>\n",
+		"*foo\\* bar*\n",
+		"<p><em>foo* bar</em></p>\n",
+	}, TestParams{})
+}
+
 func TestTrailingBackslash(t *testing.T) {
 	// A backslash at the end of a block escapes nothing and stays literal.
 	doTestsInlineParam(t, []string{
