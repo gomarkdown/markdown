@@ -130,6 +130,11 @@ type Parser struct {
 	// autolink callback needs for every URL it considers.
 	angles lastByteCache
 
+	// nextGt and nextCommentEnd remember where the next '>' and "-->" lie,
+	// so a '<' that nothing closes does not scan to the end of the buffer.
+	nextGt         nextMatchCache
+	nextCommentEnd nextMatchCache
+
 	// pendingRefDef is a reference definition detected at the start of a
 	// paragraph line. It is added after the preceding paragraph so source
 	// order is preserved.

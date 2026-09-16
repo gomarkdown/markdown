@@ -20,6 +20,35 @@ func BenchmarkInlineBareURLs(b *testing.B) {
 	}
 }
 
+func BenchmarkInlineUnclosedComments(b *testing.B) {
+	input := []byte("a" + strings.Repeat("<!--", 20000) + "\n")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		p := New()
+		p.Parse(input)
+	}
+}
+
+func BenchmarkInlineUnclosedCommentsWithGt(b *testing.B) {
+	// a '>' exists but never forms "-->", so only the comment watermark
+	// can stop the rescans
+	input := []byte("a" + strings.Repeat("<!-- ", 20000) + ">\n")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		p := New()
+		p.Parse(input)
+	}
+}
+
+func BenchmarkInlineUnclosedTags(b *testing.B) {
+	input := []byte(strings.Repeat("<a", 40000) + "\n")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		p := New()
+		p.Parse(input)
+	}
+}
+
 func BenchmarkInlineSpaceRun(b *testing.B) {
 	input := []byte("a" + strings.Repeat(" ", 50000) + "b\n")
 	b.ReportAllocs()

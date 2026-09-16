@@ -75,6 +75,8 @@ func (p *Parser) resetInlineCaches() {
 	p.codeSpans.data = nil
 	p.spaces.data = nil
 	p.angles.data = nil
+	p.nextGt.data = nil
+	p.nextCommentEnd.data = nil
 }
 
 // runCache remembers the end of the run of one byte value that the inline
@@ -400,7 +402,39 @@ const (
 )
 
 // '<' when tags or autolinks are allowed
+// nextMatchCache remembers where the next match of a pattern lies at or
+// after the inline cursor. A callback that fails when no match follows
+// would otherwise rescan to the end of the buffer for every candidate.
+type nextMatchCache struct {
+	data *byte
+	n    int
+	from int // no match starts in data[from:at]
+	at   int // start of the next match, or n when there is none
+}
+
+// next returns the start of the first match at or after data[offset], or
+// len(data) when there is none. find reports the first match in a slice,
+// or -1.
+func (c *nextMatchCache) next(data []byte, offset int, find func([]byte) int) int {
+	if c.data == &data[0] && c.n == len(data) && offset >= c.from && offset <= c.at {
+		return c.at
+	}
+	at := len(data)
+	if j := find(data[offset:]); j >= 0 {
+		at = offset + j
+	}
+	*c = nextMatchCache{data: &data[0], n: len(data), from: offset, at: at}
+	return at
+}
+
+func findGt(d []byte) int { return bytes.IndexByte(d, '>') }
+
+var commentEnd = []byte("-->")
+
+func findCommentEnd(d []byte) int { return bytes.Index(d, commentEnd) }
+
 func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
+	buf := data
 	data = data[offset:]
 
 	if p.extensions&Mmark != 0 {
@@ -412,9 +446,20 @@ func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
 		}
 	}
 
+	// A tag, an autolink and a comment all need a '>' after the cursor.
+	// Without one the scans below would run to the end of the buffer for
+	// every '<'.
+	if p.nextGt.next(buf, offset, findGt) == len(buf) {
+		return 0, nil
+	}
 	altype, end := tagLength(data)
-	if size := p.inlineHTMLComment(data); size > 0 {
-		end = size
+	// A comment "<!--" ends at the first "-->" that does not reuse the
+	// opener's dashes. Searching for it through the cache means an opener
+	// that nothing closes does not scan to the end of the buffer again.
+	if len(data) >= 5 && data[1] == '!' && data[2] == '-' && data[3] == '-' {
+		if at := p.nextCommentEnd.next(buf, offset+3, findCommentEnd); at < len(buf) {
+			end = at + len(commentEnd) - offset
+		}
 	}
 	if end <= 2 {
 		return end, nil
