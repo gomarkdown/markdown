@@ -803,3 +803,23 @@ text ` more
 </tbody>
 </table>
 <p>text ` more</p>
++++
+| h1 | h2 |
+| --- | --- |
+| a` | b` |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>a<code>| b</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
