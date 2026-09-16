@@ -117,6 +117,11 @@ type Parser struct {
 	// Attributes are attached to block level elements.
 	attr *ast.Attribute
 
+	// codeSpans remembers where the backtick run under the inline cursor
+	// closes, so retrying it from each of its bytes does not rescan the
+	// rest of the input each time.
+	codeSpans codeSpanCache
+
 	// pendingRefDef is a reference definition detected at the start of a
 	// paragraph line. It is added after the preceding paragraph so source
 	// order is preserved.
