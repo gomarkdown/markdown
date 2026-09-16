@@ -432,3 +432,63 @@ c | `d|e`
 </tr>
 </tfoot>
 </table>
++++
+| a`|`b | c |
+| --- | --- |
+| x | y |
++++
+<table>
+<thead>
+<tr>
+<th>a<code>|</code>b</th>
+<th>c</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>x</td>
+<td>y</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| x`|`y | z |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>x<code>|</code>y</td>
+<td>z</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| x`|`| z |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>x<code>|</code></td>
+<td>z</td>
+</tr>
+</tbody>
+</table>
