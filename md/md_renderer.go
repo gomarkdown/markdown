@@ -365,36 +365,20 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	switch node := node.(type) {
 	case *ast.Text:
 		r.text(w, node)
-	case *ast.Softbreak:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Hardbreak:
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Emph:
 		r.surround(w, "*")
 	case *ast.Strong:
 		r.surround(w, "**")
 	case *ast.Del:
 		r.surround(w, "~~")
-	case *ast.BlockQuote:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Aside:
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Link:
 		r.link(w, node, entering)
-	case *ast.CrossReference:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Citation:
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Image:
 		r.image(w, node, entering)
 	case *ast.Code:
 		r.code(w, node)
 	case *ast.CodeBlock:
 		r.codeBlock(w, node)
-	case *ast.Caption:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.CaptionFigure:
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Document:
 		// do nothing
 	case *ast.Paragraph:
@@ -405,38 +389,10 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.htmlBlock(w, node)
 	case *ast.Heading:
 		r.heading(w, node, entering)
-	case *ast.HorizontalRule:
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.List:
 		r.list(w, node, entering)
 	case *ast.ListItem:
 		r.listItem(w, node, entering)
-	case *ast.Table:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.TableCell:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.TableHeader:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.TableBody:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.TableRow:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.TableFooter:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Math:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.MathBlock:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.DocumentMatter:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Callout:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Index:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Subscript:
-		panic(fmt.Sprintf("node %T NYI", node))
-	case *ast.Superscript:
-		panic(fmt.Sprintf("node %T NYI", node))
 	case *ast.Footnotes:
 		// nothing by default; just output the list.
 	case *ast.ReferenceDefinition:
@@ -453,35 +409,29 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.outs(w, "\n")
 		}
 	default:
-		panic(fmt.Sprintf("Unknown node %T", node))
+		panic(fmt.Sprintf("node %T NYI", node))
 	}
 	return ast.GoToNext
 }
 
 // RenderHeader renders header
-func (r *Renderer) RenderHeader(w io.Writer, ast ast.Node) {
+func (r *Renderer) RenderHeader(_ io.Writer, _ ast.Node) {
 	// do nothing
 }
 
 // RenderFooter renders footer
-func (r *Renderer) RenderFooter(w io.Writer, ast ast.Node) {
-	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 {
-		if r.linkcache == nil {
-			return
-		}
-
-		// Extract links so we can write links in a predictable order.
-		links := make([]string, 0, len(r.linkcache))
-		for k := range r.linkcache {
-			links = append(links, k)
-		}
-		// Sort the keys to ensure consistent order.
-		sort.Strings(links)
-
-		for _, linkdefn := range links {
-			r.outs(w, "\n")
-			r.outs(w, linkdefn)
-		}
-		r.outs(w, "\n")
+func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
+	if r.C == nil || r.C.Flags&renderLinksInFooter == 0 || len(r.linkcache) == 0 {
+		return
 	}
+	links := make([]string, 0, len(r.linkcache))
+	for link := range r.linkcache {
+		links = append(links, link)
+	}
+	sort.Strings(links)
+	for _, link := range links {
+		r.outs(w, "\n")
+		r.outs(w, link)
+	}
+	r.outs(w, "\n")
 }
