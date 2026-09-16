@@ -1403,6 +1403,29 @@ func TestEntityNullByte(t *testing.T) {
 	}, TestParams{})
 }
 
+func TestEntityNumericOnly(t *testing.T) {
+	doTestsInlineParam(t, []string{
+		// only &#...; is a numeric reference; other names pass through as
+		// text, which the HTML renderer then escapes
+		"&z1234;\n",
+		"<p>&amp;z1234;</p>\n",
+		"&a41;\n",
+		"<p>&amp;a41;</p>\n",
+		"&hellip;\n",
+		"<p>&amp;hellip;</p>\n",
+		"&#65; &#x41;\n",
+		"<p>A A</p>\n",
+		// values past the Unicode range are invalid even when they would
+		// wrap to a valid rune
+		"&#4294967361;\n",
+		"<p>�</p>\n",
+		"&#x100000041;\n",
+		"<p>�</p>\n",
+		"&#x110000;\n",
+		"<p>�</p>\n",
+	}, TestParams{})
+}
+
 func TestTrailingBackslash(t *testing.T) {
 	// A backslash at the end of a block escapes nothing and stays literal.
 	doTestsInlineParam(t, []string{

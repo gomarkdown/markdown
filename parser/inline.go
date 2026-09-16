@@ -473,11 +473,12 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 	if bytes.Equal(ent, []byte("&amp;")) {
 		return end, newTextNode([]byte{'&'})
 	}
-	if len(ent) < 4 {
+	// only numeric references, &#NNN; and &#xHHH;, are decoded here; named
+	// entities pass through for the renderer
+	if len(ent) < 4 || ent[1] != '#' {
 		return end, newTextNode(ent)
 	}
 
-	// if ent consists solely out of numbers (hex or decimal) convert that unicode codepoint to actual rune
 	codepoint := uint64(0)
 	var err error
 	if ent[2] == 'x' || ent[2] == 'X' { // hexadecimal
@@ -486,10 +487,11 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 		codepoint, err = strconv.ParseUint(string(ent[2:len(ent)-1]), 10, 64)
 	}
 	if err == nil { // only if conversion was valid return here.
-		r := rune(codepoint)
-		// Replace invalid codepoints with U+FFFD per CommonMark spec section 6.2
-		if r == 0 || (r >= 0xD800 && r <= 0xDFFF) || r > 0x10FFFF {
-			r = '\uFFFD'
+		// Replace invalid codepoints with U+FFFD per CommonMark spec section
+		// 6.2. Check before converting to rune, which would wrap large values.
+		r := '\uFFFD'
+		if codepoint != 0 && (codepoint < 0xD800 || codepoint > 0xDFFF) && codepoint <= 0x10FFFF {
+			r = rune(codepoint)
 		}
 		return end, newTextNode([]byte(string(r)))
 	}
