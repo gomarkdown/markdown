@@ -702,3 +702,63 @@ a `x|y` b | c
 </tr>
 </tbody>
 </table>
++++
+| a | b |
+| --- | --- |
+| \`x | y` |
++++
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>`x</td>
+<td>y`</td>
+</tr>
+</tbody>
+</table>
++++
+| \`a | b` |
+| --- | --- |
+| 1 | 2 |
++++
+<table>
+<thead>
+<tr>
+<th>`a</th>
+<th>b`</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
++++
+| a | b |
+| --- | --- |
+| \\`x | y` |
++++
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>\<code>x | y</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
