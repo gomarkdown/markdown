@@ -73,6 +73,27 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 // place must not see entries built from the old contents.
 func (p *Parser) resetInlineCaches() {
 	p.codeSpans.data = nil
+	p.spaces.data = nil
+}
+
+// runCache remembers the end of the run of one byte value that the inline
+// cursor is inside. A callback registered for that byte fires once per
+// byte of the run, and without the cache each firing rescanned the run.
+type runCache struct {
+	data       *byte
+	n          int
+	start, end int
+}
+
+// endOf returns the index just past the run of b that starts at
+// data[offset], scanning only when offset is outside the remembered run.
+func (c *runCache) endOf(data []byte, offset int, b byte) int {
+	if c.data == &data[0] && c.n == len(data) && offset >= c.start && offset < c.end {
+		return c.end
+	}
+	end := skipChar(data, offset, b)
+	*c = runCache{data: &data[0], n: len(data), start: offset, end: end}
+	return end
 }
 
 // single and double emphasis parsing
@@ -287,7 +308,7 @@ func codeSpan(p *Parser, data []byte, offset int) (int, ast.Node) {
 // newline preceded by two spaces becomes <br>
 func maybeLineBreak(p *Parser, data []byte, offset int) (int, ast.Node) {
 	origOffset := offset
-	offset = skipChar(data, offset, ' ')
+	offset = p.spaces.endOf(data, offset, ' ')
 
 	if offset < len(data) && data[offset] == '\n' {
 		if offset-origOffset >= 2 {

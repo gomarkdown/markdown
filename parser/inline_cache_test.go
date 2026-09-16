@@ -2,10 +2,23 @@ package parser
 
 import (
 	"bytes"
+	"strings"
 	"testing"
 
 	"github.com/gomarkdown/markdown/ast"
 )
+
+// Adversarial inputs for the inline callbacks that fire once per byte of a
+// run. Each used to rescan from the cursor on every firing.
+
+func BenchmarkInlineSpaceRun(b *testing.B) {
+	input := []byte("a" + strings.Repeat(" ", 50000) + "b\n")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		p := New()
+		p.Parse(input)
+	}
+}
 
 // TestInlineCachesResetPerBuffer reuses one Parser on a buffer rewritten in
 // place. The memo tables key on the buffer's address, so without a reset

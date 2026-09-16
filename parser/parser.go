@@ -122,6 +122,10 @@ type Parser struct {
 	// rest of the input each time.
 	codeSpans codeSpanCache
 
+	// spaces remembers the space run under the inline cursor, since the
+	// line-break callback fires for every space in it.
+	spaces runCache
+
 	// pendingRefDef is a reference definition detected at the start of a
 	// paragraph line. It is added after the preceding paragraph so source
 	// order is preserved.
