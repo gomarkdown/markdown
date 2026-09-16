@@ -80,7 +80,8 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 			// potential subscript, no spaces, except when escaped, helperEmphasis does
 			// not check that for us, so walk the bytes and check.
 			ret := skipUntilChar(data[1:], 0, c)
-			if ret == 0 {
+			if ret == 0 || ret >= len(data)-1 {
+				// empty, or no closing '~'
 				return 0, nil
 			}
 			ret++ // we started with data[1:] above.
@@ -308,7 +309,8 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 
 	if p.extensions&SuperSubscript != 0 {
 		ret := skipUntilChar(data[offset:], 1, '^')
-		if ret == 0 {
+		if ret >= len(data)-offset {
+			// no closing '^'
 			return 0, nil
 		}
 		for i := offset; i < offset+ret; i++ {

@@ -1381,6 +1381,19 @@ func TestSubSuper(t *testing.T) {
 		"<p>2<sup>10</sup> is 1024, H<sub>2</sub>O is a liquid</p>\n",
 		"2\\^10 is 2^10^ is 1024\n",
 		"<p>2^10 is 2<sup>10</sup> is 1024</p>\n",
+		// an opener with no closer before the end of the block is literal
+		"# x^2\n",
+		"<h1>x^2</h1>\n",
+		"x^2\n",
+		"<p>x^2</p>\n",
+		"a^\n",
+		"<p>a^</p>\n",
+		"# H~2O\n",
+		"<h1>H~2O</h1>\n",
+		"H~2O\n",
+		"<p>H~2O</p>\n",
+		"[x^2](u)\n",
+		"<p><a href=\"u\">x^2</a></p>\n",
 	}
 	doTestsInlineParam(t, tests, TestParams{extensions: parser.SuperSubscript})
 }
