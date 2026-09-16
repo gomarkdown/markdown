@@ -1456,6 +1456,22 @@ func TestEmphasisAfterEscapedBackslash(t *testing.T) {
 	}, TestParams{})
 }
 
+func TestLinkAfterEscapedBackslash(t *testing.T) {
+	doTestsInlineParam(t, []string{
+		// "\\" is an escaped backslash, so the bracket after it opens a link
+		"\\\\[foo](http://x)\n",
+		"<p>\\<a href=\"http://x\">foo</a></p>\n",
+		"\\\\![foo](http://x)\n",
+		"<p>\\<img src=\"http://x\" alt=\"foo\" /></p>\n",
+		// a single backslash still escapes the bracket
+		"\\[foo](http://x)\n",
+		"<p>[foo](<a href=\"http://x\">http://x</a>)</p>\n",
+		// an escaped closing bracket does not end the link text
+		"[a\\]b](http://x)\n",
+		"<p><a href=\"http://x\">a]b</a></p>\n",
+	}, TestParams{})
+}
+
 func TestTrailingBackslash(t *testing.T) {
 	// A backslash at the end of a block escapes nothing and stays literal.
 	doTestsInlineParam(t, []string{
