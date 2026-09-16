@@ -1402,3 +1402,17 @@ func TestEntityNullByte(t *testing.T) {
 		"<p>\uFFFD</p>\n",
 	}, TestParams{})
 }
+
+func TestTrailingBackslash(t *testing.T) {
+	// A backslash at the end of a block escapes nothing and stays literal.
+	doTestsInlineParam(t, []string{
+		"foo\\\n",
+		"<p>foo\\</p>\n",
+		"# foo\\\n",
+		"<h1>foo\\</h1>\n",
+		"C:\\dir\\\n",
+		"<p>C:\\dir\\</p>\n",
+		"foo\\\\\n",
+		"<p>foo\\</p>\n",
+	}, TestParams{})
+}

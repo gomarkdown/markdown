@@ -412,8 +412,9 @@ var EscapeChars = []byte("\\`*_{}[]()#+-.!:|&<>~^$")
 func escape(p *Parser, data []byte, offset int) (int, ast.Node) {
 	data = data[offset:]
 
+	// A backslash with nothing after it escapes nothing and is literal text.
 	if len(data) <= 1 {
-		return 2, nil
+		return 0, nil
 	}
 
 	if p.extensions&NonBlockingSpace != 0 && data[1] == ' ' {
