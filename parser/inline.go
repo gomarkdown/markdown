@@ -128,19 +128,18 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 	return 0, nil
 }
 
-func codeSpan(p *Parser, data []byte, offset int) (int, ast.Node) {
-	data = data[offset:]
-
+// codeSpanEnd returns the index just past the code span that opens with the
+// backtick run at data[0], or 0 when that run has no closing delimiter. The
+// closing delimiter is the first later run of at least as many backticks.
+// It is the delimiter search of codeSpan without building a node, for
+// callers that only need to skip over a span.
+func codeSpanEnd(data []byte) int {
 	// count the number of backticks in the delimiter
 	nb := skipChar(data, 0, '`')
 
 	// find the next delimiter
 	i, end := 0, 0
-	hasLFBeforeDelimiter := false
 	for end = nb; end < len(data) && i < nb; end++ {
-		if data[end] == '\n' {
-			hasLFBeforeDelimiter = true
-		}
 		if data[end] == '`' {
 			i++
 		} else {
@@ -150,8 +149,20 @@ func codeSpan(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 	// no matching delimiter?
 	if i < nb && end >= len(data) {
+		return 0
+	}
+	return end
+}
+
+func codeSpan(p *Parser, data []byte, offset int) (int, ast.Node) {
+	data = data[offset:]
+
+	end := codeSpanEnd(data)
+	if end == 0 {
 		return 0, nil
 	}
+	nb := skipChar(data, 0, '`')
+	hasLFBeforeDelimiter := bytes.IndexByte(data[nb:end], '\n') >= 0
 
 	// If there are non-space chars after the ending delimiter and before a '\n',
 	// flag that this is not a well formed fenced code block.
