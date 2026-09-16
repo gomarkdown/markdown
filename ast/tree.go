@@ -75,8 +75,8 @@ func GetFirstChild(n Node) Node {
 // GetNextNode returns next sibling of node n (node after n)
 // We can't make it part of Container or Leaf because we loose Node identity
 func GetNextNode(n Node) Node {
-	if next, ok := linkedNextNode(n); ok {
-		return next
+	if _, next, ok := siblingLinks(n); ok {
+		return *next
 	}
 	parent := n.GetParent()
 	if parent == nil {
@@ -95,8 +95,8 @@ func GetNextNode(n Node) Node {
 // GetPrevNode returns previous sibling of node n (node before n)
 // We can't make it part of Container or Leaf because we loose Node identity
 func GetPrevNode(n Node) Node {
-	if prev, ok := linkedPrevNode(n); ok {
-		return prev
+	if prev, _, ok := siblingLinks(n); ok {
+		return *prev
 	}
 	parent := n.GetParent()
 	if parent == nil {
@@ -126,48 +126,27 @@ func linkSiblings(children []Node) {
 	}
 }
 
-func linkedPrevNode(n Node) (Node, bool) {
+func siblingLinks(n Node) (prev, next *Node, ok bool) {
+	if n == nil {
+		return nil, nil, false
+	}
 	if c := n.AsContainer(); c != nil {
-		return c.Prev, true
+		return &c.Prev, &c.Next, true
 	}
 	if l := n.AsLeaf(); l != nil {
-		return l.Prev, true
+		return &l.Prev, &l.Next, true
 	}
-	return nil, false
-}
-
-func linkedNextNode(n Node) (Node, bool) {
-	if c := n.AsContainer(); c != nil {
-		return c.Next, true
-	}
-	if l := n.AsLeaf(); l != nil {
-		return l.Next, true
-	}
-	return nil, false
+	return nil, nil, false
 }
 
 func setPrevNode(n Node, prev Node) {
-	if n == nil {
-		return
-	}
-	if c := n.AsContainer(); c != nil {
-		c.Prev = prev
-		return
-	}
-	if l := n.AsLeaf(); l != nil {
-		l.Prev = prev
+	if link, _, ok := siblingLinks(n); ok {
+		*link = prev
 	}
 }
 
 func setNextNode(n Node, next Node) {
-	if n == nil {
-		return
-	}
-	if c := n.AsContainer(); c != nil {
-		c.Next = next
-		return
-	}
-	if l := n.AsLeaf(); l != nil {
-		l.Next = next
+	if _, link, ok := siblingLinks(n); ok {
+		*link = next
 	}
 }
