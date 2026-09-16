@@ -762,3 +762,44 @@ a `x|y` b | c
 </tr>
 </tbody>
 </table>
++++
+| a ` b |
+| --- |
+| c ` d |
++++
+<table>
+<thead>
+<tr>
+<th>a ` b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>c ` d</td>
+</tr>
+</tbody>
+</table>
++++
+| `a | b |
+| --- | --- |
+| x | y |
+
+text ` more
++++
+<table>
+<thead>
+<tr>
+<th>`a</th>
+<th>b</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>x</td>
+<td>y</td>
+</tr>
+</tbody>
+</table>
+<p>text ` more</p>

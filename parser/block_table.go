@@ -142,8 +142,10 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 	if bytes.IndexByte(data[:lineEnd], '|') < 0 {
 		return
 	}
-	for i = 0; i < len(data) && data[i] != '\n'; i++ {
-		i = skipCodeSpan(data, i)
+	// Scan only the header line: a backtick with no closing delimiter on
+	// this line must not pair with one further down the document.
+	for i = 0; i < lineEnd; i++ {
+		i = skipCodeSpan(data[:lineEnd], i)
 
 		if data[i] == '|' && !isBackslashEscaped(data, i) {
 			colCount++
