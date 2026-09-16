@@ -17,10 +17,31 @@ func skipCodeSpan(data []byte, i int) int {
 	if data[i] != '`' || isEscape(data, i) {
 		return i
 	}
-	if end := codeSpanEnd(data[i:]); end > 0 {
-		return i + end - 1
+	// The inline parser tries the whole run of k backticks and, when that
+	// has no closing delimiter, retries from the next byte with a run one
+	// shorter, down to a single backtick. A run of m closes at the first
+	// later run of at least m backticks, so those retries resolve in one
+	// pass: either some later run reaches k, or the longest later run L
+	// (L < k) is the delimiter that the retry of length L finds first, or
+	// no later backtick exists and every retry fails, so the whole run is
+	// literal text and the caller may step over it.
+	k := skipChar(data, i, '`') - i
+	best, bestEnd := 0, i+k-1
+	run := 0
+	for j := i + k; j < len(data); j++ {
+		if data[j] != '`' {
+			run = 0
+			continue
+		}
+		run++
+		if run == k {
+			return j
+		}
+		if run > best {
+			best, bestEnd = run, j
+		}
 	}
-	return i
+	return bestEnd
 }
 
 func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool) {
