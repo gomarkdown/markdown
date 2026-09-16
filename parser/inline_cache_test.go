@@ -11,6 +11,15 @@ import (
 // Adversarial inputs for the inline callbacks that fire once per byte of a
 // run. Each used to rescan from the cursor on every firing.
 
+func BenchmarkInlineBareURLs(b *testing.B) {
+	input := []byte(strings.Repeat("http://x ", 10000) + "\n")
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		p := NewWithExtensions(Autolink)
+		p.Parse(input)
+	}
+}
+
 func BenchmarkInlineSpaceRun(b *testing.B) {
 	input := []byte("a" + strings.Repeat(" ", 50000) + "b\n")
 	b.ReportAllocs()

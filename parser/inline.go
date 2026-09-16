@@ -74,6 +74,7 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 func (p *Parser) resetInlineCaches() {
 	p.codeSpans.data = nil
 	p.spaces.data = nil
+	p.angles.data = nil
 }
 
 // runCache remembers the end of the run of one byte value that the inline
@@ -601,14 +602,35 @@ func maybeAutoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 	return 0, nil
 }
 
+// lastByteCache remembers the last position of one byte value at or
+// before the inline cursor. The cursor only moves forward through a
+// buffer, so each call scans just the bytes since the previous call.
+type lastByteCache struct {
+	data *byte
+	n    int
+	upTo int // bytes up to and including this index have been scanned
+	last int // last index of the byte in data[:upTo+1], or -1
+}
+
+// lastAt returns the last index of b in data[:offset+1], or -1.
+func (c *lastByteCache) lastAt(data []byte, offset int, b byte) int {
+	if c.data != &data[0] || c.n != len(data) || offset < c.upTo {
+		*c = lastByteCache{data: &data[0], n: len(data), upTo: -1, last: -1}
+	}
+	if j := bytes.LastIndexByte(data[c.upTo+1:offset+1], b); j >= 0 {
+		c.last = c.upTo + 1 + j
+	}
+	c.upTo = offset
+	return c.last
+}
+
 func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// Now a more expensive check to see if we're not inside an anchor element
-	anchorStart := offset
-	offsetFromAnchor := 0
-	for anchorStart > 0 && data[anchorStart] != '<' {
-		anchorStart--
-		offsetFromAnchor++
+	anchorStart := p.angles.lastAt(data, offset, '<')
+	if anchorStart < 0 {
+		anchorStart = 0
 	}
+	offsetFromAnchor := offset - anchorStart
 
 	anchorStr := anchorRe.Find(data[anchorStart:])
 	if anchorStr != nil {

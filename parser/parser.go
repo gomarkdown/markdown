@@ -126,6 +126,10 @@ type Parser struct {
 	// line-break callback fires for every space in it.
 	spaces runCache
 
+	// angles remembers the last '<' before the inline cursor, which the
+	// autolink callback needs for every URL it considers.
+	angles lastByteCache
+
 	// pendingRefDef is a reference definition detected at the start of a
 	// paragraph line. It is added after the preceding paragraph so source
 	// order is preserved.
