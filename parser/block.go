@@ -390,7 +390,7 @@ func (p *Parser) parseHeadingContent(data []byte, i, end int) (id string, conten
 	}
 	// strip trailing closing '#' markers and surrounding spaces
 	for end > 0 && data[end-1] == '#' {
-		if isBackslashEscaped(data, end-1) {
+		if isEscape(data, end-1) {
 			break
 		}
 		end--

@@ -6,23 +6,15 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// check if the specified position is preceded by an odd number of backslashes
-func isBackslashEscaped(data []byte, i int) bool {
-	backslashes := 0
-	for i-backslashes-1 >= 0 && data[i-backslashes-1] == '\\' {
-		backslashes++
-	}
-	return backslashes&1 == 1
-}
-
 // skipCodeSpan returns the index of the closing backtick of the code span
 // that opens at data[i], or i when no code span opens there. A '|' inside a
 // code span does not separate cells, so the row and header scanners jump
 // over spans the same way. Callers then examine data[i], the closing
-// backtick, as an ordinary byte and advance past it. A backslash-escaped backtick is
-// literal text, as it is for the inline parser, so it opens nothing.
+// backtick, as an ordinary byte and advance past it. A backslash-escaped
+// backtick is literal text, as it is for the inline parser, so it opens
+// nothing.
 func skipCodeSpan(data []byte, i int) int {
-	if data[i] != '`' || isBackslashEscaped(data, i) {
+	if data[i] != '`' || isEscape(data, i) {
 		return i
 	}
 	if end := codeSpanEnd(data[i:]); end > 0 {
@@ -45,7 +37,7 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 
 		cellStart := i
 
-		for i < n && (data[i] != '|' || isBackslashEscaped(data, i)) && data[i] != '\n' {
+		for i < n && (data[i] != '|' || isEscape(data, i)) && data[i] != '\n' {
 			i = skipCodeSpan(data, i)
 			i++
 		}
@@ -54,7 +46,7 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 
 		// skip the end-of-cell marker, possibly taking us past end of buffer
 		// each _extra_ | means a colspan
-		for i < len(data) && data[i] == '|' && !isBackslashEscaped(data, i) {
+		for i < len(data) && data[i] == '|' && !isEscape(data, i) {
 			i++
 			colspan++
 		}
@@ -105,7 +97,7 @@ func (p *Parser) tableFooter(data []byte) bool {
 	n := len(data)
 	i := skipCharN(data, 0, ' ', 3)
 	for ; i < n && data[i] != '\n'; i++ {
-		if data[i] == '|' && !isBackslashEscaped(data, i) {
+		if data[i] == '|' && !isEscape(data, i) {
 			colCount++
 			continue
 		}
@@ -145,7 +137,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 	for i = 0; i < lineEnd; i++ {
 		i = skipCodeSpan(data[:lineEnd], i)
 
-		if data[i] == '|' && !isBackslashEscaped(data, i) {
+		if data[i] == '|' && !isEscape(data, i) {
 			colCount++
 		}
 		if data[i] != '-' && data[i] != ' ' && data[i] != ':' && data[i] != '|' {
@@ -181,7 +173,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 			}
 		}
 		n := len(tmp)
-		if n > 2 && tmp[n-1] == '|' && !isBackslashEscaped(tmp, n-1) {
+		if n > 2 && tmp[n-1] == '|' && !isEscape(tmp, n-1) {
 			colCount--
 		}
 	}
@@ -202,7 +194,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 		return
 	}
 
-	if data[i] == '|' && !isBackslashEscaped(data, i) {
+	if data[i] == '|' && !isEscape(data, i) {
 		i++
 	}
 	i = skipChar(data, i, ' ')
@@ -240,7 +232,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 			// not a valid column
 			return
 
-		case data[i] == '|' && !isBackslashEscaped(data, i):
+		case data[i] == '|' && !isEscape(data, i):
 			// marker found, now skip past trailing whitespace
 			col++
 			i++
@@ -253,7 +245,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 				return
 			}
 
-		case (data[i] != '|' || isBackslashEscaped(data, i)) && col+1 < colCount:
+		case (data[i] != '|' || isEscape(data, i)) && col+1 < colCount:
 			// something else found where marker was required
 			return
 
