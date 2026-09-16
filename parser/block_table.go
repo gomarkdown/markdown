@@ -17,9 +17,9 @@ func isBackslashEscaped(data []byte, i int) bool {
 
 // skipCodeSpan returns the index of the closing backtick of the code span
 // that opens at data[i], or i when no code span opens there. A '|' inside a
-// code span does not separate cells, so every table scanner jumps over spans
-// the same way. Callers then examine data[i], the closing backtick, as an
-// ordinary byte and advance past it. A backslash-escaped backtick is
+// code span does not separate cells, so the row and header scanners jump
+// over spans the same way. Callers then examine data[i], the closing
+// backtick, as an ordinary byte and advance past it. A backslash-escaped backtick is
 // literal text, as it is for the inline parser, so it opens nothing.
 func skipCodeSpan(data []byte, i int) int {
 	if data[i] != '`' || isBackslashEscaped(data, i) {
@@ -105,8 +105,6 @@ func (p *Parser) tableFooter(data []byte) bool {
 	n := len(data)
 	i := skipCharN(data, 0, ' ', 3)
 	for ; i < n && data[i] != '\n'; i++ {
-		i = skipCodeSpan(data, i)
-
 		if data[i] == '|' && !isBackslashEscaped(data, i) {
 			colCount++
 			continue
