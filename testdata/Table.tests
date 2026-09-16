@@ -492,3 +492,213 @@ c | `d|e`
 </tr>
 </tbody>
 </table>
++++
+| h1 | h2 |
+| --- | --- |
+| a ` b | c |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>a ` b</td>
+<td>c</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| a` | c |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>a`</td>
+<td>c</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| ``a`|`b`` | c |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>a`|`b</code></td>
+<td>c</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| `a|b` and `c|d` | e |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>a|b</code> and <code>c|d</code></td>
+<td>e</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| ` | ` | z |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>|</code></td>
+<td>z</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| a `b | c` d |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>a <code>b | c</code> d</td>
+<td></td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 | h3 |
+| --- | --- | --- |
+| a || b `|` c |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+<th>h3</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td colspan="2">a</td>
+<td>b <code>|</code> c</td>
+</tr>
+</tbody>
+</table>
++++
+a `x|y` b | c
+--- | ---
+1 | 2
++++
+<table>
+<thead>
+<tr>
+<th>a <code>x|y</code> b</th>
+<th>c</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| 1 | 2 |
+|===|===|
+| x`|`y | z |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody>
+
+<tfoot>
+<tr>
+<td>x<code>|</code>y</td>
+<td>z</td>
+</tr>
+</tfoot>
+</table>
++++
+| h1 | h2 |
+| --- | --- |
+| \| `q|r` | d |
++++
+<table>
+<thead>
+<tr>
+<th>h1</th>
+<th>h2</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>| <code>q|r</code></td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
