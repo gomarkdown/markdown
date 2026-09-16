@@ -185,6 +185,12 @@ implements the following extensions:
   Total   | 23
   ```
 
+  A pipe inside a code span does not end the cell, so `` `a|b` `` is
+  one cell. Elsewhere, write a literal pipe as `\|`. This differs from
+  GitHub, where a pipe always ends the cell and `\|` is the only way to
+  include one; a `\|` inside a code span is left as written here rather
+  than unescaped.
+
 
 - **Fenced code blocks**. In addition to the normal 4-space
   indentation to mark code blocks, you can explicitly mark them
