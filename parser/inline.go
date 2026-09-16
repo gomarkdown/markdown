@@ -25,6 +25,9 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 	if p.nesting >= p.maxNesting || len(data) == 0 {
 		return
 	}
+	if p.nesting == 0 {
+		p.resetInlineCaches()
+	}
 	p.nesting++
 	prev := p.brackets
 	p.brackets = bracketTable{data: data}
@@ -62,6 +65,14 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 		}
 		ast.AppendChild(currBlock, newTextNode(data[beg:end]))
 	}
+}
+
+// resetInlineCaches drops the memo tables that inline callbacks keep for
+// the buffer under the cursor. They key on the buffer's address and
+// length, so a caller that reuses a Parser on a buffer it has rewritten in
+// place must not see entries built from the old contents.
+func (p *Parser) resetInlineCaches() {
+	p.codeSpans.data = nil
 }
 
 // single and double emphasis parsing
