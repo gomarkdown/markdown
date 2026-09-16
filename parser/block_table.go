@@ -29,14 +29,13 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 
 		cellStart := i
 
-		// If we are in a codespan we should discount any | we see, check for that here and skip ahead.
-		if i < n && data[i] == '`' {
-			if isCode, _ := codeSpan(p, data[i:], 0); isCode > 0 {
-				i += isCode - 1
-			}
-		}
-
 		for i < n && (data[i] != '|' || isBackslashEscaped(data, i)) && data[i] != '\n' {
+			// If we are in a codespan we should discount any | we see, check for that here and skip ahead.
+			if data[i] == '`' {
+				if isCode, _ := codeSpan(p, data[i:], 0); isCode > 0 {
+					i += isCode - 1
+				}
+			}
 			i++
 		}
 
