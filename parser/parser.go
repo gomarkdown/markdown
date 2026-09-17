@@ -264,15 +264,14 @@ func (p *Parser) parseRefsToAST() {
 	for i := 0; i < len(p.notes); i++ {
 		ref := p.notes[i]
 		p.addChild(ref.footnote)
-		block := ref.footnote
-		listItem := block.(*ast.ListItem)
-		listItem.ListFlags = flags | ast.ListTypeOrdered
-		listItem.RefLink = ref.link
+		item := ref.footnote.(*ast.ListItem)
+		item.ListFlags = flags | ast.ListTypeOrdered
+		item.RefLink = ref.link
 		if ref.hasBlock {
 			flags |= ast.ListItemContainsBlock
 			p.Block(ref.title)
 		} else {
-			p.Inline(block, ref.title)
+			p.Inline(item, ref.title)
 		}
 		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
