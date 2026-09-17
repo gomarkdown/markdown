@@ -101,29 +101,19 @@ type CanContain interface {
 }
 
 // AsContainer returns itself as *Container
-func (c *Container) AsContainer() *Container {
-	return c
-}
+func (c *Container) AsContainer() *Container { return c }
 
 // AsLeaf returns nil
-func (c *Container) AsLeaf() *Leaf {
-	return nil
-}
+func (c *Container) AsLeaf() *Leaf { return nil }
 
 // GetParent returns parent node
-func (c *Container) GetParent() Node {
-	return c.Parent
-}
+func (c *Container) GetParent() Node { return c.Parent }
 
 // SetParent sets the parent node
-func (c *Container) SetParent(newParent Node) {
-	c.Parent = newParent
-}
+func (c *Container) SetParent(newParent Node) { c.Parent = newParent }
 
 // GetChildren returns children nodes
-func (c *Container) GetChildren() []Node {
-	return c.Children
-}
+func (c *Container) GetChildren() []Node { return c.Children }
 
 // SetChildren sets children node
 func (c *Container) SetChildren(newChildren []Node) {
@@ -144,29 +134,19 @@ type Leaf struct {
 }
 
 // AsContainer returns nil
-func (l *Leaf) AsContainer() *Container {
-	return nil
-}
+func (l *Leaf) AsContainer() *Container { return nil }
 
 // AsLeaf returns itself as *Leaf
-func (l *Leaf) AsLeaf() *Leaf {
-	return l
-}
+func (l *Leaf) AsLeaf() *Leaf { return l }
 
 // GetParent returns parent node
-func (l *Leaf) GetParent() Node {
-	return l.Parent
-}
+func (l *Leaf) GetParent() Node { return l.Parent }
 
-// SetParent sets the parent nodd
-func (l *Leaf) SetParent(newParent Node) {
-	l.Parent = newParent
-}
+// SetParent sets the parent node
+func (l *Leaf) SetParent(newParent Node) { l.Parent = newParent }
 
 // GetChildren returns nil because Leaf cannot have children
-func (l *Leaf) GetChildren() []Node {
-	return nil
-}
+func (l *Leaf) GetChildren() []Node { return nil }
 
 // SetChildren will panic if trying to set non-empty children
 // because Leaf cannot have children
@@ -174,7 +154,6 @@ func (l *Leaf) SetChildren(newChildren []Node) {
 	if len(newChildren) != 0 {
 		panic("leaf node cannot have children")
 	}
-
 }
 
 // Document represents markdown document node, a root of ast
