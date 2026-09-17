@@ -30,10 +30,7 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 	if len(data) < 4 {
 		return 0
 	}
-	i := 0
-	for i < 3 && data[i] == ' ' {
-		i++
-	}
+	i := skipCharN(data, 0, ' ', 3)
 
 	noteID := 0
 
@@ -42,13 +39,10 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 		return 0
 	}
 	i++
-	if p.extensions&Footnotes != 0 {
-		if i < len(data) && data[i] == '^' {
-			// we can set it to anything here because the proper noteIds will
-			// be assigned later during the second pass. It just has to be != 0
-			noteID = 1
-			i++
-		}
+	if p.extensions&Footnotes != 0 && i < len(data) && data[i] == '^' {
+		// The final pass assigns the real ID; this only marks a footnote.
+		noteID = 1
+		i++
 	}
 	idOffset := i
 	for i < len(data) && data[i] != '\n' && data[i] != '\r' && data[i] != ']' {
@@ -69,18 +63,14 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 		return 0
 	}
 	i++
-	for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-		i++
-	}
+	i = skipHSpace(data, i)
 	if i < len(data) && (data[i] == '\n' || data[i] == '\r') {
 		i++
 		if i < len(data) && data[i] == '\n' && data[i-1] == '\r' {
 			i++
 		}
 	}
-	for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-		i++
-	}
+	i = skipHSpace(data, i)
 	if i >= len(data) {
 		return 0
 	}
@@ -152,9 +142,7 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 	}
 
 	// optional spacer: (space | tab)* (newline | '\'' | '"' | '(' )
-	for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-		i++
-	}
+	i = skipHSpace(data, i)
 	if i < len(data) && data[i] != '\n' && data[i] != '\r' && data[i] != '\'' && data[i] != '"' && data[i] != '(' {
 		return
 	}
@@ -169,10 +157,7 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 
 	// optional (space|tab)* spacer after a newline
 	if lineEnd > 0 {
-		i = lineEnd + 1
-		for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-			i++
-		}
+		i = skipHSpace(data, lineEnd+1)
 	}
 
 	// optional title: any non-newline sequence enclosed in '"() alone on its line

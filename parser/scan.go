@@ -62,6 +62,13 @@ func skipSpace(data []byte, i int) int {
 	return i
 }
 
+func skipHSpace(data []byte, i int) int {
+	for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
+		i++
+	}
+	return i
+}
+
 func backChar(data []byte, i int, c byte) int {
 	for i > 0 && data[i-1] == c {
 		i--

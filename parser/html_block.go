@@ -224,10 +224,7 @@ func (p *Parser) parseHTMLInterior(data []byte) {
 			data = data[1:]
 			continue
 		}
-		i := 0
-		for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-			i++
-		}
+		i := skipHSpace(data, 0)
 		if i < len(data) && data[i] == '<' {
 			if n := p.html(data[i:], true); n > 0 {
 				data = data[i+n:]
