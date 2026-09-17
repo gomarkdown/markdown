@@ -255,7 +255,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	switch t {
 	case linkNormal:
 		link := &ast.Link{
-			Destination: normalizeURI(uLink),
+			Destination: uLink,
 			Title:       title,
 			DeferredID:  linkID,
 		}
@@ -299,8 +299,4 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	default:
 		return 0, nil
 	}
-}
-
-func normalizeURI(s []byte) []byte {
-	return s // TODO: implement
 }

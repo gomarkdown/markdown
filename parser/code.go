@@ -264,25 +264,17 @@ func findEntityEnd(str []byte, start int) int {
 		}
 		return i + 1
 	}
-	if !isAlpha(str[i]) {
+	if !IsLetter(str[i]) {
 		return 0
 	}
 	i++
-	for i < len(str) && i-start <= 32 && isAlnum(str[i]) {
+	for i < len(str) && i-start <= 32 && IsAlnum(str[i]) {
 		i++
 	}
 	if i >= len(str) || str[i] != ';' {
 		return 0
 	}
 	return i + 1
-}
-
-func isAlpha(c byte) bool {
-	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
-}
-
-func isAlnum(c byte) bool {
-	return isAlpha(c) || c >= '0' && c <= '9'
 }
 
 func isHexDigit(c byte) bool {
