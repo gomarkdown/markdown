@@ -114,9 +114,9 @@ func escape(text []byte) []byte {
 	return bytes.Replace(text, []byte(`\`), []byte(`\\`), -1)
 }
 
-func isNumber(data []byte) bool {
-	for _, b := range data {
-		if b < '0' || b > '9' {
+func isNumber(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
 			return false
 		}
 	}
@@ -140,7 +140,7 @@ func needsEscaping(text []byte, lastNormalText string) bool {
 		return false
 	case ".":
 		// Return true if number, because a period after a number must be escaped to not get parsed as an ordered list.
-		return isNumber([]byte(lastNormalText))
+		return isNumber(lastNormalText)
 	case "<", ">":
 		return true
 	default:
@@ -205,8 +205,7 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 			break
 		}
 	}
-	r.outs(w, "```"+language)
-	r.outs(w, "\n")
+	r.outs(w, "```"+language+"\n")
 	r.out(w, text)
 	if len(text) == 0 || text[len(text)-1] != '\n' {
 		r.outs(w, "\n")
@@ -215,17 +214,12 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 }
 
 func (r *Renderer) code(w io.Writer, node *ast.Code) {
-	r.outs(w, "`")
-	r.out(w, node.Literal)
-	r.outs(w, "`")
+	r.outs(w, "`"+string(node.Literal)+"`")
 }
 
 func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 	if entering {
-		for i := 0; i < node.Level; i++ {
-			r.outs(w, "#")
-		}
-		r.outs(w, " ")
+		r.outs(w, strings.Repeat("#", node.Level)+" ")
 		r.out(w, node.Literal)
 	} else {
 		r.outs(w, "\n\n")
@@ -234,10 +228,7 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 
 func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 	if entering {
-		// alt := node. ??
-		var alt []byte
 		r.outs(w, "![")
-		r.out(w, alt)
 	} else {
 		link := node.Destination
 		title := node.Title
