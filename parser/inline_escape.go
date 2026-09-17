@@ -55,6 +55,12 @@ func unescapeText(ob *bytes.Buffer, src []byte) {
 	}
 }
 
+func unescapeBytes(src []byte) []byte {
+	var out bytes.Buffer
+	unescapeText(&out, src)
+	return out.Bytes()
+}
+
 // '&' escaped when it doesn't belong to an entity
 // valid entities are assumed to be anything matching &#?[A-Za-z0-9]+;
 func entity(p *Parser, data []byte, offset int) (int, ast.Node) {

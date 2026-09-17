@@ -80,12 +80,10 @@ func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return end, htmlTag
 	}
 
-	var uLink bytes.Buffer
-	unescapeText(&uLink, data[1:end+1-2])
-	if uLink.Len() <= 0 {
+	link := unescapeBytes(data[1 : end-1])
+	if len(link) == 0 {
 		return end, nil
 	}
-	link := uLink.Bytes()
 	node := &ast.Link{
 		Destination: link,
 	}
@@ -255,14 +253,12 @@ func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 		}
 	}
 
-	var uLink bytes.Buffer
-	unescapeText(&uLink, data[:linkEnd])
-
-	if uLink.Len() > 0 {
+	link := unescapeBytes(data[:linkEnd])
+	if len(link) > 0 {
 		node := &ast.Link{
-			Destination: uLink.Bytes(),
+			Destination: link,
 		}
-		ast.AppendChild(node, newTextNode(uLink.Bytes()))
+		ast.AppendChild(node, newTextNode(link))
 		return linkEnd, node
 	}
 

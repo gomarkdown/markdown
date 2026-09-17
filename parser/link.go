@@ -231,16 +231,8 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	}
 
 	var uLink []byte
-	if t == linkNormal || t == linkImg {
-		if len(link) > 0 {
-			var uLinkBuf bytes.Buffer
-			unescapeText(&uLinkBuf, link)
-			uLink = uLinkBuf.Bytes()
-		}
-
-		// links need something to click on and somewhere to go
-		// [](http://bla) is legal in CommonMark, so allow txtE <=1 for linkNormal
-		// [bla]() is also legal in CommonMark, so allow empty uLink
+	if (t == linkNormal || t == linkImg) && len(link) > 0 {
+		uLink = unescapeBytes(link)
 	}
 
 	var inlineAttr *ast.Attribute
