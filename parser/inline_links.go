@@ -152,11 +152,11 @@ func maybeAutoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 			return 0, nil
 		}
 	}
+	endOfHead := offset + 8 // length of the longest supported prefix
+	if endOfHead > len(data) {
+		endOfHead = len(data)
+	}
 	for _, prefix := range protocolPrefixes {
-		endOfHead := offset + 8 // 8 is the len() of the longest prefix
-		if endOfHead > len(data) {
-			endOfHead = len(data)
-		}
 		if hasPrefixCaseInsensitive(data[offset:endOfHead], prefix) {
 			return autoLink(p, data, offset)
 		}
@@ -275,37 +275,22 @@ func isEndOfLink(char byte) bool {
 
 // return the length of the given tag, or 0 is it's not valid
 func tagLength(data []byte) (autolink autolinkType, end int) {
-	var i, j int
-
-	// a valid tag can't be shorter than 3 chars
-	if len(data) < 3 {
-		return notAutolink, 0
+	if len(data) < 3 || data[0] != '<' {
+		return
 	}
-
-	// begins with a '<' optionally followed by '/', followed by letter or number
-	if data[0] != '<' {
-		return notAutolink, 0
+	i := 1
+	if data[i] == '/' {
+		i++
 	}
-	if data[1] == '/' {
-		i = 2
-	} else {
-		i = 1
-	}
-
 	if !IsAlnum(data[i]) {
-		return notAutolink, 0
+		return
 	}
 
-	// scheme test
-	autolink = notAutolink
-
-	// try to find the beginning of an URI
 	for i < len(data) && (IsAlnum(data[i]) || data[i] == '.' || data[i] == '+' || data[i] == '-') {
 		i++
 	}
-
 	if i > 1 && i < len(data) && data[i] == '@' {
-		if j = isMailtoAutoLink(data[i:]); j != 0 {
+		if j := isMailtoAutoLink(data[i:]); j != 0 {
 			return emailAutolink, i + j
 		}
 	}
@@ -313,15 +298,7 @@ func tagLength(data []byte) (autolink autolinkType, end int) {
 	if i > 2 && i < len(data) && data[i] == ':' {
 		autolink = normalAutolink
 		i++
-	}
-
-	// complete autolink test: no whitespace or ' or "
-	switch {
-	case i >= len(data):
-		autolink = notAutolink
-	case autolink != notAutolink:
-		j = i
-
+		contentStart := i
 		for i < len(data) {
 			if data[i] == '\\' {
 				i += 2
@@ -330,25 +307,19 @@ func tagLength(data []byte) (autolink autolinkType, end int) {
 			} else {
 				i++
 			}
-
 		}
-
 		if i >= len(data) {
 			return autolink, 0
 		}
-		if i > j && data[i] == '>' {
+		if i > contentStart && data[i] == '>' {
 			return autolink, i + 1
 		}
-
-		// one of the forbidden chars has been found
 		autolink = notAutolink
 	}
-	j = bytes.IndexByte(data[i:], '>')
-	if j < 0 {
-		return autolink, 0
+	if j := bytes.IndexByte(data[i:], '>'); j >= 0 {
+		return autolink, i + j + 1
 	}
-	i += j
-	return autolink, i + 1
+	return autolink, 0
 }
 
 // look for the address part of a mail autolink and '>'
