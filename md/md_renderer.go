@@ -15,9 +15,9 @@ import (
 type Renderer struct {
 	orderedListCounter map[int]int
 
-	lastOutputLen  int
-	listDepth      int
-	lastNormalText string
+	lastOutput        bool
+	listDepth         int
+	previousWasNumber bool
 
 	C *RendererConfig
 
@@ -59,12 +59,12 @@ func WithRenderInFooter(renderInFooter bool) RendererOpt {
 }
 
 func (r *Renderer) out(w io.Writer, d []byte) {
-	r.lastOutputLen = len(d)
+	r.lastOutput = len(d) > 0
 	w.Write(d)
 }
 
 func (r *Renderer) outs(w io.Writer, s string) {
-	r.lastOutputLen = len(s)
+	r.lastOutput = len(s) > 0
 	io.WriteString(w, s)
 }
 
@@ -97,7 +97,7 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 }
 
 func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
-	if !entering && r.lastOutputLen > 0 {
+	if !entering && r.lastOutput {
 		br := "\n\n"
 
 		// List items don't need the extra line-break.
@@ -114,16 +114,16 @@ func escape(text []byte) []byte {
 	return bytes.Replace(text, []byte(`\`), []byte(`\\`), -1)
 }
 
-func isNumber(s string) bool {
-	for i := 0; i < len(s); i++ {
-		if s[i] < '0' || s[i] > '9' {
+func isNumber(data []byte) bool {
+	for _, b := range data {
+		if b < '0' || b > '9' {
 			return false
 		}
 	}
 	return true
 }
 
-func needsEscaping(text []byte, lastNormalText string) bool {
+func needsEscaping(text []byte, previousWasNumber bool) bool {
 	switch string(text) {
 	case `\`,
 		"`",
@@ -140,7 +140,7 @@ func needsEscaping(text []byte, lastNormalText string) bool {
 		return false
 	case ".":
 		// Return true if number, because a period after a number must be escaped to not get parsed as an ordered list.
-		return isNumber(lastNormalText)
+		return previousWasNumber
 	case "<", ">":
 		return true
 	default:
@@ -148,38 +148,36 @@ func needsEscaping(text []byte, lastNormalText string) bool {
 	}
 }
 
-// cleanWithoutTrim is like clean, but doesn't trim blanks.
-func cleanWithoutTrim(s string) string {
-	var b []byte
-	var p byte
-	for i := 0; i < len(s); i++ {
-		q := s[i]
+func cleanWithoutTrim(text []byte) []byte {
+	clean := make([]byte, 0, len(text))
+	var previous byte
+	for _, q := range text {
 		if q == '\n' || q == '\r' || q == '\t' {
 			q = ' '
 		}
-		if q != ' ' || p != ' ' {
-			b = append(b, q)
-			p = q
+		if q != ' ' || previous != ' ' {
+			clean = append(clean, q)
+			previous = q
 		}
 	}
-	return string(b)
+	return clean
 }
 
 func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	lit := text.Literal
-	if needsEscaping(lit, r.lastNormalText) {
+	if needsEscaping(lit, r.previousWasNumber) {
 		lit = append([]byte("\\"), lit...)
 	}
-	r.lastNormalText = string(text.Literal)
+	r.previousWasNumber = isNumber(text.Literal)
 	if r.listDepth > 0 && string(lit) == "\n" {
 		// TODO: See if this can be cleaned up... It's needed for lists.
 		return
 	}
-	cleanString := cleanWithoutTrim(string(lit))
-	if cleanString == "" {
+	clean := cleanWithoutTrim(lit)
+	if len(clean) == 0 {
 		return
 	}
-	r.outs(w, cleanString)
+	r.out(w, clean)
 }
 
 func (r *Renderer) htmlSpan(w io.Writer, node *ast.HTMLSpan) {
