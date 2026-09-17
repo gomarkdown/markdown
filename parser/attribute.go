@@ -25,7 +25,7 @@ func parseAttributeList(data []byte, requireEOL bool) (*ast.Attribute, int) {
 	}
 	if requireEOL {
 		end := skipUntilChar(data, 1, '\n')
-		if end == 0 || data[end-1] != '}' {
+		if data[end-1] != '}' {
 			return nil, 0
 		}
 	}
@@ -42,8 +42,6 @@ func parseAttributeList(data []byte, requireEOL bool) (*ast.Attribute, int) {
 	esc := false
 	quote := false
 	trail := i - 1
-	found := false
-Loop:
 	for ; i < len(data); i++ {
 		switch data[i] {
 		case '\n', '\r':
@@ -53,11 +51,7 @@ Loop:
 				continue
 			}
 			chunk := data[trail+1 : i]
-			if len(chunk) == 0 {
-				trail = i
-				continue
-			}
-			if !addAttrChunk(b, chunk) {
+			if len(chunk) > 0 && !addAttrChunk(b, chunk) {
 				return nil, 0
 			}
 			trail = i
@@ -79,16 +73,12 @@ Loop:
 				return nil, 0
 			}
 			i++
-			found = true
-			break Loop
+			return b, i
 		default:
 			esc = false
 		}
 	}
-	if !found {
-		return nil, 0
-	}
-	return b, i
+	return nil, 0
 }
 
 func addAttrChunk(b *ast.Attribute, chunk []byte) bool {
@@ -188,11 +178,7 @@ func (p *Parser) lastBlock() ast.Node {
 		return nil
 	}
 	if _, ok := n.(*ast.Document); ok {
-		ch := n.GetChildren()
-		if len(ch) == 0 {
-			return nil
-		}
-		return ch[len(ch)-1]
+		return ast.GetLastChild(n)
 	}
 	return n
 }
@@ -205,10 +191,7 @@ func keyValue(data []byte) ([]byte, []byte) {
 	}
 	key, value := data[:separator], data[separator+1:]
 
-	if len(value) < 3 {
-		return nil, nil
-	}
-	if value[0] != '"' || value[len(value)-1] != '"' {
+	if len(value) < 3 || value[0] != '"' || value[len(value)-1] != '"' {
 		return key, nil
 	}
 	return key, value[1 : len(value)-1]
