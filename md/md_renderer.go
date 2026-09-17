@@ -14,19 +14,17 @@ import (
 // form.
 type Renderer struct {
 	orderedListCounter map[int]int
-	// used to keep track of whether a given list item uses a paragraph
-	// for large spacing.
-	paragraph map[int]bool
 
 	lastOutputLen  int
 	listDepth      int
-	indentSize     int
 	lastNormalText string
 
 	C *RendererConfig
 
 	linkcache map[string]bool // cache for link definitions to write in the footer, if renderLinksInFooter is set
 }
+
+const listIndentSize = 4
 
 type RendererConfig struct {
 	Flags Flags
@@ -46,8 +44,6 @@ func NewRenderer(opts ...RendererOpt) *Renderer {
 	}
 	return &Renderer{
 		orderedListCounter: map[int]int{},
-		paragraph:          map[int]bool{},
-		indentSize:         4,
 		C:                  c,
 	}
 }
@@ -91,7 +87,7 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 	if !entering {
 		return
 	}
-	io.WriteString(w, strings.Repeat(" ", (r.listDepth-1)*r.indentSize))
+	io.WriteString(w, strings.Repeat(" ", (r.listDepth-1)*listIndentSize))
 	if node.ListFlags&ast.ListTypeOrdered != 0 {
 		fmt.Fprintf(w, "%d. ", r.orderedListCounter[r.listDepth])
 		r.orderedListCounter[r.listDepth]++
