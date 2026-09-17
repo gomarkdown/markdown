@@ -25,6 +25,25 @@ func isReferenceStyleLink(data []byte, pos int, t linkType) bool {
 	return pos < len(data)-1 && data[pos] == '[' && data[pos+1] != '^'
 }
 
+func referenceID(data []byte, end int, multiline, trimFootnoteMarker bool) []byte {
+	if !multiline {
+		start := 1
+		if trimFootnoteMarker {
+			start++
+		}
+		return data[start:end]
+	}
+	var id bytes.Buffer
+	for i := 1; i < end; i++ {
+		if data[i] != '\n' {
+			id.WriteByte(data[i])
+		} else if data[i-1] != ' ' {
+			id.WriteByte(' ')
+		}
+	}
+	return id.Bytes()
+}
+
 func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// no links allowed inside regular links, footnote, and deferred footnotes
 	if p.InsideLink && (offset > 0 && data[offset-1] == '[' || len(data)-1 > offset && data[offset+1] == '^') {
@@ -215,21 +234,8 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 		// find the reference
 		if linkB == linkE {
-			if textHasNl {
-				var b bytes.Buffer
-
-				for j := 1; j < txtE; j++ {
-					switch {
-					case data[j] != '\n':
-						b.WriteByte(data[j])
-					case data[j-1] != ' ':
-						b.WriteByte(' ')
-					}
-				}
-
-				id = b.Bytes()
-			} else {
-				id = data[1:txtE]
+			id = referenceID(data, txtE, textHasNl, false)
+			if !textHasNl {
 				altContentConsidered = true
 			}
 		} else {
@@ -253,29 +259,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 	// shortcut reference style link or reference or inline footnote
 	default:
-		var id []byte
-
-		// craft the id
-		if textHasNl {
-			var b bytes.Buffer
-
-			for j := 1; j < txtE; j++ {
-				switch {
-				case data[j] != '\n':
-					b.WriteByte(data[j])
-				case data[j-1] != ' ':
-					b.WriteByte(' ')
-				}
-			}
-
-			id = b.Bytes()
-		} else {
-			if t == linkDeferredFootnote {
-				id = data[2:txtE] // get rid of the ^
-			} else {
-				id = data[1:txtE]
-			}
-		}
+		id := referenceID(data, txtE, textHasNl, t == linkDeferredFootnote)
 
 		footnoteNode = &ast.ListItem{}
 		if t == linkInlineFootnote {
