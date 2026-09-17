@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 )
 
+var includeCaptions = [...]string{captionFigure, captionTable, captionQuote}
+
 // isInclude parses {{...}}[...], that contains a path between the {{, the [...] syntax contains
 // an address to select which lines to include. It is treated as an opaque string and just given
 // to readInclude.
@@ -88,6 +90,39 @@ func (p *Parser) readCodeInclude(from, file string, address []byte) []byte {
 	buf.Write(data)
 	buf.WriteString("```\n")
 	return buf.Bytes()
+}
+
+func (p *Parser) parseInclude(data []byte) int {
+	read := p.readInclude
+	file, address, consumed := isInclude(data)
+	if consumed == 0 {
+		file, address, consumed = isCodeInclude(data)
+		read = p.readCodeInclude
+	}
+	if consumed == 0 {
+		return 0
+	}
+
+	included := read(p.includeStack.Last(), file, address)
+	if consumed < len(data) {
+		rest := data[consumed:]
+		captionStart := 0
+		if rest[0] == '\n' {
+			captionStart++
+		}
+		for _, prefix := range includeCaptions {
+			_, _, captionLen := parseCaption(rest[captionStart:], []byte(prefix))
+			if captionLen > 0 {
+				included = append(included, rest[captionStart:captionStart+captionLen]...)
+				consumed += captionStart + captionLen
+				break
+			}
+		}
+	}
+	p.includeStack.Push(file)
+	p.Block(included)
+	p.includeStack.Pop()
+	return consumed
 }
 
 // incStack hold the current stack of chained includes. Each value is the containing

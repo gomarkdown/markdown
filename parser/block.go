@@ -38,37 +38,7 @@ func (p *Parser) Block(data []byte) {
 		}
 
 		if p.extensions&Includes != 0 {
-			f := p.readInclude
-			path, address, consumed := isInclude(data)
-			if consumed == 0 {
-				path, address, consumed = isCodeInclude(data)
-				f = p.readCodeInclude
-			}
-			if consumed > 0 {
-				included := f(p.includeStack.Last(), path, address)
-
-				// Optional caption on the line after the include. Skip a following
-				// newline when present; do not assume data[consumed+1] exists (EOF
-				// after {{file}} used to panic with slice bounds out of range).
-				if consumed < len(data) {
-					rest := data[consumed:]
-					captionOff := 0
-					if rest[0] == '\n' {
-						captionOff = 1
-					}
-					if captionOff < len(rest) {
-						for _, caption := range []string{captionFigure, captionTable, captionQuote} {
-							if _, _, capcon := parseCaption(rest[captionOff:], []byte(caption)); capcon > 0 {
-								included = append(included, rest[captionOff:captionOff+capcon]...)
-								consumed += captionOff + capcon
-								break // there can only be 1 caption.
-							}
-						}
-					}
-				}
-				p.includeStack.Push(path)
-				p.Block(included)
-				p.includeStack.Pop()
+			if consumed := p.parseInclude(data); consumed > 0 {
 				data = data[consumed:]
 				continue
 			}
