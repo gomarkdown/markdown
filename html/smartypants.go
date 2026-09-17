@@ -37,61 +37,36 @@ func isdigit(c byte) bool {
 	return c >= '0' && c <= '9'
 }
 
-func smartQuoteHelper(out *bytes.Buffer, previousChar byte, nextChar byte, quote byte, isOpen *bool, addNBSP bool) bool {
-	// edge of the buffer is likely to be a tag that we don't get to see,
-	// so we treat it like text sometimes
-
-	// enumerate all sixteen possibilities for (previousChar, nextChar)
-	// each can be one of {0, space, punct, other}
+func quoteContext(c byte) int {
 	switch {
-	case previousChar == 0 && nextChar == 0:
-		// context is not any help here, so toggle
-		*isOpen = !*isOpen
-	case isSpace(previousChar) && nextChar == 0:
-		// [ "] might be [ "<code>foo...]
-		*isOpen = true
-	case isPunctuation(previousChar) && nextChar == 0:
-		// [!"] hmm... could be [Run!"] or [("<code>...]
-		*isOpen = false
-	case /* isnormal(previousChar) && */ nextChar == 0:
-		// [a"] is probably a close
-		*isOpen = false
-	case previousChar == 0 && isSpace(nextChar):
-		// [" ] might be [...foo</code>" ]
-		*isOpen = false
-	case isSpace(previousChar) && isSpace(nextChar):
-		// [ " ] context is not any help here, so toggle
-		*isOpen = !*isOpen
-	case isPunctuation(previousChar) && isSpace(nextChar):
-		// [!" ] is probably a close
-		*isOpen = false
-	case /* isnormal(previousChar) && */ isSpace(nextChar):
-		// [a" ] this is one of the easy cases
-		*isOpen = false
-	case previousChar == 0 && isPunctuation(nextChar):
-		// ["!] hmm... could be ["$1.95] or [</code>"!...]
-		*isOpen = false
-	case isSpace(previousChar) && isPunctuation(nextChar):
-		// [ "!] looks more like [ "$1.95]
-		*isOpen = true
-	case isPunctuation(previousChar) && isPunctuation(nextChar):
-		// [!"!] context is not any help here, so toggle
-		*isOpen = !*isOpen
-	case /* isnormal(previousChar) && */ isPunctuation(nextChar):
-		// [a"!] is probably a close
-		*isOpen = false
-	case previousChar == 0 /* && isnormal(nextChar) */ :
-		// ["a] is probably an open
-		*isOpen = true
-	case isSpace(previousChar) /* && isnormal(nextChar) */ :
-		// [ "a] this is one of the easy cases
-		*isOpen = true
-	case isPunctuation(previousChar) /* && isnormal(nextChar) */ :
-		// [!"a] is probably an open
-		*isOpen = true
+	case c == 0:
+		return 0
+	case isSpace(c):
+		return 1
+	case isPunctuation(c):
+		return 2
 	default:
-		// [a'b] maybe a contraction?
+		return 3
+	}
+}
+
+// quoteState maps {edge, space, punctuation, text} context pairs to
+// {-1: close, 0: toggle, 1: open}.
+var quoteState = [4][4]int8{
+	{0, -1, -1, 1},
+	{1, 0, 1, 1},
+	{-1, -1, 0, 1},
+	{-1, -1, -1, -1},
+}
+
+func smartQuote(out *bytes.Buffer, previous, next, quote byte, isOpen *bool, addNBSP bool) {
+	switch quoteState[quoteContext(previous)][quoteContext(next)] {
+	case -1:
 		*isOpen = false
+	case 0:
+		*isOpen = !*isOpen
+	case 1:
+		*isOpen = true
 	}
 
 	// Note that with the limited lookahead, this non-breaking
@@ -113,7 +88,6 @@ func smartQuoteHelper(out *bytes.Buffer, previousChar byte, nextChar byte, quote
 		out.WriteString("&nbsp;")
 	}
 
-	return true
 }
 
 func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text []byte) int {
@@ -125,9 +99,8 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 			if len(text) >= 3 {
 				nextChar = text[2]
 			}
-			if smartQuoteHelper(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false) {
-				return 1
-			}
+			smartQuote(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false)
+			return 1
 		}
 
 		if (t1 == 's' || t1 == 't' || t1 == 'm' || t1 == 'd') && (len(text) < 3 || wordBoundary(text[2])) {
@@ -150,11 +123,7 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 	if len(text) > 1 {
 		nextChar = text[1]
 	}
-	if smartQuoteHelper(out, previousChar, nextChar, 's', &r.inSingleQuote, false) {
-		return 0
-	}
-
-	out.WriteByte(text[0])
+	smartQuote(out, previousChar, nextChar, 's', &r.inSingleQuote, false)
 	return 0
 }
 
@@ -220,9 +189,8 @@ func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text 
 		if len(text) >= 7 {
 			nextChar = text[6]
 		}
-		if smartQuoteHelper(out, previousChar, nextChar, quote, &r.inDoubleQuote, addNBSP) {
-			return 5
-		}
+		smartQuote(out, previousChar, nextChar, quote, &r.inDoubleQuote, addNBSP)
+		return 5
 	}
 
 	if bytes.HasPrefix(text, []byte("&#0;")) {
@@ -265,9 +233,8 @@ func (r *SPRenderer) smartBacktick(out *bytes.Buffer, previousChar byte, text []
 		if len(text) >= 3 {
 			nextChar = text[2]
 		}
-		if smartQuoteHelper(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false) {
-			return 1
-		}
+		smartQuote(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false)
+		return 1
 	}
 
 	out.WriteByte(text[0])
@@ -344,24 +311,13 @@ func (r *SPRenderer) smartNumber(out *bytes.Buffer, previousChar byte, text []by
 	return 0
 }
 
-func (r *SPRenderer) smartDoubleQuoteVariant(out *bytes.Buffer, previousChar byte, text []byte, quote byte) int {
+func (r *SPRenderer) smartDoubleQuote(out *bytes.Buffer, previousChar byte, text []byte, quote byte) int {
 	nextChar := byte(0)
 	if len(text) > 1 {
 		nextChar = text[1]
 	}
-	if !smartQuoteHelper(out, previousChar, nextChar, quote, &r.inDoubleQuote, false) {
-		out.WriteString("&quot;")
-	}
-
+	smartQuote(out, previousChar, nextChar, quote, &r.inDoubleQuote, false)
 	return 0
-}
-
-func (r *SPRenderer) smartDoubleQuote(out *bytes.Buffer, previousChar byte, text []byte) int {
-	return r.smartDoubleQuoteVariant(out, previousChar, text, 'd')
-}
-
-func (r *SPRenderer) smartAngledDoubleQuote(out *bytes.Buffer, previousChar byte, text []byte) int {
-	return r.smartDoubleQuoteVariant(out, previousChar, text, 'a')
 }
 
 func (r *SPRenderer) smartLeftAngle(out *bytes.Buffer, previousChar byte, text []byte) int {
@@ -382,32 +338,16 @@ type smartCallback func(out *bytes.Buffer, previousChar byte, text []byte) int
 
 // NewSmartypantsRenderer constructs a Smartypants renderer object.
 func NewSmartypantsRenderer(flags Flags) *SPRenderer {
-	var (
-		r SPRenderer
-
-		smartAmpAngled      = r.smartAmp(true, false)
-		smartAmpAngledNBSP  = r.smartAmp(true, true)
-		smartAmpRegular     = r.smartAmp(false, false)
-		smartAmpRegularNBSP = r.smartAmp(false, true)
-
-		addNBSP = flags&SmartypantsQuotesNBSP != 0
-	)
-
-	if flags&SmartypantsAngledQuotes == 0 {
-		r.callbacks['"'] = r.smartDoubleQuote
-		if !addNBSP {
-			r.callbacks['&'] = smartAmpRegular
-		} else {
-			r.callbacks['&'] = smartAmpRegularNBSP
-		}
-	} else {
-		r.callbacks['"'] = r.smartAngledDoubleQuote
-		if !addNBSP {
-			r.callbacks['&'] = smartAmpAngled
-		} else {
-			r.callbacks['&'] = smartAmpAngledNBSP
-		}
+	var r SPRenderer
+	angled := flags&SmartypantsAngledQuotes != 0
+	quote := byte('d')
+	if angled {
+		quote = 'a'
 	}
+	r.callbacks['"'] = func(out *bytes.Buffer, previous byte, text []byte) int {
+		return r.smartDoubleQuote(out, previous, text, quote)
+	}
+	r.callbacks['&'] = r.smartAmp(angled, flags&SmartypantsQuotesNBSP != 0)
 	r.callbacks['\''] = r.smartSingleQuote
 	r.callbacks['('] = r.smartParens
 	if flags&SmartypantsDashes != 0 {
