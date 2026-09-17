@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 func IsList(node ast.Node) bool {
@@ -30,21 +31,7 @@ func IsListItemTerm(node ast.Node) bool {
 
 // Slugify creates a URL-safe fragment slug.
 func Slugify(in []byte) []byte {
-	out := make([]byte, 0, len(in))
-	separator := true
-	for _, ch := range in {
-		if isAlnum(ch) {
-			out = append(out, ch)
-			separator = false
-		} else if !separator {
-			out = append(out, '-')
-			separator = true
-		}
-	}
-	if len(out) > 0 && out[len(out)-1] == '-' {
-		out = out[:len(out)-1]
-	}
-	return out
+	return textutil.Slugify(in)
 }
 
 // BlockAttrs returns the serialized block attributes attached to node.

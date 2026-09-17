@@ -11,7 +11,6 @@ import (
 
 var (
 	isSpace       = parser.IsSpace
-	isAlnum       = parser.IsAlnum
 	isPunctuation = parser.IsPunctuation
 )
 
