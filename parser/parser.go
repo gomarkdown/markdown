@@ -163,50 +163,50 @@ func New() *Parser {
 
 // NewWithExtensions creates a markdown parser with given extensions.
 func NewWithExtensions(extension Extensions) *Parser {
+	doc := &ast.Document{}
 	p := Parser{
-		refs:         make(map[string]*reference),
-		refsRecord:   make(map[string]struct{}),
-		maxNesting:   64,
-		InsideLink:   false,
-		Doc:          &ast.Document{},
-		extensions:   extension,
-		allClosed:    true,
-		includeStack: newIncStack(),
+		refs:                 make(map[string]*reference),
+		refsRecord:           make(map[string]struct{}),
+		maxNesting:           64,
+		Doc:                  doc,
+		extensions:           extension,
+		tip:                  doc,
+		oldTip:               doc,
+		lastMatchedContainer: doc,
+		allClosed:            true,
+		includeStack:         newIncStack(),
 	}
-	p.tip = p.Doc
-	p.oldTip = p.Doc
-	p.lastMatchedContainer = p.Doc
 
-	p.inlineCallback[' '] = maybeLineBreak
-	p.inlineCallback['*'] = emphasis
-	p.inlineCallback['_'] = emphasis
+	p.registerInline(" ", maybeLineBreak)
+	p.registerInline("*_", emphasis)
 	if p.extensions&Strikethrough != 0 {
-		p.inlineCallback['~'] = emphasis
+		p.registerInline("~", emphasis)
 	}
-	p.inlineCallback['`'] = codeSpan
-	p.inlineCallback['\n'] = lineBreak
-	p.inlineCallback['['] = link
-	p.inlineCallback['<'] = leftAngle
-	p.inlineCallback['\\'] = escape
-	p.inlineCallback['&'] = entity
-	p.inlineCallback['!'] = maybeImage
+	p.registerInline("`", codeSpan)
+	p.registerInline("\n", lineBreak)
+	p.registerInline("[", link)
+	p.registerInline("<", leftAngle)
+	p.registerInline("\\", escape)
+	p.registerInline("&", entity)
+	p.registerInline("!", maybeImage)
 	if p.extensions&Mmark != 0 {
-		p.inlineCallback['('] = maybeShortRefOrIndex
+		p.registerInline("(", maybeShortRefOrIndex)
 	}
-	p.inlineCallback['^'] = maybeInlineFootnoteOrSuper
+	p.registerInline("^", maybeInlineFootnoteOrSuper)
 	if p.extensions&Autolink != 0 {
-		p.inlineCallback['h'] = maybeAutoLink
-		p.inlineCallback['m'] = maybeAutoLink
-		p.inlineCallback['f'] = maybeAutoLink
-		p.inlineCallback['H'] = maybeAutoLink
-		p.inlineCallback['M'] = maybeAutoLink
-		p.inlineCallback['F'] = maybeAutoLink
+		p.registerInline("hmfHMF", maybeAutoLink)
 	}
 	if p.extensions&MathJax != 0 {
-		p.inlineCallback['$'] = math
+		p.registerInline("$", math)
 	}
 
 	return &p
+}
+
+func (p *Parser) registerInline(chars string, fn InlineParser) {
+	for i := 0; i < len(chars); i++ {
+		p.inlineCallback[chars[i]] = fn
+	}
 }
 
 func (p *Parser) RegisterInline(n byte, fn InlineParser) InlineParser {
