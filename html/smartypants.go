@@ -275,23 +275,18 @@ func (r *SPRenderer) smartNumberGeneric(out *bytes.Buffer, previousChar byte, te
 
 func (r *SPRenderer) smartNumber(out *bytes.Buffer, previousChar byte, text []byte) int {
 	if wordBoundary(previousChar) && previousChar != '/' && len(text) >= 3 {
-		if text[0] == '1' && text[1] == '/' && text[2] == '2' {
-			if len(text) < 4 || wordBoundary(text[3]) && text[3] != '/' {
-				out.WriteString("&frac12;")
-				return 2
+		for _, fraction := range [...]struct{ token, suffix, entity string }{
+			{"1/2", "", "&frac12;"},
+			{"1/4", "th", "&frac14;"},
+			{"3/4", "ths", "&frac34;"},
+		} {
+			if string(text[:3]) != fraction.token {
+				continue
 			}
-		}
-
-		if text[0] == '1' && text[1] == '/' && text[2] == '4' {
-			if len(text) < 4 || wordBoundary(text[3]) && text[3] != '/' || (len(text) >= 5 && tolower(text[3]) == 't' && tolower(text[4]) == 'h') {
-				out.WriteString("&frac14;")
-				return 2
-			}
-		}
-
-		if text[0] == '3' && text[1] == '/' && text[2] == '4' {
-			if len(text) < 4 || wordBoundary(text[3]) && text[3] != '/' || (len(text) >= 6 && tolower(text[3]) == 't' && tolower(text[4]) == 'h' && tolower(text[5]) == 's') {
-				out.WriteString("&frac34;")
+			boundary := len(text) == 3 || wordBoundary(text[3]) && text[3] != '/'
+			suffix := text[3:]
+			if boundary || fraction.suffix != "" && len(suffix) >= len(fraction.suffix) && bytes.EqualFold(suffix[:len(fraction.suffix)], []byte(fraction.suffix)) {
+				out.WriteString(fraction.entity)
 				return 2
 			}
 		}
