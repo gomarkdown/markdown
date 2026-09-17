@@ -97,10 +97,10 @@ func (p *Parser) prefixHeading(data []byte) int {
 	id, end, skip := p.parseHeadingContent(data, i, end)
 	if end > i {
 		block := &ast.Heading{
-			Level: level,
+			Container: ast.Container{Content: data[i:end]},
+			Level:     level,
 		}
 		p.setHeadingID(block, id, data[i:end])
-		block.Content = data[i:end]
 		p.AddBlock(block)
 	}
 	return skip
@@ -137,42 +137,33 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 	id, end, skip := p.parseHeadingContent(data, i, end)
 	if end > i {
 		block := &ast.Heading{
+			Container: ast.Container{Literal: data[i:end], Content: data[i:end]},
 			IsSpecial: true,
-			Level:     1, // always level 1.
+			Level:     1,
 		}
 		p.setHeadingID(block, id, data[i:end])
-		block.Literal = data[i:end]
-		block.Content = data[i:end]
 		p.AddBlock(block)
 	}
 	return skip
 }
 
 func isUnderlinedHeading(data []byte) int {
-	// test of level 1 heading
-	if data[0] == '=' {
-		i := skipChar(data, 1, '=')
-		i = skipChar(data, i, ' ')
-		if i < len(data) && data[i] == '\n' {
+	marker := data[0]
+	if marker != '=' && marker != '-' {
+		return 0
+	}
+	i := skipChar(data, 1, marker)
+	i = skipChar(data, i, ' ')
+	if i < len(data) && data[i] == '\n' {
+		if marker == '=' {
 			return 1
 		}
-		return 0
+		return 2
 	}
-
-	// test of level 2 heading
-	if data[0] == '-' {
-		i := skipChar(data, 1, '-')
-		i = skipChar(data, i, ' ')
-		if i < len(data) && data[i] == '\n' {
-			return 2
-		}
-		return 0
-	}
-
 	return 0
 }
 
-func (p *Parser) titleBlock(data []byte, doRender bool) int {
+func (p *Parser) titleBlock(data []byte) int {
 	if data[0] != '%' {
 		return 0
 	}
@@ -200,12 +191,7 @@ func (p *Parser) titleBlock(data []byte, doRender bool) int {
 }
 
 func isHRule(data []byte) bool {
-	i := 0
-
-	// skip up to three spaces
-	for i < 3 && data[i] == ' ' {
-		i++
-	}
+	i := skipCharN(data, 0, ' ', 3)
 
 	// look at the hrule char
 	if data[i] != '*' && data[i] != '-' && data[i] != '_' {

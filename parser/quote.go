@@ -46,32 +46,22 @@ func (p *Parser) quote(data []byte) int {
 		beg = end
 	}
 
-	if p.extensions&Mmark == 0 {
-		block := p.AddBlock(&ast.BlockQuote{})
-		p.Block(raw.Bytes())
-		p.Finalize(block)
-		return end
-	}
+	if p.extensions&Mmark != 0 {
+		if captionContent, id, consumed := parseCaption(data[end:], []byte(captionQuote)); consumed > 0 {
+			figure := &ast.CaptionFigure{HeadingID: id}
+			caption := &ast.Caption{}
+			p.Inline(caption, captionContent)
 
-	if captionContent, id, consumed := parseCaption(data[end:], []byte(captionQuote)); consumed > 0 {
-		figure := &ast.CaptionFigure{}
-		caption := &ast.Caption{}
-		figure.HeadingID = id
-		p.Inline(caption, captionContent)
+			p.AddBlock(figure)
+			block := &ast.BlockQuote{Container: ast.Container{Attribute: figure.Attribute}}
+			p.addChild(block)
+			p.Block(raw.Bytes())
+			p.Finalize(block)
 
-		p.AddBlock(figure) // this discard any attributes
-		block := &ast.BlockQuote{}
-		block.AsContainer().Attribute = figure.AsContainer().Attribute
-		p.addChild(block)
-		p.Block(raw.Bytes())
-		p.Finalize(block)
-
-		p.addChild(caption)
-		p.Finalize(figure)
-
-		end += consumed
-
-		return end
+			p.addChild(caption)
+			p.Finalize(figure)
+			return end + consumed
+		}
 	}
 
 	block := p.AddBlock(&ast.BlockQuote{})
@@ -80,5 +70,3 @@ func (p *Parser) quote(data []byte) int {
 
 	return end
 }
-
-// returns prefix length for block code

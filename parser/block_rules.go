@@ -69,7 +69,7 @@ func parseHTMLBlock(p *Parser, data []byte) int {
 	return 0
 }
 
-func parseTitleBlock(p *Parser, data []byte) int { return p.titleBlock(data, true) }
+func parseTitleBlock(p *Parser, data []byte) int { return p.titleBlock(data) }
 func parseBlankLines(_ *Parser, data []byte) int { return IsEmpty(data) }
 
 func parseIndentedCode(p *Parser, data []byte) int {
