@@ -139,16 +139,14 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 				return 0, nil
 			}
 		}
-		sup := &ast.Superscript{}
-		sup.Literal = data[offset+1 : offset+ret]
+		sup := &ast.Superscript{Leaf: ast.Leaf{Literal: data[offset+1 : offset+ret]}}
 		return ret + 1, sup
 	}
 
 	return 0, nil
 }
 
-// '[': parse a link or an image or a footnote or a citation
-func math(p *Parser, data []byte, offset int) (int, ast.Node) {
+func math(_ *Parser, data []byte, offset int) (int, ast.Node) {
 	data = data[offset:]
 
 	// too short, or block math
@@ -166,10 +164,7 @@ func math(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return 0, nil
 	}
 
-	// create inline math node
-	math := &ast.Math{}
-	math.Literal = data[1:end]
-	return end + 1, math
+	return end + 1, &ast.Math{Leaf: ast.Leaf{Literal: data[1:end]}}
 }
 
 func newTextNode(d []byte) *ast.Text {

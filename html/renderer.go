@@ -279,7 +279,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.CaptionFigure:
 		r.CaptionFigure(w, node, entering)
 	case *ast.Document:
-		// do nothing
 	case *ast.Paragraph:
 		r.Paragraph(w, node, entering)
 	case *ast.HTMLSpan:

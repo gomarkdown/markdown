@@ -127,8 +127,7 @@ func IsSpace(c byte) bool {
 // IsLetter returns true if c is ascii letter
 func IsLetter(c byte) bool { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' }
 
-// IsAlnum returns true if c is a digit or letter
-// TODO: check when this is looking for ASCII alnum and when it should use unicode
+// IsAlnum returns true if c is an ASCII digit or letter.
 func IsAlnum(c byte) bool { return c >= '0' && c <= '9' || IsLetter(c) }
 
 func NormalizeNewlines(d []byte) []byte {

@@ -21,7 +21,7 @@ const (
 	ListTypeTerm
 
 	ListItemContainsBlock
-	ListItemBeginningOfList // TODO: figure out if this is of any use now
+	ListItemBeginningOfList // Marks the first item emitted for a list.
 	ListItemEndOfList
 )
 
@@ -284,7 +284,7 @@ type CodeBlock struct {
 }
 
 // Softbreak represents markdown softbreak node
-// Note: not used currently
+// The built-in parser does not currently emit Softbreak nodes.
 type Softbreak struct{ Leaf }
 
 // Hardbreak represents markdown hard break node

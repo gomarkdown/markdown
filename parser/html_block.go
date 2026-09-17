@@ -12,7 +12,7 @@ var (
 	blockTags = stringSet(
 		"blockquote", "del", "dd", "div", "dl", "dt", "fieldset", "form",
 		"h1", "h2", "h3", "h4", "h5", "h6",
-		// TODO: technically block but breaks Inline HTML (Simple).text
+		// Kept inline for compatibility with existing simple HTML parsing.
 		// "hr",
 		"iframe", "ins", "li", "math", "noscript", "ol", "pre", "p",
 		"script", "style", "table", "ul",

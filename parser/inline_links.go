@@ -334,7 +334,7 @@ func isMailtoAutoLink(data []byte) int {
 			nb++
 
 		case '-', '.', '_':
-			// no-op but not defult
+			// valid address punctuation
 
 		case '>':
 			if nb == 1 {
