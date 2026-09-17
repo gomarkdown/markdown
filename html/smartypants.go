@@ -102,16 +102,10 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 			return 1
 		}
 
-		if (t1 == 's' || t1 == 't' || t1 == 'm' || t1 == 'd') && (len(text) < 3 || wordBoundary(text[2])) {
-			out.WriteString("&rsquo;")
-			return 0
-		}
-
-		if len(text) >= 3 {
-			t2 := tolower(text[2])
-
-			if ((t1 == 'r' && t2 == 'e') || (t1 == 'l' && t2 == 'l') || (t1 == 'v' && t2 == 'e')) &&
-				(len(text) < 4 || wordBoundary(text[3])) {
+		for _, suffix := range [...]string{"s", "t", "m", "d", "re", "ll", "ve"} {
+			end := 1 + len(suffix)
+			if len(text) >= end && bytes.EqualFold(text[1:end], []byte(suffix)) &&
+				(len(text) == end || wordBoundary(text[end])) {
 				out.WriteString("&rsquo;")
 				return 0
 			}
@@ -189,17 +183,6 @@ func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text 
 
 	out.WriteByte('&')
 	return 0
-}
-
-func (r *SPRenderer) smartAmp(angledQuotes, addNBSP bool) func(*bytes.Buffer, byte, []byte) int {
-	var quote byte = 'd'
-	if angledQuotes {
-		quote = 'a'
-	}
-
-	return func(out *bytes.Buffer, previousChar byte, text []byte) int {
-		return r.smartAmpVariant(out, previousChar, text, quote, addNBSP)
-	}
 }
 
 func (r *SPRenderer) smartPeriod(out *bytes.Buffer, previousChar byte, text []byte) int {
@@ -328,7 +311,10 @@ func NewSmartypantsRenderer(flags Flags) *SPRenderer {
 		smartQuote(out, previous, next, quote, &r.inDoubleQuote, false)
 		return 0
 	}
-	r.callbacks['&'] = r.smartAmp(angled, flags&SmartypantsQuotesNBSP != 0)
+	addNBSP := flags&SmartypantsQuotesNBSP != 0
+	r.callbacks['&'] = func(out *bytes.Buffer, previous byte, text []byte) int {
+		return r.smartAmpVariant(out, previous, text, quote, addNBSP)
+	}
 	r.callbacks['\''] = r.smartSingleQuote
 	r.callbacks['('] = r.smartParens
 	if flags&SmartypantsDashes != 0 {
