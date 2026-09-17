@@ -124,11 +124,7 @@ func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 	if doRender {
 		p.addHTMLBlock(bytes.TrimRight(data[:openEnd], "\n"))
 
-		innerStart := openEnd
-		if innerStart < len(data) && data[innerStart] == '\n' {
-			innerStart++
-		}
-		inner := data[innerStart:closeStart]
+		inner := bytes.TrimPrefix(data[openEnd:closeStart], []byte("\n"))
 		if len(inner) > 0 {
 			p.Block(inner)
 		}
@@ -157,16 +153,8 @@ func hasBlankLineBefore(data []byte, pos int, skipIndent bool) bool {
 		return false
 	}
 	lineEnd := pos - 1
-	lineStart := lineEnd
-	for lineStart > 0 && data[lineStart-1] != '\n' {
-		lineStart--
-	}
-	for _, b := range data[lineStart:lineEnd] {
-		if b != ' ' && b != '\t' {
-			return false
-		}
-	}
-	return true
+	lineStart := bytes.LastIndexByte(data[:lineEnd], '\n') + 1
+	return len(bytes.Trim(data[lineStart:lineEnd], " \t")) == 0
 }
 
 func (p *Parser) findHTMLCloseTag(data []byte, tag string, start int, loose bool) (closeStart int, consumed int) {
@@ -286,7 +274,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 	if len(data) < 4 {
 		return 0
 	}
-	if data[0] != '<' || (data[1] != 'h' && data[1] != 'H') || (data[2] != 'r' && data[2] != 'R') {
+	if (data[1] != 'h' && data[1] != 'H') || (data[2] != 'r' && data[2] != 'R') {
 		return 0
 	}
 	if data[3] != ' ' && data[3] != '/' && data[3] != '>' {
@@ -335,13 +323,11 @@ func (p *Parser) htmlFindEnd(tag string, data []byte) int {
 	i := len(closetag)
 
 	// check that the rest of the line is blank
-	skip := 0
-	if skip = IsEmpty(data[i:]); skip == 0 {
+	skip := IsEmpty(data[i:])
+	if skip == 0 {
 		return 0
 	}
 	i += skip
-	skip = 0
-
 	if i >= len(data) {
 		return i
 	}
