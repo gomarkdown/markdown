@@ -39,23 +39,22 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 		}
 	}
 
-	ptag := "<p"
-	if r.Opts.ParagraphTag != "" {
-		ptag = "<" + r.Opts.ParagraphTag
-	}
-	tag := TagWithAttributes(ptag, BlockAttrs(para))
+	tag := TagWithAttributes("<"+r.paragraphTag(), BlockAttrs(para))
 	r.Outs(w, tag)
 }
 
 func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
-	ptag := "</p>"
-	if r.Opts.ParagraphTag != "" {
-		ptag = "</" + r.Opts.ParagraphTag + ">"
-	}
-	r.Outs(w, ptag)
+	r.Outs(w, "</"+r.paragraphTag()+">")
 	if !(IsListItem(para.Parent) && ast.GetNextNode(para) == nil) {
 		r.CR(w)
 	}
+}
+
+func (r *Renderer) paragraphTag() string {
+	if r.Opts.ParagraphTag != "" {
+		return r.Opts.ParagraphTag
+	}
+	return "p"
 }
 
 // Paragraph writes ast.Paragraph node
@@ -123,30 +122,16 @@ func (r *Renderer) MakeUniqueHeadingID(hdr *ast.Heading) string {
 
 func (r *Renderer) HeadingEnter(w io.Writer, hdr *ast.Heading) {
 	var attrs []string
-	var class string
 	if hdr.IsTitleblock {
-		class = "title"
+		attrs = append(attrs, `class="title"`)
 	}
 	if hdr.IsSpecial {
-		if class != "" {
-			class += " special"
-		} else {
-			class = "special"
-		}
-	}
-	if class != "" {
-		attrs = []string{`class="` + class + `"`}
+		attrs = append(attrs, `class="special"`)
 	}
 
 	if hdr.HeadingID != "" {
 		id := r.MakeUniqueHeadingID(hdr)
-		// Escape so untrusted {#id} values cannot break out of the attribute
-		// (GHSA-gc99-qr5c-98ff).
-		var idBuf bytes.Buffer
-		idBuf.WriteString(`id="`)
-		EscapeHTML(&idBuf, []byte(id))
-		idBuf.WriteByte('"')
-		attrs = append(attrs, idBuf.String())
+		attrs = append(attrs, fmt.Sprintf(`id="%s"`, escapeAttr(id)))
 	}
 	attrs = append(attrs, BlockAttrs(hdr)...)
 	attrs = coalesceClassAttrs(attrs)
