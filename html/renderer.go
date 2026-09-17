@@ -242,7 +242,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 		r.Text(w, node)
 	case *ast.Softbreak:
 		r.CR(w)
-		// TODO: make it configurable via out(renderer.softbreak)
 	case *ast.Hardbreak:
 		r.HardBreak(w, node)
 	case *ast.NonBlockingSpace:

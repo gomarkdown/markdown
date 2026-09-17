@@ -215,14 +215,11 @@ func (r *Renderer) Caption(w io.Writer, caption *ast.Caption, entering bool) {
 
 // CaptionFigure writes ast.CaptionFigure node
 func (r *Renderer) CaptionFigure(w io.Writer, figure *ast.CaptionFigure, entering bool) {
-	// TODO(miek): copy more generic ways of mmark over to here.
-	fig := "<figure"
+	var attrs []string
 	if figure.HeadingID != "" {
-		fig += ` id="` + escapeAttr(figure.HeadingID) + `">`
-	} else {
-		fig += ">"
+		attrs = append(attrs, `id="`+escapeAttr(figure.HeadingID)+`"`)
 	}
-	r.OutOneOf(w, entering, fig, "\n</figure>\n")
+	r.OutOneOf(w, entering, TagWithAttributes("<figure", attrs), "\n</figure>\n")
 }
 
 // TableCell writes ast.TableCell node
@@ -257,7 +254,7 @@ func (r *Renderer) TableBody(w io.Writer, node *ast.TableBody, entering bool) {
 	if entering {
 		r.CR(w)
 		r.Outs(w, "<tbody>")
-		// XXX: this is to adhere to a rather silly test. Should fix test.
+		// Preserve the historical newline for empty table bodies.
 		if ast.GetFirstChild(node) == nil {
 			r.CR(w)
 		}
