@@ -53,6 +53,17 @@ func dliPrefix(data []byte) int {
 	return 2
 }
 
+func listIndent(data []byte, max int) (width, bytes int) {
+	if len(data) > 0 && data[0] == '\t' {
+		return 4, 1
+	}
+	for bytes < len(data) && width < max && data[bytes] == ' ' {
+		width++
+		bytes++
+	}
+	return
+}
+
 // parse ordered or unordered list block
 func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) int {
 	i := 0
@@ -114,15 +125,7 @@ func trackListFence(line []byte, indent int, marker *string) (verbatim, endList 
 // Assumes initial prefix is already removed if this is a sublist.
 func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 	isDefinitionList := *flags&ast.ListTypeDefinition != 0
-	// keep track of the indentation of the first line
-	itemIndent := 0
-	if data[0] == '\t' {
-		itemIndent += 4
-	} else {
-		for itemIndent < 3 && data[itemIndent] == ' ' {
-			itemIndent++
-		}
-	}
+	itemIndent, _ := listIndent(data, 3)
 
 	var (
 		bulletChar byte = '*'
@@ -194,17 +197,7 @@ gatherlines:
 		}
 
 		// calculate the indentation
-		indent := 0
-		indentIndex := 0
-		if data[line] == '\t' {
-			indentIndex++
-			indent += 4
-		} else {
-			for indent < 4 && line+indent < i && data[line+indent] == ' ' {
-				indent++
-				indentIndex++
-			}
-		}
+		indent, indentIndex := listIndent(data[line:i], 4)
 
 		chunk := data[line+indentIndex : i]
 
@@ -316,6 +309,10 @@ gatherlines:
 	}
 
 	rawBytes := raw.Bytes()
+	itemEnd := len(rawBytes)
+	if sublist > 0 {
+		itemEnd = sublist
+	}
 
 	listItem := &ast.ListItem{
 		ListFlags:  *flags,
@@ -327,27 +324,13 @@ gatherlines:
 
 	// render the contents of the list item
 	if *flags&ast.ListItemContainsBlock != 0 && *flags&ast.ListTypeTerm == 0 {
-		// intermediate render of block item, except for definition term
-		if sublist > 0 {
-			p.Block(rawBytes[:sublist])
-			p.Block(rawBytes[sublist:])
-		} else {
-			p.Block(rawBytes)
-		}
+		p.Block(rawBytes[:itemEnd])
 	} else {
-		// intermediate render of inline item
-		para := &ast.Paragraph{}
-		if sublist > 0 {
-			para.Content = rawBytes[:sublist]
-		} else {
-			para.Content = rawBytes
-		}
+		para := &ast.Paragraph{Container: ast.Container{Content: rawBytes[:itemEnd]}}
 		p.addChild(para)
-		if sublist > 0 {
-			p.Block(rawBytes[sublist:])
-		}
+	}
+	if sublist > 0 {
+		p.Block(rawBytes[sublist:])
 	}
 	return line
 }
-
-// render a single paragraph that has already been parsed out
