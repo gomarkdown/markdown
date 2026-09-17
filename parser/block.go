@@ -21,14 +21,7 @@ func (p *Parser) Block(data []byte) {
 
 	// parse out one block-level construct at a time
 	for len(data) > 0 {
-		// attributes that can be specified before a block element:
-		//
-		// {#id .class1 .class2 key="value"}
-		//
-		// kramdown also allows an IAL on the line after a block:
-		//
-		// ## foo
-		// {: data-line="1"}
+		// Attributes may occur before a block or as a kramdown-style IAL after it.
 		if p.extensions&Attributes != 0 {
 			if n := p.applyAfterBlockAttribute(data); n > 0 {
 				data = data[n:]
@@ -76,8 +69,7 @@ func (p *Parser) AddBlock(n ast.Node) ast.Node {
 	if p.attr != nil {
 		if c := n.AsContainer(); c != nil {
 			c.Attribute = p.attr
-		}
-		if l := n.AsLeaf(); l != nil {
+		} else if l := n.AsLeaf(); l != nil {
 			l.Attribute = p.attr
 		}
 		p.attr = nil
@@ -100,10 +92,7 @@ func (p *Parser) blockMath(data []byte) int {
 		return 0
 	}
 
-	// render the display math
-	mathBlock := &ast.MathBlock{}
-	mathBlock.Literal = data[2:end]
-	p.AddBlock(mathBlock)
+	p.AddBlock(&ast.MathBlock{Container: ast.Container{Literal: data[2:end]}})
 
 	return end + 2
 }
