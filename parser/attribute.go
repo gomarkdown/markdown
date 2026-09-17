@@ -149,36 +149,37 @@ func (p *Parser) applyAfterBlockAttribute(data []byte) int {
 	if prev == nil {
 		return 0
 	}
+	attr, consumed := parseAfterBlockAttribute(data)
+	if consumed == 0 {
+		return 0
+	}
+	applyAttribute(prev, attr)
+	return consumed
+}
+
+func parseAfterBlockAttribute(data []byte) (*ast.Attribute, int) {
 	i := 0
-	if i < len(data) && data[i] == '\n' {
+	if len(data) > 0 && data[0] == '\n' {
 		i++
 	}
 	i = skipCharN(data, i, ' ', 3)
-	if i >= len(data) || data[i] != '{' {
-		return 0
-	}
-	if i+1 >= len(data) || data[i+1] != ':' {
-		return 0
+	if i+1 >= len(data) || data[i] != '{' || data[i+1] != ':' {
+		return nil, 0
 	}
 	attr, n := parseAttributeList(data[i:], true)
 	if n == 0 {
-		return 0
+		return nil, 0
 	}
-	j := i + n
-	if j < len(data) && data[j] == '\n' {
-		j++
+	consumed := i + n
+	if consumed < len(data) && data[consumed] == '\n' {
+		consumed++
 	}
-	applyAttribute(prev, attr)
-	return j
+	return attr, consumed
 }
 
 func isAfterBlockIAL(data []byte) bool {
-	i := skipCharN(data, 0, ' ', 3)
-	if i+1 >= len(data) || data[i] != '{' || data[i+1] != ':' {
-		return false
-	}
-	_, n := parseAttributeList(data[i:], true)
-	return n > 0
+	_, consumed := parseAfterBlockAttribute(data)
+	return consumed > 0
 }
 
 func (p *Parser) lastBlock() ast.Node {
@@ -198,14 +199,13 @@ func (p *Parser) lastBlock() ast.Node {
 
 // key="value" quotes are mandatory.
 func keyValue(data []byte) ([]byte, []byte) {
-	chunk := bytes.SplitN(data, []byte{'='}, 2)
-	if len(chunk) != 2 {
+	separator := bytes.IndexByte(data, '=')
+	if separator <= 0 {
 		return nil, nil
 	}
-	key := chunk[0]
-	value := chunk[1]
+	key, value := data[:separator], data[separator+1:]
 
-	if len(value) < 3 || len(key) == 0 {
+	if len(value) < 3 {
 		return nil, nil
 	}
 	if value[0] != '"' || value[len(value)-1] != '"' {
