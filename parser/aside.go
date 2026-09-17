@@ -8,30 +8,7 @@ import (
 
 // returns aisde prefix length
 func asidePrefix(data []byte) int {
-	i := 0
-	n := len(data)
-	for i < 3 && i < n && data[i] == ' ' {
-		i++
-	}
-	if i+1 < n && data[i] == 'A' && data[i+1] == '>' {
-		if i+2 < n && data[i+2] == ' ' {
-			return i + 3
-		}
-		return i + 2
-	}
-	return 0
-}
-
-// aside ends with at least one blank line
-// followed by something without a aside prefix
-func terminateAside(data []byte, beg, end int) bool {
-	if IsEmpty(data[beg:]) <= 0 {
-		return false
-	}
-	if end >= len(data) {
-		return true
-	}
-	return asidePrefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0
+	return prefixedBlock(data, "A>")
 }
 
 // parse a aside fragment
@@ -58,7 +35,7 @@ func (p *Parser) aside(data []byte) int {
 		if pre := asidePrefix(data[beg:]); pre > 0 {
 			// skip the prefix
 			beg += pre
-		} else if terminateAside(data, beg, end) {
+		} else if terminatesPrefixedBlock(data, beg, end, asidePrefix) {
 			break
 		}
 		// this line is part of the aside

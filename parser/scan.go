@@ -81,6 +81,28 @@ func backUntilChar(data []byte, i int, c byte) int {
 	return i
 }
 
+func prefixedBlock(data []byte, marker string) int {
+	i := skipCharN(data, 0, ' ', 3)
+	if len(data)-i < len(marker) {
+		return 0
+	}
+	for j := 0; j < len(marker); j++ {
+		if data[i+j] != marker[j] {
+			return 0
+		}
+	}
+	i += len(marker)
+	if i < len(data) && data[i] == ' ' {
+		i++
+	}
+	return i
+}
+
+func terminatesPrefixedBlock(data []byte, begin, end int, prefix func([]byte) int) bool {
+	return IsEmpty(data[begin:]) > 0 &&
+		(end >= len(data) || prefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0)
+}
+
 // IsPunctuation returns true if c is a punctuation symbol.
 func IsPunctuation(c byte) bool {
 	for _, r := range []byte("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~") {

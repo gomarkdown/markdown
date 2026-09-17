@@ -8,30 +8,7 @@ import (
 
 // quotePrefix returns the blockquote prefix length.
 func quotePrefix(data []byte) int {
-	i := 0
-	n := len(data)
-	for i < 3 && i < n && data[i] == ' ' {
-		i++
-	}
-	if i < n && data[i] == '>' {
-		if i+1 < n && data[i+1] == ' ' {
-			return i + 2
-		}
-		return i + 1
-	}
-	return 0
-}
-
-// blockquote ends with at least one blank line
-// followed by something without a blockquote prefix
-func terminateBlockquote(data []byte, beg, end int) bool {
-	if IsEmpty(data[beg:]) <= 0 {
-		return false
-	}
-	if end >= len(data) {
-		return true
-	}
-	return quotePrefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0
+	return prefixedBlock(data, ">")
 }
 
 // parse a blockquote fragment
@@ -52,7 +29,7 @@ func (p *Parser) quote(data []byte) int {
 		} else if fenceMarker != "" {
 			// Lines inside a quoted fenced code block may omit the quote
 			// prefix. Keep them in the quote until the fence closes.
-		} else if terminateBlockquote(data, beg, end) {
+		} else if terminatesPrefixedBlock(data, beg, end, quotePrefix) {
 			break
 		}
 		// this line is part of the blockquote
