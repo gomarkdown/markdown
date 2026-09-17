@@ -95,8 +95,8 @@ func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
 }
 
 func linkEndsWithEntity(data []byte, linkEnd int) bool {
-	entityRanges := htmlEntityRe.FindAllIndex(data[:linkEnd], -1)
-	return entityRanges != nil && entityRanges[len(entityRanges)-1][1] == linkEnd
+	start := bytes.LastIndexByte(data[:linkEnd], '&')
+	return start >= 0 && findEntityEnd(data, start) == linkEnd
 }
 
 // hasPrefixCaseInsensitive is a custom implementation of

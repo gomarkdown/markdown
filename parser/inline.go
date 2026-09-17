@@ -11,9 +11,6 @@ import (
 var (
 	urlRe    = `((https?|ftp):\/\/|\/)[-A-Za-z0-9+&@#\/%?=~_|!:,.;\(\)]+`
 	anchorRe = regexp.MustCompile(`^(<a\shref="` + urlRe + `"(\stitle="[^"<>]+")?\s?>` + urlRe + `<\/a>)`)
-
-	// TODO: improve this regexp to catch all possible entities:
-	htmlEntityRe = regexp.MustCompile(`&[a-z]{2,5};`)
 )
 
 // Inline parses text within a block.
