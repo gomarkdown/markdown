@@ -7,32 +7,24 @@ import (
 )
 
 func (p *Parser) inlineHTMLComment(data []byte) int {
-	if len(data) < 5 {
+	if !bytes.HasPrefix(data, []byte("<!--")) {
 		return 0
 	}
-	if data[0] != '<' || data[1] != '!' || data[2] != '-' || data[3] != '-' {
+	i := bytes.Index(data[3:], commentEnd)
+	if i < 0 {
 		return 0
 	}
-	i := 5
-	// scan for an end-of-comment marker, across lines if necessary
-	for i < len(data) && !(data[i-2] == '-' && data[i-1] == '-' && data[i] == '>') {
-		i++
-	}
-	// no end-of-comment marker
-	if i >= len(data) {
-		return 0
-	}
-	return i + 1
+	return i + 3 + len(commentEnd)
 }
 
 func stripMailto(link []byte) []byte {
 	if bytes.HasPrefix(link, []byte("mailto://")) {
 		return link[9:]
-	} else if bytes.HasPrefix(link, []byte("mailto:")) {
-		return link[7:]
-	} else {
-		return link
 	}
+	if bytes.HasPrefix(link, []byte("mailto:")) {
+		return link[7:]
+	}
+	return link
 }
 
 // autolinkType specifies a kind of autolink that gets detected.
@@ -292,26 +284,8 @@ func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 		openDelim := 1
 
-		/* Try to close the final punctuation sign in this same line;
-		 * if we managed to close it outside of the URL, that means that it's
-		 * not part of the URL. If it closes inside the URL, that means it
-		 * is part of the URL.
-		 *
-		 * Examples:
-		 *
-		 *      foo http://www.pokemon.com/Pikachu_(Electric) bar
-		 *              => http://www.pokemon.com/Pikachu_(Electric)
-		 *
-		 *      foo (http://www.pokemon.com/Pikachu_(Electric)) bar
-		 *              => http://www.pokemon.com/Pikachu_(Electric)
-		 *
-		 *      foo http://www.pokemon.com/Pikachu_(Electric)) bar
-		 *              => http://www.pokemon.com/Pikachu_(Electric))
-		 *
-		 *      (foo http://www.pokemon.com/Pikachu_(Electric)) bar
-		 *              => foo http://www.pokemon.com/Pikachu_(Electric)
-		 */
-
+		// Exclude the final closer only when its matching opener lies outside
+		// the URL. A balanced pair within the URL remains part of it.
 		for bufEnd >= 0 && origData[bufEnd] != '\n' && openDelim != 0 {
 			if origData[bufEnd] == data[linkEnd-1] {
 				openDelim++
