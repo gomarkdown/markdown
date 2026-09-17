@@ -162,18 +162,20 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	default:
 		id := referenceID(data, txtE, textHasNl, t == linkDeferredFootnote)
 
-		footnoteNode = &ast.ListItem{}
+		if t == linkInlineFootnote || t == linkDeferredFootnote {
+			footnoteNode = &ast.ListItem{}
+		}
 		if t == linkInlineFootnote {
 			// create a new reference
 			noteID = len(p.notes) + 1
 
 			var fragment []byte
 			if len(id) > 0 {
-				if len(id) < 16 {
-					fragment = make([]byte, len(id))
-				} else {
-					fragment = make([]byte, 16)
+				length := len(id)
+				if length > 16 {
+					length = 16
 				}
+				fragment = make([]byte, length)
 				copy(fragment, textutil.Slugify(id))
 			} else {
 				fragment = append([]byte("footnote-"), []byte(strconv.Itoa(noteID))...)
@@ -181,7 +183,6 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 			ref := &reference{
 				noteID:   noteID,
-				hasBlock: false,
 				link:     fragment,
 				title:    id,
 				footnote: footnoteNode,

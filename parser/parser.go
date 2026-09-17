@@ -106,11 +106,9 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 				return nil, false
 			}
 			return &reference{
-				link:     []byte(r.Link),
-				title:    []byte(r.Title),
-				noteID:   0,
-				hasBlock: false,
-				text:     []byte(r.Text)}, true
+				link:  []byte(r.Link),
+				title: []byte(r.Title),
+				text:  []byte(r.Text)}, true
 		}
 	}
 	// refs are case insensitive

@@ -316,7 +316,6 @@ gatherlines:
 
 	listItem := &ast.ListItem{
 		ListFlags:  *flags,
-		Tight:      false,
 		BulletChar: bulletChar,
 		Delimiter:  delimiter,
 	}
