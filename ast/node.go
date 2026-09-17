@@ -178,9 +178,7 @@ func (l *Leaf) SetChildren(newChildren []Node) {
 }
 
 // Document represents markdown document node, a root of ast
-type Document struct {
-	Container
-}
+type Document struct{ Container }
 
 // DocumentMatter represents markdown node that signals a document
 // division: frontmatter, mainmatter or backmatter.
@@ -191,14 +189,10 @@ type DocumentMatter struct {
 }
 
 // BlockQuote represents markdown block quote node
-type BlockQuote struct {
-	Container
-}
+type BlockQuote struct{ Container }
 
 // Aside represents an markdown aside node.
-type Aside struct {
-	Container
-}
+type Aside struct{ Container }
 
 // List represents markdown list node
 type List struct {
@@ -226,19 +220,13 @@ type ListItem struct {
 }
 
 // Paragraph represents markdown paragraph node
-type Paragraph struct {
-	Container
-}
+type Paragraph struct{ Container }
 
 // Math represents markdown MathAjax inline node
-type Math struct {
-	Leaf
-}
+type Math struct{ Leaf }
 
 // MathBlock represents markdown MathAjax block node
-type MathBlock struct {
-	Container
-}
+type MathBlock struct{ Container }
 
 // Heading represents markdown heading node
 type Heading struct {
@@ -251,24 +239,16 @@ type Heading struct {
 }
 
 // HorizontalRule represents markdown horizontal rule node
-type HorizontalRule struct {
-	Leaf
-}
+type HorizontalRule struct{ Leaf }
 
 // Emph represents markdown emphasis node
-type Emph struct {
-	Container
-}
+type Emph struct{ Container }
 
 // Strong represents markdown strong node
-type Strong struct {
-	Container
-}
+type Strong struct{ Container }
 
 // Del represents markdown del node
-type Del struct {
-	Container
-}
+type Del struct{ Container }
 
 // Link represents markdown link node
 type Link struct {
@@ -308,14 +288,10 @@ type Image struct {
 }
 
 // Text represents markdown text node
-type Text struct {
-	Leaf
-}
+type Text struct{ Leaf }
 
 // HTMLBlock represents markdown html node
-type HTMLBlock struct {
-	Leaf
-}
+type HTMLBlock struct{ Leaf }
 
 // CodeBlock represents markdown code block node
 type CodeBlock struct {
@@ -330,34 +306,22 @@ type CodeBlock struct {
 
 // Softbreak represents markdown softbreak node
 // Note: not used currently
-type Softbreak struct {
-	Leaf
-}
+type Softbreak struct{ Leaf }
 
 // Hardbreak represents markdown hard break node
-type Hardbreak struct {
-	Leaf
-}
+type Hardbreak struct{ Leaf }
 
 // NonBlockingSpace represents a markdown non-breaking space node
-type NonBlockingSpace struct {
-	Leaf
-}
+type NonBlockingSpace struct{ Leaf }
 
 // Code represents markdown code node
-type Code struct {
-	Leaf
-}
+type Code struct{ Leaf }
 
 // HTMLSpan represents markdown html span node
-type HTMLSpan struct {
-	Leaf
-}
+type HTMLSpan struct{ Leaf }
 
 // Table represents markdown table node
-type Table struct {
-	Container
-}
+type Table struct{ Container }
 
 // TableCell represents markdown table cell node
 type TableCell struct {
@@ -369,29 +333,19 @@ type TableCell struct {
 }
 
 // TableHeader represents markdown table head node
-type TableHeader struct {
-	Container
-}
+type TableHeader struct{ Container }
 
 // TableBody represents markdown table body node
-type TableBody struct {
-	Container
-}
+type TableBody struct{ Container }
 
 // TableRow represents markdown table row node
-type TableRow struct {
-	Container
-}
+type TableRow struct{ Container }
 
 // TableFooter represents markdown table foot node
-type TableFooter struct {
-	Container
-}
+type TableFooter struct{ Container }
 
 // Caption represents a figure, code or quote caption
-type Caption struct {
-	Container
-}
+type Caption struct{ Container }
 
 // CaptionFigure is a node (blockquote or codeblock) that has a caption
 type CaptionFigure struct {
@@ -418,19 +372,13 @@ type Index struct {
 }
 
 // Subscript is a subscript node
-type Subscript struct {
-	Leaf
-}
+type Subscript struct{ Leaf }
 
-// Subscript is a superscript node
-type Superscript struct {
-	Leaf
-}
+// Superscript is a superscript node.
+type Superscript struct{ Leaf }
 
 // Footnotes is a node that contains all footnotes
-type Footnotes struct {
-	Container
-}
+type Footnotes struct{ Container }
 
 // ReferenceDefinition is a [label]: destination "title" definition.
 // Links still resolve Destination at parse time; this node is additive so
