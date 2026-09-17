@@ -9,7 +9,7 @@ import (
 // isInclude parses {{...}}[...], that contains a path between the {{, the [...] syntax contains
 // an address to select which lines to include. It is treated as an opaque string and just given
 // to readInclude.
-func (p *Parser) isInclude(data []byte) (filename string, address []byte, consumed int) {
+func isInclude(data []byte) (filename string, address []byte, consumed int) {
 	i := skipCharN(data, 0, ' ', 3) // start with up to 3 spaces
 	if len(data[i:]) < 3 {
 		return "", nil, 0
@@ -54,7 +54,7 @@ func (p *Parser) readInclude(from, file string, address []byte) []byte {
 }
 
 // isCodeInclude parses <{{...}} which is similar to isInclude the returned bytes are, however wrapped in a code block.
-func (p *Parser) isCodeInclude(data []byte) (filename string, address []byte, consumed int) {
+func isCodeInclude(data []byte) (filename string, address []byte, consumed int) {
 	i := skipCharN(data, 0, ' ', 3) // start with up to 3 spaces
 	if len(data[i:]) < 3 {
 		return "", nil, 0
@@ -64,7 +64,7 @@ func (p *Parser) isCodeInclude(data []byte) (filename string, address []byte, co
 	}
 	start := i
 
-	filename, address, consumed = p.isInclude(data[i+1:])
+	filename, address, consumed = isInclude(data[i+1:])
 	if consumed == 0 {
 		return "", nil, 0
 	}
@@ -97,28 +97,22 @@ type incStack struct {
 }
 
 func newIncStack() *incStack {
-	return &incStack{stack: []string{}}
+	return &incStack{}
 }
 
 // Push updates i with new.
 func (i *incStack) Push(new string) {
-	if path.IsAbs(new) {
-		i.stack = append(i.stack, path.Dir(new))
-		return
+	if !path.IsAbs(new) {
+		new = filepath.Join(i.Last(), new)
 	}
-	last := ""
-	if len(i.stack) > 0 {
-		last = i.stack[len(i.stack)-1]
-	}
-	i.stack = append(i.stack, path.Dir(filepath.Join(last, new)))
+	i.stack = append(i.stack, path.Dir(new))
 }
 
 // Pop pops the last value.
 func (i *incStack) Pop() {
-	if len(i.stack) == 0 {
-		return
+	if len(i.stack) > 0 {
+		i.stack = i.stack[:len(i.stack)-1]
 	}
-	i.stack = i.stack[:len(i.stack)-1]
 }
 
 func (i *incStack) Last() string {

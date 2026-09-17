@@ -42,9 +42,9 @@ func (p *Parser) Block(data []byte) {
 
 		if p.extensions&Includes != 0 {
 			f := p.readInclude
-			path, address, consumed := p.isInclude(data)
+			path, address, consumed := isInclude(data)
 			if consumed == 0 {
-				path, address, consumed = p.isCodeInclude(data)
+				path, address, consumed = isCodeInclude(data)
 				f = p.readCodeInclude
 			}
 			if consumed > 0 {
