@@ -2,7 +2,6 @@ package md
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	"github.com/gomarkdown/markdown/ast"
@@ -16,9 +15,7 @@ func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 	r.outs(w, "](")
 	r.out(w, escape(node.Destination))
 	if len(node.Title) != 0 {
-		r.outs(w, ` "`)
-		r.out(w, node.Title)
-		r.outs(w, `"`)
+		r.outs(w, ` "`+string(node.Title)+`"`)
 	}
 	r.outs(w, ")")
 }
@@ -44,9 +41,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 		if bytes.EqualFold(linkPlainText(node), node.DeferredID) {
 			r.outs(w, "]")
 		} else {
-			r.outs(w, "][")
-			r.out(w, escape(node.DeferredID))
-			r.outs(w, "]")
+			r.outs(w, "]["+string(escape(node.DeferredID))+"]")
 		}
 		return
 	}
@@ -57,9 +52,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 		r.outs(w, "](")
 		r.outs(w, link)
 		if title != "" {
-			r.outs(w, ` "`)
-			r.outs(w, title)
-			r.outs(w, `"`)
+			r.outs(w, ` "`+title+`"`)
 		}
 		r.outs(w, ")")
 		return
@@ -67,9 +60,9 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
 
 	r.outs(w, "]")
 	child, _ := ast.GetFirstChild(node).(*ast.Text)
-	definition := fmt.Sprintf("[%s]: %s", string(escape(child.Literal)), link)
+	definition := "[" + string(escape(child.Literal)) + "]: " + link
 	if title != "" {
-		definition += fmt.Sprintf(" \"%s\"", title)
+		definition += ` "` + title + `"`
 	}
 	if r.linkcache == nil {
 		r.linkcache = make(map[string]bool)
