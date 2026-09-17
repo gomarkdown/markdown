@@ -37,32 +37,6 @@ const (
 	emailAutolink
 )
 
-// '<' when tags or autolinks are allowed
-// nextMatchCache remembers where the next match of a pattern lies at or
-// after the inline cursor. A callback that fails when no match follows
-// would otherwise rescan to the end of the buffer for every candidate.
-type nextMatchCache struct {
-	data *byte
-	n    int
-	from int // no match starts in data[from:at]
-	at   int // start of the next match, or n when there is none
-}
-
-// next returns the start of the first match at or after data[offset], or
-// len(data) when there is none. find reports the first match in a slice,
-// or -1.
-func (c *nextMatchCache) next(data []byte, offset int, find func([]byte) int) int {
-	if c.data == &data[0] && c.n == len(data) && offset >= c.from && offset <= c.at {
-		return c.at
-	}
-	at := len(data)
-	if j := find(data[offset:]); j >= 0 {
-		at = offset + j
-	}
-	*c = nextMatchCache{data: &data[0], n: len(data), from: offset, at: at}
-	return at
-}
-
 func findGt(d []byte) int { return bytes.IndexByte(d, '>') }
 
 var commentEnd = []byte("-->")
@@ -188,28 +162,6 @@ func maybeAutoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 		}
 	}
 	return 0, nil
-}
-
-// lastByteCache remembers the last position of one byte value at or
-// before the inline cursor. The cursor only moves forward through a
-// buffer, so each call scans just the bytes since the previous call.
-type lastByteCache struct {
-	data *byte
-	n    int
-	upTo int // bytes up to and including this index have been scanned
-	last int // last index of the byte in data[:upTo+1], or -1
-}
-
-// lastAt returns the last index of b in data[:offset+1], or -1.
-func (c *lastByteCache) lastAt(data []byte, offset int, b byte) int {
-	if c.data != &data[0] || c.n != len(data) || offset < c.upTo {
-		*c = lastByteCache{data: &data[0], n: len(data), upTo: -1, last: -1}
-	}
-	if j := bytes.LastIndexByte(data[c.upTo+1:offset+1], b); j >= 0 {
-		c.last = c.upTo + 1 + j
-	}
-	c.upTo = offset
-	return c.last
 }
 
 func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
