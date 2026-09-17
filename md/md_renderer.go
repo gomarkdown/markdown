@@ -110,9 +110,7 @@ func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
 }
 
 // escape replaces instances of backslash with escaped backslash in text.
-func escape(text []byte) []byte {
-	return bytes.Replace(text, []byte(`\`), []byte(`\\`), -1)
-}
+func escape(text []byte) []byte { return bytes.ReplaceAll(text, []byte(`\`), []byte(`\\`)) }
 
 func isNumber(data []byte) bool {
 	for _, b := range data {
@@ -169,8 +167,7 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 		lit = append([]byte("\\"), lit...)
 	}
 	r.previousWasNumber = isNumber(text.Literal)
-	if r.listDepth > 0 && string(lit) == "\n" {
-		// TODO: See if this can be cleaned up... It's needed for lists.
+	if r.listDepth > 0 && len(lit) == 1 && lit[0] == '\n' {
 		return
 	}
 	clean := cleanWithoutTrim(lit)
@@ -244,7 +241,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.CodeBlock:
 		r.codeBlock(w, node)
 	case *ast.Document:
-		// do nothing
 	case *ast.Paragraph:
 		r.para(w, node, entering)
 	case *ast.HTMLSpan:
@@ -258,7 +254,6 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.ListItem:
 		r.listItem(w, node, entering)
 	case *ast.Footnotes:
-		// nothing by default; just output the list.
 	case *ast.ReferenceDefinition:
 		if entering {
 			r.outs(w, "[")
@@ -279,9 +274,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 }
 
 // RenderHeader renders header
-func (r *Renderer) RenderHeader(_ io.Writer, _ ast.Node) {
-	// do nothing
-}
+func (r *Renderer) RenderHeader(_ io.Writer, _ ast.Node) {}
 
 // RenderFooter renders footer
 func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
