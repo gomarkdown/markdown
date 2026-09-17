@@ -88,8 +88,12 @@ func coalesceClassAttrs(attrs []string) []string {
 
 // TagWithAttributes creates an HTML tag with the given name and attributes.
 func TagWithAttributes(name string, attrs []string) string {
+	return tagStart(name, attrs) + ">"
+}
+
+func tagStart(name string, attrs []string) string {
 	if len(attrs) == 0 {
-		return name + ">"
+		return name
 	}
-	return name + " " + strings.Join(attrs, " ") + ">"
+	return name + " " + strings.Join(attrs, " ")
 }

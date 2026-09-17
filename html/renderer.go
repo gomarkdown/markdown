@@ -5,18 +5,12 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
 )
 
 func (r *Renderer) OutTag(w io.Writer, name string, attrs []string) {
-	s := name
-	if len(attrs) > 0 {
-		s += " " + strings.Join(attrs, " ")
-	}
-	io.WriteString(w, s+">")
-	r.lastOutputLen = 1
+	r.Outs(w, TagWithAttributes(name, attrs))
 }
 
 func FootnoteRef(prefix string, node *ast.Link) string {
@@ -207,9 +201,7 @@ func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
 		attrs = append(attrs, `loading="lazy"`)
 	}
 
-	s := TagWithAttributes("<img", attrs)
-	s = s[:len(s)-1] // hackish: strip off ">" from end
-	r.Outs(w, s+` src="`)
+	r.Outs(w, tagStart("<img", attrs)+` src="`)
 	EscLink(w, src)
 	r.Outs(w, `" alt="`)
 }
