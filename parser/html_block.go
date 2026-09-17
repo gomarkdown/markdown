@@ -9,82 +9,41 @@ import (
 var (
 	// blockTags is a set of tags that are recognized as HTML block tags.
 	// Any of these can be included in markdown text without special escaping.
-	blockTags = map[string]struct{}{
-		"blockquote": {},
-		"del":        {},
-		"dd":         {},
-		"div":        {},
-		"dl":         {},
-		"dt":         {},
-		"fieldset":   {},
-		"form":       {},
-		"h1":         {},
-		"h2":         {},
-		"h3":         {},
-		"h4":         {},
-		"h5":         {},
-		"h6":         {},
+	blockTags = stringSet(
+		"blockquote", "del", "dd", "div", "dl", "dt", "fieldset", "form",
+		"h1", "h2", "h3", "h4", "h5", "h6",
 		// TODO: technically block but breaks Inline HTML (Simple).text
-		//"hr":         {},
-		"iframe":   {},
-		"ins":      {},
-		"li":       {},
-		"math":     {},
-		"noscript": {},
-		"ol":       {},
-		"pre":      {},
-		"p":        {},
-		"script":   {},
-		"style":    {},
-		"table":    {},
-		"ul":       {},
+		// "hr",
+		"iframe", "ins", "li", "math", "noscript", "ol", "pre", "p",
+		"script", "style", "table", "ul",
 
 		// HTML5
-		"address":    {},
-		"article":    {},
-		"aside":      {},
-		"canvas":     {},
-		"details":    {},
-		"dialog":     {},
-		"figcaption": {},
-		"figure":     {},
-		"footer":     {},
-		"header":     {},
-		"hgroup":     {},
-		"main":       {},
-		"nav":        {},
-		"output":     {},
-		"progress":   {},
-		"section":    {},
-		"svg":        {},
-		"video":      {},
-	}
+		"address", "article", "aside", "canvas", "details", "dialog",
+		"figcaption", "figure", "footer", "header", "hgroup", "main", "nav",
+		"output", "progress", "section", "svg", "video",
+	)
 
-	markdownHTMLBlockTags = map[string]struct{}{
-		"details": {},
-		"div":     {},
-	}
+	markdownHTMLBlockTags = stringSet("details", "div")
 
 	// Tags whose interiors are walked as nested HTML when MarkdownInHTML is set.
-	htmlStructureTags = map[string]struct{}{
-		"table": {},
-		"thead": {},
-		"tbody": {},
-		"tfoot": {},
-		"tr":    {},
-	}
+	htmlStructureTags = stringSet("table", "thead", "tbody", "tfoot", "tr")
 
 	// Extra block tags recognized only with MarkdownInHTML.
-	markdownInHTMLTags = map[string]struct{}{
-		"table": {},
-		"thead": {},
-		"tbody": {},
-		"tfoot": {},
-		"tr":    {},
-		"td":    {},
-		"th":    {},
-	}
+	markdownInHTMLTags = stringSet("table", "thead", "tbody", "tfoot", "tr", "td", "th")
 )
+
+func stringSet(values ...string) map[string]struct{} {
+	set := make(map[string]struct{}, len(values))
+	for _, value := range values {
+		set[value] = struct{}{}
+	}
+	return set
+}
+
+func inStringSet(set map[string]struct{}, value string) bool {
+	_, ok := set[value]
+	return ok
+}
 
 func (p *Parser) html(data []byte, doRender bool) int {
 	// identify the opening tag
@@ -139,19 +98,12 @@ func (p *Parser) html(data []byte, doRender bool) int {
 }
 
 func (p *Parser) markdownHTMLTag(tag string) bool {
-	if _, ok := markdownHTMLBlockTags[tag]; ok {
-		return true
-	}
-	if p.extensions&MarkdownInHTML != 0 {
-		_, ok := markdownInHTMLTags[tag]
-		return ok
-	}
-	return false
+	return inStringSet(markdownHTMLBlockTags, tag) ||
+		p.extensions&MarkdownInHTML != 0 && inStringSet(markdownInHTMLTags, tag)
 }
 
 func isHTMLStructureTag(tag string) bool {
-	_, ok := htmlStructureTags[tag]
-	return ok
+	return inStringSet(htmlStructureTags, tag)
 }
 
 func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
@@ -374,13 +326,9 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 func (p *Parser) htmlFindTag(data []byte) (string, bool) {
 	i := skipAlnum(data, 0)
 	key := string(data[:i])
-	if _, ok := blockTags[key]; ok {
+	if inStringSet(blockTags, key) ||
+		p.extensions&MarkdownInHTML != 0 && inStringSet(markdownInHTMLTags, key) {
 		return key, true
-	}
-	if p.extensions&MarkdownInHTML != 0 {
-		if _, ok := markdownInHTMLTags[key]; ok {
-			return key, true
-		}
 	}
 	return "", false
 }
