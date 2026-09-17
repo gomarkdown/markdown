@@ -9,20 +9,11 @@ import (
 	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
-func IsList(node ast.Node) bool {
-	_, ok := node.(*ast.List)
-	return ok
-}
+func IsList(node ast.Node) bool { _, ok := node.(*ast.List); return ok }
 
-func IsListTight(node ast.Node) bool {
-	list, ok := node.(*ast.List)
-	return ok && list.Tight
-}
+func IsListTight(node ast.Node) bool { list, ok := node.(*ast.List); return ok && list.Tight }
 
-func IsListItem(node ast.Node) bool {
-	_, ok := node.(*ast.ListItem)
-	return ok
-}
+func IsListItem(node ast.Node) bool { _, ok := node.(*ast.ListItem); return ok }
 
 func IsListItemTerm(node ast.Node) bool {
 	item, ok := node.(*ast.ListItem)
@@ -30,9 +21,7 @@ func IsListItemTerm(node ast.Node) bool {
 }
 
 // Slugify creates a URL-safe fragment slug.
-func Slugify(in []byte) []byte {
-	return textutil.Slugify(in)
-}
+func Slugify(in []byte) []byte { return textutil.Slugify(in) }
 
 // BlockAttrs returns the serialized block attributes attached to node.
 func BlockAttrs(node ast.Node) []string {
