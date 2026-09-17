@@ -10,20 +10,16 @@ import (
 )
 
 func prevVisibleBlock(n ast.Node) ast.Node {
-	prev := ast.GetPrevNode(n)
-	for prev != nil {
-		if _, ok := prev.(*ast.ReferenceDefinition); ok {
-			prev = ast.GetPrevNode(prev)
-			continue
+	for prev := ast.GetPrevNode(n); prev != nil; prev = ast.GetPrevNode(prev) {
+		if _, hidden := prev.(*ast.ReferenceDefinition); !hidden {
+			return prev
 		}
-		return prev
 	}
 	return nil
 }
 
 func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
-	// TODO: untangle this clusterfuck about when the newlines need
-	// to be added and when not.
+	// Preserve spacing between visible block-level siblings.
 	prev := prevVisibleBlock(para)
 	if prev != nil {
 		switch prev.(type) {
@@ -110,12 +106,7 @@ func (r *Renderer) MakeUniqueHeadingID(hdr *ast.Heading) string {
 		return ""
 	}
 	id := r.EnsureUniqueHeadingID(hdr.HeadingID)
-	if r.Opts.HeadingIDPrefix != "" {
-		id = r.Opts.HeadingIDPrefix + id
-	}
-	if r.Opts.HeadingIDSuffix != "" {
-		id = id + r.Opts.HeadingIDSuffix
-	}
+	id = r.Opts.HeadingIDPrefix + id + r.Opts.HeadingIDSuffix
 	hdr.HeadingID = id
 	return id
 }
@@ -191,15 +182,14 @@ Parse:
 		if escSeq != nil {
 			w.Write(escSeq)
 		} else {
-			w.Write([]byte{d[i]})
+			w.Write(d[i : i+1])
 		}
 	}
 }
 
 // CodeBlock writes ast.CodeBlock node
 func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
-	var attrs []string
-	attrs = appendLanguageAttr(attrs, codeBlock.Info)
+	attrs := appendLanguageAttr(nil, codeBlock.Info)
 	attrs = append(attrs, BlockAttrs(codeBlock)...)
 	attrs = coalesceClassAttrs(attrs)
 	r.CR(w)
@@ -212,8 +202,7 @@ func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	} else {
 		EscapeHTML(w, codeBlock.Literal)
 	}
-	r.Outs(w, "</code>")
-	r.Outs(w, "</pre>")
+	r.Outs(w, "</code></pre>")
 	if !IsListItem(codeBlock.Parent) {
 		r.CR(w)
 	}
@@ -221,11 +210,7 @@ func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 
 // Caption writes ast.Caption node
 func (r *Renderer) Caption(w io.Writer, caption *ast.Caption, entering bool) {
-	if entering {
-		r.Outs(w, "<figcaption>")
-		return
-	}
-	r.Outs(w, "</figcaption>")
+	r.OutOneOf(w, entering, "<figcaption>", "</figcaption>")
 }
 
 // CaptionFigure writes ast.CaptionFigure node
@@ -324,8 +309,7 @@ func (r *Renderer) Citation(w io.Writer, node *ast.Citation) {
 
 // Callout writes ast.Callout node
 func (r *Renderer) Callout(w io.Writer, node *ast.Callout) {
-	attr := []string{`class="callout"`}
-	r.OutTag(w, "<span", attr)
+	r.OutTag(w, "<span", []string{`class="callout"`})
 	r.Out(w, node.ID)
 	r.Outs(w, "</span>")
 }
@@ -333,7 +317,6 @@ func (r *Renderer) Callout(w io.Writer, node *ast.Callout) {
 // Index writes ast.Index node
 func (r *Renderer) Index(w io.Writer, node *ast.Index) {
 	// there is no in-text representation.
-	attr := []string{`class="index"`, fmt.Sprintf(`id="%s"`, node.ID)}
-	r.OutTag(w, "<span", attr)
+	r.OutTag(w, "<span", []string{`class="index"`, fmt.Sprintf(`id="%s"`, node.ID)})
 	r.Outs(w, "</span>")
 }
