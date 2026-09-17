@@ -44,14 +44,8 @@ func ListItemOpenCR(listItem *ast.ListItem) bool {
 
 func SkipParagraphTags(para *ast.Paragraph) bool {
 	parent := para.Parent
-	grandparent := parent.GetParent()
-	if grandparent == nil || !IsList(grandparent) {
-		return false
-	}
-	isParentTerm := IsListItemTerm(parent)
-	grandparentListData := grandparent.(*ast.List)
-	tightOrTerm := grandparentListData.Tight || isParentTerm
-	return tightOrTerm
+	list, ok := parent.GetParent().(*ast.List)
+	return ok && (list.Tight || IsListItemTerm(parent))
 }
 
 // Out is a helper to write data to writer
@@ -79,23 +73,19 @@ func (r *Renderer) CR(w io.Writer) {
 	}
 }
 
-var (
-	openHTags  = []string{"<h1", "<h2", "<h3", "<h4", "<h5"}
-	closeHTags = []string{"</h1>", "</h2>", "</h3>", "</h4>", "</h5>"}
-)
+func normalizedHeadingLevel(level int) int {
+	if level < 1 || level > 5 {
+		return 6
+	}
+	return level
+}
 
 func HeadingOpenTagFromLevel(level int) string {
-	if level < 1 || level > 5 {
-		return "<h6"
-	}
-	return openHTags[level-1]
+	return "<h" + strconv.Itoa(normalizedHeadingLevel(level))
 }
 
 func HeadingCloseTagFromLevel(level int) string {
-	if level < 1 || level > 5 {
-		return "</h6>"
-	}
-	return closeHTags[level-1]
+	return "</h" + strconv.Itoa(normalizedHeadingLevel(level)) + ">"
 }
 
 func (r *Renderer) OutHRTag(w io.Writer, attrs []string) {
@@ -327,9 +317,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.TableFooter:
 		r.OutOneOfCr(w, entering, "<tfoot>", "</tfoot>")
 	case *ast.Math:
-		r.OutOneOf(w, true, `<span class="math inline">\(`, `\)</span>`)
+		r.Outs(w, `<span class="math inline">\(`)
 		EscapeHTML(w, node.Literal)
-		r.OutOneOf(w, false, `<span class="math inline">\(`, `\)</span>`)
+		r.Outs(w, `\)</span>`)
 	case *ast.MathBlock:
 		r.OutOneOf(w, entering, `<p><span class="math display">\[`, `\]</span></p>`)
 		if entering {
@@ -342,17 +332,17 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Index:
 		r.Index(w, node)
 	case *ast.Subscript:
-		r.OutOneOf(w, true, "<sub>", "</sub>")
+		r.Outs(w, "<sub>")
 		if entering {
 			Escape(w, node.Literal)
 		}
-		r.OutOneOf(w, false, "<sub>", "</sub>")
+		r.Outs(w, "</sub>")
 	case *ast.Superscript:
-		r.OutOneOf(w, true, "<sup>", "</sup>")
+		r.Outs(w, "<sup>")
 		if entering {
 			Escape(w, node.Literal)
 		}
-		r.OutOneOf(w, false, "<sup>", "</sup>")
+		r.Outs(w, "</sup>")
 	case *ast.Footnotes:
 		// nothing by default; just output the list.
 	case *ast.ReferenceDefinition:
