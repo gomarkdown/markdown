@@ -90,9 +90,7 @@ func (p *Parser) html(data []byte, doRender bool) int {
 
 	if doRender {
 		end := backChar(data, consumed, '\n')
-		htmlBLock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
-		p.AddBlock(htmlBLock)
-		finalizeHTMLBlock(htmlBLock)
+		p.addHTMLBlock(data[:end])
 	}
 	return consumed
 }
@@ -124,8 +122,7 @@ func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 
 	closeEnd := closeStart + len("</"+tag+">")
 	if doRender {
-		open := bytes.TrimRight(data[:openEnd], "\n")
-		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: open}})
+		p.addHTMLBlock(bytes.TrimRight(data[:openEnd], "\n"))
 
 		innerStart := openEnd
 		if innerStart < len(data) && data[innerStart] == '\n' {
@@ -136,8 +133,7 @@ func (p *Parser) htmlMarkdownBlock(data []byte, tag string, doRender bool) int {
 			p.Block(inner)
 		}
 
-		close := bytes.TrimRight(data[closeStart:closeEnd], "\n")
-		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: close}})
+		p.addHTMLBlock(bytes.TrimRight(data[closeStart:closeEnd], "\n"))
 	}
 
 	return consumed
@@ -227,11 +223,9 @@ func (p *Parser) htmlStructuredBlock(data []byte, tag string, doRender bool) int
 
 	closeEnd := closeStart + len("</"+tag+">")
 	if doRender {
-		open := bytes.TrimRight(data[:openEnd], "\n")
-		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: open}})
+		p.addHTMLBlock(bytes.TrimRight(data[:openEnd], "\n"))
 		p.parseHTMLInterior(data[openEnd:closeStart])
-		close := bytes.TrimRight(data[closeStart:closeEnd], "\n")
-		p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: close}})
+		p.addHTMLBlock(bytes.TrimRight(data[closeStart:closeEnd], "\n"))
 	}
 	return consumed
 }
@@ -255,21 +249,20 @@ func (p *Parser) parseHTMLInterior(data []byte) {
 		nl := bytes.IndexByte(data, '\n')
 		if nl < 0 {
 			if len(bytes.TrimSpace(data)) > 0 {
-				p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: bytes.TrimRight(data, "\n")}})
+				p.addHTMLBlock(bytes.TrimRight(data, "\n"))
 			}
 			return
 		}
 		chunk := data[:nl]
 		if len(bytes.TrimSpace(chunk)) > 0 {
-			p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: chunk}})
+			p.addHTMLBlock(chunk)
 		}
 		data = data[nl+1:]
 	}
 }
 
-func finalizeHTMLBlock(block *ast.HTMLBlock) {
-	block.Literal = block.Content
-	block.Content = nil
+func (p *Parser) addHTMLBlock(literal []byte) {
+	p.AddBlock(&ast.HTMLBlock{Leaf: ast.Leaf{Literal: literal}})
 }
 
 // HTML comment, lax form
@@ -281,9 +274,7 @@ func (p *Parser) htmlComment(data []byte, doRender bool) int {
 		if doRender {
 			// trim trailing newlines
 			end := backChar(data, size, '\n')
-			htmlBLock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
-			p.AddBlock(htmlBLock)
-			finalizeHTMLBlock(htmlBLock)
+			p.addHTMLBlock(data[:end])
 		}
 		return size
 	}
@@ -313,9 +304,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 			if doRender {
 				// trim newlines
 				end := backChar(data, size, '\n')
-				htmlBlock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
-				p.AddBlock(htmlBlock)
-				finalizeHTMLBlock(htmlBlock)
+				p.addHTMLBlock(data[:end])
 			}
 			return size
 		}
