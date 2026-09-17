@@ -78,7 +78,6 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) in
 	}
 
 	above := block.GetParent()
-	finalizeList(list)
 	p.tip = above
 	return i
 }
@@ -93,48 +92,6 @@ func (p *Parser) listTypeChanged(data []byte, flags *ast.ListType) bool {
 		return true
 	}
 	return false
-}
-
-// Returns true if block ends with a blank line, descending if needed
-// into lists and sublists.
-func endsWithBlankLine(block ast.Node) bool {
-	// TODO: figure this out. Always false now.
-	for block != nil {
-		//if block.lastLineBlank {
-		//return true
-		//}
-		switch block.(type) {
-		case *ast.List, *ast.ListItem:
-			block = ast.GetLastChild(block)
-		default:
-			return false
-		}
-	}
-	return false
-}
-
-func finalizeList(list *ast.List) {
-	items := list.GetChildren()
-	lastItemIdx := len(items) - 1
-	for i, item := range items {
-		isLastItem := i == lastItemIdx
-		// check for non-final list item ending with blank line:
-		if !isLastItem && endsWithBlankLine(item) {
-			list.Tight = false
-			break
-		}
-		// recurse into children of list item, to see if there are spaces
-		// between any of them:
-		subItems := item.GetChildren()
-		lastSubItemIdx := len(subItems) - 1
-		for j, subItem := range subItems {
-			isLastSubItem := j == lastSubItemIdx
-			if (!isLastItem || !isLastSubItem) && endsWithBlankLine(subItem) {
-				list.Tight = false
-				break
-			}
-		}
-	}
 }
 
 // Parse a single list item.

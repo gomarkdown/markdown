@@ -401,7 +401,6 @@ func (p *Parser) parseRefsToAST() {
 		flags &^= ast.ListItemBeginningOfList | ast.ListItemContainsBlock
 	}
 	above := list.Parent
-	finalizeList(list)
 	p.tip = above
 
 	ast.WalkFunc(block, func(node ast.Node, entering bool) ast.WalkStatus {
