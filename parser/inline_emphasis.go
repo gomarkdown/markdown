@@ -1,6 +1,10 @@
 package parser
 
-import "github.com/gomarkdown/markdown/ast"
+import (
+	"bytes"
+
+	"github.com/gomarkdown/markdown/ast"
+)
 
 // single and double emphasis parsing
 func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
@@ -28,8 +32,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 					return 0, nil
 				}
 			}
-			sub := &ast.Subscript{}
-			sub.Literal = data[1:ret]
+			sub := &ast.Subscript{Leaf: ast.Leaf{Literal: data[1:ret]}}
 			return ret + 1, sub
 		}
 		ret, node := helperEmphasis(p, data[1:], c)
@@ -197,12 +200,8 @@ func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 		i += length
 
 		if i+1 < len(data) && data[i] == c && data[i+1] == c && i > 0 && !IsSpace(data[i-1]) {
-			// When the closing delimiter is *** (3+ chars) and there is an
-			// unclosed single emphasis opener inside the content, include
-			// one extra char in the content so that the inner emphasis can
-			// pair with it. For example: **bold *ital*** should produce
-			// <strong>bold <em>ital</em></strong>, not <strong>bold *ital</strong>*.
-			// See https://github.com/gomarkdown/markdown/issues/279
+			// A triple closer may close an inner single emphasis before the
+			// strong emphasis (for example, **bold *ital***).
 			contentEnd := i
 			if i+2 < len(data) && data[i+2] == c && c != '~' {
 				if hasTrailingEmphOpener(data[:i], c) {
@@ -222,24 +221,13 @@ func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 	return 0, nil
 }
 
-// hasTrailingEmphOpener checks if the last occurrence of c in data is an
-// unclosed opener. An opener is c preceded by whitespace or start of data,
-// followed by non-whitespace. If the last c is a closer (preceded by
-// non-whitespace), the emphasis pair is balanced and we should not shift
-// the content boundary.
+// hasTrailingEmphOpener reports whether the final c is preceded by a boundary
+// and followed by text, making it an unmatched opener.
 func hasTrailingEmphOpener(data []byte, c byte) bool {
-	// find the last c in data
-	last := -1
-	for j := len(data) - 1; j >= 0; j-- {
-		if data[j] == c {
-			last = j
-			break
-		}
-	}
+	last := bytes.LastIndexByte(data, c)
 	if last < 0 {
 		return false
 	}
-	// opener: preceded by space/start, followed by non-space
 	return (last == 0 || IsSpace(data[last-1])) &&
 		last+1 < len(data) && !IsSpace(data[last+1])
 }
@@ -287,5 +275,3 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, ast.
 	}
 	return 0, nil
 }
-
-// math handle inline math wrapped with '$'
