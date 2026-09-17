@@ -33,12 +33,8 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 	}
 
 	if prev == nil {
-		_, isParentBlockQuote := para.Parent.(*ast.BlockQuote)
-		if isParentBlockQuote {
-			r.CR(w)
-		}
-		_, isParentAside := para.Parent.(*ast.Aside)
-		if isParentAside {
+		switch para.Parent.(type) {
+		case *ast.BlockQuote, *ast.Aside:
 			r.CR(w)
 		}
 	}
@@ -181,8 +177,29 @@ func (r *Renderer) HorizontalRule(w io.Writer, node *ast.HorizontalRule) {
 	r.CR(w)
 }
 
+func listTag(flags ast.ListType) string {
+	switch {
+	case flags&ast.ListTypeDefinition != 0:
+		return "dl"
+	case flags&ast.ListTypeOrdered != 0:
+		return "ol"
+	default:
+		return "ul"
+	}
+}
+
+func listItemTag(flags ast.ListType) string {
+	switch {
+	case flags&ast.ListTypeTerm != 0:
+		return "dt"
+	case flags&ast.ListTypeDefinition != 0:
+		return "dd"
+	default:
+		return "li"
+	}
+}
+
 func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
-	// TODO: attrs don't seem to be set
 	var attrs []string
 
 	if nodeData.IsFootnotesList {
@@ -200,35 +217,18 @@ func (r *Renderer) listEnter(w io.Writer, nodeData *ast.List) {
 		}
 	}
 
-	openTag := "<ul"
 	if nodeData.ListFlags&ast.ListTypeOrdered != 0 {
 		if nodeData.Start > 0 {
 			attrs = append(attrs, fmt.Sprintf(`start="%d"`, nodeData.Start))
 		}
-		openTag = "<ol"
-	}
-	if nodeData.ListFlags&ast.ListTypeDefinition != 0 {
-		openTag = "<dl"
 	}
 	attrs = append(attrs, BlockAttrs(nodeData)...)
-	r.OutTag(w, openTag, attrs)
+	r.OutTag(w, "<"+listTag(nodeData.ListFlags), attrs)
 	r.CR(w)
 }
 
 func (r *Renderer) listExit(w io.Writer, list *ast.List) {
-	closeTag := "</ul>"
-	if list.ListFlags&ast.ListTypeOrdered != 0 {
-		closeTag = "</ol>"
-	}
-	if list.ListFlags&ast.ListTypeDefinition != 0 {
-		closeTag = "</dl>"
-	}
-	r.Outs(w, closeTag)
-
-	//cr(w)
-	//if node.parent.Type != Item {
-	//	cr(w)
-	//}
+	r.Outs(w, "</"+listTag(list.ListFlags)+">")
 	parent := list.Parent
 	switch parent.(type) {
 	case *ast.ListItem:
@@ -263,14 +263,7 @@ func (r *Renderer) listItemEnter(w io.Writer, listItem *ast.ListItem) {
 		return
 	}
 
-	openTag := "<li>"
-	if listItem.ListFlags&ast.ListTypeDefinition != 0 {
-		openTag = "<dd>"
-	}
-	if listItem.ListFlags&ast.ListTypeTerm != 0 {
-		openTag = "<dt>"
-	}
-	r.Outs(w, openTag)
+	r.Outs(w, "<"+listItemTag(listItem.ListFlags)+">")
 }
 
 func (r *Renderer) listItemExit(w io.Writer, listItem *ast.ListItem) {
@@ -282,14 +275,7 @@ func (r *Renderer) listItemExit(w io.Writer, listItem *ast.ListItem) {
 		r.Outs(w, s)
 	}
 
-	closeTag := "</li>"
-	if listItem.ListFlags&ast.ListTypeDefinition != 0 {
-		closeTag = "</dd>"
-	}
-	if listItem.ListFlags&ast.ListTypeTerm != 0 {
-		closeTag = "</dt>"
-	}
-	r.Outs(w, closeTag)
+	r.Outs(w, "</"+listItemTag(listItem.ListFlags)+">")
 	r.CR(w)
 }
 
