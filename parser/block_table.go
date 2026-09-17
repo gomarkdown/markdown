@@ -6,25 +6,14 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// skipCodeSpan returns the index of the closing backtick of the code span
-// that opens at data[i], or i when no code span opens there. A '|' inside a
-// code span does not separate cells, so the row and header scanners jump
-// over spans the same way. Callers then examine data[i], the closing
-// backtick, as an ordinary byte and advance past it. A backslash-escaped
-// backtick is literal text, as it is for the inline parser, so it opens
-// nothing.
+// skipCodeSpan returns the closing backtick index, allowing table scanners to
+// ignore pipes inside code. It returns i when no span starts there.
 func skipCodeSpan(data []byte, i int) int {
 	if data[i] != '`' || isEscape(data, i) {
 		return i
 	}
-	// The inline parser tries the whole run of k backticks and, when that
-	// has no closing delimiter, retries from the next byte with a run one
-	// shorter, down to a single backtick. A run of m closes at the first
-	// later run of at least m backticks, so those retries resolve in one
-	// pass: either some later run reaches k, or the longest later run L
-	// (L < k) is the delimiter that the retry of length L finds first, or
-	// no later backtick exists and every retry fails, so the whole run is
-	// literal text and the caller may step over it.
+	// If no later run reaches the opener length, the inline parser retries
+	// shorter suffixes of the opener, so the longest later run wins.
 	k := skipChar(data, i, '`') - i
 	best, bestEnd := 0, i+k-1
 	run := 0
@@ -182,21 +171,9 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 	if data[0] == '|' {
 		colCount--
 	}
-	{
-		tmp := header
-		// remove whitespace from the end
-		for len(tmp) > 0 {
-			lastIdx := len(tmp) - 1
-			if tmp[lastIdx] == '\n' || tmp[lastIdx] == ' ' {
-				tmp = tmp[:lastIdx]
-			} else {
-				break
-			}
-		}
-		n := len(tmp)
-		if n > 2 && tmp[n-1] == '|' && !isEscape(tmp, n-1) {
-			colCount--
-		}
+	tmp := bytes.TrimRight(header, " \n")
+	if n := len(tmp); n > 2 && tmp[n-1] == '|' && !isEscape(tmp, n-1) {
+		colCount--
 	}
 
 	// if the header looks like a underline, then we omit the header
@@ -241,9 +218,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 			columns[col] |= ast.TableAlignmentRight
 			dashes++
 		}
-		for i < n && data[i] == ' ' {
-			i++
-		}
+		i = skipChar(data, i, ' ')
 		if i == n {
 			return
 		}
@@ -256,10 +231,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 		case data[i] == '|' && !isEscape(data, i):
 			// marker found, now skip past trailing whitespace
 			col++
-			i++
-			for i < n && data[i] == ' ' {
-				i++
-			}
+			i = skipChar(data, i+1, ' ')
 
 			// trailing junk found after last column
 			if col >= colCount && i < len(data) && data[i] != '\n' {
@@ -295,14 +267,6 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 	return
 }
 
-/*
-Table:
-
-Name  | Age | Phone
-------|-----|---------
-Bob   | 31  | 555-1234
-Alice | 27  | 555-4321
-*/
 func (p *Parser) table(data []byte) int {
 	i, columns, table := p.tableHeader(data, true)
 	if i == 0 {
