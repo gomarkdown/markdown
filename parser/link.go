@@ -112,110 +112,11 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// inline style link
 	switch {
 	case i < len(data) && data[i] == '(':
-		// skip initial whitespace
-		i++
-
-		i = skipSpace(data, i)
-
-		linkB := i
-		brace := 0
-
-		var c byte
-		// look for link end: ' " )
-	findlinkend:
-		for i < len(data) {
-			c = data[i]
-			switch {
-			case c == '\\':
-				i += 2
-
-			case c == '(':
-				brace++
-				i++
-
-			case c == ')':
-				if brace <= 0 {
-					break findlinkend
-				}
-				brace--
-				i++
-
-			case brace == 0 && (c == '\'' || c == '"') && i > linkB && IsSpace(data[i-1]):
-				break findlinkend
-
-			default:
-				i++
-			}
-		}
-
-		if i >= len(data) {
+		var ok bool
+		i, link, title, ok = parseInlineLink(data, i)
+		if !ok {
 			return 0, nil
 		}
-		linkE := i
-
-		// look for title end if present
-		titleB, titleE := 0, 0
-		if data[i] == '\'' || data[i] == '"' {
-			i++
-			titleB = i
-			titleEndCharFound := false
-
-		findtitleend:
-			for i < len(data) {
-				c = data[i]
-				switch {
-				case c == '\\':
-					i++
-
-				case c == data[titleB-1]: // matching title delimiter
-					titleEndCharFound = true
-
-				case titleEndCharFound && c == ')':
-					break findtitleend
-				}
-				i++
-			}
-
-			if i >= len(data) {
-				return 0, nil
-			}
-
-			// skip whitespace after title
-			titleE = i - 1
-			for titleE > titleB && IsSpace(data[titleE]) {
-				titleE--
-			}
-
-			// check for closing quote presence
-			if data[titleE] != '\'' && data[titleE] != '"' {
-				titleB, titleE = 0, 0
-				linkE = i
-			}
-		}
-
-		// remove whitespace at the end of the link
-		for linkE > linkB && IsSpace(data[linkE-1]) {
-			linkE--
-		}
-
-		// remove optional angle brackets around the link
-		if data[linkB] == '<' {
-			linkB++
-		}
-		if data[linkE-1] == '>' {
-			linkE--
-		}
-
-		// build escaped link and title
-		if linkE > linkB {
-			link = data[linkB:linkE]
-		}
-
-		if titleE > titleB {
-			title = data[titleB:titleE]
-		}
-
-		i++
 
 	// reference style link
 	case isReferenceStyleLink(data, i, t):
