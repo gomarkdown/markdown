@@ -87,8 +87,6 @@ var (
 )
 
 func (p *Parser) html(data []byte, doRender bool) int {
-	var i, j int
-
 	// identify the opening tag
 	if data[0] != '<' {
 		return 0
@@ -122,76 +120,22 @@ func (p *Parser) html(data []byte, doRender bool) int {
 		}
 	}
 
-	// look for an unindented matching closing tag
-	// followed by a blank line
-	found := false
-	/*
-		closetag := []byte("\n</" + curtag + ">")
-		j = len(curtag) + 1
-		for !found {
-			// scan for a closing tag at the beginning of a line
-			if skip := bytes.Index(data[j:], closetag); skip >= 0 {
-				j += skip + len(closetag)
-			} else {
-				break
-			}
-
-			// see if it is the only thing on the line
-			if skip := IsEmpty(data[j:]); skip > 0 {
-				// see if it is followed by a blank line/eof
-				j += skip
-				if j >= len(data) {
-					found = true
-					i = j
-				} else {
-					if skip := IsEmpty(data[j:]); skip > 0 {
-						j += skip
-						found = true
-						i = j
-					}
-				}
-			}
-		}
-	*/
-
-	// if not found, try a second pass looking for indented match
-	// but not if tag is "ins" or "del" (following original Markdown.pl)
-	if !found && curtag != "ins" && curtag != "del" {
-		i = 1
-		for i < len(data) {
-			i++
-			for i < len(data) && !(data[i-1] == '<' && data[i] == '/') {
-				i++
-			}
-
-			if i+2+len(curtag) >= len(data) {
-				break
-			}
-
-			j = p.htmlFindEnd(curtag, data[i-1:])
-
-			if j > 0 {
-				i += j - 1
-				found = true
-				break
-			}
-		}
+	// Following Markdown.pl, ins and del cannot form these blocks.
+	if curtag == "ins" || curtag == "del" {
+		return 0
 	}
-
-	if !found {
+	_, consumed := p.findHTMLCloseTag(data, curtag, 1, false)
+	if consumed == 0 {
 		return 0
 	}
 
-	// the end of the block has been found
 	if doRender {
-		// trim newlines
-		end := backChar(data, i, '\n')
+		end := backChar(data, consumed, '\n')
 		htmlBLock := &ast.HTMLBlock{Leaf: ast.Leaf{Content: data[:end]}}
 		p.AddBlock(htmlBLock)
 		finalizeHTMLBlock(htmlBLock)
 	}
-
-	return i
+	return consumed
 }
 
 func (p *Parser) markdownHTMLTag(tag string) bool {
