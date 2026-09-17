@@ -21,9 +21,7 @@ type SPRenderer struct {
 	callbacks     [256]smartCallback
 }
 
-func wordBoundary(c byte) bool {
-	return c == 0 || isSpace(c) || isPunctuation(c)
-}
+func wordBoundary(c byte) bool { return c == 0 || isSpace(c) || isPunctuation(c) }
 
 func tolower(c byte) byte {
 	if c >= 'A' && c <= 'Z' {
@@ -32,9 +30,7 @@ func tolower(c byte) byte {
 	return c
 }
 
-func isdigit(c byte) bool {
-	return c >= '0' && c <= '9'
-}
+func isdigit(c byte) bool { return c >= '0' && c <= '9' }
 
 func quoteContext(c byte) int {
 	switch {
@@ -280,16 +276,11 @@ func (r *SPRenderer) smartNumber(out *bytes.Buffer, previousChar byte, text []by
 }
 
 func (r *SPRenderer) smartLeftAngle(out *bytes.Buffer, previousChar byte, text []byte) int {
-	i := 0
-
-	for i < len(text) && text[i] != '>' {
-		i++
+	i := bytes.IndexByte(text, '>')
+	if i < 0 {
+		return len(text)
 	}
-
-	if i == len(text) { // No > found until the end of the text
-		return i
-	}
-	out.Write(text[:i+1]) // include the '>'
+	out.Write(text[:i+1])
 	return i
 }
 
