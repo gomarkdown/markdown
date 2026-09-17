@@ -84,14 +84,30 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) in
 
 // Returns true if the list item is not the same type as its parent list
 func (p *Parser) listTypeChanged(data []byte, flags *ast.ListType) bool {
-	if p.dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 {
-		return true
-	} else if p.oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 {
-		return true
-	} else if p.uliPrefix(data) > 0 && (*flags&ast.ListTypeOrdered != 0 || *flags&ast.ListTypeDefinition != 0) {
-		return true
+	return p.dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 ||
+		p.oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 ||
+		p.uliPrefix(data) > 0 && *flags&(ast.ListTypeOrdered|ast.ListTypeDefinition) != 0
+}
+
+// trackListFence updates marker and reports whether this line belongs to an
+// indented fence or starts an unindented fence that ends the list.
+func trackListFence(line []byte, indent int, marker *string) (verbatim, endList bool) {
+	if *marker != "" && indent > 0 {
+		if _, closing := isFenceLine(line, nil, *marker); closing != "" {
+			*marker = ""
+		}
+		return true, false
 	}
-	return false
+	*marker = ""
+	_, opening := isFenceLine(line, nil, "")
+	if opening == "" {
+		return false, false
+	}
+	if indent == 0 {
+		return false, true
+	}
+	*marker = opening
+	return false, false
 }
 
 // Parse a single list item.
@@ -192,53 +208,20 @@ gatherlines:
 
 		chunk := data[line+indentIndex : i]
 
-		// track fenced code blocks inside list items;
-		// only track fences that are indented (part of the list item content),
-		// a fence at indent 0 ends the list (handled below)
 		if !isDefinitionList && p.extensions&FencedCode != 0 {
-			if fenceMarker != "" {
-				if indent == 0 {
-					// non-indented line while inside a fence means we
-					// left the list item content -- abandon the fence
-					fenceMarker = ""
-				} else {
-					// inside a fence: check for closing fence
-					_, marker := isFenceLine(chunk, nil, fenceMarker)
-					if marker != "" {
-						fenceMarker = ""
-					}
-					// gather the line verbatim, skip structure detection
-					if containsBlankLine {
-						containsBlankLine = false
-						raw.WriteByte('\n')
-					}
-					raw.Write(chunk)
-					line = i
-					continue
-				}
-			} else if indent > 0 {
-				// not inside a fence: check for opening fence (indented only)
-				_, marker := isFenceLine(chunk, nil, "")
-				if marker != "" {
-					fenceMarker = marker
-				}
-			}
-		}
-
-		// If there is a fence line (marking starting of a code block)
-		// without indent do not process it as part of the list.
-		//
-		// does not apply for definition lists because it causes infinite
-		// loop if text before defintion term is fenced code block start
-		// marker but not part of actual fenced code block
-		// for defnition lists we're called after parsing fence code blocks
-		// so we kno this cannot be a fenced block
-		// https://github.com/gomarkdown/markdown/issues/326
-		if !isDefinitionList && p.extensions&FencedCode != 0 {
-			fenceLineEnd, _ := isFenceLine(chunk, nil, "")
-			if fenceLineEnd > 0 && indent == 0 {
+			verbatim, endList := trackListFence(chunk, indent, &fenceMarker)
+			if endList {
 				*flags |= ast.ListItemEndOfList
 				break gatherlines
+			}
+			if verbatim {
+				if containsBlankLine {
+					containsBlankLine = false
+					raw.WriteByte('\n')
+				}
+				raw.Write(chunk)
+				line = i
+				continue
 			}
 		}
 
