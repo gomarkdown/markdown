@@ -16,10 +16,7 @@ func AppendChild(parent Node, child Node) {
 	RemoveFromTree(child)
 	child.SetParent(parent)
 	children := parent.GetChildren()
-	prev := Node(nil)
-	if len(children) > 0 {
-		prev = children[len(children)-1]
-	}
+	prev := GetLastChild(parent)
 	setPrevNode(child, prev)
 	setNextNode(child, nil)
 	setNextNode(prev, child)
@@ -32,14 +29,14 @@ func AppendChild(parent Node, child Node) {
 
 // RemoveFromTree removes this node from tree
 func RemoveFromTree(n Node) {
-	if n.GetParent() == nil {
+	p := n.GetParent()
+	if p == nil {
 		return
 	}
 	// important: don't clear n.Children if n has no parent
 	// we're called from AppendChild and that might happen on a node
 	// that accumulated Children but hasn't been inserted into the tree
 	n.SetChildren(nil)
-	p := n.GetParent()
 	prev := GetPrevNode(n)
 	next := GetNextNode(n)
 	setNextNode(prev, next)
@@ -83,8 +80,7 @@ func GetNextNode(n Node) Node {
 		return nil
 	}
 	a := parent.GetChildren()
-	len := len(a) - 1
-	for i := 0; i < len; i++ {
+	for i := 0; i+1 < len(a); i++ {
 		if a[i] == n {
 			return a[i+1]
 		}

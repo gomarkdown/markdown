@@ -54,12 +54,9 @@ func Walk(n Node, visitor NodeVisitor) WalkStatus {
 }
 
 // Visit calls visitor function
-func (f NodeVisitorFunc) Visit(node Node, entering bool) WalkStatus {
-	return f(node, entering)
-}
+func (f NodeVisitorFunc) Visit(node Node, entering bool) WalkStatus { return f(node, entering) }
 
 // WalkFunc is like Walk but accepts just a callback function
 func WalkFunc(n Node, f NodeVisitorFunc) {
-	visitor := NodeVisitorFunc(f)
-	Walk(n, visitor)
+	Walk(n, f)
 }
