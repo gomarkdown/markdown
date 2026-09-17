@@ -159,7 +159,7 @@ func (p *Parser) Block(data []byte) {
 		//         }
 		//         return b
 		//      }
-		if p.codePrefix(data) > 0 {
+		if codePrefix(data) > 0 {
 			data = data[p.code(data):]
 			continue
 		}
@@ -243,7 +243,7 @@ func (p *Parser) Block(data []byte) {
 		// * Item 2
 		//
 		// also works with + or -
-		if p.uliPrefix(data) > 0 {
+		if uliPrefix(data) > 0 {
 			data = data[p.list(data, 0, 0, '.'):]
 			continue
 		}
@@ -252,7 +252,7 @@ func (p *Parser) Block(data []byte) {
 		//
 		// 1. Item 1
 		// 2. Item 2
-		if i := p.oliPrefix(data); i > 0 {
+		if i := oliPrefix(data); i > 0 {
 			start := 0
 			delim := byte('.')
 			if i > 2 {
@@ -278,7 +278,7 @@ func (p *Parser) Block(data []byte) {
 		// Term 2
 		// :   Definition c
 		if p.extensions&DefinitionLists != 0 {
-			if p.dliPrefix(data) > 0 {
+			if dliPrefix(data) > 0 {
 				data = data[p.list(data, ast.ListTypeDefinition, 0, '.'):]
 				continue
 			}

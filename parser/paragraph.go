@@ -153,7 +153,7 @@ func (p *Parser) paragraph(data []byte) int {
 
 		// if there's a definition list item, prev line is a definition term
 		if p.extensions&DefinitionLists != 0 {
-			if p.dliPrefix(current) != 0 {
+			if dliPrefix(current) != 0 {
 				ret := p.list(data[prev:], ast.ListTypeDefinition, 0, '.')
 				return ret + prev
 			}
@@ -161,10 +161,10 @@ func (p *Parser) paragraph(data []byte) int {
 
 		// if there's a list after this, paragraph is over
 		if p.extensions&NoEmptyLineBeforeBlock != 0 {
-			if p.uliPrefix(current) != 0 ||
-				p.oliPrefix(current) != 0 ||
+			if uliPrefix(current) != 0 ||
+				oliPrefix(current) != 0 ||
 				p.quotePrefix(current) != 0 ||
-				p.codePrefix(current) != 0 {
+				codePrefix(current) != 0 {
 				p.renderParagraph(data[:i])
 				return i
 			}

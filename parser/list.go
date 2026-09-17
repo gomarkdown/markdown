@@ -6,7 +6,7 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-func (p *Parser) uliPrefix(data []byte) int {
+func uliPrefix(data []byte) int {
 	// start with up to 3 spaces
 	i := skipCharN(data, 0, ' ', 3)
 
@@ -22,7 +22,7 @@ func (p *Parser) uliPrefix(data []byte) int {
 }
 
 // returns ordered list item prefix
-func (p *Parser) oliPrefix(data []byte) int {
+func oliPrefix(data []byte) int {
 	// start with up to 3 spaces
 	i := skipCharN(data, 0, ' ', 3)
 
@@ -43,7 +43,7 @@ func (p *Parser) oliPrefix(data []byte) int {
 }
 
 // returns definition list item prefix
-func (p *Parser) dliPrefix(data []byte) int {
+func dliPrefix(data []byte) int {
 	if len(data) < 2 {
 		return 0
 	}
@@ -84,9 +84,9 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) in
 
 // Returns true if the list item is not the same type as its parent list
 func (p *Parser) listTypeChanged(data []byte, flags *ast.ListType) bool {
-	return p.dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 ||
-		p.oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 ||
-		p.uliPrefix(data) > 0 && *flags&(ast.ListTypeOrdered|ast.ListTypeDefinition) != 0
+	return dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 ||
+		oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 ||
+		uliPrefix(data) > 0 && *flags&(ast.ListTypeOrdered|ast.ListTypeDefinition) != 0
 }
 
 // trackListFence updates marker and reports whether this line belongs to an
@@ -128,9 +128,9 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 		bulletChar byte = '*'
 		delimiter  byte = '.'
 	)
-	i := p.uliPrefix(data)
+	i := uliPrefix(data)
 	if i == 0 {
-		i = p.oliPrefix(data)
+		i = oliPrefix(data)
 		if i > 0 {
 			delimiter = data[i-2]
 		}
@@ -138,7 +138,7 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 		bulletChar = data[i-2]
 	}
 	if i == 0 {
-		i = p.dliPrefix(data)
+		i = dliPrefix(data)
 		// reset definition term flag
 		if i > 0 {
 			*flags &= ^ast.ListTypeTerm
@@ -228,11 +228,11 @@ gatherlines:
 		// evaluate how this line fits in
 		switch {
 		// is this a nested list item?
-		case (p.uliPrefix(chunk) > 0 && !isHRule(chunk)) || p.oliPrefix(chunk) > 0 || p.dliPrefix(chunk) > 0:
+		case (uliPrefix(chunk) > 0 && !isHRule(chunk)) || oliPrefix(chunk) > 0 || dliPrefix(chunk) > 0:
 
 			// if indent is 4 or more spaces on unordered or ordered lists
 			// we need to add leadingWhiteSpaces + 1 spaces in the beginning of the chunk
-			if indentIndex >= 4 && p.dliPrefix(chunk) <= 0 {
+			if indentIndex >= 4 && dliPrefix(chunk) <= 0 {
 				leadingWhiteSpaces := skipChar(chunk, 0, ' ')
 				chunk = data[line+indentIndex-(leadingWhiteSpaces+1) : i]
 			}
@@ -259,7 +259,7 @@ gatherlines:
 				sublist = raw.Len()
 				// in the case of dliPrefix we are too late and need to search back for the definition item, which
 				// should be on the previous line, we then adjust sublist to start there.
-				if p.dliPrefix(chunk) > 0 {
+				if dliPrefix(chunk) > 0 {
 					sublist = backUntilChar(raw.Bytes(), raw.Len()-1, '\n')
 				}
 			}

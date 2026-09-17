@@ -47,10 +47,7 @@ func isFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 	if oldmarker == "" {
 		i = skipChar(data, i, ' ')
 		if i >= n {
-			if i == n {
-				return i, marker
-			}
-			return 0, ""
+			return i, marker
 		}
 
 		syntaxStart, syntaxLen := syntaxRange(data, &i)
@@ -65,10 +62,10 @@ func isFenceLine(data []byte, syntax *string, oldmarker string) (end int, marker
 	}
 
 	i = skipChar(data, i, ' ')
-	if i >= n || data[i] != '\n' {
-		if i == n {
-			return i, marker
-		}
+	if i >= n {
+		return i, marker
+	}
+	if data[i] != '\n' {
 		return 0, ""
 	}
 	return i + 1, marker // Take newline into account.
@@ -292,7 +289,7 @@ func isHexDigit(c byte) bool {
 	return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F'
 }
 
-func (p *Parser) codePrefix(data []byte) int {
+func codePrefix(data []byte) int {
 	n := len(data)
 	if n >= 1 && data[0] == '\t' {
 		return 1
@@ -314,7 +311,7 @@ func (p *Parser) code(data []byte) int {
 		i = skipCharN(data, i, '\n', 1)
 
 		blankline := IsEmpty(data[beg:i]) > 0
-		if pre := p.codePrefix(data[beg:i]); pre > 0 {
+		if pre := codePrefix(data[beg:i]); pre > 0 {
 			beg += pre
 		} else if !blankline {
 			// non-empty, non-prefixed line breaks the pre
