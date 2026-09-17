@@ -126,8 +126,6 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 
 	var work bytes.Buffer
-	work.WriteString(syntax)
-	work.WriteByte('\n')
 
 	for {
 		// check for the end of the code block
@@ -155,12 +153,12 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 	codeBlock := &ast.CodeBlock{
 		IsFenced: true,
+		Info:     unescapeString([]byte(syntax)),
 	}
-	codeBlock.Content = work.Bytes() // TODO: get rid of temp buffer
+	codeBlock.Literal = work.Bytes()
 
 	if p.extensions&Mmark == 0 {
 		p.AddBlock(codeBlock)
-		finalizeCodeBlock(codeBlock)
 		return beg
 	}
 
@@ -174,7 +172,6 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 		p.AddBlock(figure)
 		codeBlock.AsLeaf().Attribute = figure.AsContainer().Attribute
 		p.addChild(codeBlock)
-		finalizeCodeBlock(codeBlock)
 		p.addChild(caption)
 		p.Finalize(figure)
 
@@ -185,7 +182,6 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 
 	// Still here, normal block
 	p.AddBlock(codeBlock)
-	finalizeCodeBlock(codeBlock)
 
 	return beg
 }
@@ -296,20 +292,6 @@ func isHexDigit(c byte) bool {
 	return c >= '0' && c <= '9' || c >= 'a' && c <= 'f' || c >= 'A' && c <= 'F'
 }
 
-func finalizeCodeBlock(code *ast.CodeBlock) {
-	c := code.Content
-	if code.IsFenced {
-		newlinePos := bytes.IndexByte(c, '\n')
-		firstLine := c[:newlinePos]
-		rest := c[newlinePos+1:]
-		code.Info = unescapeString(bytes.Trim(firstLine, "\n"))
-		code.Literal = rest
-	} else {
-		code.Literal = c
-	}
-	code.Content = nil
-}
-
 func (p *Parser) codePrefix(data []byte) int {
 	n := len(data)
 	if n >= 1 && data[0] == '\t' {
@@ -362,10 +344,8 @@ func (p *Parser) code(data []byte) int {
 	codeBlock := &ast.CodeBlock{
 		IsFenced: false,
 	}
-	// TODO: get rid of temp buffer
-	codeBlock.Content = work.Bytes()
+	codeBlock.Literal = work.Bytes()
 	p.AddBlock(codeBlock)
-	finalizeCodeBlock(codeBlock)
 
 	return i
 }
