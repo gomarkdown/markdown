@@ -2,7 +2,6 @@ package parser
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/gomarkdown/markdown/ast"
 )
@@ -83,11 +82,6 @@ type reference struct {
 	text []byte // only gets populated by refOverride feature with Reference.Text
 }
 
-func (r *reference) String() string {
-	return fmt.Sprintf("{link: %q, title: %q, text: %q, noteID: %d, hasBlock: %v}",
-		r.link, r.title, r.text, r.noteID, r.hasBlock)
-}
-
 // Check whether or not data starts with a reference link.
 // If so, it is parsed and stored in the list of references
 // (in the render struct).
@@ -162,10 +156,10 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 	)
 
 	if p.extensions&Footnotes != 0 && noteID != 0 {
-		linkOffset, linkEnd, raw, hasBlock = scanFootnote(p, data, i, tabSize)
+		linkOffset, linkEnd, raw, hasBlock = scanFootnote(data, i, tabSize)
 		lineEnd = linkEnd
 	} else {
-		linkOffset, linkEnd, titleOffset, titleEnd, lineEnd = scanLinkRef(p, data, i)
+		linkOffset, linkEnd, titleOffset, titleEnd, lineEnd = scanLinkRef(data, i)
 	}
 	if lineEnd == 0 {
 		return 0
@@ -204,7 +198,7 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 	return lineEnd
 }
 
-func scanLinkRef(p *Parser, data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd, lineEnd int) {
+func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd, lineEnd int) {
 	// link: whitespace-free sequence, optionally between angle brackets
 	if data[i] == '<' {
 		i++
@@ -278,7 +272,7 @@ func scanLinkRef(p *Parser, data []byte, i int) (linkOffset, linkEnd, titleOffse
 // blockEnd is the end of the section in the input buffer, and contents is the
 // extracted text that was shifted over one tab. It will need to be rendered at
 // the end of the document.
-func scanFootnote(p *Parser, data []byte, i, indentSize int) (blockStart, blockEnd int, contents []byte, hasBlock bool) {
+func scanFootnote(data []byte, i, indentSize int) (blockStart, blockEnd int, contents []byte, hasBlock bool) {
 	if i == 0 || len(data) == 0 {
 		return
 	}
