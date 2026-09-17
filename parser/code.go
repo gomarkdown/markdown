@@ -160,7 +160,7 @@ func (p *Parser) fencedCodeBlock(data []byte, doRender bool) int {
 	}
 
 	// Check for caption and if found make it a figure.
-	if captionContent, id, consumed := p.caption(data[beg:], []byte(captionFigure)); consumed > 0 {
+	if captionContent, id, consumed := parseCaption(data[beg:], []byte(captionFigure)); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
 		figure.HeadingID = id

@@ -80,7 +80,7 @@ func (p *Parser) paragraph(data []byte) int {
 
 		// an underline under some text marks a heading, so our paragraph ended on prev line
 		if i > 0 {
-			if level := p.isUnderlinedHeading(current); level > 0 {
+			if level := isUnderlinedHeading(current); level > 0 {
 				// render the paragraph
 				p.renderParagraph(data[:prev])
 
@@ -122,7 +122,7 @@ func (p *Parser) paragraph(data []byte) int {
 		}
 
 		// if there's a block quote, paragraph is over
-		if p.quotePrefix(current) > 0 {
+		if quotePrefix(current) > 0 {
 			p.renderParagraph(data[:i])
 			return i
 		}
@@ -163,7 +163,7 @@ func (p *Parser) paragraph(data []byte) int {
 		if p.extensions&NoEmptyLineBeforeBlock != 0 {
 			if uliPrefix(current) != 0 ||
 				oliPrefix(current) != 0 ||
-				p.quotePrefix(current) != 0 ||
+				quotePrefix(current) != 0 ||
 				codePrefix(current) != 0 {
 				p.renderParagraph(data[:i])
 				return i

@@ -61,7 +61,7 @@ func (p *Parser) Block(data []byte) {
 					}
 					if captionOff < len(rest) {
 						for _, caption := range []string{captionFigure, captionTable, captionQuote} {
-							if _, _, capcon := p.caption(rest[captionOff:], []byte(caption)); capcon > 0 {
+							if _, _, capcon := parseCaption(rest[captionOff:], []byte(caption)); capcon > 0 {
 								included = append(included, rest[captionOff:captionOff+capcon]...)
 								consumed += captionOff + capcon
 								break // there can only be 1 caption.
@@ -201,7 +201,7 @@ func (p *Parser) Block(data []byte) {
 		//
 		// > A big quote I found somewhere
 		// > on the web
-		if p.quotePrefix(data) > 0 {
+		if quotePrefix(data) > 0 {
 			data = data[p.quote(data):]
 			continue
 		}
@@ -211,7 +211,7 @@ func (p *Parser) Block(data []byte) {
 		// A> The proof is too large to fit
 		// A> in the margin.
 		if p.extensions&Mmark != 0 {
-			if p.asidePrefix(data) > 0 {
+			if asidePrefix(data) > 0 {
 				data = data[p.aside(data):]
 				continue
 			}

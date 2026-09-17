@@ -83,10 +83,10 @@ func (p *Parser) list(data []byte, flags ast.ListType, start int, delim byte) in
 }
 
 // Returns true if the list item is not the same type as its parent list
-func (p *Parser) listTypeChanged(data []byte, flags *ast.ListType) bool {
-	return dliPrefix(data) > 0 && *flags&ast.ListTypeDefinition == 0 ||
-		oliPrefix(data) > 0 && *flags&ast.ListTypeOrdered == 0 ||
-		uliPrefix(data) > 0 && *flags&(ast.ListTypeOrdered|ast.ListTypeDefinition) != 0
+func listTypeChanged(data []byte, flags ast.ListType) bool {
+	return dliPrefix(data) > 0 && flags&ast.ListTypeDefinition == 0 ||
+		oliPrefix(data) > 0 && flags&ast.ListTypeOrdered == 0 ||
+		uliPrefix(data) > 0 && flags&(ast.ListTypeOrdered|ast.ListTypeDefinition) != 0
 }
 
 // trackListFence updates marker and reports whether this line belongs to an
@@ -241,7 +241,7 @@ gatherlines:
 			// if not, it is either a different kind of list
 			// or the next item in the same list
 			if indent <= itemIndent {
-				if p.listTypeChanged(chunk, flags) {
+				if listTypeChanged(chunk, *flags) {
 					*flags |= ast.ListItemEndOfList
 				} else if containsBlankLine {
 					*flags |= ast.ListItemContainsBlock
@@ -274,7 +274,7 @@ gatherlines:
 			}
 			*flags |= ast.ListItemContainsBlock
 
-		case p.quotePrefix(chunk) > 0 && indent < 4:
+		case quotePrefix(chunk) > 0 && indent < 4:
 			*flags |= ast.ListItemEndOfList
 			break gatherlines
 

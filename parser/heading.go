@@ -148,7 +148,7 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 	return skip
 }
 
-func (p *Parser) isUnderlinedHeading(data []byte) int {
+func isUnderlinedHeading(data []byte) int {
 	// test of level 1 heading
 	if data[0] == '=' {
 		i := skipChar(data, 1, '=')

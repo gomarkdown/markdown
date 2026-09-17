@@ -7,7 +7,7 @@ import (
 )
 
 // quotePrefix returns the blockquote prefix length.
-func (p *Parser) quotePrefix(data []byte) int {
+func quotePrefix(data []byte) int {
 	i := 0
 	n := len(data)
 	for i < 3 && i < n && data[i] == ' ' {
@@ -24,14 +24,14 @@ func (p *Parser) quotePrefix(data []byte) int {
 
 // blockquote ends with at least one blank line
 // followed by something without a blockquote prefix
-func (p *Parser) terminateBlockquote(data []byte, beg, end int) bool {
+func terminateBlockquote(data []byte, beg, end int) bool {
 	if IsEmpty(data[beg:]) <= 0 {
 		return false
 	}
 	if end >= len(data) {
 		return true
 	}
-	return p.quotePrefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0
+	return quotePrefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0
 }
 
 // parse a blockquote fragment
@@ -46,13 +46,13 @@ func (p *Parser) quote(data []byte) int {
 		}
 		end = skipCharN(data, end, '\n', 1)
 		contentBeg := beg
-		if pre := p.quotePrefix(data[beg:]); pre > 0 {
+		if pre := quotePrefix(data[beg:]); pre > 0 {
 			// skip the prefix
 			contentBeg += pre
 		} else if fenceMarker != "" {
 			// Lines inside a quoted fenced code block may omit the quote
 			// prefix. Keep them in the quote until the fence closes.
-		} else if p.terminateBlockquote(data, beg, end) {
+		} else if terminateBlockquote(data, beg, end) {
 			break
 		}
 		// this line is part of the blockquote
@@ -76,7 +76,7 @@ func (p *Parser) quote(data []byte) int {
 		return end
 	}
 
-	if captionContent, id, consumed := p.caption(data[end:], []byte(captionQuote)); consumed > 0 {
+	if captionContent, id, consumed := parseCaption(data[end:], []byte(captionQuote)); consumed > 0 {
 		figure := &ast.CaptionFigure{}
 		caption := &ast.Caption{}
 		figure.HeadingID = id
