@@ -127,23 +127,14 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 }
 
 func (r *SPRenderer) smartParens(out *bytes.Buffer, previousChar byte, text []byte) int {
-	if len(text) >= 3 {
-		t1 := tolower(text[1])
-		t2 := tolower(text[2])
-
-		if t1 == 'c' && t2 == ')' {
-			out.WriteString("&copy;")
-			return 2
-		}
-
-		if t1 == 'r' && t2 == ')' {
-			out.WriteString("&reg;")
-			return 2
-		}
-
-		if len(text) >= 4 && t1 == 't' && t2 == 'm' && text[3] == ')' {
-			out.WriteString("&trade;")
-			return 3
+	for _, replacement := range [...]struct{ token, entity string }{
+		{"(c)", "&copy;"},
+		{"(r)", "&reg;"},
+		{"(tm)", "&trade;"},
+	} {
+		if len(text) >= len(replacement.token) && bytes.EqualFold(text[:len(replacement.token)], []byte(replacement.token)) {
+			out.WriteString(replacement.entity)
+			return len(replacement.token) - 1
 		}
 	}
 
@@ -310,15 +301,6 @@ func (r *SPRenderer) smartNumber(out *bytes.Buffer, previousChar byte, text []by
 	return 0
 }
 
-func (r *SPRenderer) smartDoubleQuote(out *bytes.Buffer, previousChar byte, text []byte, quote byte) int {
-	nextChar := byte(0)
-	if len(text) > 1 {
-		nextChar = text[1]
-	}
-	smartQuote(out, previousChar, nextChar, quote, &r.inDoubleQuote, false)
-	return 0
-}
-
 func (r *SPRenderer) smartLeftAngle(out *bytes.Buffer, previousChar byte, text []byte) int {
 	i := 0
 
@@ -344,7 +326,12 @@ func NewSmartypantsRenderer(flags Flags) *SPRenderer {
 		quote = 'a'
 	}
 	r.callbacks['"'] = func(out *bytes.Buffer, previous byte, text []byte) int {
-		return r.smartDoubleQuote(out, previous, text, quote)
+		next := byte(0)
+		if len(text) > 1 {
+			next = text[1]
+		}
+		smartQuote(out, previous, next, quote, &r.inDoubleQuote, false)
+		return 0
 	}
 	r.callbacks['&'] = r.smartAmp(angled, flags&SmartypantsQuotesNBSP != 0)
 	r.callbacks['\''] = r.smartSingleQuote
