@@ -6,72 +6,10 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-//
-// Link references
-//
-// This section implements support for references that (usually) appear
-// as footnotes in a document, and can be referenced anywhere in the document.
-// The basic format is:
-//
-//    [1]: http://www.google.com/ "Google"
-//    [2]: http://www.github.com/ "Github"
-//
-// Anywhere in the document, the reference can be linked by referring to its
-// label, i.e., 1 and 2 in this example, as in:
-//
-//    This library is hosted on [Github][2], a git hosting site.
-//
-// Actual footnotes as specified in Pandoc and supported by some other Markdown
-// libraries such as php-markdown are also taken care of. They look like this:
-//
-//    This sentence needs a bit of further explanation.[^note]
-//
-//    [^note]: This is the explanation.
-//
-// Footnotes should be placed at the end of the document in an ordered list.
-// Inline footnotes such as:
-//
-//    Inline footnotes^[Not supported.] also exist.
-//
-// are not yet supported.
-
-// reference holds all information necessary for a reference-style links or
-// footnotes.
-//
-// Consider this markdown with reference-style links:
-//
-//	[link][ref]
-//
-//	[ref]: /url/ "tooltip title"
-//
-// It will be ultimately converted to this HTML:
-//
-//	<p><a href=\"/url/\" title=\"title\">link</a></p>
-//
-// And a reference structure will be populated as follows:
-//
-//	p.refs["ref"] = &reference{
-//	    link: "/url/",
-//	    title: "tooltip title",
-//	}
-//
-// Alternatively, reference can contain information about a footnote. Consider
-// this markdown:
-//
-//	Text needing a footnote.[^a]
-//
-//	[^a]: This is the note
-//
-// A reference structure will be populated as follows:
-//
-//	p.refs["a"] = &reference{
-//	    link: "a",
-//	    title: "This is the note",
-//	    noteID: <some positive int>,
-//	}
-//
-// TODO: As you can see, it begs for splitting into two dedicated structures
-// for refs and for footnotes.
+// reference is the parser's resolved target for both reference-style links and
+// footnotes. For links, link and title are the destination and tooltip. For
+// footnotes, link is the fragment ID, title is the note source, and footnote is
+// the list item populated during the final AST pass.
 type reference struct {
 	link     []byte
 	title    []byte
