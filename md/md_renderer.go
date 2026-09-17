@@ -72,13 +72,6 @@ func (r *Renderer) outs(w io.Writer, s string) {
 	io.WriteString(w, s)
 }
 
-func (r *Renderer) doubleSpace(w io.Writer) {
-	// TODO: need to remember number of written bytes
-	// if out.Len() > 0 {
-	r.outs(w, "\n")
-	//}
-}
-
 func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 	if entering {
 		r.listDepth++
@@ -95,21 +88,15 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 }
 
 func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
-	flags := node.ListFlags
-	bullet := string(node.BulletChar)
-
-	if entering {
-		for i := 1; i < r.listDepth; i++ {
-			for i := 0; i < r.indentSize; i++ {
-				fmt.Fprintf(w, " ")
-			}
-		}
-		if flags&ast.ListTypeOrdered != 0 {
-			fmt.Fprintf(w, "%d. ", r.orderedListCounter[r.listDepth])
-			r.orderedListCounter[r.listDepth]++
-		} else {
-			fmt.Fprintf(w, "%s ", bullet)
-		}
+	if !entering {
+		return
+	}
+	io.WriteString(w, strings.Repeat(" ", (r.listDepth-1)*r.indentSize))
+	if node.ListFlags&ast.ListTypeOrdered != 0 {
+		fmt.Fprintf(w, "%d. ", r.orderedListCounter[r.listDepth])
+		r.orderedListCounter[r.listDepth]++
+	} else {
+		io.WriteString(w, string(node.BulletChar)+" ")
 	}
 }
 
@@ -182,30 +169,12 @@ func cleanWithoutTrim(s string) string {
 	return string(b)
 }
 
-func (r *Renderer) skipSpaceIfNeededNormalText(w io.Writer, cleanString string) bool {
-	if cleanString[0] != ' ' {
-		return false
-	}
-
-	return false
-	//  TODO: what did it mean to do?
-	// we no longer use *bytes.Buffer for out, so whatever this tracked,
-	// it has to be done in a different wy
-	/*
-		if _, ok := r.normalTextMarker[out]; !ok {
-			r.normalTextMarker[out] = -1
-		}
-		return r.normalTextMarker[out] == out.Len()
-	*/
-}
-
 func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	lit := text.Literal
-	normalText := string(text.Literal)
 	if needsEscaping(lit, r.lastNormalText) {
 		lit = append([]byte("\\"), lit...)
 	}
-	r.lastNormalText = normalText
+	r.lastNormalText = string(text.Literal)
 	if r.listDepth > 0 && string(lit) == "\n" {
 		// TODO: See if this can be cleaned up... It's needed for lists.
 		return
@@ -214,20 +183,7 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	if cleanString == "" {
 		return
 	}
-	// Skip first space if last character is already a space (i.e., no need for a 2nd space in a row).
-	if r.skipSpaceIfNeededNormalText(w, cleanString) {
-		cleanString = cleanString[1:]
-	}
 	r.outs(w, cleanString)
-	// If it ends with a space, make note of that.
-	//if len(cleanString) >= 1 && cleanString[len(cleanString)-1] == ' ' {
-	// TODO: write equivalent of this
-	// r.normalTextMarker[out] = out.Len()
-	//}
-}
-
-func (r *Renderer) surround(w io.Writer, symbol string) {
-	r.outs(w, symbol)
 }
 
 func (r *Renderer) htmlSpan(w io.Writer, node *ast.HTMLSpan) {
@@ -235,33 +191,25 @@ func (r *Renderer) htmlSpan(w io.Writer, node *ast.HTMLSpan) {
 }
 
 func (r *Renderer) htmlBlock(w io.Writer, node *ast.HTMLBlock) {
-	r.doubleSpace(w)
+	r.outs(w, "\n")
 	r.out(w, node.Literal)
 	r.outs(w, "\n\n")
 }
 
 func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
-	r.doubleSpace(w)
+	r.outs(w, "\n")
 	text := node.Literal
-	lang := string(node.Info)
-	// Parse out the language name.
-	count := 0
-	for _, elt := range strings.Fields(lang) {
+	language := ""
+	for _, elt := range strings.Fields(string(node.Info)) {
 		if elt[0] == '.' {
 			elt = elt[1:]
 		}
-		if len(elt) == 0 {
-			continue
+		if elt != "" {
+			language = elt
+			break
 		}
-		r.outs(w, "```")
-		r.outs(w, elt)
-		count++
-		break
 	}
-
-	if count == 0 {
-		r.outs(w, "```")
-	}
+	r.outs(w, "```"+language)
 	r.outs(w, "\n")
 	r.out(w, text)
 	if len(text) == 0 || text[len(text)-1] != '\n' {
@@ -366,11 +314,11 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Text:
 		r.text(w, node)
 	case *ast.Emph:
-		r.surround(w, "*")
+		r.outs(w, "*")
 	case *ast.Strong:
-		r.surround(w, "**")
+		r.outs(w, "**")
 	case *ast.Del:
-		r.surround(w, "~~")
+		r.outs(w, "~~")
 	case *ast.Link:
 		r.link(w, node, entering)
 	case *ast.Image:
