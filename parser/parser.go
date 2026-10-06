@@ -250,6 +250,21 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		p.parseRefsToAST()
 	}
 
+	// a {#id} block attribute on a heading is the heading's ID. Move it to
+	// HeadingID so the heading ends up with one ID instead of the renderer
+	// writing both the attribute's id and the generated one.
+	idFromAttr := map[*ast.Heading]bool{}
+	if p.extensions&Attributes != 0 {
+		ast.WalkFunc(p.Doc, func(node ast.Node, entering bool) ast.WalkStatus {
+			if h, ok := node.(*ast.Heading); ok && entering && h.Attribute != nil && h.Attribute.ID != nil {
+				h.HeadingID = string(h.Attribute.ID)
+				h.Attribute.ID = nil
+				idFromAttr[h] = true
+			}
+			return ast.GoToNext
+		})
+	}
+
 	// ensure HeadingIDs generated with AutoHeadingIDs are unique
 	// this is delayed here (as opposed to done when we create the id)
 	// so that we can preserve more original ids when there are conflicts
@@ -257,7 +272,7 @@ func (p *Parser) Parse(input []byte) ast.Node {
 	nextSuffix := map[string]int{}
 	for _, h := range p.allHeadingsWithAutoID {
 		base := h.HeadingID
-		if base == "" {
+		if base == "" || idFromAttr[h] {
 			continue
 		}
 		id := base
