@@ -250,12 +250,43 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		p.parseRefsToAST()
 	}
 
+	// A non-empty block-attribute id replaces the generated heading id and
+	// occupies an auto-id slot. An empty {#} does not.
+	heads := p.allHeadingsWithAutoID
+	if p.extensions&Attributes != 0 {
+		inSlot := map[*ast.Heading]bool{}
+		for _, h := range p.allHeadingsWithAutoID {
+			inSlot[h] = true
+		}
+		var ordered []*ast.Heading
+		ast.WalkFunc(p.Doc, func(node ast.Node, entering bool) ast.WalkStatus {
+			h, ok := node.(*ast.Heading)
+			if !ok || !entering {
+				return ast.GoToNext
+			}
+			if h.Attribute != nil {
+				if len(h.Attribute.ID) > 0 {
+					h.HeadingID = string(h.Attribute.ID)
+					h.Attribute.ID = nil
+					inSlot[h] = true
+				} else if h.Attribute.ID != nil {
+					h.Attribute.ID = nil
+				}
+			}
+			if inSlot[h] {
+				ordered = append(ordered, h)
+			}
+			return ast.GoToNext
+		})
+		heads = ordered
+	}
+
 	// ensure HeadingIDs generated with AutoHeadingIDs are unique
 	// this is delayed here (as opposed to done when we create the id)
 	// so that we can preserve more original ids when there are conflicts
 	taken := map[string]bool{}
 	nextSuffix := map[string]int{}
-	for _, h := range p.allHeadingsWithAutoID {
+	for _, h := range heads {
 		base := h.HeadingID
 		if base == "" {
 			continue

@@ -373,9 +373,59 @@ func TestAfterBlockAttributesAutoHeadingID(t *testing.T) {
 	tests := []string{
 		"## foo\n{: data-line=\"1\"}\n",
 		"<h2 id=\"foo\" data-line=\"1\">foo</h2>\n",
+
+		"{#myid}\n## foo\n",
+		"<h2 id=\"myid\">foo</h2>\n",
+
+		"{#myid}\n## foo\n{: data-line=\"1\"}\n",
+		"<h2 id=\"myid\" data-line=\"1\">foo</h2>\n",
+
+		"{#myid .bar}\n## foo\n",
+		"<h2 id=\"myid\" class=\"bar\">foo</h2>\n",
+
+		"{#myid}\n## foo\n\n## foo\n",
+		"<h2 id=\"myid\">foo</h2>\n\n<h2 id=\"foo\">foo</h2>\n",
+
+		// An empty # is not an id. Keep the generated one, and do not emit id="".
+		"{#}\n## foo\n",
+		"<h2 id=\"foo\">foo</h2>\n",
+
+		"{# .c}\n## foo\n",
+		"<h2 id=\"foo\" class=\"c\">foo</h2>\n",
+
+		"{#myid #}\n## foo\n",
+		"<h2 id=\"foo\">foo</h2>\n",
+
+		// The attribute id occupies the auto-id slot, so a later slug is suffixed.
+		"{#foo}\n## Introduction\n\n## Foo\n",
+		"<h2 id=\"foo\">Introduction</h2>\n\n<h2 id=\"foo-1\">Foo</h2>\n",
+
+		"## Foo\n\n{#foo}\n## Introduction\n",
+		"<h2 id=\"foo\">Foo</h2>\n\n<h2 id=\"foo-1\">Introduction</h2>\n",
+
+		"{#foo}\n## One\n\n{#foo}\n## Two\n",
+		"<h2 id=\"foo\">One</h2>\n\n<h2 id=\"foo-1\">Two</h2>\n",
+
+		"{#a}\n## foo {#b}\n",
+		"<h2 id=\"a\">foo</h2>\n",
 	}
 	params := TestParams{
 		extensions: parser.CommonExtensions | parser.Attributes | parser.AutoHeadingIDs,
+	}
+	doTestsParam(t, tests, params)
+}
+
+func TestBlockAttributeHeadingIDMatchesTOC(t *testing.T) {
+	tests := []string{
+		"{#foo}\n## Introduction\n\n## Foo\n",
+		"<nav>\n\n<ul>\n<li>\n<ul>\n<li><a href=\"#foo\">Introduction</a></li>\n\n<li><a href=\"#foo-1\">Foo</a></li>\n</ul></li>\n</ul>\n\n</nav>\n\n<h2 id=\"foo\">Introduction</h2>\n\n<h2 id=\"foo-1\">Foo</h2>\n",
+
+		"## Foo\n\n{#foo}\n## Introduction\n",
+		"<nav>\n\n<ul>\n<li>\n<ul>\n<li><a href=\"#foo\">Foo</a></li>\n\n<li><a href=\"#foo-1\">Introduction</a></li>\n</ul></li>\n</ul>\n\n</nav>\n\n<h2 id=\"foo\">Foo</h2>\n\n<h2 id=\"foo-1\">Introduction</h2>\n",
+	}
+	params := TestParams{
+		extensions: parser.CommonExtensions | parser.Attributes | parser.AutoHeadingIDs,
+		Flags:      html.TOC,
 	}
 	doTestsParam(t, tests, params)
 }
