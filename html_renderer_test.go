@@ -373,6 +373,15 @@ func TestAfterBlockAttributesAutoHeadingID(t *testing.T) {
 	tests := []string{
 		"## foo\n{: data-line=\"1\"}\n",
 		"<h2 id=\"foo\" data-line=\"1\">foo</h2>\n",
+
+		"{#myid}\n## foo\n",
+		"<h2 id=\"myid\">foo</h2>\n",
+
+		"{#myid}\n## foo\n{: data-line=\"1\"}\n",
+		"<h2 id=\"myid\" data-line=\"1\">foo</h2>\n",
+
+		"{#myid}\n## foo\n\n## foo\n",
+		"<h2 id=\"myid\">foo</h2>\n\n<h2 id=\"foo\">foo</h2>\n",
 	}
 	params := TestParams{
 		extensions: parser.CommonExtensions | parser.Attributes | parser.AutoHeadingIDs,
