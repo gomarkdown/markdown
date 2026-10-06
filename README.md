@@ -78,22 +78,6 @@ CommonMark mode uses Goldmark to parse into this library's usual `ast` nodes, so
 
 When `markdown.ToHTML` receives no renderer, CommonMark documents use XHTML tags and no smart punctuation, matching the official examples. To customize rendering, supply an `html.Renderer` with your own flags.
 
-With the flag on, a blank line ends a block quote:
-
-```markdown
-> a
-
-> b
-```
-
-That is two quotes. The same input is one quote with two paragraphs when the flag is off, which is the original Markdown behavior. To keep both paragraphs in one quote with the flag on, put `>` on the blank line:
-
-```markdown
-> a
->
-> b
-```
-
 ```go
 p := parser.New()
 p.Opts.Flags |= parser.CommonMark

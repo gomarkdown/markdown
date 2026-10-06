@@ -24,10 +24,10 @@ func (p *Parser) parseCommonMark(input []byte) ast.Node {
 	if p.ReferenceOverride != nil {
 		context = &commonMarkContext{Context: context, override: p.ReferenceOverride}
 	}
-	root := goldmark.New().Parser().Parse(text.NewReader(input), goldparser.WithContext(context))
+	root := goldmark.DefaultParser().Parse(text.NewReader(input), goldparser.WithContext(context))
 	doc := p.Doc.(*ast.Document)
 	doc.CommonMark = true
-	p.commonMarkChildren(doc, root, input)
+	commonMarkChildren(doc, root, input)
 	p.tip = nil
 	return doc
 }
@@ -72,7 +72,7 @@ func appendCommonMarkText(parent ast.Node, literal []byte) {
 	ast.AppendChild(parent, &ast.Text{Leaf: ast.Leaf{Literal: bytes.Clone(literal)}})
 }
 
-func (p *Parser) commonMarkChildren(parent ast.Node, source goldast.Node, input []byte) {
+func commonMarkChildren(parent ast.Node, source goldast.Node, input []byte) {
 	for child := source.FirstChild(); child != nil; child = child.NextSibling() {
 		var node ast.Node
 		switch n := child.(type) {
@@ -177,7 +177,7 @@ func (p *Parser) commonMarkChildren(parent ast.Node, source goldast.Node, input 
 		}
 		ast.AppendChild(parent, node)
 		if node.AsContainer() != nil {
-			p.commonMarkChildren(node, child, input)
+			commonMarkChildren(node, child, input)
 		}
 	}
 }
