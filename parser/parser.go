@@ -4,6 +4,7 @@ Package parser implements a parser for markdown text that generates an AST (abst
 package parser
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 
@@ -94,6 +95,9 @@ type Parser struct {
 
 	didParse bool
 
+	// Lazy container continuation lines cannot become setext underlines.
+	commonMarkLazyLines map[*byte]bool
+
 	// Matching ']' for each '[' in the current Inline() buffer.
 	brackets bracketTable
 	// Citation brackets preserve Mmark's immediate-backslash escape rule.
@@ -126,7 +130,11 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 		}
 	}
 	// refs are case insensitive
-	ref, found = p.refs[strings.ToLower(refid)]
+	if p.Opts.Flags&CommonMark != 0 {
+		ref, found = p.refs[commonMarkLabel([]byte(refid))]
+	} else {
+		ref, found = p.refs[strings.ToLower(refid)]
+	}
 	return ref, found
 }
 
@@ -221,7 +229,9 @@ func (p *Parser) Parse(input []byte) ast.Node {
 	p.didParse = true
 
 	if p.Opts.Flags&CommonMark != 0 {
-		return p.parseCommonMark(input)
+		p.Doc.(*ast.Document).CommonMark = true
+		input = bytes.ReplaceAll(input, []byte{0}, []byte("\ufffd"))
+		defer func() { p.commonMarkLazyLines = nil }()
 	}
 
 	// the code only works with Unix CR newlines so to make life easy for

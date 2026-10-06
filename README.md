@@ -74,7 +74,7 @@ Example source: [examples/basic.go](examples/basic.go)
 
 `parser.CommonMark` selects the [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) grammar. All 652 official examples are tested against exact HTML output. The flag is off by default, preserving existing parsing and rendering behavior.
 
-CommonMark mode uses Goldmark to parse into this library's usual `ast` nodes, so AST traversal, transformation, custom renderers, and HTML rendering hooks remain available. It uses strict CommonMark syntax regardless of the parser's `Extensions` setting; extensions and custom block/inline parsers apply only when the flag is off. Reference destination and title overrides remain available.
+CommonMark mode uses this library's parser and usual `ast` nodes, so AST traversal, transformation, custom renderers, and HTML rendering hooks remain available. It uses strict CommonMark syntax regardless of the parser's `Extensions` setting; extensions and custom block/inline parsers apply only when the flag is off. Reference destination and title overrides remain available.
 
 When `markdown.ToHTML` receives no renderer, CommonMark documents use XHTML tags and no smart punctuation, matching the official examples. To customize rendering, supply an `html.Renderer` with your own flags.
 
@@ -151,7 +151,7 @@ To run: `mdtohtml input-file [output-file]`
   goroutines without ill effect. There is no dependence on global
   shared state.
 
-- **Minimal dependencies**. Uses Goldmark for CommonMark parsing. Requires Go 1.22 or later.
+- **Minimal dependencies**. Only depends on standard library packages in Go.
 
 - **Standards compliant**. Output successfully validates using the
   W3C validation tool for HTML 4.01 and XHTML 1.0 Transitional.
