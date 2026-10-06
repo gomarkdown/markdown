@@ -220,6 +220,10 @@ func (p *Parser) Parse(input []byte) ast.Node {
 	}
 	p.didParse = true
 
+	if p.Opts.Flags&CommonMark != 0 {
+		return p.parseCommonMark(input)
+	}
+
 	// the code only works with Unix CR newlines so to make life easy for
 	// callers normalize newlines
 	input = NormalizeNewlines(input)
