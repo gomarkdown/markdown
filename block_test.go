@@ -61,6 +61,68 @@ func TestPrefixHeaderMmarkExtension(t *testing.T) {
 	doTestsBlock(t, "PrefixHeaderMmarkExtension.tests", parser.Mmark)
 }
 
+func TestSpecialHeadingRequiresMmark(t *testing.T) {
+	configs := []struct {
+		name       string
+		extensions parser.Extensions
+		special    bool
+	}{
+		{"none", parser.NoExtensions, false},
+		{"common", parser.CommonExtensions, false},
+		{"heading IDs", parser.HeadingIDs | parser.AutoHeadingIDs, false},
+		{"Mmark", parser.Mmark, true},
+		{"Mmark with common", parser.Mmark | parser.CommonExtensions, true},
+	}
+	tests := []struct {
+		name  string
+		input string
+		plain string
+		mmark string
+	}{
+		{
+			"standalone",
+			".# Appendix\n",
+			"<p>.# Appendix</p>\n",
+			"<h1 class=\"special\">Appendix</h1>\n",
+		},
+		{
+			"paragraph",
+			"Before\n.# Appendix\nAfter\n",
+			"<p>Before\n.# Appendix\nAfter</p>\n",
+			"<p>Before</p>\n\n<h1 class=\"special\">Appendix</h1>\n\n<p>After</p>\n",
+		},
+		{
+			"list",
+			"* item\n.# Appendix\n* next\n",
+			"<ul>\n<li>item\n.# Appendix</li>\n<li>next</li>\n</ul>\n",
+			"<ul>\n<li><p>item</p>\n\n<h1 class=\"special\">Appendix</h1></li>\n\n<li><p>next</p></li>\n</ul>\n",
+		},
+	}
+	for _, config := range configs {
+		t.Run(config.name, func(t *testing.T) {
+			for _, test := range tests {
+				t.Run(test.name, func(t *testing.T) {
+					want := test.plain
+					if config.special {
+						want = test.mmark
+					}
+					got := runMarkdown(test.input, TestParams{extensions: config.extensions})
+					if got != want {
+						t.Errorf("input %q: got %q, want %q", test.input, got, want)
+					}
+				})
+			}
+		})
+	}
+	t.Run("default parser", func(t *testing.T) {
+		got := string(ToHTML([]byte(".# Appendix\n"), nil, nil))
+		want := "<p>.# Appendix</p>\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+}
+
 func TestUnderlineHeaders(t *testing.T) {
 	doTestsBlock(t, "UnderlineHeaders.tests", 0)
 }
