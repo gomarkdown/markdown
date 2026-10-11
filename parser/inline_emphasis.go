@@ -43,6 +43,9 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 			sub := &ast.Subscript{Leaf: ast.Leaf{Literal: data[1:ret]}}
 			return ret + 1, sub
 		}
+		if c == '~' {
+			return 0, nil
+		}
 		ret, node := helperEmphasis(p, data[1:], c)
 		if ret == 0 {
 			return 0, nil
