@@ -76,7 +76,7 @@ func NewWithExtensions(extension Extensions) *Parser {
 
 	p.registerInline(" ", maybeLineBreak)
 	p.registerInline("*_", emphasis)
-	if extension&Strikethrough != 0 {
+	if extension&(Strikethrough|SuperSubscript) != 0 {
 		p.registerInline("~", emphasis)
 	}
 	p.registerInline("`", codeSpan)

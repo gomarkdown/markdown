@@ -8,6 +8,14 @@ import (
 
 // single and double emphasis parsing
 func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
+	// Registering '~' for subscript must not enable double-tilde syntax or
+	// reinterpret the suffix of a double-tilde opener as a single opener.
+	if data[offset] == '~' && p.extensions&Strikethrough == 0 {
+		if offset+1 < len(data) && data[offset+1] == '~' ||
+			offset > 0 && data[offset-1] == '~' && !isEscape(data, offset-1) {
+			return 0, nil
+		}
+	}
 	data = data[offset:]
 	c := data[0]
 
