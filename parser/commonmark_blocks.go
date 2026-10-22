@@ -341,7 +341,14 @@ func (p *Parser) commonMarkFencedCode(data []byte, i int, marker byte, count, in
 		work.WriteByte('\n')
 		i += end
 	}
-	p.AddBlock(&ast.CodeBlock{IsFenced: true, Info: commonMarkLiteral(info), Leaf: ast.Leaf{Literal: work.Bytes()}})
+	p.AddBlock(&ast.CodeBlock{
+		IsFenced:    true,
+		Info:        commonMarkLiteral(info),
+		FenceChar:   marker,
+		FenceLength: count,
+		FenceOffset: indent,
+		Leaf:        ast.Leaf{Literal: work.Bytes()},
+	})
 	return i
 }
 
