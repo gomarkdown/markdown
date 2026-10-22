@@ -175,6 +175,10 @@ func commonMarkFence(line []byte) (marker byte, count, indent int, info []byte) 
 	if marker == '`' && bytes.IndexByte(info, '`') >= 0 {
 		return 0, 0, 0, nil
 	}
+	// like the legacy parser, ``` {go} has info string "go"
+	if len(info) >= 2 && info[0] == '{' && info[len(info)-1] == '}' && bytes.IndexByte(info[1:len(info)-1], '}') < 0 {
+		info = bytes.TrimSpace(info[1 : len(info)-1])
+	}
 	return
 }
 
