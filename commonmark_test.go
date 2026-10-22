@@ -61,6 +61,19 @@ func TestCommonMark(t *testing.T) {
 	}
 }
 
+func TestNewCommonMark(t *testing.T) {
+	p := parser.NewCommonMark()
+	if p.Opts.Flags&parser.CommonMark == 0 {
+		t.Fatal("NewCommonMark didn't set the CommonMark flag")
+	}
+	for _, example := range commonMarkExamples(t) {
+		got := string(ToHTML([]byte(example.Markdown), parser.NewCommonMark(), nil))
+		if got != example.HTML {
+			t.Errorf("example %d, markdown: %q\nwant: %q\n got: %q", example.Example, example.Markdown, example.HTML, got)
+		}
+	}
+}
+
 func TestCommonMarkEmptyTitles(t *testing.T) {
 	for _, input := range []string{"[link](/url \"\")", "[link][ref]\n\n[ref]: /url \"\""} {
 		p := parser.New()
