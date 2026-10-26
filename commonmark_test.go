@@ -140,9 +140,12 @@ func TestCommonMarkReferenceDefinitionContinuation(t *testing.T) {
 		{"[x]: /u\n- ", "<p>-</p>\n"},
 		{"[x]: /u\n<a>", "<p><a></p>\n"},
 		{"> [x]: /u\n    code", "<blockquote>\n<p>code</p>\n</blockquote>\n"},
+		// Continuation lines lose their indentation, so this is a definition.
+		{"[x]: /u\n    [y]: /v\n\n[y]", "<p><a href=\"/v\">y</a></p>\n"},
 		// Blocks that can interrupt a paragraph still do.
 		{"[x]: /u\n- a", "<ul>\n<li>a</li>\n</ul>\n"},
 		{"[x]: /u\n# h", "<h1>h</h1>\n"},
+		{"[x]: /u\n---", "<hr />\n"},
 		{"[x]: /u\n\n    code", "<pre><code>code\n</code></pre>\n"},
 	} {
 		if got := string(ToHTML([]byte(tc.input), parser.NewCommonMark(), nil)); got != tc.want {
