@@ -128,6 +128,29 @@ func TestCommonMarkEdgeCases(t *testing.T) {
 	}
 }
 
+// Link reference definitions are part of a paragraph, so the line after them
+// is paragraph continuation text: only blocks that can interrupt a paragraph
+// may start there.
+func TestCommonMarkReferenceDefinitionContinuation(t *testing.T) {
+	for _, tc := range []struct{ input, want string }{
+		{"[x]: /u\n    code", "<p>code</p>\n"},
+		{"[x]: /u \"t\"\n    code", "<p>code</p>\n"},
+		{"[x]: /u\n[y]: /v\n    code\n\n[x] [y]", "<p>code</p>\n<p><a href=\"/u\">x</a> <a href=\"/v\">y</a></p>\n"},
+		{"[x]: /u\n2) a", "<p>2) a</p>\n"},
+		{"[x]: /u\n- ", "<p>-</p>\n"},
+		{"[x]: /u\n<a>", "<p><a></p>\n"},
+		{"> [x]: /u\n    code", "<blockquote>\n<p>code</p>\n</blockquote>\n"},
+		// Blocks that can interrupt a paragraph still do.
+		{"[x]: /u\n- a", "<ul>\n<li>a</li>\n</ul>\n"},
+		{"[x]: /u\n# h", "<h1>h</h1>\n"},
+		{"[x]: /u\n\n    code", "<pre><code>code\n</code></pre>\n"},
+	} {
+		if got := string(ToHTML([]byte(tc.input), parser.NewCommonMark(), nil)); got != tc.want {
+			t.Errorf("input %q: want %q, got %q", tc.input, tc.want, got)
+		}
+	}
+}
+
 func TestCommonMarkAdversarialInputs(t *testing.T) {
 	for name, input := range map[string]string{
 		"open brackets":                    strings.Repeat("[", 32768),
