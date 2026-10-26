@@ -182,6 +182,34 @@ func TestGHSA_h7w2_xgxh_p66q_UnmatchedEmphasisBrackets(t *testing.T) {
 	parseWithShortTimeout(t, input)
 }
 
+// GHSA-c9jw-c68c-f39j: findHTMLCloseTag scanned to the end of the buffer for
+// every unclosed block-level HTML tag, which is quadratic.
+func TestGHSA_c9jw_c68c_f39j_UnclosedHTMLBlocks(t *testing.T) {
+	for name, input := range map[string]string{
+		"div":            strings.Repeat("<div>\n\n", 32*1024),
+		"p":              strings.Repeat("<p>\n\n", 32*1024),
+		"near-miss":      strings.Repeat("<p>\n</p>x\n\n", 32*1024),
+		"nested":         strings.Repeat("<p>\n\n<div>\n\n<p>\n\n</div>\n\n", 8*1024),
+		"mixed tags":     strings.Repeat("<div>\n\n<section>\n\n<table>\n\n", 16*1024),
+		"paragraph lazy": strings.Repeat("a\n<div>\n", 32*1024),
+	} {
+		t.Run(name, func(t *testing.T) {
+			p := parser.NewWithExtensions(parser.CommonExtensions | parser.LaxHTMLBlocks)
+			parseWithParserShortTimeout(t, input, p)
+			parseWithShortTimeout(t, input)
+		})
+	}
+}
+
+func TestGHSA_c9jw_c68c_f39j_ClosedAfterUnclosed(t *testing.T) {
+	input := "<div>\n\n<p>\nx\n</p>\n\n<div>\n"
+	got := string(ToHTML([]byte(input), nil, nil))
+	want := "<p><div></p>\n\n<p>\nx\n</p>\n\n<p><div></p>\n"
+	if got != want {
+		t.Fatalf("got  %q\nwant %q", got, want)
+	}
+}
+
 func TestUnclosedInlineLinkDestinationsLinear(t *testing.T) {
 	inputs := []string{
 		strings.Repeat("[x](", 32*1024),
