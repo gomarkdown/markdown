@@ -740,7 +740,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.outs(w, "~~")
 	case *ast.Link:
-		r.link(w, node, entering)
+		return r.link(w, node, entering)
 	case *ast.Image:
 		r.image(w, node, entering)
 	case *ast.Code:

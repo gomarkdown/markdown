@@ -459,6 +459,29 @@ func TestRenderFootnotes(t *testing.T) {
 	testRendering(t, input, "a[^1]\n\n[^1]: note\n\n")
 }
 
+func TestRenderLinksInFooter(t *testing.T) {
+	footer := WithRenderInFooter(true)
+	for _, source := range []string{
+		"[*a*](u)\n",
+		"[`a`](u)\n",
+		"[![i](s)](u)\n",
+		"[](u)\n",
+		"x [a](u \"t\") y\n",
+		"[a](u)(y)\n",
+		"[a](u): y\n",
+		"[a\\]b](u)\n",
+		"[a][r] and [r]\n\n[r]: /z\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source, footer)
+			})
+		}
+	}
+	input := parser.NewCommonMark().Parse([]byte("[*a*](u)\n"))
+	testRendering(t, input, "[*a*]\n\n\n[*a*]: u\n", footer)
+}
+
 func TestRenderBlockQuote(t *testing.T) {
 	for _, source := range []string{
 		"> q\n",
