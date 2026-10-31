@@ -482,6 +482,42 @@ func TestRenderLinksInFooter(t *testing.T) {
 	testRendering(t, input, "[*a*]\n\n\n[*a*]: u\n", footer)
 }
 
+func TestRenderShortcutReferenceBeforeLink(t *testing.T) {
+	for name, p := range testParsers {
+		t.Run(name, func(t *testing.T) {
+			testSameHTML(t, p, "[a][] [b]\n\n[a]: /x\n[b]: /y\n")
+		})
+	}
+}
+
+func TestRenderLinksInFooterLabelCollisions(t *testing.T) {
+	footer := WithRenderInFooter(true)
+	for _, source := range []string{
+		"[a](x) [a](y)\n",
+		"[a](x) [A](y) [a](x) [a](y)\n",
+		"[a](x \"t\") [a](x)\n",
+		"[r](x) and [t][r]\n\n[r]: /z\n",
+		"[r](/z) and [t][r]\n\n[r]: /z\n",
+		"[![i](s)](x) [![j](s)](y)\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source, footer)
+			})
+		}
+	}
+	input := testLegacyParser().Parse([]byte("[a](x) [a](y) [a](x)\n"))
+	testRendering(t, input, "[a][] [a][a-2] [a]\n\n\n[a-2]: y\n[a]: x\n", footer)
+
+	// the label is free again in the next document
+	r := NewRenderer(footer)
+	markdown.Render(testLegacyParser().Parse([]byte("[a](x)\n")), r)
+	got := string(markdown.Render(testLegacyParser().Parse([]byte("[a](y)\n")), r))
+	if expected := "[a]\n\n\n[a]: y\n"; got != expected {
+		t.Errorf("[%s] is not equal to [%s]", got, expected)
+	}
+}
+
 func TestRenderBlockQuote(t *testing.T) {
 	for _, source := range []string{
 		"> q\n",

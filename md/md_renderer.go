@@ -22,7 +22,8 @@ type Renderer struct {
 
 	C *RendererConfig
 
-	linkcache map[string]bool // cache for link definitions to write in the footer, if renderLinksInFooter is set
+	linkcache    map[string]bool   // cache for link definitions to write in the footer, if renderLinksInFooter is set
+	footerLabels map[string]string // normalized labels in use and what they refer to, if renderLinksInFooter is set
 }
 
 const listIndentSize = 4
@@ -826,7 +827,11 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 }
 
 // RenderHeader renders header
-func (r *Renderer) RenderHeader(_ io.Writer, _ ast.Node) {}
+func (r *Renderer) RenderHeader(_ io.Writer, node ast.Node) {
+	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 {
+		r.reserveDefinedLabels(node)
+	}
+}
 
 // RenderFooter renders footer
 func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
