@@ -425,6 +425,21 @@ func TestRenderListItemBlocks(t *testing.T) {
 	testSameHTML(t, parser.NewCommonMark, "100. a\n\n     b\n")
 }
 
+func TestRenderDefinitionList(t *testing.T) {
+	for _, source := range []string{
+		"Term\n: def\n",
+		"T1\n: d1\n\nT2\n: d2\n",
+		"T\n: d1\n: d2\n",
+		"T\n\n: d\n\n    para\n",
+		"*T*\n: *d*\n\nafter\n",
+	} {
+		t.Run(source, func(t *testing.T) {
+			testSameHTML(t, testLegacyParser, source)
+		})
+	}
+	testRendering(t, testLegacyParser().Parse([]byte("Term\n: def\n")), "Term\n: def\n\n")
+}
+
 func TestRenderBlockQuote(t *testing.T) {
 	for _, source := range []string{
 		"> q\n",

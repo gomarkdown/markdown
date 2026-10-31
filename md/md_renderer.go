@@ -142,7 +142,10 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) ast.WalkStat
 		}
 	}
 	for i, item := range node.GetChildren() {
-		if i > 0 && !node.Tight {
+		// without a blank line a term would become a part of the previous definition
+		listItem, _ := item.(*ast.ListItem)
+		isTerm := listItem != nil && listItem.ListFlags&ast.ListTypeTerm != 0
+		if i > 0 && (!node.Tight || isTerm) {
 			r.outs(w, "\n")
 		}
 		r.out(w, r.render(item))
@@ -159,7 +162,11 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) ast.
 		return ast.GoToNext
 	}
 	var marker string
-	if node.ListFlags&ast.ListTypeOrdered != 0 {
+	if node.ListFlags&ast.ListTypeTerm != 0 {
+		marker = ""
+	} else if node.ListFlags&ast.ListTypeDefinition != 0 {
+		marker = ": "
+	} else if node.ListFlags&ast.ListTypeOrdered != 0 {
 		delimiter := byte('.')
 		if node.Delimiter == ')' {
 			delimiter = ')'
