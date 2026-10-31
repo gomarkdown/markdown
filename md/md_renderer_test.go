@@ -88,6 +88,41 @@ func TestRenderImage(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderTitleQuotes(t *testing.T) {
+	titleOf := func(n ast.Node) []byte {
+		var title []byte
+		ast.WalkFunc(n, func(node ast.Node, entering bool) ast.WalkStatus {
+			switch node := node.(type) {
+			case *ast.Link:
+				title = node.Title
+			case *ast.Image:
+				title = node.Title
+			}
+			return ast.GoToNext
+		})
+		return title
+	}
+	for _, source := range []string{
+		"[a](b 'c\"d')\n",
+		"![a](b 'c\"d')\n",
+		"[a][r]\n\n[r]: /u 'c\"d'\n",
+	} {
+		for name, p := range map[string]func() *parser.Parser{"legacy": parser.New, "commonmark": parser.NewCommonMark} {
+			output := markdown.Render(p().Parse([]byte(source)), NewRenderer())
+			if got := titleOf(p().Parse(output)); string(got) != `c"d` {
+				t.Errorf("%s: rendered %q as %q; got title %q", name, source, output, got)
+			}
+		}
+	}
+
+	// both kinds of quotes can only be written with a backslash
+	input := &ast.Link{Title: []byte(`c"d'e`), Destination: []byte("b")}
+	output := markdown.Render(input, NewRenderer())
+	if got := titleOf(parser.NewCommonMark().Parse(append([]byte("["+"a"), output[1:]...))); string(got) != `c"d'e` {
+		t.Errorf("rendered as %q; got title %q", output, got)
+	}
+}
+
 func TestRenderCode(t *testing.T) {
 	input := &ast.Code{}
 	input.Literal = []byte(string("val x : Int = 42"))

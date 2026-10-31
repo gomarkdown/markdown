@@ -319,9 +319,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.outs(w, "]: ")
 			r.out(w, node.Destination)
 			if len(node.Title) > 0 {
-				r.outs(w, " \"")
-				r.out(w, node.Title)
-				r.outs(w, "\"")
+				r.outs(w, " "+quoteTitle(node.Title))
 			}
 			r.outs(w, "\n")
 		}
