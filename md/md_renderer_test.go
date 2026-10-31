@@ -275,6 +275,14 @@ func TestRenderShortcutReferenceRoundTrip(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderZeroValueRenderer(t *testing.T) {
+	input := markdown.Parse([]byte("1. a\n2. b\n"), nil)
+	got := string(markdown.Render(input, &Renderer{}))
+	if expected := "1. a\n2. b\n\n"; got != expected {
+		t.Errorf("[%s] is not equal to [%s]", got, expected)
+	}
+}
+
 func testRendering(t *testing.T, input ast.Node, expected string, opts ...RendererOpt) {
 	renderer := NewRenderer(opts...)
 	result := string(markdown.Render(input, renderer))

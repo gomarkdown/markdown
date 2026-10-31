@@ -73,6 +73,9 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 		r.listDepth++
 		flags := node.ListFlags
 		if flags&ast.ListTypeOrdered != 0 {
+			if r.orderedListCounter == nil {
+				r.orderedListCounter = map[int]int{}
+			}
 			r.orderedListCounter[r.listDepth] = 1
 		}
 	} else {
