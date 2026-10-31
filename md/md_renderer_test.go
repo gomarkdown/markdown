@@ -53,6 +53,13 @@ func TestRenderHeading(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderHeadingID(t *testing.T) {
+	source := []byte("# T {#myid}\n")
+	input := parser.NewWithExtensions(parser.CommonExtensions).Parse(source)
+	expected := "# T {#myid}\n\n"
+	testRendering(t, input, expected)
+}
+
 func TestRenderEmph(t *testing.T) {
 	var input ast.Node = &ast.Emph{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello"))}})

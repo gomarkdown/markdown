@@ -272,6 +272,9 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 		r.outs(w, strings.Repeat("#", node.Level)+" ")
 		r.out(w, node.Literal)
 	} else {
+		if node.HeadingID != "" {
+			r.outs(w, " {#"+node.HeadingID+"}")
+		}
 		r.outs(w, "\n\n")
 	}
 }
