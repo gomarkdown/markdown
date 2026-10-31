@@ -406,6 +406,25 @@ func TestRenderList(t *testing.T) {
 	testRendering(t, input, expected, rendererOpts...)
 }
 
+func TestRenderListItemBlocks(t *testing.T) {
+	for _, source := range []string{
+		"* a\n\n    para2\n\n* c\n",
+		"* a\n\n    ```\n    x\n\n    y\n    ```\n* c\n",
+		"* a\n    * n\n\n    tail\n",
+		"* a\n\n* b\n",
+		"1. a\n\n    b\n\n2. c\n",
+		"* a\n\n    * n\n\n        deep\n\n    tail\n\n* b\n",
+		"* a\n\n    <div>x</div>\n\n* b\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source)
+			})
+		}
+	}
+	testSameHTML(t, parser.NewCommonMark, "100. a\n\n     b\n")
+}
+
 func TestRenderReferenceDefinitionRoundTrip(t *testing.T) {
 	source := []byte("Hello [world][wiki-world]\n\n[wiki-world]: https://wikipedia.com/blah-blah-blah \"Wiki\"\n")
 	p := parser.NewWithExtensions(parser.CommonExtensions)

@@ -68,42 +68,118 @@ func (r *Renderer) outs(w io.Writer, s string) {
 	io.WriteString(w, s)
 }
 
-func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
-	if entering {
-		r.listDepth++
-		flags := node.ListFlags
-		if flags&ast.ListTypeOrdered != 0 {
-			if r.orderedListCounter == nil {
-				r.orderedListCounter = map[int]int{}
-			}
-			r.orderedListCounter[r.listDepth] = 1
-			if node.Start > 0 {
-				r.orderedListCounter[r.listDepth] = node.Start
-			}
-		}
-	} else {
-		r.listDepth--
-		if _, ok := node.Parent.(*ast.ListItem); !ok {
-			fmt.Fprintf(w, "\n")
-		}
-	}
+// render returns the output for node and its children.
+func (r *Renderer) render(node ast.Node) []byte {
+	var buf bytes.Buffer
+	ast.WalkFunc(node, func(n ast.Node, entering bool) ast.WalkStatus {
+		return r.RenderNode(&buf, n, entering)
+	})
+	return buf.Bytes()
 }
 
-func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
-	if !entering {
-		return
+// isBlockNode returns true if node is a block and not inline content.
+func isBlockNode(node ast.Node) bool {
+	switch node.(type) {
+	case *ast.Paragraph, *ast.List, *ast.ListItem, *ast.CodeBlock, *ast.Heading, *ast.HTMLBlock,
+		*ast.BlockQuote, *ast.Aside, *ast.HorizontalRule, *ast.Table, *ast.MathBlock,
+		*ast.CaptionFigure, *ast.Caption, *ast.DocumentMatter, *ast.Footnotes, *ast.ReferenceDefinition:
+		return true
 	}
-	io.WriteString(w, strings.Repeat(" ", (r.listDepth-1)*listIndentSize))
+	return false
+}
+
+// renderBlocks returns the output for children of node without newlines around
+// them, separated by a blank line or, if tight, by a line break where possible.
+func (r *Renderer) renderBlocks(node ast.Node, tight bool) []byte {
+	var res []byte
+	var prev ast.Node
+	for _, child := range node.GetChildren() {
+		block := bytes.Trim(r.render(child), "\n")
+		if len(block) == 0 {
+			continue
+		}
+		if prev != nil {
+			_, prevIsPara := prev.(*ast.Paragraph)
+			_, isPara := child.(*ast.Paragraph)
+			switch {
+			case !isBlockNode(prev) && !isBlockNode(child):
+			case tight && !(prevIsPara && isPara):
+				res = append(res, '\n')
+			default:
+				res = append(res, "\n\n"...)
+			}
+		}
+		res = append(res, block...)
+		prev = child
+	}
+	return res
+}
+
+// prefixLines adds prefix to all lines of text but the first and to no empty lines.
+func prefixLines(text []byte, prefix string) []byte {
+	lines := bytes.Split(text, []byte("\n"))
+	for i, line := range lines {
+		if i > 0 && len(line) > 0 {
+			lines[i] = append([]byte(prefix), line...)
+		}
+	}
+	return bytes.Join(lines, []byte("\n"))
+}
+
+func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) ast.WalkStatus {
+	if !entering {
+		return ast.GoToNext
+	}
+	r.listDepth++
+	if node.ListFlags&ast.ListTypeOrdered != 0 {
+		if r.orderedListCounter == nil {
+			r.orderedListCounter = map[int]int{}
+		}
+		r.orderedListCounter[r.listDepth] = 1
+		if node.Start > 0 {
+			r.orderedListCounter[r.listDepth] = node.Start
+		}
+	}
+	for i, item := range node.GetChildren() {
+		if i > 0 && !node.Tight {
+			r.outs(w, "\n")
+		}
+		r.out(w, r.render(item))
+	}
+	r.listDepth--
+	if _, ok := node.Parent.(*ast.ListItem); !ok {
+		r.outs(w, "\n")
+	}
+	return ast.SkipChildren
+}
+
+func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) ast.WalkStatus {
+	if !entering {
+		return ast.GoToNext
+	}
+	var marker string
 	if node.ListFlags&ast.ListTypeOrdered != 0 {
 		delimiter := byte('.')
 		if node.Delimiter == ')' {
 			delimiter = ')'
 		}
-		fmt.Fprintf(w, "%d%c ", r.orderedListCounter[r.listDepth], delimiter)
+		marker = fmt.Sprintf("%d%c ", r.orderedListCounter[r.listDepth], delimiter)
 		r.orderedListCounter[r.listDepth]++
 	} else {
-		io.WriteString(w, string(node.BulletChar)+" ")
+		marker = string(node.BulletChar) + " "
 	}
+	// lines must be indented at least to the content after the marker. CommonMark
+	// keeps any extra indent as content, while the legacy parser needs 4 spaces.
+	indent := len(marker)
+	if indent < listIndentSize && !isCommonMarkDoc(node) {
+		indent = listIndentSize
+	}
+	list, _ := node.Parent.(*ast.List)
+	content := r.renderBlocks(node, list != nil && list.Tight)
+	r.outs(w, marker)
+	r.out(w, prefixLines(content, strings.Repeat(" ", indent)))
+	r.outs(w, "\n")
+	return ast.SkipChildren
 }
 
 func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
@@ -457,9 +533,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Heading:
 		r.heading(w, node, entering)
 	case *ast.List:
-		r.list(w, node, entering)
+		return r.list(w, node, entering)
 	case *ast.ListItem:
-		r.listItem(w, node, entering)
+		return r.listItem(w, node, entering)
 	case *ast.Footnotes:
 	case *ast.ReferenceDefinition:
 		if entering {
