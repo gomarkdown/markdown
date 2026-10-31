@@ -45,6 +45,12 @@ func linkPlainText(node *ast.Link) []byte {
 }
 
 func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) {
+	if node.NoteID != 0 {
+		if entering {
+			r.outs(w, "[^"+string(node.Destination)+"]")
+		}
+		return
+	}
 	if entering {
 		r.outs(w, "[")
 		return

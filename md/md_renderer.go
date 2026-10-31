@@ -161,6 +161,14 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) ast.
 	if !entering {
 		return ast.GoToNext
 	}
+	if len(node.RefLink) > 0 {
+		// the content of a footnote is indented by 4, whatever the length of its id
+		content := r.renderBlocks(node, false)
+		r.outs(w, "[^"+string(node.RefLink)+"]: ")
+		r.out(w, prefixLines(content, strings.Repeat(" ", listIndentSize)))
+		r.outs(w, "\n")
+		return ast.SkipChildren
+	}
 	var marker string
 	if node.ListFlags&ast.ListTypeTerm != 0 {
 		marker = ""

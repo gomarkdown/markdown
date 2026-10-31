@@ -440,6 +440,25 @@ func TestRenderDefinitionList(t *testing.T) {
 	testRendering(t, testLegacyParser().Parse([]byte("Term\n: def\n")), "Term\n: def\n\n")
 }
 
+func TestRenderFootnotes(t *testing.T) {
+	footnotes := func() *parser.Parser {
+		return parser.NewWithExtensions(parser.CommonExtensions | parser.Footnotes)
+	}
+	for _, source := range []string{
+		"a[^1]\n\n[^1]: note\n",
+		"a[^x] b[^y] c[^x]\n\n[^x]: *one*\n\n[^y]: two\n",
+		"a[^long-id]\n\n[^long-id]: para\n\n    more\n\n    * list\n\nafter\n",
+		"a^[inline note]\n",
+		"* item[^1]\n\n[^1]: note\n",
+	} {
+		t.Run(source, func(t *testing.T) {
+			testSameHTML(t, footnotes, source)
+		})
+	}
+	input := footnotes().Parse([]byte("a[^1]\n\n[^1]: note\n"))
+	testRendering(t, input, "a[^1]\n\n[^1]: note\n\n")
+}
+
 func TestRenderBlockQuote(t *testing.T) {
 	for _, source := range []string{
 		"> q\n",
