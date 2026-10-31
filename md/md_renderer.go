@@ -18,6 +18,7 @@ type Renderer struct {
 	lastOutput        bool // the current paragraph has written something
 	listDepth         int
 	previousWasNumber bool
+	inTableCell       bool
 
 	C *RendererConfig
 
@@ -413,6 +414,9 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	} else if !raw {
 		clean = escapeText(clean, text)
 	}
+	if r.inTableCell {
+		clean = bytes.ReplaceAll(clean, []byte("|"), []byte(`\|`))
+	}
 	r.out(w, clean)
 }
 
@@ -504,6 +508,211 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
 	}
 }
 
+// prefixedBlock renders a block whose lines all start with prefix.
+func (r *Renderer) prefixedBlock(w io.Writer, node ast.Node, entering bool, prefix string) ast.WalkStatus {
+	if !entering {
+		return ast.GoToNext
+	}
+	lines := bytes.Split(r.renderBlocks(node, false), []byte("\n"))
+	for _, line := range lines {
+		if len(line) == 0 {
+			r.outs(w, strings.TrimRight(prefix, " "))
+		} else {
+			r.outs(w, prefix)
+			r.out(w, line)
+		}
+		r.outs(w, "\n")
+	}
+	r.outs(w, "\n")
+	return ast.SkipChildren
+}
+
+func (r *Renderer) tableRow(w io.Writer, row ast.Node) {
+	r.outs(w, "|")
+	for _, child := range row.GetChildren() {
+		cell, ok := child.(*ast.TableCell)
+		if !ok {
+			continue
+		}
+		wasInCell := r.inTableCell
+		r.inTableCell = true
+		content := bytes.ReplaceAll(r.renderBlocks(cell, true), []byte("\n"), []byte(" "))
+		r.inTableCell = wasInCell
+		r.outs(w, " ")
+		r.out(w, content)
+		r.outs(w, " |")
+		// each extra | makes the cell span one more column
+		if cell.ColSpan > 1 {
+			r.outs(w, strings.Repeat("|", cell.ColSpan-1))
+		}
+	}
+	r.outs(w, "\n")
+}
+
+// tableColumnAligns returns the alignment of each column, using the first row.
+func tableColumnAligns(node *ast.Table) []ast.CellAlignFlags {
+	var aligns []ast.CellAlignFlags
+	for _, section := range node.GetChildren() {
+		for _, row := range section.GetChildren() {
+			for _, child := range row.GetChildren() {
+				cell, ok := child.(*ast.TableCell)
+				if !ok {
+					continue
+				}
+				aligns = append(aligns, cell.Align)
+				for i := 1; i < cell.ColSpan; i++ {
+					aligns = append(aligns, cell.Align)
+				}
+			}
+			return aligns
+		}
+	}
+	return aligns
+}
+
+func (r *Renderer) table(w io.Writer, node *ast.Table, entering bool) ast.WalkStatus {
+	if !entering {
+		return ast.GoToNext
+	}
+	aligns := tableColumnAligns(node)
+	writeDelimiter := func() {
+		r.outs(w, "|")
+		for _, align := range aligns {
+			switch align {
+			case ast.TableAlignmentLeft:
+				r.outs(w, " :--- |")
+			case ast.TableAlignmentRight:
+				r.outs(w, " ---: |")
+			case ast.TableAlignmentCenter:
+				r.outs(w, " :---: |")
+			default:
+				r.outs(w, " --- |")
+			}
+		}
+		r.outs(w, "\n")
+	}
+	wroteDelimiter := false
+	for _, section := range node.GetChildren() {
+		_, isHeader := section.(*ast.TableHeader)
+		if !isHeader && !wroteDelimiter {
+			writeDelimiter()
+			wroteDelimiter = true
+		}
+		if _, isFooter := section.(*ast.TableFooter); isFooter {
+			// the parser allows no spaces in this line and needs at least one |
+			r.outs(w, strings.Repeat("===|", len(aligns))+"\n")
+		}
+		for _, row := range section.GetChildren() {
+			r.tableRow(w, row)
+		}
+		if isHeader {
+			writeDelimiter()
+			wroteDelimiter = true
+		}
+	}
+	r.outs(w, "\n")
+	return ast.SkipChildren
+}
+
+func (r *Renderer) captionFigure(w io.Writer, node *ast.CaptionFigure, entering bool) ast.WalkStatus {
+	if !entering {
+		return ast.GoToNext
+	}
+	children := node.GetChildren()
+	var caption *ast.Caption
+	if len(children) > 0 {
+		if c, ok := children[len(children)-1].(*ast.Caption); ok {
+			caption = c
+			children = children[:len(children)-1]
+		}
+	}
+	// a code block, a quote or a table can have a caption directly after it,
+	// anything else has to be in a figure block
+	prefix, separator := "", "\n"
+	if len(children) == 1 {
+		switch children[0].(type) {
+		case *ast.CodeBlock:
+			prefix = "Figure: "
+		case *ast.BlockQuote:
+			// a line directly after a quote is a part of the quote
+			prefix, separator = "Quote: ", "\n\n"
+		case *ast.Table:
+			prefix = "Table: "
+		}
+	}
+	if prefix != "" {
+		r.out(w, bytes.Trim(r.render(children[0]), "\n"))
+		r.outs(w, separator)
+	} else {
+		prefix = "Figure: "
+		r.outs(w, "!---\n")
+		for _, child := range children {
+			r.out(w, bytes.Trim(r.render(child), "\n"))
+			r.outs(w, "\n\n")
+		}
+		r.outs(w, "!---\n")
+	}
+	if caption != nil {
+		r.outs(w, prefix)
+		r.out(w, bytes.TrimRight(r.renderBlocks(caption, true), " "))
+		if node.HeadingID != "" {
+			r.outs(w, " {#"+node.HeadingID+"}")
+		}
+		r.outs(w, "\n")
+	}
+	r.outs(w, "\n")
+	return ast.SkipChildren
+}
+
+func (r *Renderer) documentMatter(w io.Writer, node *ast.DocumentMatter, entering bool) {
+	if !entering {
+		return
+	}
+	switch node.Matter {
+	case ast.DocumentMatterFront:
+		r.outs(w, "{frontmatter}\n\n")
+	case ast.DocumentMatterMain:
+		r.outs(w, "{mainmatter}\n\n")
+	case ast.DocumentMatterBack:
+		r.outs(w, "{backmatter}\n\n")
+	}
+}
+
+func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
+	r.outs(w, "[")
+	for i, destination := range node.Destination {
+		if i > 0 {
+			r.outs(w, "; ")
+		}
+		r.outs(w, "@")
+		if i < len(node.Type) {
+			switch node.Type[i] {
+			case ast.CitationTypeNormative:
+				r.outs(w, "!")
+			case ast.CitationTypeSuppressed:
+				r.outs(w, "-")
+			}
+		}
+		r.out(w, destination)
+		if i < len(node.Suffix) && len(node.Suffix[i]) > 0 {
+			r.outs(w, ", "+string(node.Suffix[i]))
+		}
+	}
+	r.outs(w, "]")
+}
+
+func (r *Renderer) index(w io.Writer, node *ast.Index) {
+	r.outs(w, "(!")
+	if node.Primary {
+		r.outs(w, "!")
+	}
+	r.out(w, node.Item)
+	if len(node.Subitem) > 0 {
+		r.outs(w, ", "+string(node.Subitem))
+	}
+	r.outs(w, ")")
+}
+
 // RenderNode renders markdown node
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	switch node := node.(type) {
@@ -548,8 +757,55 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			}
 			r.outs(w, "\n")
 		}
+	case *ast.BlockQuote:
+		return r.prefixedBlock(w, node, entering, "> ")
+	case *ast.Aside:
+		return r.prefixedBlock(w, node, entering, "A> ")
+	case *ast.HorizontalRule:
+		r.outs(w, "---\n\n")
+	case *ast.Hardbreak:
+		r.outs(w, "  \n")
+	case *ast.Softbreak:
+		r.outs(w, "\n")
+	case *ast.NonBlockingSpace:
+		r.outs(w, "&nbsp;")
+	case *ast.Math:
+		r.outs(w, "$"+string(node.Literal)+"$")
+	case *ast.MathBlock:
+		if entering {
+			r.outs(w, "$$"+string(node.Literal)+"$$\n\n")
+		}
+		return ast.SkipChildren
+	case *ast.Subscript:
+		r.outs(w, "~"+string(node.Literal)+"~")
+	case *ast.Superscript:
+		r.outs(w, "^"+string(node.Literal)+"^")
+	case *ast.Table:
+		return r.table(w, node, entering)
+	case *ast.CaptionFigure:
+		return r.captionFigure(w, node, entering)
+	case *ast.DocumentMatter:
+		r.documentMatter(w, node, entering)
+	case *ast.CrossReference:
+		if entering {
+			r.outs(w, "(#"+string(node.Destination))
+			if len(node.Suffix) > 0 {
+				r.outs(w, ", "+string(node.Suffix))
+			}
+			r.outs(w, ")")
+		}
+		return ast.SkipChildren
+	case *ast.Citation:
+		r.citation(w, node)
+	case *ast.Callout:
+		r.outs(w, "<<"+string(node.ID)+">>")
+	case *ast.Index:
+		r.index(w, node)
 	default:
-		panic(fmt.Sprintf("node %T NYI", node))
+		// a node we don't know about, like a custom node added by a parser hook
+		if leaf := node.AsLeaf(); leaf != nil {
+			r.out(w, leaf.Literal)
+		}
 	}
 	return ast.GoToNext
 }

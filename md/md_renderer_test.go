@@ -425,6 +425,107 @@ func TestRenderListItemBlocks(t *testing.T) {
 	testSameHTML(t, parser.NewCommonMark, "100. a\n\n     b\n")
 }
 
+func TestRenderBlockQuote(t *testing.T) {
+	for _, source := range []string{
+		"> q\n",
+		"> a\n>\n> b\n",
+		"> a\n>\n> > nested\n>\n> ```\n> x\n>\n> y\n> ```\n",
+		"> * a\n> * b\n\nafter\n",
+		"* a\n\n    > q\n\n* b\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source)
+			})
+		}
+	}
+	input := parser.NewCommonMark().Parse([]byte("> a\n>\n> b\n"))
+	testRendering(t, input, "> a\n>\n> b\n\n")
+}
+
+func TestRenderInlineAndLeafNodes(t *testing.T) {
+	for _, source := range []string{
+		"a\n\n---\n\nb\n",
+		"foo  \nbar\n",
+		"foo  \n\\# bar\n",
+		"* a  \n  b\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source)
+			})
+		}
+	}
+	for _, source := range []string{
+		"a $x+y$ b\n",
+		"$$\nx\n$$\n",
+		"foo\\\nbar\n",
+	} {
+		t.Run(source, func(t *testing.T) {
+			testSameHTML(t, testLegacyParser, source)
+		})
+	}
+	withExtensions := func(e parser.Extensions) func() *parser.Parser {
+		return func() *parser.Parser { return parser.NewWithExtensions(e) }
+	}
+	testSameHTML(t, withExtensions(parser.SuperSubscript), "H~2~O and x^2^\n")
+	testRendering(t, withExtensions(parser.NonBlockingSpace)().Parse([]byte("a\\ b\n")), "a&nbsp;b\n\n")
+	testRendering(t, &ast.Softbreak{}, "\n")
+}
+
+func TestRenderTable(t *testing.T) {
+	for _, source := range []string{
+		"a|b\n-|-\n1|2\n",
+		"| a | b | c | d |\n|:--|--:|:-:|---|\n| 1 | 2 | 3 | 4 |\n",
+		"| a | b |\n|---|---|\n| x \\| y | `p|q` |\n",
+		"| *a* | [l](u) |\n|---|---|\n| | z |\n\nafter\n",
+		"| a | b | c |\n|---|---|---|\n| 1 || 3 |\n",
+		"| a | b |\n|---|---|\n| 1 | 2 |\n===|===\n| f | g |\n",
+		"|---|---|\n| 1 | 2 |\n",
+		"* x\n\n    | a | b |\n    |---|---|\n    | 1 | 2 |\n\n* y\n",
+	} {
+		t.Run(source, func(t *testing.T) {
+			testSameHTML(t, testLegacyParser, source)
+		})
+	}
+	input := testLegacyParser().Parse([]byte("a|b\n:-|-:\n1|2\n"))
+	testRendering(t, input, "| a | b |\n| :--- | ---: |\n| 1 | 2 |\n\n")
+}
+
+func TestRenderMmarkNodes(t *testing.T) {
+	mmark := func() *parser.Parser {
+		return parser.NewWithExtensions(parser.CommonExtensions | parser.Mmark)
+	}
+	for _, source := range []string{
+		"A> aside\nA>\nA> more\n",
+		"{frontmatter}\n\na\n\n{mainmatter}\n\nb\n\n{backmatter}\n\nc\n",
+		"```\ncode\n```\nFigure: cap *x* {#id}\n\nafter\n",
+		"> q\n\nQuote: cap\n\nafter\n",
+		"| a | b |\n|---|---|\n| 1 | 2 |\nTable: cap\n\nafter\n",
+		"!---\n![a](b)\n\n![c](d)\n!---\nFigure: cap\n\nafter\n",
+		"see (#ref) and (#ref, sec 1)\n",
+		"[@a] and [@!a, p. 3; @-b]\n",
+		"(!item) (!!item, sub)\n",
+		"```\ncode <<1>>\n```\n",
+	} {
+		t.Run(source, func(t *testing.T) {
+			testSameHTML(t, mmark, source)
+		})
+	}
+}
+
+// customLeaf is the kind of node a parser hook can add.
+type customLeaf struct{ ast.Leaf }
+
+func TestRenderUnknownNodes(t *testing.T) {
+	testRendering(t, &customLeaf{ast.Leaf{Literal: []byte("x")}}, "x")
+
+	type customContainer struct{ ast.Container }
+	input := &customContainer{}
+	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte("y")}})
+	testRendering(t, input, "y")
+}
+
 func TestRenderReferenceDefinitionRoundTrip(t *testing.T) {
 	source := []byte("Hello [world][wiki-world]\n\n[wiki-world]: https://wikipedia.com/blah-blah-blah \"Wiki\"\n")
 	p := parser.NewWithExtensions(parser.CommonExtensions)
