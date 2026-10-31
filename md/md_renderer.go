@@ -77,6 +77,9 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) {
 				r.orderedListCounter = map[int]int{}
 			}
 			r.orderedListCounter[r.listDepth] = 1
+			if node.Start > 0 {
+				r.orderedListCounter[r.listDepth] = node.Start
+			}
 		}
 	} else {
 		r.listDepth--
@@ -92,7 +95,11 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 	}
 	io.WriteString(w, strings.Repeat(" ", (r.listDepth-1)*listIndentSize))
 	if node.ListFlags&ast.ListTypeOrdered != 0 {
-		fmt.Fprintf(w, "%d. ", r.orderedListCounter[r.listDepth])
+		delimiter := byte('.')
+		if node.Delimiter == ')' {
+			delimiter = ')'
+		}
+		fmt.Fprintf(w, "%d%c ", r.orderedListCounter[r.listDepth], delimiter)
 		r.orderedListCounter[r.listDepth]++
 	} else {
 		io.WriteString(w, string(node.BulletChar)+" ")

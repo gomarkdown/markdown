@@ -275,6 +275,17 @@ func TestRenderShortcutReferenceRoundTrip(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderOrderedListMarker(t *testing.T) {
+	input := parser.NewCommonMark().Parse([]byte("3. a\n4. b\n"))
+	testRendering(t, input, "3. a\n4. b\n\n")
+
+	input = parser.NewCommonMark().Parse([]byte("1) a\n2) b\n"))
+	testRendering(t, input, "1) a\n2) b\n\n")
+
+	input = parser.NewWithExtensions(parser.CommonExtensions | parser.OrderedListStart).Parse([]byte("3. a\n4. b\n"))
+	testRendering(t, input, "3. a\n4. b\n\n")
+}
+
 func TestRenderParagraphSeparator(t *testing.T) {
 	// the last child writing nothing doesn't make the paragraph empty
 	input := &ast.Paragraph{}
