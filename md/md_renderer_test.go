@@ -71,10 +71,21 @@ func TestRenderTextEscaping(t *testing.T) {
 		}
 	}
 
+	for _, source := range []string{
+		"\\![a](b)\n", "\\~~x\\~~\n", "\\&amp;\n", "\\&amp; \\&#35;\n", "&amp;amp;\n", "\\$x\\$\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source)
+			})
+		}
+	}
+
 	// nothing to escape
 	for _, source := range []string{
 		"snake_case and a-b and 1.5 and a < b and C.\n",
 		"-5 and +5 and 1.x\n",
+		"AT&T and a & b and wow! [a](b)\n",
 	} {
 		for name, p := range testParsers {
 			t.Run(name+" "+source, func(t *testing.T) {

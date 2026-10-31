@@ -146,7 +146,9 @@ func needsEscaping(text []byte, previousWasNumber bool) bool {
 		"(", ")",
 		"#",
 		"+",
-		"-":
+		"-",
+		"$",
+		"^":
 		return true
 	case "!":
 		return false
@@ -246,6 +248,33 @@ func blockMarkerIndex(text []byte) int {
 	return -1
 }
 
+// nextNonEmptyNode returns the next sibling, skipping the empty text nodes that
+// the legacy parser leaves around inline nodes.
+func nextNonEmptyNode(node ast.Node) ast.Node {
+	next := ast.GetNextNode(node)
+	for {
+		text, ok := next.(*ast.Text)
+		if !ok || len(text.Literal) > 0 {
+			return next
+		}
+		next = ast.GetNextNode(text)
+	}
+}
+
+// startsWithEntity returns true if text, which starts with &, would be parsed
+// as an entity.
+func startsWithEntity(text []byte) bool {
+	i := 1
+	if i < len(text) && text[i] == '#' {
+		i++
+	}
+	start := i
+	for i < len(text) && text[i] < 0x80 && isWordChar(text[i]) {
+		i++
+	}
+	return i > start && i < len(text) && text[i] == ';'
+}
+
 func isWordChar(c byte) bool {
 	return c >= 0x80 || c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
 }
@@ -269,6 +298,19 @@ func escapeText(clean []byte, text *ast.Text) []byte {
 			needsEscape = i == 0 || i == last || !isWordChar(clean[i-1]) || !isWordChar(clean[i+1])
 		case '<':
 			needsEscape = i == last || clean[i+1] != ' '
+		case '~':
+			needsEscape = true
+		case '!':
+			// would turn a link that follows into an image
+			_, nextIsLink := nextNonEmptyNode(text).(*ast.Link)
+			needsEscape = i == last && nextIsLink
+		case '&':
+			rest := clean[i:]
+			if next, ok := nextNonEmptyNode(text).(*ast.Text); ok && i == last {
+				// the legacy parser splits text at some characters
+				rest = append([]byte{'&'}, next.Literal...)
+			}
+			needsEscape = startsWithEntity(rest)
 		}
 		if needsEscape {
 			res = append(res, '\\')
