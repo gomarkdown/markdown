@@ -175,18 +175,125 @@ func cleanWithoutTrim(text []byte) []byte {
 	return clean
 }
 
+// isCommonMarkDoc returns true if node is in a document parsed as CommonMark.
+func isCommonMarkDoc(node ast.Node) bool {
+	for ; node != nil; node = node.GetParent() {
+		if doc, ok := node.(*ast.Document); ok {
+			return doc.CommonMark
+		}
+	}
+	return false
+}
+
+// isRawText returns true if the literal of text is still in Markdown syntax.
+// The legacy parser doesn't parse image descriptions.
+func isRawText(text *ast.Text) bool {
+	_, ok := text.Parent.(*ast.Image)
+	return ok && !isCommonMarkDoc(text)
+}
+
+// isAtLineStart returns true if text starts a line of a block where a leading
+// marker would start a new block.
+func isAtLineStart(text *ast.Text) bool {
+	prev := ast.GetPrevNode(text)
+	for {
+		sibling, ok := prev.(*ast.Text)
+		if !ok || len(sibling.Literal) > 0 {
+			break
+		}
+		prev = ast.GetPrevNode(sibling)
+	}
+	switch prev.(type) {
+	case nil:
+		switch text.Parent.(type) {
+		case *ast.Paragraph, *ast.ListItem:
+			return true
+		}
+		return false
+	case *ast.Hardbreak, *ast.Softbreak:
+		return true
+	}
+	return false
+}
+
+// blockMarkerIndex returns the index of the character to escape so that text at
+// the start of a line doesn't start a block, or -1 if there's no such character.
+func blockMarkerIndex(text []byte) int {
+	i := 0
+	for i < len(text) && text[i] == ' ' {
+		i++
+	}
+	if i == len(text) {
+		return -1
+	}
+	first := i
+	switch c := text[first]; c {
+	case '#', '>':
+		return first
+	case '+', '-':
+		// a list item or a setext heading underline or a horizontal rule
+		if first+1 == len(text) || text[first+1] == ' ' || len(bytes.Trim(text[first:], string(c)+" ")) == 0 {
+			return first
+		}
+		return -1
+	}
+	for i < len(text) && text[i] >= '0' && text[i] <= '9' {
+		i++
+	}
+	if i > first && i < len(text) && (text[i] == '.' || text[i] == ')') && (i+1 == len(text) || text[i+1] == ' ') {
+		return i
+	}
+	return -1
+}
+
+func isWordChar(c byte) bool {
+	return c >= 0x80 || c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+}
+
+// escapeText escapes the characters in the text of a node that would otherwise
+// be parsed as Markdown syntax.
+func escapeText(clean []byte, text *ast.Text) []byte {
+	marker := -1
+	if isAtLineStart(text) {
+		marker = blockMarkerIndex(clean)
+	}
+	res := make([]byte, 0, len(clean))
+	last := len(clean) - 1
+	for i, c := range clean {
+		needsEscape := i == marker
+		switch c {
+		case '\\', '`', '*', '[', ']':
+			needsEscape = true
+		case '_':
+			// not emphasis inside of a word
+			needsEscape = i == 0 || i == last || !isWordChar(clean[i-1]) || !isWordChar(clean[i+1])
+		case '<':
+			needsEscape = i == last || clean[i+1] != ' '
+		}
+		if needsEscape {
+			res = append(res, '\\')
+		}
+		res = append(res, c)
+	}
+	return res
+}
+
 func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	lit := text.Literal
-	if needsEscaping(lit, r.previousWasNumber) {
-		lit = append([]byte("\\"), lit...)
-	}
-	r.previousWasNumber = isNumber(text.Literal)
+	raw := isRawText(text)
+	needsEscape := !raw && needsEscaping(lit, r.previousWasNumber)
+	r.previousWasNumber = isNumber(lit)
 	if r.listDepth > 0 && len(lit) == 1 && lit[0] == '\n' {
 		return
 	}
 	clean := cleanWithoutTrim(lit)
 	if len(clean) == 0 {
 		return
+	}
+	if needsEscape {
+		clean = append([]byte("\\"), clean...)
+	} else if !raw {
+		clean = escapeText(clean, text)
 	}
 	r.out(w, clean)
 }

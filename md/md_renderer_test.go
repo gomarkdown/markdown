@@ -39,6 +39,60 @@ func TestRenderText(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+// testSameHTML renders source to Markdown, reparses it and checks that it still
+// means the same by comparing the HTML of both.
+func testSameHTML(t *testing.T, newParser func() *parser.Parser, source string, opts ...RendererOpt) string {
+	t.Helper()
+	output := markdown.Render(newParser().Parse([]byte(source)), NewRenderer(opts...))
+	want := markdown.ToHTML([]byte(source), newParser(), nil)
+	got := markdown.ToHTML(output, newParser(), nil)
+	if string(got) != string(want) {
+		t.Errorf("rendered %q as %q\nHTML: %q\nwant: %q", source, output, got, want)
+	}
+	return string(output)
+}
+
+var (
+	testLegacyParser = func() *parser.Parser { return parser.NewWithExtensions(parser.CommonExtensions) }
+	testParsers      = map[string]func() *parser.Parser{"legacy": testLegacyParser, "commonmark": parser.NewCommonMark}
+)
+
+func TestRenderTextEscaping(t *testing.T) {
+	for _, source := range []string{
+		"\\*x\\*\n", "\\_x\\_\n", "\\`x\\`\n", "\\[a\\](b)\n", "a\\\\b\n",
+		"\\# x\n", "\\- x\n", "\\+ x\n", "\\> x\n", "1\\. foo\n", "1\\) foo\n", "\\---\n",
+		"&lt;script&gt;alert(1)&lt;/script&gt;\n", "\\<b>\n", "_a*b_\n", "*a\\*b*\n",
+		"a\\*b *c*\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source)
+			})
+		}
+	}
+
+	// nothing to escape
+	for _, source := range []string{
+		"snake_case and a-b and 1.5 and a < b and C.\n",
+		"-5 and +5 and 1.x\n",
+	} {
+		for name, p := range testParsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				if got := testSameHTML(t, p, source); got != source+"\n" {
+					t.Errorf("got %q, want %q", got, source+"\n")
+				}
+			})
+		}
+	}
+
+	// the legacy parser keeps image descriptions as they are in the source
+	source := "![a*b](c)\n"
+	if got := testSameHTML(t, testLegacyParser, source); got != source+"\n" {
+		t.Errorf("got %q, want %q", got, source+"\n")
+	}
+	testSameHTML(t, parser.NewCommonMark, source)
+}
+
 func TestRenderStrong(t *testing.T) {
 	var input ast.Node = &ast.Strong{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello"))}})
