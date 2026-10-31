@@ -209,7 +209,25 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 }
 
 func (r *Renderer) code(w io.Writer, node *ast.Code) {
-	r.outs(w, "`"+string(node.Literal)+"`")
+	literal := node.Literal
+	fenceLen, run := 1, 0
+	for _, ch := range literal {
+		if ch == '`' {
+			run++
+			if run >= fenceLen {
+				fenceLen = run + 1
+			}
+		} else {
+			run = 0
+		}
+	}
+	fence := strings.Repeat("`", fenceLen)
+	padding := ""
+	if len(literal) > 0 && (literal[0] == '`' || literal[len(literal)-1] == '`' ||
+		(literal[0] == ' ' && literal[len(literal)-1] == ' ' && len(bytes.Trim(literal, " ")) > 0)) {
+		padding = " "
+	}
+	r.outs(w, fence+padding+string(literal)+padding+fence)
 }
 
 func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {

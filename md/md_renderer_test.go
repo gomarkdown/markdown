@@ -88,6 +88,29 @@ func TestRenderCode(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderCodeRoundTrip(t *testing.T) {
+	for _, literal := range []string{
+		"plain code", "a`b", "a``b", "a`b``c", "`code", "code`", "`", "``",
+		" code ", "  code  ", "   ",
+	} {
+		t.Run(literal, func(t *testing.T) {
+			input := &ast.Code{Leaf: ast.Leaf{Literal: []byte(literal)}}
+			output := markdown.Render(input, NewRenderer())
+			parsed := markdown.Parse(output, parser.NewCommonMark())
+			var codes []string
+			ast.WalkFunc(parsed, func(node ast.Node, entering bool) ast.WalkStatus {
+				if code, ok := node.(*ast.Code); ok && entering {
+					codes = append(codes, string(code.Literal))
+				}
+				return ast.GoToNext
+			})
+			if len(codes) != 1 || codes[0] != literal {
+				t.Fatalf("rendered %q as %q; parsed code literals: %q", literal, output, codes)
+			}
+		})
+	}
+}
+
 func TestRenderCodeBlock(t *testing.T) {
 	input := &ast.CodeBlock{Info: []byte(string("scala"))}
 	input.Literal = []byte(string("val x : Int = 42"))
