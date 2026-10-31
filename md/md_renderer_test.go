@@ -159,6 +159,26 @@ func TestRenderCodeBlock(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderCodeBlockFence(t *testing.T) {
+	for _, source := range []string{
+		"````\n```\nx\n```\n````\n",
+		"    a\n    ```\n    b\n",
+	} {
+		for name, p := range map[string]func() *parser.Parser{"legacy": parser.New, "commonmark": parser.NewCommonMark} {
+			doc := p().Parse([]byte(source))
+			want := ast.GetFirstChild(doc).(*ast.CodeBlock).Literal
+			output := markdown.Render(doc, NewRenderer())
+			children := p().Parse(output).GetChildren()
+			if len(children) != 1 {
+				t.Fatalf("%s: rendered %q as %q; got %d blocks", name, source, output, len(children))
+			}
+			if got := children[0].(*ast.CodeBlock).Literal; string(got) != string(want) {
+				t.Errorf("%s: rendered %q as %q; got literal %q, want %q", name, source, output, got, want)
+			}
+		}
+	}
+}
+
 func TestRenderParagraph(t *testing.T) {
 	input := &ast.Paragraph{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello World !"))}})

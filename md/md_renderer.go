@@ -214,12 +214,33 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 			break
 		}
 	}
-	r.outs(w, "```"+language+"\n")
+	fenceLen := fenceLength(text, '`')
+	if fenceLen < 3 {
+		fenceLen = 3
+	}
+	fence := strings.Repeat("`", fenceLen)
+	r.outs(w, fence+language+"\n")
 	r.out(w, text)
 	if len(text) == 0 || text[len(text)-1] != '\n' {
 		r.outs(w, "\n")
 	}
-	r.outs(w, "```\n\n")
+	r.outs(w, fence+"\n\n")
+}
+
+// fenceLength returns a fence length longer than any run of c in text.
+func fenceLength(text []byte, c byte) int {
+	fenceLen, run := 1, 0
+	for _, ch := range text {
+		if ch == c {
+			run++
+			if run >= fenceLen {
+				fenceLen = run + 1
+			}
+		} else {
+			run = 0
+		}
+	}
+	return fenceLen
 }
 
 func (r *Renderer) code(w io.Writer, node *ast.Code) {
@@ -230,17 +251,7 @@ func (r *Renderer) code(w io.Writer, node *ast.Code) {
 	}
 	// the delimiter must be longer than any backtick run in the literal because
 	// the legacy parser closes a code span at the first run at least as long
-	fenceLen, run := 1, 0
-	for _, ch := range literal {
-		if ch == '`' {
-			run++
-			if run >= fenceLen {
-				fenceLen = run + 1
-			}
-		} else {
-			run = 0
-		}
-	}
+	fenceLen := fenceLength(literal, '`')
 	// the legacy parser turns a multi-line code span with a delimiter of 3
 	// backticks into a code block
 	if fenceLen == 3 {
