@@ -328,4 +328,6 @@ func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
 		r.outs(w, link)
 	}
 	r.outs(w, "\n")
+	// the renderer can be reused and links must not leak into the next document
+	r.linkcache = nil
 }

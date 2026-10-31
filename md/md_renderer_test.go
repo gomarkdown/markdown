@@ -283,6 +283,15 @@ func TestRenderZeroValueRenderer(t *testing.T) {
 	}
 }
 
+func TestRenderReusedRendererFooter(t *testing.T) {
+	r := NewRenderer(WithRenderInFooter(true))
+	markdown.Render(markdown.Parse([]byte("[a](x)\n"), nil), r)
+	got := string(markdown.Render(markdown.Parse([]byte("[b](y)\n"), nil), r))
+	if expected := "[b]\n\n\n[b]: y\n"; got != expected {
+		t.Errorf("[%s] is not equal to [%s]", got, expected)
+	}
+}
+
 func testRendering(t *testing.T, input ast.Node, expected string, opts ...RendererOpt) {
 	renderer := NewRenderer(opts...)
 	result := string(markdown.Render(input, renderer))
