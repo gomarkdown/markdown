@@ -88,27 +88,68 @@ func TestRenderCode(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+// testCodeRoundTrip renders a code node with the given literal, reparses the
+// output and checks that it is exactly one code span holding want.
+func testCodeRoundTrip(t *testing.T, p *parser.Parser, literal, want string) {
+	t.Helper()
+	input := &ast.Code{Leaf: ast.Leaf{Literal: []byte(literal)}}
+	output := markdown.Render(input, NewRenderer())
+	var codes []string
+	ast.WalkFunc(markdown.Parse(output, p), func(node ast.Node, entering bool) ast.WalkStatus {
+		if code, ok := node.(*ast.Code); ok && entering {
+			codes = append(codes, string(code.Literal))
+		}
+		return ast.GoToNext
+	})
+	if len(codes) != 1 || codes[0] != want {
+		t.Fatalf("rendered %q as %q; parsed code literals: %q, want %q", literal, output, codes, want)
+	}
+}
+
 func TestRenderCodeRoundTrip(t *testing.T) {
 	for _, literal := range []string{
 		"plain code", "a`b", "a``b", "a`b``c", "`code", "code`", "`", "``",
-		" code ", "  code  ", "   ",
+		" code ", "  code  ", "   ", " a", "a ", "` ", " `",
 	} {
 		t.Run(literal, func(t *testing.T) {
-			input := &ast.Code{Leaf: ast.Leaf{Literal: []byte(literal)}}
-			output := markdown.Render(input, NewRenderer())
-			parsed := markdown.Parse(output, parser.NewCommonMark())
-			var codes []string
-			ast.WalkFunc(parsed, func(node ast.Node, entering bool) ast.WalkStatus {
-				if code, ok := node.(*ast.Code); ok && entering {
-					codes = append(codes, string(code.Literal))
-				}
-				return ast.GoToNext
-			})
-			if len(codes) != 1 || codes[0] != literal {
-				t.Fatalf("rendered %q as %q; parsed code literals: %q", literal, output, codes)
-			}
+			testCodeRoundTrip(t, parser.NewCommonMark(), literal, literal)
 		})
 	}
+}
+
+// CommonMark turns line endings in a code span into spaces, so that is the
+// most that can survive. A literal ending in a line ending also loses that
+// trailing space: padding after it is stripped as the next line's indentation.
+func TestRenderCodeRoundTripNewlines(t *testing.T) {
+	for _, tt := range []struct{ literal, want string }{
+		{"a\nb", "a b"},
+		{"a``\nb", "a`` b"},
+		{"\na ", " a "},
+		{" a\n", " a"},
+		{"\na\n", " a"},
+	} {
+		t.Run(tt.literal, func(t *testing.T) {
+			testCodeRoundTrip(t, parser.NewCommonMark(), tt.literal, tt.want)
+		})
+	}
+}
+
+// The legacy parser trims spaces at the edges of a code span, so those can't
+// round trip. It also treats a multi-line span with a 3 backtick delimiter as
+// a code block.
+func TestRenderCodeRoundTripLegacy(t *testing.T) {
+	for _, literal := range []string{
+		"plain code", "a`b", "a``b", "a`b``c", "`code", "code`", "`", "``",
+		"a\nb", "a``\nb", "a`b``\nc", "\na\n",
+	} {
+		t.Run(literal, func(t *testing.T) {
+			testCodeRoundTrip(t, parser.New(), literal, literal)
+		})
+	}
+}
+
+func TestRenderCodeEmpty(t *testing.T) {
+	testRendering(t, &ast.Code{}, "")
 }
 
 func TestRenderCodeBlock(t *testing.T) {

@@ -210,6 +210,12 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 
 func (r *Renderer) code(w io.Writer, node *ast.Code) {
 	literal := node.Literal
+	// there's no syntax for an empty code span: `` parses as literal backticks
+	if len(literal) == 0 {
+		return
+	}
+	// the delimiter must be longer than any backtick run in the literal because
+	// the legacy parser closes a code span at the first run at least as long
 	fenceLen, run := 1, 0
 	for _, ch := range literal {
 		if ch == '`' {
@@ -221,10 +227,20 @@ func (r *Renderer) code(w io.Writer, node *ast.Code) {
 			run = 0
 		}
 	}
+	// the legacy parser turns a multi-line code span with a delimiter of 3
+	// backticks into a code block
+	if fenceLen == 3 {
+		fenceLen = 4
+	}
 	fence := strings.Repeat("`", fenceLen)
+	// padding keeps backticks at the edges from merging with the delimiter.
+	// It also protects spaces at the edges: CommonMark strips one from each end
+	// if both ends are spaces, after turning line endings into spaces, unless
+	// the content is all spaces.
+	first, last := literal[0], literal[len(literal)-1]
 	padding := ""
-	if len(literal) > 0 && (literal[0] == '`' || literal[len(literal)-1] == '`' ||
-		(literal[0] == ' ' && literal[len(literal)-1] == ' ' && len(bytes.Trim(literal, " ")) > 0)) {
+	if first == '`' || last == '`' ||
+		((first == ' ' || first == '\n') && (last == ' ' || last == '\n') && len(bytes.Trim(literal, " \n")) > 0) {
 		padding = " "
 	}
 	r.outs(w, fence+padding+string(literal)+padding+fence)
