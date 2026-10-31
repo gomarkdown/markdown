@@ -15,7 +15,7 @@ import (
 type Renderer struct {
 	orderedListCounter map[int]int
 
-	lastOutput        bool
+	lastOutput        bool // the current paragraph has written something
 	listDepth         int
 	previousWasNumber bool
 
@@ -59,12 +59,12 @@ func WithRenderInFooter(renderInFooter bool) RendererOpt {
 }
 
 func (r *Renderer) out(w io.Writer, d []byte) {
-	r.lastOutput = len(d) > 0
+	r.lastOutput = r.lastOutput || len(d) > 0
 	w.Write(d)
 }
 
 func (r *Renderer) outs(w io.Writer, s string) {
-	r.lastOutput = len(s) > 0
+	r.lastOutput = r.lastOutput || len(s) > 0
 	io.WriteString(w, s)
 }
 
@@ -100,7 +100,11 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) {
 }
 
 func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
-	if !entering && r.lastOutput {
+	if entering {
+		r.lastOutput = false
+		return
+	}
+	if r.lastOutput {
 		br := "\n\n"
 
 		// List items don't need the extra line-break.

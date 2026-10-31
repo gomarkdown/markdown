@@ -275,6 +275,22 @@ func TestRenderShortcutReferenceRoundTrip(t *testing.T) {
 	testRendering(t, input, expected)
 }
 
+func TestRenderParagraphSeparator(t *testing.T) {
+	// the last child writing nothing doesn't make the paragraph empty
+	input := &ast.Paragraph{}
+	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte("a")}})
+	ast.AppendChild(input, &ast.HTMLSpan{})
+	testRendering(t, input, "a\n\n")
+
+	// output before an empty paragraph doesn't make it non-empty
+	doc := &ast.Document{}
+	heading := &ast.Heading{Level: 1}
+	ast.AppendChild(heading, &ast.Text{Leaf: ast.Leaf{Literal: []byte("t")}})
+	ast.AppendChild(doc, heading)
+	ast.AppendChild(doc, &ast.Paragraph{})
+	testRendering(t, doc, "# t\n\n")
+}
+
 func TestRenderZeroValueRenderer(t *testing.T) {
 	input := markdown.Parse([]byte("1. a\n2. b\n"), nil)
 	got := string(markdown.Render(input, &Renderer{}))
