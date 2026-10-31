@@ -179,6 +179,26 @@ func TestRenderCodeBlockFence(t *testing.T) {
 	}
 }
 
+func TestRenderCodeBlockInfo(t *testing.T) {
+	for _, tt := range []struct{ info, expected string }{
+		{"go", "\n```go\nz\n```\n\n"},
+		{".go", "\n```go\nz\n```\n\n"},
+		{" go title=x ", "\n```go title=x\nz\n```\n\n"},
+		{"a`b", "\n~~~a`b\nz\n~~~\n\n"},
+	} {
+		input := &ast.CodeBlock{Info: []byte(tt.info), Leaf: ast.Leaf{Literal: []byte("z\n")}}
+		testRendering(t, input, tt.expected)
+	}
+
+	input := parser.NewCommonMark().Parse([]byte("~~~ a`b\nz\n~~~\n"))
+	output := markdown.Render(input, NewRenderer())
+	reparsed := parser.NewCommonMark().Parse(output)
+	code, ok := ast.GetFirstChild(reparsed).(*ast.CodeBlock)
+	if !ok || string(code.Info) != "a`b" {
+		t.Errorf("rendered as %q, which doesn't keep the info string", output)
+	}
+}
+
 func TestRenderParagraph(t *testing.T) {
 	input := &ast.Paragraph{}
 	ast.AppendChild(input, &ast.Text{Leaf: ast.Leaf{Literal: []byte(string("Hello World !"))}})

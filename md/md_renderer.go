@@ -204,22 +204,18 @@ func (r *Renderer) htmlBlock(w io.Writer, node *ast.HTMLBlock) {
 func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 	r.outs(w, "\n")
 	text := node.Literal
-	language := ""
-	for _, elt := range strings.Fields(string(node.Info)) {
-		if elt[0] == '.' {
-			elt = elt[1:]
-		}
-		if elt != "" {
-			language = elt
-			break
-		}
+	info := strings.TrimLeft(strings.TrimSpace(string(node.Info)), ". ")
+	// the info string of a backtick fence can't contain backticks
+	fenceChar := byte('`')
+	if strings.IndexByte(info, '`') >= 0 {
+		fenceChar = '~'
 	}
-	fenceLen := fenceLength(text, '`')
+	fenceLen := fenceLength(text, fenceChar)
 	if fenceLen < 3 {
 		fenceLen = 3
 	}
-	fence := strings.Repeat("`", fenceLen)
-	r.outs(w, fence+language+"\n")
+	fence := strings.Repeat(string(fenceChar), fenceLen)
+	r.outs(w, fence+info+"\n")
 	r.out(w, text)
 	if len(text) == 0 || text[len(text)-1] != '\n' {
 		r.outs(w, "\n")
