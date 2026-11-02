@@ -79,6 +79,35 @@ func (r *Renderer) render(node ast.Node) []byte {
 	return buf.Bytes()
 }
 
+// emphasisChar returns the delimiter character of an emphasis node. It's *
+// except for Emph that is all the content of other emphasis: **foo** would be
+// strong instead of emphasis in emphasis, and ***foo*** is emphasis around
+// strong instead of strong around emphasis. Other nesting parses as intended
+// with *, which unlike _ also works inside a word.
+func emphasisChar(node ast.Node) string {
+	if _, ok := node.(*ast.Emph); !ok {
+		return "*"
+	}
+	parent := node.GetParent()
+	switch parent.(type) {
+	case *ast.Emph, *ast.Strong:
+	default:
+		return "*"
+	}
+	for _, child := range parent.GetChildren() {
+		if text, ok := child.(*ast.Text); ok && len(text.Literal) == 0 {
+			continue
+		}
+		if child != node {
+			return "*"
+		}
+	}
+	if emphasisChar(parent) == "*" {
+		return "_"
+	}
+	return "*"
+}
+
 // isBlockNode returns true if node is a block and not inline content.
 func isBlockNode(node ast.Node) bool {
 	switch node.(type) {
@@ -137,8 +166,9 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) ast.WalkStat
 		if r.orderedListCounter == nil {
 			r.orderedListCounter = map[int]int{}
 		}
+		// CommonMark keeps the start number, while the legacy parser uses 0 for 1
 		r.orderedListCounter[r.listDepth] = 1
-		if node.Start > 0 {
+		if node.Start > 0 || isCommonMarkDoc(node) {
 			r.orderedListCounter[r.listDepth] = node.Start
 		}
 	}
@@ -156,6 +186,35 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) ast.WalkStat
 		r.outs(w, "\n")
 	}
 	return ast.SkipChildren
+}
+
+// bulletChar returns the bullet of an unordered list item. A list at the start
+// of an item of another list is on the same line as the item's bullet, so it
+// gets a different one: * * * would be a thematic break.
+func bulletChar(item *ast.ListItem) byte {
+	c := item.BulletChar
+	if c == 0 {
+		c = '*'
+	}
+	list, _ := item.Parent.(*ast.List)
+	if list == nil {
+		return c
+	}
+	outer, _ := list.Parent.(*ast.ListItem)
+	if outer == nil || outer.ListFlags&(ast.ListTypeOrdered|ast.ListTypeDefinition|ast.ListTypeTerm) != 0 {
+		return c
+	}
+	if ast.GetFirstChild(outer) != ast.Node(list) {
+		return c
+	}
+	outerChar := bulletChar(outer)
+	if c != outerChar {
+		return c
+	}
+	if outerChar == '-' {
+		return '*'
+	}
+	return '-'
 }
 
 func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) ast.WalkStatus {
@@ -183,7 +242,7 @@ func (r *Renderer) listItem(w io.Writer, node *ast.ListItem, entering bool) ast.
 		marker = fmt.Sprintf("%d%c ", r.orderedListCounter[r.listDepth], delimiter)
 		r.orderedListCounter[r.listDepth]++
 	} else {
-		marker = string(node.BulletChar) + " "
+		marker = string(bulletChar(node)) + " "
 	}
 	// lines must be indented at least to the content after the marker. CommonMark
 	// keeps any extra indent as content, while the legacy parser needs 4 spaces.
@@ -215,9 +274,6 @@ func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
 		r.outs(w, br)
 	}
 }
-
-// escape replaces instances of backslash with escaped backslash in text.
-func escape(text []byte) []byte { return bytes.ReplaceAll(text, []byte(`\`), []byte(`\\`)) }
 
 func isNumber(data []byte) bool {
 	for _, b := range data {
@@ -462,7 +518,7 @@ func (r *Renderer) codeBlock(w io.Writer, node *ast.CodeBlock) {
 	fence := strings.Repeat(string(fenceChar), fenceLen)
 	r.outs(w, fence+info+"\n")
 	r.out(w, text)
-	if len(text) == 0 || text[len(text)-1] != '\n' {
+	if len(text) > 0 && text[len(text)-1] != '\n' {
 		r.outs(w, "\n")
 	}
 	r.outs(w, fence+"\n\n")
@@ -512,16 +568,54 @@ func (r *Renderer) code(w io.Writer, node *ast.Code) {
 	r.outs(w, fence+padding+string(literal)+padding+fence)
 }
 
-func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) {
-	if entering {
-		r.outs(w, strings.Repeat("#", node.Level)+" ")
-		r.out(w, node.Literal)
-	} else {
-		if node.HeadingID != "" {
-			r.outs(w, " {#"+node.HeadingID+"}")
-		}
-		r.outs(w, "\n\n")
+func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.WalkStatus {
+	if !entering {
+		return ast.GoToNext
 	}
+	content := append([]byte{}, node.Literal...)
+	for _, child := range node.GetChildren() {
+		content = append(content, r.render(child)...)
+	}
+	// a # heading can't span lines; CommonMark has multi-line setext headings
+	if bytes.IndexByte(content, '\n') >= 0 && node.Level <= 2 && node.HeadingID == "" {
+		underline := "==="
+		if node.Level == 2 {
+			underline = "---"
+		}
+		r.out(w, content)
+		r.outs(w, "\n"+underline+"\n\n")
+		return ast.SkipChildren
+	}
+	r.outs(w, strings.Repeat("#", node.Level)+" ")
+	r.out(w, escapeClosingHashes(content))
+	if node.HeadingID != "" {
+		r.outs(w, " {#"+node.HeadingID+"}")
+	}
+	r.outs(w, "\n\n")
+	return ast.SkipChildren
+}
+
+// escapeClosingHashes escapes each # in a run at the end of heading text, which
+// would otherwise be taken as the closing sequence of the heading. The legacy
+// parser strips that run back to the first escaped #, even without a space
+// before it.
+func escapeClosingHashes(text []byte) []byte {
+	end := len(bytes.TrimRight(text, " "))
+	start := end
+	for start > 0 && text[start-1] == '#' {
+		start--
+	}
+	if start == end {
+		return text
+	}
+	res := append([]byte{}, text[:start]...)
+	for i := start; i < end; i++ {
+		if i > start || start == 0 || text[start-1] != '\\' {
+			res = append(res, '\\')
+		}
+		res = append(res, '#')
+	}
+	return append(res, text[end:]...)
 }
 
 // prefixedBlock renders a block whose lines all start with prefix.
@@ -735,9 +829,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Text:
 		r.text(w, node)
 	case *ast.Emph:
-		r.outs(w, "*")
+		r.outs(w, emphasisChar(node))
 	case *ast.Strong:
-		r.outs(w, "**")
+		r.outs(w, strings.Repeat(emphasisChar(node), 2))
 	case *ast.Del:
 		r.outs(w, "~~")
 	case *ast.Link:
@@ -756,7 +850,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.HTMLBlock:
 		r.htmlBlock(w, node)
 	case *ast.Heading:
-		r.heading(w, node, entering)
+		return r.heading(w, node, entering)
 	case *ast.List:
 		return r.list(w, node, entering)
 	case *ast.ListItem:
@@ -769,15 +863,29 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.outs(w, "]: ")
 			r.outs(w, refTarget(node))
 			r.outs(w, "\n")
+			// the legacy parser would take the next line as the destination
+			if len(node.Destination) == 0 && !isCommonMarkDoc(node) {
+				r.outs(w, "\n")
+			}
 		}
 	case *ast.BlockQuote:
 		return r.prefixedBlock(w, node, entering, "> ")
 	case *ast.Aside:
 		return r.prefixedBlock(w, node, entering, "A> ")
 	case *ast.HorizontalRule:
-		r.outs(w, "---\n\n")
+		// - --- would be a thematic break itself
+		if item, ok := node.Parent.(*ast.ListItem); ok && item.ListFlags&(ast.ListTypeOrdered|ast.ListTypeDefinition|ast.ListTypeTerm) == 0 && bulletChar(item) == '-' {
+			r.outs(w, "***\n\n")
+		} else {
+			r.outs(w, "---\n\n")
+		}
 	case *ast.Hardbreak:
-		r.outs(w, "  \n")
+		// CommonMark strips trailing spaces from a line that starts a paragraph
+		if isCommonMarkDoc(node) {
+			r.outs(w, "\\\n")
+		} else {
+			r.outs(w, "  \n")
+		}
 	case *ast.Softbreak:
 		r.outs(w, "\n")
 	case *ast.NonBlockingSpace:

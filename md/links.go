@@ -50,18 +50,20 @@ func hasBalancedParens(text []byte) bool {
 
 // linkTarget returns the destination and title of a link as written after the
 // label. Both parsers unescape destinations. CommonMark also decodes entities
-// and needs <> around a destination that is empty or has spaces.
+// and needs <> around a destination that is empty or has spaces or control
+// characters.
 func linkTarget(dest, title []byte, node ast.Node) string {
 	commonMark := isCommonMarkDoc(node)
+	hasSpace := bytes.ContainsFunc(dest, func(c rune) bool { return c <= ' ' || c == 0x7f })
 	var target string
-	if commonMark && (len(dest) == 0 || bytes.ContainsAny(dest, " \t\r\n")) {
+	if commonMark && (len(dest) == 0 || hasSpace) {
 		target = "<" + string(backslashEscape(dest, func(_ int, c byte) bool {
 			return c == '\\' || c == '&' || c == '<' || c == '>'
 		})) + ">"
 	} else {
 		parens := !hasBalancedParens(dest)
 		target = string(backslashEscape(dest, func(i int, c byte) bool {
-			return c == '\\' || (c == '&' && commonMark) || (c == '<' && i == 0) ||
+			return c == '\\' || (c == '&' && commonMark) || c == '<' || c == '>' ||
 				((c == '(' || c == ')') && parens)
 		}))
 	}
@@ -245,7 +247,8 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 				r.outs(w, "[]")
 			}
 		} else {
-			r.outs(w, "]["+string(escape(node.DeferredID))+"]")
+			// the legacy parser keeps the label in source form
+			r.outs(w, "]["+string(node.DeferredID)+"]")
 		}
 		return ast.GoToNext
 	}

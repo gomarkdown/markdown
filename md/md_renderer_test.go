@@ -234,6 +234,55 @@ func TestRenderLegacyTitleEscapes(t *testing.T) {
 	}
 }
 
+// Cases found by rendering the CommonMark spec examples and fuzzed input back
+// to Markdown.
+func TestRenderRoundTrips(t *testing.T) {
+	both := []string{
+		"```\n```\n",               // empty fenced code block
+		"### foo \\###\n",          // escaped closing sequence
+		"## foo #\\##\n",           //
+		"# C\\#\n",                 // the legacy parser strips # without a space
+		"*_foo_*\n",                // emphasis in emphasis
+		"_*foo*_\n",                //
+		"**_foo_**\n",              // emphasis in strong
+		"foo***bar***baz\n",        // strong in emphasis inside a word
+		"*foo**bar***\n",           //
+		"[x](/a\\>)\n",             // > in a destination
+		"[x](/a\\<b)\n",            //
+		"- a\n\n  ***\n- b\n",      // thematic break in a list item
+		"* * a\n",                  // list at the start of a list item
+		"- ---\n",                  // a thematic break, not a list
+		"x\n\n- foo\n- ***\n\ny\n", //
+	}
+	for name, newParser := range testParsers {
+		t.Run(name, func(t *testing.T) {
+			for _, source := range both {
+				testSameHTMLLinkModes(t, newParser, source)
+			}
+		})
+	}
+	for _, source := range []string{
+		"### foo ###     \n",                // trailing # after spaces is text
+		"[foo][ref\\[]\n\n[ref\\[]: /uri\n", // labels are in source form
+		"[bar\\\\]: /uri\n\n[bar\\\\]\n",    //
+		"[foo]:\n\n[foo]\n",                 // definition without destination
+		"<https://example.com/\\[\\>\n",     // autolink ending in >
+	} {
+		testSameHTMLLinkModes(t, testLegacyParser, source)
+	}
+	for _, source := range []string{
+		"- Foo\n- * * *\n", // - --- would be a thematic break
+		"0. ok\n",          // list starting at 0
+		"\\\n00\n",         // hard line break at the start of a paragraph
+		"* *\n\t*\n",       // * * * would be a thematic break
+		"0  \n0\n-\n",      // multi-line setext heading
+		"<A0:\x7f>\n",      // control character in a destination
+		"[x](<a\x01b>)\n",  //
+	} {
+		testSameHTMLLinkModes(t, parser.NewCommonMark, source)
+	}
+}
+
 func TestRenderLinkDestinations(t *testing.T) {
 	sources := []string{
 		`[l](/a\\b)`,
