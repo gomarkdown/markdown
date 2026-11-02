@@ -2,10 +2,12 @@ package markdown
 
 import (
 	"bytes"
+	"strings"
+	"testing"
+
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
-	"testing"
 )
 
 func TestPrefixHeaderNoExtensions(t *testing.T) {
@@ -279,6 +281,15 @@ func TestPull288(t *testing.T) {
 	if got != exp {
 		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
 			input, exp, got)
+	}
+}
+
+func TestOrderedListStartIndented(t *testing.T) {
+	for _, input := range []string{"4. b\n", " 4. b\n", "   4. b\n", "x\n\n 4. b\n"} {
+		p := parser.NewWithExtensions(parser.CommonExtensions | parser.OrderedListStart)
+		if got := string(ToHTML([]byte(input), p, nil)); !strings.Contains(got, `<ol start="4">`) {
+			t.Errorf("input %q: got %q, want a list starting at 4", input, got)
+		}
 	}
 }
 

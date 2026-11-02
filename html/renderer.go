@@ -209,7 +209,7 @@ func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {
 	if r.DisableTags > 0 {
 		return
 	}
-	if image.Title != nil {
+	if len(image.Title) > 0 || (r.commonMark && image.Title != nil) {
 		r.Outs(w, `" title="`)
 		EscapeHTML(w, image.Title)
 	}

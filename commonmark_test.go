@@ -85,6 +85,16 @@ func TestCommonMarkEmptyTitles(t *testing.T) {
 	}
 }
 
+// The legacy parser gives reference images an empty title. Like links, they
+// only get title="" in CommonMark, where an empty title can be written.
+func TestLegacyReferenceImageHasNoEmptyTitle(t *testing.T) {
+	input := "![i][r]\n\n[r]: /u\n"
+	want := "<p><img src=\"/u\" alt=\"i\" /></p>\n"
+	if got := string(ToHTML([]byte(input), parser.New(), nil)); got != want {
+		t.Errorf("want %q, got %q", want, got)
+	}
+}
+
 func TestCommonMarkUnicodeReferences(t *testing.T) {
 	for _, pair := range [][2]string{{"ß", "SS"}, {"ẞ", "ss"}, {"ς", "Σ"}, {"ſ", "S"}, {"ﬃ", "FFI"}, {"İ", "i\u0307"}, {"ǰ", "j\u030c"}} {
 		p := parser.New()

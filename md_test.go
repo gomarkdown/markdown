@@ -2,9 +2,9 @@ package markdown
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gomarkdown/markdown/ast"
@@ -12,41 +12,48 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
+// collapseSpace replaces each run of whitespace with one space, as HTML
+// rendering does. md.Renderer joins the lines of a paragraph.
+func collapseSpace(b []byte) string {
+	return strings.Join(strings.Fields(string(b)), " ")
+}
+
 func TestMd(t *testing.T) {
-	if true {
-		// disabled for now because md render is not finished
-		return
+	newParser := func() *parser.Parser {
+		return parser.NewWithExtensions(parser.CommonExtensions | parser.OrderedListStart)
 	}
-	files := []string{
-		"md1",
-		"md2",
-	}
-	for _, file := range files {
+	for _, file := range []string{"md1", "md2"} {
 		pathOrig := filepath.Join("testdata", file+".md")
-		d, err := ioutil.ReadFile(pathOrig)
+		d, err := os.ReadFile(pathOrig)
 		if err != nil {
-			t.Fatalf("ioutil.ReadFile('%s') failed with %s", pathOrig, err)
+			t.Fatalf("os.ReadFile('%s') failed with %s", pathOrig, err)
 		}
 		pathExp := filepath.Join("testdata", file+"_exp.md")
-		exp, err := ioutil.ReadFile(pathExp)
+		exp, err := os.ReadFile(pathExp)
 		if err != nil {
-			t.Fatalf("ioutil.ReadFile('%s') failed with %s", pathExp, err)
+			t.Fatalf("os.ReadFile('%s') failed with %s", pathExp, err)
 		}
-		exts := parser.CommonExtensions | parser.OrderedListStart
-		parser := parser.NewWithExtensions(exts)
-		renderer := md.NewRenderer()
-		doc := Parse(d, parser)
-		got := Render(doc, renderer)
+		// working copies may be CRLF (core.autocrlf)
+		d, exp = NormalizeNewlines(d), NormalizeNewlines(exp)
+		doc := Parse(d, newParser())
+		got := Render(doc, md.NewRenderer())
+
+		wantHTML := ToHTML(d, newParser(), nil)
+		gotHTML := ToHTML(got, newParser(), nil)
+		if collapseSpace(gotHTML) != collapseSpace(wantHTML) {
+			t.Errorf("%s: rendered Markdown has different HTML\nwant: %s\n got: %s", pathOrig, wantHTML, gotHTML)
+		}
+
 		if !bytes.Equal(got, exp) {
 			pathGot := filepath.Join("testdata", file+"_got.md")
-			err = ioutil.WriteFile(pathGot, got, 0644)
-			if err != nil {
-				t.Errorf("ioutil.WriteFile('%s') failed with %s", pathGot, err)
+			if err := os.WriteFile(pathGot, got, 0644); err != nil {
+				t.Errorf("os.WriteFile('%s') failed with %s", pathGot, err)
 			}
 			pathAST := filepath.Join("testdata", file+"_ast.txt")
 			f, err := os.Create(pathAST)
 			if err != nil {
-				t.Errorf("ioutil.WriteFile('%s') failed with %s", pathAST, err)
+				t.Errorf("os.Create('%s') failed with %s", pathAST, err)
+				continue
 			}
 			ast.PrintWithPrefix(f, doc, "  ")
 			f.Close()

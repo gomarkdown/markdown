@@ -65,7 +65,8 @@ func linkTarget(dest, title []byte, node ast.Node) string {
 				((c == '(' || c == ')') && parens)
 		}))
 	}
-	if len(title) != 0 {
+	// CommonMark keeps an empty title, which the HTML renderer writes as title="".
+	if len(title) != 0 || (commonMark && title != nil) {
 		target += " " + quoteTitle(title, commonMark)
 	}
 	return target
