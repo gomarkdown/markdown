@@ -1,7 +1,6 @@
 package md
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -189,6 +188,21 @@ func TestRenderTitleQuotes(t *testing.T) {
 	}
 }
 
+// testSameHTMLLinkModes calls testSameHTML with links rendered inline and in
+// the footer.
+func testSameHTMLLinkModes(t *testing.T, newParser func() *parser.Parser, source string) {
+	t.Helper()
+	for _, footer := range []bool{false, true} {
+		name := source + " inline"
+		if footer {
+			name = source + " footer"
+		}
+		t.Run(name, func(t *testing.T) {
+			testSameHTML(t, newParser, source, WithRenderInFooter(footer))
+		})
+	}
+}
+
 func TestRenderCommonMarkTitleEscapes(t *testing.T) {
 	for _, source := range []string{
 		`[link](/page "C:\\docs\\")`,
@@ -202,11 +216,7 @@ func TestRenderCommonMarkTitleEscapes(t *testing.T) {
 		"[link][ref]\n\n[ref]: /page \"C:\\\\docs\\\\\"\n",
 		"[link][ref]\n\n[ref]: /page \"&amp;amp;\"\n",
 	} {
-		for _, footer := range []bool{false, true} {
-			t.Run(source+fmt.Sprint(footer), func(t *testing.T) {
-				testSameHTML(t, parser.NewCommonMark, source, WithRenderInFooter(footer))
-			})
-		}
+		testSameHTMLLinkModes(t, parser.NewCommonMark, source)
 	}
 }
 
@@ -217,28 +227,64 @@ func TestRenderLegacyTitleEscapes(t *testing.T) {
 		`[link](/page "&amp;amp; &#38;copy;")`,
 		`![image](/image.png "&amp;quot;")`,
 	} {
-		for _, footer := range []bool{false, true} {
-			t.Run(source+fmt.Sprint(footer), func(t *testing.T) {
-				testSameHTML(t, testLegacyParser, source, WithRenderInFooter(footer))
-			})
-		}
+		testSameHTMLLinkModes(t, testLegacyParser, source)
 	}
 }
 
-func BenchmarkRenderLinkTitles(b *testing.B) {
-	for name, source := range map[string]string{
-		"plain":   `[link](/page "ordinary title")`,
-		"escaped": `[link](/page "C:\\docs\\ &amp;amp;")`,
-	} {
-		input := []byte(strings.Repeat(source+"\n\n", 100))
-		doc := parser.NewCommonMark().Parse(input)
-		b.Run(name, func(b *testing.B) {
-			b.ReportAllocs()
-			b.SetBytes(int64(len(input)))
-			for i := 0; i < b.N; i++ {
-				markdown.Render(doc, NewRenderer())
+func TestRenderLinkDestinations(t *testing.T) {
+	sources := []string{
+		`[l](/a\\b)`,
+		`[l](/a\(b)`,
+		`[l](/a\)b)`,
+		`[l](/a(b)c)`,
+		`[l](\<a)`,
+		`[l](<>)`,
+		`[l](</a b>)`,
+		`![i](/a\(b "t")`,
+		"[l][r]\n\n[r]: /a\\(b\n",
+		"[l][r]\n\n[r]: </a b>\n",
+	}
+	for name, newParser := range testParsers {
+		t.Run(name, func(t *testing.T) {
+			for _, source := range sources {
+				testSameHTMLLinkModes(t, newParser, source)
 			}
 		})
+	}
+	for _, source := range []string{
+		`[l](/a&amp;amp;b)`,
+		`![i](/a&amp;amp;b)`,
+		"[l][r]\n\n[r]: /a&amp;amp;b\n",
+		"[l][r]\n\n[r]: <>\n",
+	} {
+		testSameHTMLLinkModes(t, parser.NewCommonMark, source)
+	}
+}
+
+// A CommonMark destination with spaces doesn't come from the parser, which
+// percent-encodes them, but can be in a document made in code.
+func TestRenderCommonMarkDestinationWithSpace(t *testing.T) {
+	link := &ast.Link{Destination: []byte("/a b<c>")}
+	ast.AppendChild(link, &ast.Text{Leaf: ast.Leaf{Literal: []byte("l")}})
+	para := &ast.Paragraph{}
+	ast.AppendChild(para, link)
+	doc := &ast.Document{CommonMark: true}
+	ast.AppendChild(doc, para)
+	output := markdown.Render(doc, NewRenderer())
+	got := markdown.ToHTML(output, parser.NewCommonMark(), nil)
+	if want := `<p><a href="/a%20b%3Cc%3E">l</a></p>` + "\n"; string(got) != want {
+		t.Errorf("rendered as %q; got %q, want %q", output, got, want)
+	}
+}
+
+// The legacy parser doesn't take a reference definition with spaces or no
+// destination, so such links stay inline.
+func TestRenderLegacyFooterFallback(t *testing.T) {
+	for _, source := range []string{`[l](/a b)`, `[l]()`} {
+		output := testSameHTML(t, testLegacyParser, source, WithRenderInFooter(true))
+		if strings.Contains(output, "]:") {
+			t.Errorf("rendered %q with a definition: %q", source, output)
+		}
 	}
 }
 

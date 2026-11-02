@@ -9,18 +9,86 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
+// backslashEscape returns text with a backslash before each byte for which
+// needsEscape returns true.
+func backslashEscape(text []byte, needsEscape func(i int, c byte) bool) []byte {
+	var out []byte
+	for i, c := range text {
+		if needsEscape(i, c) {
+			if out == nil {
+				out = append(make([]byte, 0, len(text)+8), text[:i]...)
+			}
+			out = append(out, '\\')
+		}
+		if out != nil {
+			out = append(out, c)
+		}
+	}
+	if out == nil {
+		return text
+	}
+	return out
+}
+
+// hasBalancedParens returns true if the parentheses in text are balanced, which
+// is when a link destination can have them unescaped.
+func hasBalancedParens(text []byte) bool {
+	depth := 0
+	for _, c := range text {
+		switch c {
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth < 0 {
+				return false
+			}
+		}
+	}
+	return depth == 0
+}
+
+// linkTarget returns the destination and title of a link as written after the
+// label. Both parsers unescape destinations. CommonMark also decodes entities
+// and needs <> around a destination that is empty or has spaces.
+func linkTarget(dest, title []byte, node ast.Node) string {
+	commonMark := isCommonMarkDoc(node)
+	var target string
+	if commonMark && (len(dest) == 0 || bytes.ContainsAny(dest, " \t\r\n")) {
+		target = "<" + string(backslashEscape(dest, func(_ int, c byte) bool {
+			return c == '\\' || c == '&' || c == '<' || c == '>'
+		})) + ">"
+	} else {
+		parens := !hasBalancedParens(dest)
+		target = string(backslashEscape(dest, func(i int, c byte) bool {
+			return c == '\\' || (c == '&' && commonMark) || (c == '<' && i == 0) ||
+				((c == '(' || c == ')') && parens)
+		}))
+	}
+	if len(title) != 0 {
+		target += " " + quoteTitle(title, commonMark)
+	}
+	return target
+}
+
+// refTarget returns the destination and title of a reference definition. The
+// legacy parser keeps them in source form.
+func refTarget(ref *ast.ReferenceDefinition) string {
+	if isCommonMarkDoc(ref) {
+		return linkTarget(ref.Destination, ref.Title, ref)
+	}
+	target := string(ref.Destination)
+	if len(ref.Title) != 0 {
+		target += " " + quoteTitle(ref.Title, false)
+	}
+	return target
+}
+
 // quoteTitle returns a link title with its delimiters. CommonMark titles have
 // decoded escapes and entities; the legacy parser leaves them in source form.
-func quoteTitle(title []byte, node ast.Node) string {
-	hasEntity := bytes.IndexByte(title, '&') >= 0
-	hasEscape := bytes.IndexByte(title, '\\') >= 0
-	if (hasEntity || hasEscape) && isCommonMarkDoc(node) {
-		if hasEntity {
-			title = bytes.ReplaceAll(title, []byte("&"), []byte("&amp;"))
-		}
-		if hasEscape {
-			title = escape(title)
-		}
+func quoteTitle(title []byte, commonMark bool) string {
+	if commonMark {
+		title = backslashEscape(title, func(_ int, c byte) bool { return c == '\\' || c == '&' })
 	}
 	if !bytes.Contains(title, []byte(`"`)) {
 		return `"` + string(title) + `"`
@@ -37,10 +105,7 @@ func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 		return
 	}
 	r.outs(w, "](")
-	r.out(w, escape(node.Destination))
-	if len(node.Title) != 0 {
-		r.outs(w, " "+quoteTitle(node.Title, node))
-	}
+	r.outs(w, linkTarget(node.Destination, node.Title, node))
 	r.outs(w, ")")
 }
 
@@ -77,11 +142,7 @@ func (r *Renderer) reserveDefinedLabels(doc ast.Node) {
 	r.footerLabels = map[string]string{}
 	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		if ref, ok := node.(*ast.ReferenceDefinition); ok && entering {
-			target := string(ref.Destination)
-			if len(ref.Title) != 0 {
-				target += " " + quoteTitle(ref.Title, ref)
-			}
-			r.footerLabels[normalizeLabel(string(ref.Label))] = target
+			r.footerLabels[normalizeLabel(string(ref.Label))] = refTarget(ref)
 		}
 		return ast.GoToNext
 	})
@@ -118,10 +179,7 @@ func (r *Renderer) footerLink(w io.Writer, node *ast.Link) {
 	for _, child := range node.GetChildren() {
 		text = append(text, r.render(child)...)
 	}
-	target := string(escape(node.Destination))
-	if len(node.Title) != 0 {
-		target += " " + quoteTitle(node.Title, node)
-	}
+	target := linkTarget(node.Destination, node.Title, node)
 	label := r.uniqueFooterLabel(footerLinkLabel(text), target)
 
 	r.outs(w, "[")
@@ -155,6 +213,13 @@ func shortcutNeedsBrackets(node *ast.Link) bool {
 	return isLink
 }
 
+// canBeInFooter returns true if the destination of a link can be in a reference
+// definition. The legacy parser doesn't take one that is empty or has spaces.
+func canBeInFooter(node *ast.Link) bool {
+	return isCommonMarkDoc(node) ||
+		(len(node.Destination) != 0 && !bytes.ContainsAny(node.Destination, " \t\r\n"))
+}
+
 func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStatus {
 	if node.NoteID != 0 {
 		if entering {
@@ -162,7 +227,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 		}
 		return ast.SkipChildren
 	}
-	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 {
+	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 && canBeInFooter(node) {
 		if entering {
 			r.footerLink(w, node)
 		}
@@ -185,10 +250,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 	}
 
 	r.outs(w, "](")
-	r.out(w, escape(node.Destination))
-	if len(node.Title) != 0 {
-		r.outs(w, " "+quoteTitle(node.Title, node))
-	}
+	r.outs(w, linkTarget(node.Destination, node.Title, node))
 	r.outs(w, ")")
 	return ast.GoToNext
 }

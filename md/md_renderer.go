@@ -767,10 +767,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 			r.outs(w, "[")
 			r.out(w, node.Label)
 			r.outs(w, "]: ")
-			r.out(w, node.Destination)
-			if len(node.Title) > 0 {
-				r.outs(w, " "+quoteTitle(node.Title, node))
-			}
+			r.outs(w, refTarget(node))
 			r.outs(w, "\n")
 		}
 	case *ast.BlockQuote:
