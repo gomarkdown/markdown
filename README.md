@@ -123,7 +123,7 @@ You can also use it as an example of how to use the library.
 
 You can install it with:
 
-    go get -u github.com/gomarkdown/mdtohtml
+    go install github.com/gomarkdown/mdtohtml@latest
 
 To run: `mdtohtml input-file [output-file]`
 
