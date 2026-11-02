@@ -85,22 +85,61 @@ func TestInfiniteLoopFix(t *testing.T) {
 	//ast.Print(os.Stdout, doc)
 }
 
-// TODO: fix parsing for this test case without breaking other test cases
-// https://github.com/gomarkdown/markdown/issues/325
-// this can be fixed by removing p.fenceCodeBlock() call in Parser.quote()
-// but would break other test cases
+// https://github.com/gomarkdown/markdown/issues/325: a fence closed inside a
+// quote or aside must not pair with a fence after it.
 func TestBug325(t *testing.T) {
-	input := `> ~~~
-> // comment
-> ~~~
+	for _, prefix := range []string{">", "A>"} {
+		input := prefix + " ~~~\n" + prefix + " // comment\n" + prefix + " ~~~\n\n~~~"
+		p := NewWithExtensions(CommonExtensions | Mmark)
+		got := astToString(p.Parse([]byte(input)))
+		block := "BlockQuote"
+		if prefix == "A>" {
+			block = "Aside"
+		}
+		exp := block + "\n  CodeBlock: '// comment\\n'\nParagraph\n  Text '~~~'\n"
+		if got != exp {
+			t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
+				input, exp, got)
+		}
+	}
+}
 
-~~~`
-	p := NewWithExtensions(CommonExtensions)
-	doc := p.Parse([]byte(input))
-	got := astToString(doc)
-	exp := "BlockQuote\n  CodeBlock: '// comment\\n'\nParagraph\n  Text '~~~'\n"
-	if got != exp {
-		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",
-			input, exp, got)
+// Lines of a fenced code block in a quote or aside may omit the prefix, but
+// an unclosed fence is not code and must not keep the rest of the document in
+// the block.
+func TestPrefixedBlockFences(t *testing.T) {
+	for _, prefix := range []string{">", "A>"} {
+		block := "BlockQuote"
+		if prefix == "A>" {
+			block = "Aside"
+		}
+		for _, test := range []struct{ input, exp string }{
+			{
+				prefix + " ~~~\n" + prefix + " code\n\npara\n",
+				block + "\n  Paragraph\n    Text '~~~\\ncode'\nParagraph\n  Text 'para'\n",
+			},
+			{
+				prefix + " ~~~\ncode\n" + prefix + " ~~~\n\npara\n",
+				block + "\n  CodeBlock: 'code\\n'\nParagraph\n  Text 'para'\n",
+			},
+			{
+				prefix + " ~~~\n" + prefix + " code\n~~~\n\npara\n",
+				block + "\n  CodeBlock: 'code\\n'\nParagraph\n  Text 'para'\n",
+			},
+		} {
+			p := NewWithExtensions(CommonExtensions | Mmark)
+			if got := astToString(p.Parse([]byte(test.input))); got != test.exp {
+				t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n", test.input, test.exp, got)
+			}
+		}
+	}
+}
+
+// A run of quotes with unclosed fences must not make each one scan the rest
+// of the document.
+func BenchmarkQuoteUnclosedFences(b *testing.B) {
+	input := bytes.Repeat([]byte("> ~~~\n\n"), 20000)
+	for i := 0; i < b.N; i++ {
+		NewWithExtensions(CommonExtensions).Parse(input)
 	}
 }
