@@ -58,9 +58,10 @@ func BenchmarkInlineSpaceRun(b *testing.B) {
 	}
 }
 
-// TestInlineCachesResetPerBuffer reuses one Parser on a buffer rewritten in
-// place. The memo tables key on the buffer's address, so without a reset
-// the second parse would see the first buffer's code span.
+// TestInlineCachesResetPerBuffer calls Inline twice on one Parser, with the
+// buffer rewritten in place in between. The memo tables key on the buffer's
+// address, so without a reset the second call would see the first buffer's
+// code span.
 func TestInlineCachesResetPerBuffer(t *testing.T) {
 	p := New()
 	buf := []byte("`a` b")

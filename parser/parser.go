@@ -225,7 +225,9 @@ type Reference struct {
 // You can then convert AST to html using html.Renderer, to some other format
 // using a custom renderer or transform the tree.
 //
-// Parser is not reusable. Create a new Parser for each Parse() call.
+// Parse can be called only once on a Parser and panics if called again.
+// Create a new Parser for each document. Inline and Block can be called
+// any number of times, for example from parser hooks.
 func (p *Parser) Parse(input []byte) ast.Node {
 	if p.didParse {
 		panic("Parser is not reusable. Must create new Parser for each Parse() call.")

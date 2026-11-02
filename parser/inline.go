@@ -13,8 +13,7 @@ var (
 	anchorRe = regexp.MustCompile(`^(<a\shref="` + urlRe + `"(\stitle="[^"<>]+")?\s?>` + urlRe + `<\/a>)`)
 )
 
-// Inline parses text within a block.
-// Each function returns the number of consumed chars.
+// Inline parses data as inline content and appends the nodes to currBlock.
 func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 	if p.Opts.Flags&CommonMark != 0 {
 		p.commonMarkInline(currBlock, data)
@@ -82,9 +81,10 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 }
 
 // resetInlineCaches drops the memo tables that inline callbacks keep for
-// the buffer under the cursor. They key on the buffer's address and
-// length, so a caller that reuses a Parser on a buffer it has rewritten in
-// place must not see entries built from the old contents.
+// the buffer under the cursor. It runs at the start of each top-level Inline
+// call. The tables key on the buffer's address and length, so a later call on
+// a buffer that was rewritten in place must not see entries built from the
+// old contents.
 func (p *Parser) resetInlineCaches() {
 	p.codeSpans.data = nil
 	p.spaces.data = nil
