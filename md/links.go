@@ -9,9 +9,19 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// quoteTitle returns a link title with its delimiters. The legacy parser doesn't
-// unescape titles, so a backslash is only used if both kinds of quotes are in it.
-func quoteTitle(title []byte) string {
+// quoteTitle returns a link title with its delimiters. CommonMark titles have
+// decoded escapes and entities; the legacy parser leaves them in source form.
+func quoteTitle(title []byte, node ast.Node) string {
+	hasEntity := bytes.IndexByte(title, '&') >= 0
+	hasEscape := bytes.IndexByte(title, '\\') >= 0
+	if (hasEntity || hasEscape) && isCommonMarkDoc(node) {
+		if hasEntity {
+			title = bytes.ReplaceAll(title, []byte("&"), []byte("&amp;"))
+		}
+		if hasEscape {
+			title = escape(title)
+		}
+	}
 	if !bytes.Contains(title, []byte(`"`)) {
 		return `"` + string(title) + `"`
 	}
@@ -29,7 +39,7 @@ func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 	r.outs(w, "](")
 	r.out(w, escape(node.Destination))
 	if len(node.Title) != 0 {
-		r.outs(w, " "+quoteTitle(node.Title))
+		r.outs(w, " "+quoteTitle(node.Title, node))
 	}
 	r.outs(w, ")")
 }
@@ -69,7 +79,7 @@ func (r *Renderer) reserveDefinedLabels(doc ast.Node) {
 		if ref, ok := node.(*ast.ReferenceDefinition); ok && entering {
 			target := string(ref.Destination)
 			if len(ref.Title) != 0 {
-				target += " " + quoteTitle(ref.Title)
+				target += " " + quoteTitle(ref.Title, ref)
 			}
 			r.footerLabels[normalizeLabel(string(ref.Label))] = target
 		}
@@ -110,7 +120,7 @@ func (r *Renderer) footerLink(w io.Writer, node *ast.Link) {
 	}
 	target := string(escape(node.Destination))
 	if len(node.Title) != 0 {
-		target += " " + quoteTitle(node.Title)
+		target += " " + quoteTitle(node.Title, node)
 	}
 	label := r.uniqueFooterLabel(footerLinkLabel(text), target)
 
@@ -177,7 +187,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 	r.outs(w, "](")
 	r.out(w, escape(node.Destination))
 	if len(node.Title) != 0 {
-		r.outs(w, " "+quoteTitle(node.Title))
+		r.outs(w, " "+quoteTitle(node.Title, node))
 	}
 	r.outs(w, ")")
 	return ast.GoToNext

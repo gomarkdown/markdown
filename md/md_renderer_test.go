@@ -1,6 +1,7 @@
 package md
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -185,6 +186,59 @@ func TestRenderTitleQuotes(t *testing.T) {
 	output := markdown.Render(input, NewRenderer())
 	if got := titleOf(parser.NewCommonMark().Parse(append([]byte("["+"a"), output[1:]...))); string(got) != `c"d'e` {
 		t.Errorf("rendered as %q; got title %q", output, got)
+	}
+}
+
+func TestRenderCommonMarkTitleEscapes(t *testing.T) {
+	for _, source := range []string{
+		`[link](/page "C:\\docs\\")`,
+		`![image](/image.png "C:\\docs\\")`,
+		`[link](/page "&amp;amp; &#38;copy;")`,
+		`![image](/image.png "&amp;quot;")`,
+		`[link](/page "literal \\* and \\&amp;")`,
+		`[link](/page 'a"b\\c')`,
+		`[link](/page "a\"b'c\\d")`,
+		`[link](/page "ordinary title")`,
+		"[link][ref]\n\n[ref]: /page \"C:\\\\docs\\\\\"\n",
+		"[link][ref]\n\n[ref]: /page \"&amp;amp;\"\n",
+	} {
+		for _, footer := range []bool{false, true} {
+			t.Run(source+fmt.Sprint(footer), func(t *testing.T) {
+				testSameHTML(t, parser.NewCommonMark, source, WithRenderInFooter(footer))
+			})
+		}
+	}
+}
+
+func TestRenderLegacyTitleEscapes(t *testing.T) {
+	for _, source := range []string{
+		`[link](/page "C:\\docs\\")`,
+		`![image](/image.png "C:\\docs\\")`,
+		`[link](/page "&amp;amp; &#38;copy;")`,
+		`![image](/image.png "&amp;quot;")`,
+	} {
+		for _, footer := range []bool{false, true} {
+			t.Run(source+fmt.Sprint(footer), func(t *testing.T) {
+				testSameHTML(t, testLegacyParser, source, WithRenderInFooter(footer))
+			})
+		}
+	}
+}
+
+func BenchmarkRenderLinkTitles(b *testing.B) {
+	for name, source := range map[string]string{
+		"plain":   `[link](/page "ordinary title")`,
+		"escaped": `[link](/page "C:\\docs\\ &amp;amp;")`,
+	} {
+		input := []byte(strings.Repeat(source+"\n\n", 100))
+		doc := parser.NewCommonMark().Parse(input)
+		b.Run(name, func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(len(input)))
+			for i := 0; i < b.N; i++ {
+				markdown.Render(doc, NewRenderer())
+			}
+		})
 	}
 }
 
