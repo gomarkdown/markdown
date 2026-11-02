@@ -30,14 +30,14 @@ func parseGallery(data []byte) (ast.Node, []byte, int) {
 	}
 	fmt.Printf("Found a gallery!\n\n")
 	i := len(gallery)
-	// find empty line
-	// TODO: should also consider end of document
+	// the gallery ends at an empty line or the end of the document
 	end := bytes.Index(data[i:], []byte("\n\n"))
 	if end < 0 {
-		return nil, data, 0
+		end = len(data)
+	} else {
+		end += i
 	}
-	end = end + i
-	lines := string(data[i:end])
+	lines := strings.TrimRight(string(data[i:end]), "\n")
 	parts := strings.Split(lines, "\n")
 	res := &Gallery{
 		ImageURLS: parts,
@@ -53,7 +53,8 @@ func parserHook(data []byte) (ast.Node, []byte, int) {
 }
 
 func newMarkdownParser() *parser.Parser {
-	extensions := parser.CommonExtensions
+	// with DefinitionLists, ":gallery" after a paragraph would be a definition
+	extensions := parser.CommonExtensions &^ parser.DefinitionLists
 	p := parser.NewWithExtensions(extensions)
 	p.Opts.ParserHook = parserHook
 	return p

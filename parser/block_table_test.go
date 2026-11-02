@@ -75,7 +75,6 @@ func TestBug195(t *testing.T) {
 	var buf bytes.Buffer
 	ast.Print(&buf, doc)
 	got := buf.String()
-	// TODO: change expectations for https://github.com/gomarkdown/markdown/issues/195
 	exp := "Table\n  TableHeader\n    TableRow\n      TableCell\n        Text 'a'\n      TableCell\n        Text 'b'\n  TableBody\n    TableRow\n      TableCell\n        Text\n        Code 'foo|bar'\n      TableCell\n        Text 'types'\n"
 	if got != exp {
 		t.Errorf("\nInput   [%#v]\nExpected[%#v]\nGot     [%#v]\n",

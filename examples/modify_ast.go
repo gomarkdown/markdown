@@ -5,14 +5,15 @@ package main
 // example for https://blog.kowalczyk.info/article/cxn3/advanced-markdown-processing-in-go.html
 
 import (
+	"bytes"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
-
-	"strings"
 )
 
 func modifyAst(doc ast.Node) ast.Node {
@@ -22,8 +23,10 @@ func modifyAst(doc ast.Node) ast.Node {
 			if attr == nil {
 				attr = &ast.Attribute{}
 			}
-			// TODO: might be duplicate
-			attr.Classes = append(attr.Classes, []byte("blog-img"))
+			class := []byte("blog-img")
+			if !slices.ContainsFunc(attr.Classes, func(c []byte) bool { return bytes.Equal(c, class) }) {
+				attr.Classes = append(attr.Classes, class)
+			}
 			img.Attribute = attr
 		}
 
