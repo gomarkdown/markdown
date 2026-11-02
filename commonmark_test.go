@@ -178,6 +178,9 @@ func TestCommonMarkAdversarialInputs(t *testing.T) {
 		"nested emphasis":                  strings.Repeat("*", 16384) + "a" + strings.Repeat("*", 16384),
 		"backtick runs":                    strings.Repeat("`", 32768),
 		"nested containers":                strings.Repeat("> ", 8192) + "a\n",
+		"nested list markers":              strings.Repeat("- ", 16384) + "a\n",
+		"nested mixed list markers":        strings.Repeat("- ", 16384) + "*\n",
+		"nested quoted lists":              strings.Repeat("> - ", 8192) + "a\n",
 	} {
 		t.Run(name, func(t *testing.T) {
 			p := parser.New()

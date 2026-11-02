@@ -462,12 +462,31 @@ type commonMarkContinuation struct {
 }
 
 func (s *commonMarkContinuation) feed(line []byte) {
+	// Removing prefixes only changes the start of the line. A thematic break
+	// has spaces and one kind of marker, so while what's left still has a byte
+	// that is neither a space nor the last marker, it isn't one. This way a
+	// line of many nested list markers isn't scanned again for each of them.
+	nonThematic := 0 // length of the line suffix that starts at such a byte
+	var marker byte
+	for i := len(line) - 1; i >= 0; i-- {
+		c := line[i]
+		if c == ' ' || c == '\t' {
+			continue
+		}
+		if marker == 0 && (c == '-' || c == '*' || c == '_') {
+			marker = c
+		}
+		if c != marker {
+			nonThematic = len(line) - i
+			break
+		}
+	}
 	for {
 		if prefix := commonMarkQuotePrefix(line); prefix > 0 {
 			line = commonMarkQuoteContent(line, prefix)
 			continue
 		}
-		if m, ok := commonMarkListPrefix(line); ok && !commonMarkThematic(line) {
+		if m, ok := commonMarkListPrefix(line); ok && (nonThematic > 0 && len(line) >= nonThematic || !commonMarkThematic(line)) {
 			line = m.content
 			continue
 		}
