@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/gomarkdown/markdown"
@@ -34,7 +33,7 @@ func main() {
 		usageAndExit()
 	}
 	for _, fileName := range files {
-		d, err := ioutil.ReadFile(fileName)
+		d, err := os.ReadFile(fileName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Couldn't open '%s', error: '%s'\n", fileName, err)
 			continue

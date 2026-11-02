@@ -2,7 +2,7 @@ package markdown
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -30,9 +30,9 @@ func readTestFile2(t *testing.T, fileName string) []string {
 
 func readTestFile(t *testing.T, fileName string) []*testData {
 	path := filepath.Join("testdata", fileName)
-	d, err := ioutil.ReadFile(path)
+	d, err := os.ReadFile(path)
 	if err != nil {
-		t.Fatalf("ioutil.ReadFile('%s') failed with %s", path, err)
+		t.Fatalf("os.ReadFile('%s') failed with %s", path, err)
 	}
 	// Working copies may be CRLF (core.autocrlf). Split on "+++\n", so
 	// normalize first or the file is one unmatched part.

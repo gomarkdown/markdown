@@ -1,7 +1,7 @@
 package markdown
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -55,7 +55,7 @@ var benchResultAnchor string
 func benchFile(b *testing.B, basename string) {
 	params := TestParams{extensions: parser.CommonExtensions}
 	filename := filepath.Join("testdata", basename+".text")
-	inputBytes, err := ioutil.ReadFile(filename)
+	inputBytes, err := os.ReadFile(filename)
 	if err != nil {
 		b.Errorf("Couldn't open '%s', error: %v\n", filename, err)
 		return
@@ -158,7 +158,7 @@ func BenchmarkReference(b *testing.B) {
 	var tests []string
 	for _, basename := range files {
 		filename := filepath.Join("testdata", basename+".text")
-		inputBytes, err := ioutil.ReadFile(filename)
+		inputBytes, err := os.ReadFile(filename)
 		if err != nil {
 			b.Errorf("Couldn't open '%s', error: %v\n", filename, err)
 			continue

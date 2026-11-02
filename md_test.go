@@ -74,7 +74,7 @@ func hashtag(p *parser.Parser, data []byte, offset int) (int, ast.Node) {
 	}
 	link := &ast.Link{
 		Destination: append([]byte("/search?q=%23"), data[1:i]...),
-		Title: data[0:i],
+		Title:       data[0:i],
 	}
 	ast.AppendChild(link, &ast.Text{Leaf: ast.Leaf{Literal: data[0:i]}})
 	return i + 1, link

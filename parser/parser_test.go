@@ -37,7 +37,6 @@ func TestIsSafeURLShortURLNoPanic(t *testing.T) {
 	}
 }
 
-
 func TestBug311(t *testing.T) {
 	str := "~~~~\xb4~\x94~\x94~\xd1\r\r:\xb4\x94\x94~\x9f~\xb4~\x94~\x94\x94"
 	p := New()
