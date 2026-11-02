@@ -15,7 +15,7 @@ A renderer can be configured with multiple options:
 	renderer := html.NewRenderer(opts)
 
 You can also re-use most of the logic and customize rendering of selected nodes
-by providing node render hook.
+by providing a node render hook.
 This is most useful for rendering nodes that allow for design choices, like
 links or code blocks.
 
@@ -24,7 +24,7 @@ links or code blocks.
 		"github.com/gomarkdown/markdown/ast"
 	)
 
-	// a very dummy render hook that will output "code_replacement" instead of
+	// a simple render hook that will output "code_replacement" instead of
 	// <code>${content}</code> emitted by html.Renderer
 	func renderHookCodeBlock(w io.Writer, node ast.Node, entering bool) (ast.WalkStatus, bool) {
 		_, ok := node.(*ast.CodeBlock)

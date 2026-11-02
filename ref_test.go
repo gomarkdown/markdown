@@ -49,7 +49,7 @@ func TestReference_EXTENSION_NO_EMPTY_LINE_BEFORE_BLOCK(t *testing.T) {
 }
 
 // benchResultAnchor is an anchor variable to store the result of a benchmarked
-// code so that compiler could never optimize away the call to runMarkdown()
+// code so that the compiler can't optimize away the call to runMarkdown()
 var benchResultAnchor string
 
 func benchFile(b *testing.B, basename string) {

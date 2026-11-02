@@ -239,7 +239,7 @@ func isEndOfLink(char byte) bool {
 	return IsSpace(char) || char == '<'
 }
 
-// return the length of the given tag, or 0 is it's not valid
+// return the length of the given tag, or 0 if it's not valid
 func tagLength(data []byte) (autolink autolinkType, end int) {
 	if len(data) < 3 || data[0] != '<' {
 		return

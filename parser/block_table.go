@@ -60,7 +60,7 @@ func (p *Parser) tableRow(data []byte, columns []ast.CellAlignFlags, header bool
 			i++
 			colspan++
 		}
-		// only colspan > 1 make sense.
+		// only colspan > 1 makes sense.
 		if colspan < 2 {
 			colspan = 0
 		}
@@ -176,7 +176,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 		colCount--
 	}
 
-	// if the header looks like a underline, then we omit the header
+	// if the header looks like an underline, then we omit the header
 	// and parse the first line again as underline
 	if headerIsUnderline && !headerIsWithEmptyFields {
 		header = nil

@@ -30,7 +30,7 @@ func sanitizeHeadingID(text string) string {
 	return string(anchorName)
 }
 
-// Parse Block-level data.
+// isPrefixHeading returns true if data starts with a # heading.
 // Note: this function and many that it calls assume that
 // the input buffer ends with a newline.
 func (p *Parser) isPrefixHeading(data []byte) bool {
@@ -119,7 +119,7 @@ func (p *Parser) isPrefixSpecialHeading(data []byte) bool {
 	if data[1] != '#' {
 		return false
 	}
-	if data[2] == '#' { // we don't support level, so nack this.
+	if data[2] == '#' { // levels aren't supported, so reject this
 		return false
 	}
 
@@ -171,7 +171,7 @@ func (p *Parser) titleBlock(data []byte) int {
 	var i int
 	for idx, b := range splitData {
 		if !bytes.HasPrefix(b, []byte("%")) {
-			i = idx // - 1
+			i = idx
 			break
 		}
 	}

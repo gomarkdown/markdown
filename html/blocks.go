@@ -9,6 +9,9 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
+// prevVisibleBlock returns the previous sibling of n, skipping siblings that
+// emit no HTML, such as reference definitions, so inter-block spacing stays
+// stable.
 func prevVisibleBlock(n ast.Node) ast.Node {
 	for prev := ast.GetPrevNode(n); prev != nil; prev = ast.GetPrevNode(prev) {
 		if _, hidden := prev.(*ast.ReferenceDefinition); !hidden {
@@ -72,7 +75,7 @@ func (r *Renderer) Code(w io.Writer, node *ast.Code) {
 	r.Outs(w, "</code>")
 }
 
-// HTMLBlock write ast.HTMLBlock node
+// HTMLBlock writes ast.HTMLBlock node
 func (r *Renderer) HTMLBlock(w io.Writer, node *ast.HTMLBlock) {
 	if r.Opts.Flags&SkipHTML != 0 {
 		return

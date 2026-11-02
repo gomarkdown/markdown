@@ -134,7 +134,7 @@ func IsSpace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == '\v'
 }
 
-// IsLetter returns true if c is ascii letter
+// IsLetter returns true if c is an ASCII letter
 func IsLetter(c byte) bool { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' }
 
 // IsAlnum returns true if c is an ASCII digit or letter.

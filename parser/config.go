@@ -22,7 +22,7 @@ const (
 	Footnotes                                     // Pandoc-style footnotes
 	NoEmptyLineBeforeBlock                        // No need to insert an empty line to start a (code, quote, ordered list, unordered list) block
 	HeadingIDs                                    // Specify heading IDs with {#id}
-	Titleblock                                    // Titleblock ala pandoc
+	Titleblock                                    // Pandoc-style title block
 	AutoHeadingIDs                                // Create the heading ID from the text
 	BackslashLineBreak                            // Translate trailing backslashes into line breaks
 	DefinitionLists                               // Parse definition lists

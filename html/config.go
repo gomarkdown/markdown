@@ -9,7 +9,8 @@ import (
 // Flags control optional behavior of the HTML renderer.
 type Flags int
 
-// IDTag is the tag used for tag identification. It defaults to "id".
+// IDTag is the name of the HTML attribute that holds a block attribute's ID.
+// It defaults to "id".
 var IDTag = "id"
 
 const (

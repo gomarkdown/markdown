@@ -239,8 +239,6 @@ func (r *Renderer) Image(w io.Writer, node *ast.Image, entering bool) {
 	}
 }
 
-// prevVisibleBlock skips siblings that emit no HTML, such as
-// reference definitions, so inter-block spacing stays stable.
 // RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	if doc, ok := node.(*ast.Document); ok && entering {

@@ -27,7 +27,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 			return 0, nil
 		}
 		if p.extensions&SuperSubscript != 0 && c == '~' {
-			// potential subscript, no spaces, except when escaped, helperEmphasis does
+			// potential subscript: no spaces, except when escaped. helperEmphasis does
 			// not check that for us, so walk the bytes and check.
 			ret := skipUntilChar(data[1:], 0, c)
 			if ret == 0 || ret >= len(data)-1 {
@@ -168,7 +168,7 @@ func helperFindEmphChar(p *Parser, data []byte, c byte) int {
 func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 	i := 0
 
-	// skip two symbol if coming from emph3, as it detected a double emphasis case
+	// skip two symbols if coming from emph3, as it detected a double emphasis case
 	if len(data) > 1 && data[0] == c && data[1] == c {
 		i = 2
 	}
@@ -265,7 +265,7 @@ func helperTripleEmphasis(p *Parser, data []byte, offset int, c byte) (int, ast.
 		}
 		i += length
 
-		// skip whitespace preceded symbols
+		// skip symbols preceded by whitespace
 		if data[i] != c || IsSpace(data[i-1]) {
 			continue
 		}

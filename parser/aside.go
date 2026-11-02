@@ -6,12 +6,12 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// returns aisde prefix length
+// returns aside prefix length
 func asidePrefix(data []byte) int {
 	return prefixedBlock(data, "A>")
 }
 
-// parse a aside fragment
+// parse an aside fragment
 func (p *Parser) aside(data []byte) int {
 	var raw bytes.Buffer
 	beg, end := 0, 0
@@ -20,7 +20,7 @@ func (p *Parser) aside(data []byte) int {
 		end = beg
 		// Step over whole lines, collecting them. While doing that, check for
 		// fenced code and if one's found, incorporate it altogether,
-		// irregardless of any contents inside it
+		// regardless of any contents inside it
 		for end < len(data) && data[end] != '\n' {
 			if p.extensions&FencedCode != 0 {
 				if i := p.fencedCodeBlock(data[end:], false); i > 0 {

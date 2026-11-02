@@ -178,7 +178,7 @@ func math(_ *Parser, data []byte, offset int) (int, ast.Node) {
 	for end = 1; end < len(data) && data[end] != '$'; end++ {
 	}
 
-	// $ not match
+	// no matching $
 	if end == len(data) {
 		return 0, nil
 	}

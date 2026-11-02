@@ -207,7 +207,7 @@ func (p *Parser) closeUnmatchedBlocks() {
 }
 
 // Reference represents the details of a link.
-// See the documentation in Options for more details on use-case.
+// See Parser.ReferenceOverride for how it's used.
 type Reference struct {
 	// Link is usually the URL the reference points to.
 	Link string
@@ -238,12 +238,12 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		defer func() { p.commonMarkLazyLines = nil }()
 	}
 
-	// the code only works with Unix CR newlines so to make life easy for
-	// callers normalize newlines
+	// the code only works with Unix (LF) newlines, so to make life easy for
+	// callers, normalize newlines
 	input = NormalizeNewlines(input)
 
 	p.Block(input)
-	// Walk the tree and finish up some of unfinished blocks
+	// Walk the tree and finish up unfinished blocks
 	for p.tip != nil {
 		p.Finalize(p.tip)
 	}

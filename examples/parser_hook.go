@@ -63,7 +63,7 @@ func galleryRenderHook(w io.Writer, node ast.Node, entering bool) (ast.WalkStatu
 	if _, ok := node.(*Gallery); ok {
 		if entering {
 			// note: just for illustration purposes
-			// actual implemenation of gallery in HTML / JavaScript is long
+			// actual implementation of gallery in HTML / JavaScript is long
 			io.WriteString(w, "\n<gallery></gallery>\n\n")
 		}
 		return ast.GoToNext, true

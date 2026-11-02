@@ -823,14 +823,15 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	return ast.GoToNext
 }
 
-// RenderHeader renders header
+// RenderHeader reserves the labels of reference definitions in the document
+// when links are rendered in the footer.
 func (r *Renderer) RenderHeader(_ io.Writer, node ast.Node) {
 	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 {
 		r.reserveDefinedLabels(node)
 	}
 }
 
-// RenderFooter renders footer
+// RenderFooter writes the link definitions collected for the footer.
 func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
 	if r.C == nil || r.C.Flags&renderLinksInFooter == 0 || len(r.linkcache) == 0 {
 		return
