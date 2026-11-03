@@ -181,6 +181,9 @@ func TestCommonMarkAdversarialInputs(t *testing.T) {
 		"nested list markers":              strings.Repeat("- ", 16384) + "a\n",
 		"nested mixed list markers":        strings.Repeat("- ", 16384) + "*\n",
 		"nested quoted lists":              strings.Repeat("> - ", 8192) + "a\n",
+		"nested quotes with spaces":        strings.Repeat(">  ", 16384) + "a\n",
+		"nested quotes with tabs":          strings.Repeat(">\t", 16384) + "a\n",
+		"nested lists in quotes":           strings.Repeat("- >  ", 8192) + "a\n",
 	} {
 		t.Run(name, func(t *testing.T) {
 			p := parser.New()

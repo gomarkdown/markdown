@@ -69,13 +69,16 @@ func NewCommonMark() *Parser {
 	return p
 }
 
+// maxNesting limits how deeply blocks and inline content are nested.
+const maxNesting = 64
+
 // NewWithExtensions creates a markdown parser with the given extensions.
 func NewWithExtensions(extension Extensions) *Parser {
 	doc := &ast.Document{}
 	p := Parser{
 		refs:                 make(map[string]*reference),
 		refsRecord:           make(map[string]struct{}),
-		maxNesting:           64,
+		maxNesting:           maxNesting,
 		Doc:                  doc,
 		extensions:           extension,
 		tip:                  doc,

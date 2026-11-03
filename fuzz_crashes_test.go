@@ -252,3 +252,93 @@ func TestUnclosedMmarkIndexesLinear(t *testing.T) {
 	extensions := parser.CommonExtensions | parser.Mmark
 	parseWithParserShortTimeout(t, input, parser.NewWithExtensions(extensions))
 }
+
+// The search for the closer of an emphasis opener walked through every later
+// delimiter that can't close it, such as each ** for a single *, so a run of
+// openers was quadratic.
+func TestUnmatchedEmphasisRunsLinear(t *testing.T) {
+	for name, input := range map[string]string{
+		"double before bracket":       strings.Repeat("**[ ", 32*1024),
+		"double before bracket lines": strings.Repeat("**[\n", 32*1024),
+		"underscores":                 strings.Repeat("__[", 32*1024),
+		"strikethrough":               strings.Repeat("~~[", 32*1024),
+		// a failed search moved past an escaped delimiter as if it had found
+		// one and searched to the end of the buffer again
+		"escaped delimiters": strings.Repeat("*\\", 64*1024),
+	} {
+		t.Run(name, func(t *testing.T) {
+			parseWithShortTimeout(t, input)
+		})
+	}
+}
+
+// An unclosed inline attribute list after each link was scanned to the end of
+// the line.
+func TestUnclosedInlineAttributesLinear(t *testing.T) {
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.InlineAttributes)
+	parseWithParserShortTimeout(t, strings.Repeat("![a](b){", 64*1024), p)
+}
+
+func TestInlineAttributesBrace(t *testing.T) {
+	for input, want := range map[string]string{
+		`[a](b){title="x{y"}`: `<p><a href="b" title="x{y">a</a></p>` + "\n",
+		`[a](b){.x{y}`:        `<p><a href="b">a</a>{.x{y}</p>` + "\n",
+		`[a](b){.x}{.y}`:      `<p><a href="b" class="x">a</a>{.y}</p>` + "\n",
+	} {
+		p := parser.NewWithExtensions(parser.CommonExtensions | parser.InlineAttributes)
+		if got := string(ToHTML([]byte(input), p, nil)); got != want {
+			t.Errorf("%s: got %q, want %q", input, got, want)
+		}
+	}
+}
+
+// Each unclosed HTML comment block searched for "-->" to the end of the
+// buffer, also when a later "-->" can't end it.
+func TestUnclosedHTMLCommentBlocksLinear(t *testing.T) {
+	for name, input := range map[string]string{
+		"unclosed":         strings.Repeat("<!--\n\n", 64*1024),
+		"closer not alone": strings.Repeat("<!--\n\n", 64*1024) + "-->x\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			for _, exts := range []parser.Extensions{parser.CommonExtensions, parser.CommonExtensions | parser.LaxHTMLBlocks | parser.MarkdownInHTML} {
+				parseWithParserShortTimeout(t, input, parser.NewWithExtensions(exts))
+			}
+		})
+	}
+}
+
+func TestHTMLCommentBlocks(t *testing.T) {
+	for input, want := range map[string]string{
+		"<!-- a -->\n\nb\n":      "<!-- a -->\n\n<p>b</p>\n",
+		"<!-->\n\nb\n":           "<p>&lt;!&ndash;&gt;</p>\n\n<p>b</p>\n",
+		"<!-- a --> x\n\nb\n":    "<p><!-- a --> x</p>\n\n<p>b</p>\n",
+		"a\n<!-- b -->\n\nc\n":   "<p>a\n<!-- b --></p>\n\n<p>c</p>\n",
+		"<!--\na\n-->\n\nb\n":    "<!--\na\n-->\n\n<p>b</p>\n",
+		"<!-- a\n\nb -->\n\nc\n": "<!-- a\n\nb -->\n\n<p>c</p>\n",
+	} {
+		if got := string(ToHTML([]byte(input), nil, nil)); got != want {
+			t.Errorf("%q: got %q, want %q", input, got, want)
+		}
+	}
+}
+
+// Each title block split the rest of the document into lines.
+func TestTitleBlocksLinear(t *testing.T) {
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.Titleblock)
+	parseWithParserShortTimeout(t, strings.Repeat("% a\n\n", 64*1024), p)
+}
+
+func TestTitleBlocks(t *testing.T) {
+	for input, want := range map[string]string{
+		"% Title\n% Author\n\ntext\n": "<h1 class=\"title\">Title\nAuthor</h1>\n\n<p>text</p>\n",
+		"% Title\ntext\n":             "<h1 class=\"title\">Title</h1>\n\n<p>text</p>\n",
+		// without a newline at the end it's not a title block, and there used
+		// to be an empty one before the text
+		"%a\n%b": "<p>%a\n%b</p>\n",
+	} {
+		p := parser.NewWithExtensions(parser.CommonExtensions | parser.Titleblock)
+		if got := string(ToHTML([]byte(input), p, nil)); got != want {
+			t.Errorf("%q: got %q, want %q", input, got, want)
+		}
+	}
+}

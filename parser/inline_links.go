@@ -10,11 +10,13 @@ func (p *Parser) inlineHTMLComment(data []byte) int {
 	if !bytes.HasPrefix(data, []byte("<!--")) {
 		return 0
 	}
-	i := bytes.Index(data[3:], commentEnd)
+	// the block index finds the end without scanning the rest of the buffer
+	// for every unclosed comment
+	i := p.blockIndex.commentEnd(data, 3)
 	if i < 0 {
 		return 0
 	}
-	return i + 3 + len(commentEnd)
+	return i + len(commentEnd)
 }
 
 func stripMailto(link []byte) []byte {

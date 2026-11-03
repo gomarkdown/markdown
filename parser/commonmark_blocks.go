@@ -94,8 +94,13 @@ func commonMarkDedentFrom(data []byte, startColumn, width int) []byte {
 			i++
 		}
 	}
-	if column > startColumn+width {
-		return append(bytes.Repeat([]byte{' '}, column-startColumn-width), data[i:]...)
+	if extra := column - startColumn - width; extra > 0 {
+		// spaces before data[i] can stay as they are, which saves copying the
+		// rest of the line; only part of a tab has to become spaces
+		if extra <= i && bytes.Count(data[i-extra:i], []byte{' '}) == extra {
+			return data[i-extra:]
+		}
+		return append(bytes.Repeat([]byte{' '}, extra), data[i:]...)
 	}
 	return data[i:]
 }
@@ -481,7 +486,8 @@ func (s *commonMarkContinuation) feed(line []byte) {
 			break
 		}
 	}
-	for {
+	// content nested deeper than maxNesting is not parsed
+	for depth := 0; depth < maxNesting; depth++ {
 		if prefix := commonMarkQuotePrefix(line); prefix > 0 {
 			line = commonMarkQuoteContent(line, prefix)
 			continue

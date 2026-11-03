@@ -173,10 +173,20 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 		i = 2
 	}
 
+	searches := p.emphSearches(data, c, false)
+	defer searches.done()
 	for i < len(data) {
+		if searches.failedAt(i) {
+			return 0, nil
+		}
 		length := helperFindEmphChar(p, data[i:], c)
 		i += length
 		if i >= len(data) {
+			return 0, nil
+		}
+		// helperFindEmphChar returns 0 both for a delimiter at data[i] and for
+		// no delimiter at all
+		if length == 0 && data[i] != c {
 			return 0, nil
 		}
 
@@ -196,6 +206,7 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 				}
 			}
 
+			searches.found()
 			emph := &ast.Emph{}
 			p.Inline(emph, data[:i])
 			return i + 1, emph
@@ -213,7 +224,12 @@ func helperEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 	i := 0
 
+	searches := p.emphSearches(data, c, true)
+	defer searches.done()
 	for i < len(data) {
+		if searches.failedAt(i) {
+			return 0, nil
+		}
 		length := helperFindEmphChar(p, data[i:], c)
 		if length == 0 {
 			return 0, nil
@@ -230,6 +246,7 @@ func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 				}
 			}
 
+			searches.found()
 			var node ast.Node = &ast.Strong{}
 			if c == '~' {
 				node = &ast.Del{}
@@ -240,6 +257,49 @@ func helperDoubleEmphasis(p *Parser, data []byte, c byte) (int, ast.Node) {
 		i++
 	}
 	return 0, nil
+}
+
+// emphSearchLog records where a search for the closer of emphasis has been,
+// so that if it fails, later searches that get to the same places stop there.
+type emphSearchLog struct {
+	table   *bracketTable
+	base    int
+	c       byte
+	double  bool
+	visited []emphSearch
+	success bool
+}
+
+// emphSearches starts a search in data, which must be a suffix of the buffer
+// of the current Inline call for failures to be remembered.
+func (p *Parser) emphSearches(data []byte, c byte, double bool) *emphSearchLog {
+	log := &emphSearchLog{c: c, double: double}
+	if base, ok := sliceOffset(p.brackets.data, data); ok {
+		log.table, log.base = &p.brackets, base
+	}
+	return log
+}
+
+// failedAt reports whether a search from data[i] is known to fail, and
+// otherwise records that the search got there.
+func (l *emphSearchLog) failedAt(i int) bool {
+	if l.table == nil {
+		return false
+	}
+	s := emphSearch{pos: l.base + i, c: l.c, double: l.double}
+	if l.table.emphFailed(s) {
+		return true
+	}
+	l.visited = append(l.visited, s)
+	return false
+}
+
+func (l *emphSearchLog) found() { l.success = true }
+
+func (l *emphSearchLog) done() {
+	if l.table != nil && !l.success {
+		l.table.markEmphFailed(l.visited)
+	}
 }
 
 // hasTrailingEmphOpener reports whether the final c is preceded by a boundary
