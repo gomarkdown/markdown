@@ -118,6 +118,42 @@ type Parser struct {
 
 	// Line-oriented indexes for the current Block() buffer.
 	blockIndex blockIndex
+
+	// inputSize is the size of the document being parsed, which sets
+	// expansionLimit.
+	inputSize int
+	// refExpansion is how many bytes of destinations and titles references
+	// have expanded to, and paddedCells how many empty cells were added to
+	// table rows with too few cells.
+	refExpansion int
+	paddedCells  int
+}
+
+// minExpansionLimit is the smallest expansionLimit.
+const minExpansionLimit = 100 * 1024
+
+// expansionLimit bounds how much output short input can add: a short
+// reference to a long destination used many times, or many table rows with
+// one cell under a header with many columns, would otherwise make the output
+// quadratic in the size of the document. Like cmark and cmark-gfm, it's the
+// size of the document or 100KB, whichever is larger.
+func (p *Parser) expansionLimit() int {
+	return max(p.inputSize, minExpansionLimit)
+}
+
+// expandRef reports whether a link can use ref, which is not the case when
+// references have expanded to more than expansionLimit. References from
+// ReferenceOverride don't count.
+func (p *Parser) expandRef(ref *reference) bool {
+	if ref.overridden {
+		return true
+	}
+	size := len(ref.link) + len(ref.title)
+	if p.refExpansion+size > p.expansionLimit() {
+		return false
+	}
+	p.refExpansion += size
+	return true
 }
 
 func (p *Parser) getRef(refid string) (ref *reference, found bool) {
@@ -128,9 +164,10 @@ func (p *Parser) getRef(refid string) (ref *reference, found bool) {
 				return nil, false
 			}
 			return &reference{
-				link:  []byte(r.Link),
-				title: []byte(r.Title),
-				text:  []byte(r.Text)}, true
+				link:       []byte(r.Link),
+				title:      []byte(r.Title),
+				text:       []byte(r.Text),
+				overridden: true}, true
 		}
 	}
 	// refs are case insensitive
@@ -233,6 +270,7 @@ func (p *Parser) Parse(input []byte) ast.Node {
 		panic("Parser is not reusable. Must create new Parser for each Parse() call.")
 	}
 	p.didParse = true
+	p.inputSize = len(input)
 
 	if p.Opts.Flags&CommonMark != 0 {
 		p.Doc.(*ast.Document).CommonMark = true

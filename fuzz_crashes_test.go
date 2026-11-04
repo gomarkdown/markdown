@@ -342,3 +342,80 @@ func TestTitleBlocks(t *testing.T) {
 		}
 	}
 }
+
+// A short reference to a long destination used many times made the output
+// quadratic in the input. Like cmark, references stop being resolved once
+// they have expanded to more than the size of the document or 100KB.
+func TestReferenceExpansionLimit(t *testing.T) {
+	const n = 256 * 1024
+	url := "/" + strings.Repeat("a", n/2)
+	for name, input := range map[string]string{
+		"links":     "[r]: " + url + "\n\n" + strings.Repeat("[r]", n/6) + "\n",
+		"images":    "[r]: " + url + "\n\n" + strings.Repeat("![r]", n/8) + "\n",
+		"full":      "[r]: " + url + "\n\n" + strings.Repeat("[x][r]", n/12) + "\n",
+		"collapsed": "[r]: " + url + "\n\n" + strings.Repeat("[r][]", n/10) + "\n",
+		"titles":    "[r]: /u \"" + strings.Repeat("a", n/2) + "\"\n\n" + strings.Repeat("[r]", n/6) + "\n",
+	} {
+		for pname, p := range map[string]func() *parser.Parser{"legacy": parser.New, "commonmark": parser.NewCommonMark} {
+			out := ToHTML([]byte(input), p(), nil)
+			if len(out) > 4*len(input) {
+				t.Errorf("%s %s: %d bytes of input made %d bytes of output", pname, name, len(input), len(out))
+			}
+			if !strings.Contains(string(out), `href="`+url) && !strings.Contains(string(out), `src="`+url) && name != "titles" {
+				t.Errorf("%s %s: the first references were not resolved", pname, name)
+			}
+		}
+	}
+}
+
+func TestReferenceExpansionBelowLimit(t *testing.T) {
+	// 1000 uses of a 50 byte destination are well below the limit
+	url := "/" + strings.Repeat("a", 49)
+	input := "[r]: " + url + "\n\n" + strings.Repeat("[r] a ", 1000) + "\n"
+	for pname, p := range map[string]func() *parser.Parser{"legacy": parser.New, "commonmark": parser.NewCommonMark} {
+		if got := strings.Count(string(ToHTML([]byte(input), p(), nil)), `href="`+url+`"`); got != 1000 {
+			t.Errorf("%s: %d of 1000 references resolved", pname, got)
+		}
+	}
+}
+
+// References from ReferenceOverride come from the application, and the text
+// of a footnote is rendered once however often it's referenced, so neither
+// counts toward the limit.
+func TestReferenceExpansionExceptions(t *testing.T) {
+	long := strings.Repeat("a", 64*1024)
+	p := parser.New()
+	p.ReferenceOverride = func(reference string) (*parser.Reference, bool) {
+		return &parser.Reference{Link: "/" + long}, reference == "r"
+	}
+	if got := strings.Count(string(ToHTML([]byte(strings.Repeat("[r] a ", 100)), p, nil)), "<a "); got != 100 {
+		t.Errorf("ReferenceOverride: %d of 100 references resolved", got)
+	}
+
+	p = parser.NewWithExtensions(parser.CommonExtensions | parser.Footnotes)
+	input := strings.Repeat("a[^1] ", 100) + "\n\n[^1]: " + long + "\n"
+	if got := strings.Count(string(ToHTML([]byte(input), p, nil)), `<sup class="footnote-ref"`); got != 100 {
+		t.Errorf("footnotes: %d of 100 references resolved", got)
+	}
+}
+
+// Rows with one cell under a header with many columns were each padded with
+// empty cells, which made the output quadratic in the input. Like
+// cmark-gfm, padding stops after the size of the document or 100KB cells.
+func TestTablePaddingLimit(t *testing.T) {
+	const cols = 8 * 1024
+	input := strings.Repeat("|a", cols) + "|\n" + strings.Repeat("|-", cols) + "|\n" + strings.Repeat("|x|\n", cols)
+	out := ToHTML([]byte(input), nil, nil)
+	if len(out) > 2*1024*1024 {
+		t.Errorf("%d bytes of input made %d bytes of output", len(input), len(out))
+	}
+	if got := strings.Count(string(out), "<td>x</td>"); got != cols {
+		t.Errorf("%d of %d rows kept their cell", got, cols)
+	}
+
+	// a short table is padded as before
+	got := string(ToHTML([]byte("|a|b|c|\n|-|-|-|\n|x|\n|y|z|\n"), nil, nil))
+	if strings.Count(got, "<td></td>") != 3 {
+		t.Errorf("short rows were not padded: %q", got)
+	}
+}

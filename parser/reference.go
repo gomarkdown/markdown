@@ -18,6 +18,8 @@ type reference struct {
 	footnote ast.Node // a link to the Item node within a list of footnotes
 
 	text []byte // only gets populated by refOverride feature with Reference.Text
+
+	overridden bool // comes from ReferenceOverride
 }
 
 // Check whether or not data starts with a reference link.
