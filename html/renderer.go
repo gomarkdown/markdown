@@ -162,7 +162,7 @@ func (r *Renderer) linkEnter(w io.Writer, link *ast.Link) {
 		titleBuff.WriteByte('"')
 		attrs = append(attrs, titleBuff.String())
 	}
-	attrs = append(attrs, BlockAttrs(link)...)
+	attrs = append(attrs, r.blockAttrs(link, attrNames(attrs)...)...)
 	attrs = coalesceClassAttrs(attrs)
 	r.OutTag(w, "<a", attrs)
 }
@@ -194,7 +194,7 @@ func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
 		return
 	}
 	src := AddAbsPrefixToImage(r.outputDest(image.Destination), r.Opts.AbsolutePrefix)
-	attrs := BlockAttrs(image)
+	attrs := r.blockAttrs(image, imageAttrNames(r, image.Title)...)
 	if r.Opts.Flags&LazyLoadImages != 0 {
 		attrs = append(attrs, `loading="lazy"`)
 	}
@@ -202,6 +202,19 @@ func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
 	r.Outs(w, tagStart("<img", attrs)+` src="`)
 	EscapeHTML(w, src)
 	r.Outs(w, `" alt="`)
+}
+
+// imageAttrNames returns the names of the attributes the renderer writes on
+// an image with the given title.
+func imageAttrNames(r *Renderer, title []byte) []string {
+	names := []string{"src", "alt"}
+	if len(title) > 0 || (r.commonMark && title != nil) {
+		names = append(names, "title")
+	}
+	if r.Opts.Flags&LazyLoadImages != 0 {
+		names = append(names, "loading")
+	}
+	return names
 }
 
 func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {
@@ -271,10 +284,10 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.OutOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		tag := TagWithAttributes("<blockquote", BlockAttrs(node))
+		tag := TagWithAttributes("<blockquote", r.blockAttrs(node))
 		r.OutOneOfCr(w, entering, tag, "</blockquote>")
 	case *ast.Aside:
-		tag := TagWithAttributes("<aside", BlockAttrs(node))
+		tag := TagWithAttributes("<aside", r.blockAttrs(node))
 		r.OutOneOfCr(w, entering, tag, "</aside>")
 	case *ast.Link:
 		r.Link(w, node, entering)
@@ -312,7 +325,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.ListItem:
 		r.ListItem(w, node, entering)
 	case *ast.Table:
-		tag := TagWithAttributes("<table", BlockAttrs(node))
+		tag := TagWithAttributes("<table", r.blockAttrs(node))
 		r.OutOneOfCr(w, entering, tag, "</table>")
 	case *ast.TableCell:
 		r.TableCell(w, node, entering)
@@ -342,13 +355,13 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Subscript:
 		r.Outs(w, "<sub>")
 		if entering {
-			Escape(w, node.Literal)
+			EscapeHTML(w, removeBackslashEscapes(node.Literal))
 		}
 		r.Outs(w, "</sub>")
 	case *ast.Superscript:
 		r.Outs(w, "<sup>")
 		if entering {
-			Escape(w, node.Literal)
+			EscapeHTML(w, removeBackslashEscapes(node.Literal))
 		}
 		r.Outs(w, "</sup>")
 	case *ast.Footnotes:

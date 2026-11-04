@@ -440,3 +440,65 @@ func TestHardLineBreakDoesNotApplyInsideHTMLBlock(t *testing.T) {
 	}
 	doTestsParam(t, tests, params)
 }
+
+func renderAttrs(t *testing.T, input string, flags html.Flags) string {
+	t.Helper()
+	exts := parser.CommonExtensions | parser.Attributes | parser.InlineAttributes | parser.OrderedListStart
+	r := html.NewRenderer(html.RendererOptions{Flags: flags})
+	return string(ToHTML([]byte(input), parser.NewWithExtensions(exts), r))
+}
+
+// With SkipHTML or Safelink, attributes from the Attributes and
+// InlineAttributes extensions could still run script or replace a destination
+// that Safelink had checked.
+func TestDocumentAttributesUntrusted(t *testing.T) {
+	for _, flags := range []html.Flags{html.SkipHTML, html.Safelink} {
+		for input, want := range map[string]string{
+			"{onmouseover=\"alert(1)\"}\npara\n":        "<p>para</p>\n",
+			"[x](/u){onclick=\"alert(1)\"}\n":           "<p><a href=\"/u\">x</a></p>\n",
+			"{style=\"color:red\"}\n# h\n":              "<h1>h</h1>\n",
+			"![x](/u.png){src=\"javascript:alert(1)\"}": "<p><img src=\"/u.png\" alt=\"x\" /></p>\n",
+			"[x](/u){href=\"javascript:alert(1)\"}\n":   "<p><a href=\"/u\">x</a></p>\n",
+			// attributes that can't run script or load anything stay
+			"{#i .c lang=\"en\" data-x=\"1\" aria-label=\"a\" width=\"5\"}\npara\n": "<p id=\"i\" class=\"c\" aria-label=\"a\" data-x=\"1\" lang=\"en\" width=\"5\">para</p>\n",
+			"[x](/u){title=\"t\" data-x=\"1\"}\n":                                   "<p><a href=\"/u\" data-x=\"1\" title=\"t\">x</a></p>\n",
+		} {
+			if got := renderAttrs(t, input, flags); got != want {
+				t.Errorf("flags %d, %q:\ngot  %q\nwant %q", flags, input, got, want)
+			}
+		}
+	}
+}
+
+// Without those flags a document can set any attribute, but not one that
+// the renderer writes on the element.
+func TestDocumentAttributesTrusted(t *testing.T) {
+	for input, want := range map[string]string{
+		"[x](http://a.b){onclick=\"f()\" target=\"_blank\"}\n": "<p><a href=\"http://a.b\" onclick=\"f()\" target=\"_blank\">x</a></p>\n",
+		"[x](/u){href=\"/other\" data-x=\"1\"}\n":              "<p><a href=\"/u\" data-x=\"1\">x</a></p>\n",
+		"![x](/u.png){src=\"/other.png\" width=\"10\"}\n":      "<p><img width=\"10\" src=\"/u.png\" alt=\"x\" /></p>\n",
+		"{start=\"9\"}\n3. a\n":                                "<ol start=\"3\">\n<li>a</li>\n</ol>\n",
+		"{style=\"color:red\"}\n# h\n":                         "<h1 style=\"color:red\">h</h1>\n",
+	} {
+		if got := renderAttrs(t, input, 0); got != want {
+			t.Errorf("%q:\ngot  %q\nwant %q", input, got, want)
+		}
+	}
+	// the renderer's own target takes the place of the document's
+	got := renderAttrs(t, "[x](http://a.b){target=\"_self\"}\n", html.HrefTargetBlank)
+	if want := "<p><a href=\"http://a.b\" target=\"_blank\">x</a></p>\n"; got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+// Super- and subscripts were written without escaping HTML, so they could
+// add markup even with SkipHTML.
+func TestSuperSubscriptEscapeHTML(t *testing.T) {
+	exts := parser.CommonExtensions | parser.SuperSubscript
+	r := html.NewRenderer(html.RendererOptions{Flags: html.SkipHTML})
+	got := string(ToHTML([]byte("a^<img/src/onerror=alert(1)>^ b~<b>~ c^\\*^\n"), parser.NewWithExtensions(exts), r))
+	want := "<p>a<sup>&lt;img/src/onerror=alert(1)&gt;</sup> b<sub>&lt;b&gt;</sub> c<sup>*</sup></p>\n"
+	if got != want {
+		t.Errorf("got  %q\nwant %q", got, want)
+	}
+}

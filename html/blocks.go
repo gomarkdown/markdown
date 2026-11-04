@@ -38,7 +38,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 		}
 	}
 
-	tag := TagWithAttributes("<"+r.paragraphTag(), BlockAttrs(para))
+	tag := TagWithAttributes("<"+r.paragraphTag(), r.blockAttrs(para))
 	r.Outs(w, tag)
 }
 
@@ -127,7 +127,7 @@ func (r *Renderer) HeadingEnter(w io.Writer, hdr *ast.Heading) {
 		id := r.MakeUniqueHeadingID(hdr)
 		attrs = append(attrs, fmt.Sprintf(`id="%s"`, escapeAttr(id)))
 	}
-	attrs = append(attrs, BlockAttrs(hdr)...)
+	attrs = append(attrs, r.blockAttrs(hdr)...)
 	attrs = coalesceClassAttrs(attrs)
 	r.CR(w)
 	r.OutTag(w, HeadingOpenTagFromLevel(hdr.Level), attrs)
@@ -152,7 +152,7 @@ func (r *Renderer) Heading(w io.Writer, hdr *ast.Heading, entering bool) {
 // HorizontalRule writes ast.HorizontalRule node
 func (r *Renderer) HorizontalRule(w io.Writer, node *ast.HorizontalRule) {
 	r.CR(w)
-	r.OutHRTag(w, BlockAttrs(node))
+	r.OutHRTag(w, r.blockAttrs(node))
 	r.CR(w)
 }
 
@@ -193,7 +193,7 @@ Parse:
 // CodeBlock writes ast.CodeBlock node
 func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	attrs := appendLanguageAttr(nil, codeBlock.Info)
-	attrs = append(attrs, BlockAttrs(codeBlock)...)
+	attrs = append(attrs, r.blockAttrs(codeBlock)...)
 	attrs = coalesceClassAttrs(attrs)
 	r.CR(w)
 
