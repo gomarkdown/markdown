@@ -265,6 +265,14 @@ type Reference struct {
 // Parse can be called only once on a Parser and panics if called again.
 // Create a new Parser for each document. Inline and Block can be called
 // any number of times, for example from parser hooks.
+//
+// Parsing takes time linear in the size of input, and limits keep the tree
+// from growing much faster than input for documents that aren't trusted:
+// blocks and inline content are nested at most 64 levels deep, references
+// stop being resolved once they have expanded to more destination and title
+// bytes than the size of input or 100KB, whichever is larger, and table rows
+// stop being padded with empty cells after as many cells. Footnotes and
+// references from ReferenceOverride don't count toward the limit.
 func (p *Parser) Parse(input []byte) ast.Node {
 	if p.didParse {
 		panic("Parser is not reusable. Must create new Parser for each Parse() call.")

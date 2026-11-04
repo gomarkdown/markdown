@@ -10,8 +10,8 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 )
 
-// Renderer renders to markdown. Allows converting to a canonical
-// form.
+// Renderer renders a parsed document as Markdown. Create one with
+// NewRenderer. A Renderer can render more than one document.
 type Renderer struct {
 	orderedListCounter map[int]int
 
@@ -28,14 +28,18 @@ type Renderer struct {
 
 const listIndentSize = 4
 
+// RendererConfig holds the options of a Renderer, set with RendererOpt
+// functions such as WithRenderInFooter.
 type RendererConfig struct {
 	Flags Flags
 }
 
+// Flags are options of a Renderer.
 type Flags int
 
 const renderLinksInFooter Flags = 1 << iota
 
+// RendererOpt sets an option of a Renderer created with NewRenderer.
 type RendererOpt func(c *RendererConfig)
 
 // NewRenderer returns a Markdown renderer.
@@ -50,6 +54,8 @@ func NewRenderer(opts ...RendererOpt) *Renderer {
 	}
 }
 
+// WithRenderInFooter sets whether links are written as references with their
+// definitions at the end of the document, instead of inline.
 func WithRenderInFooter(renderInFooter bool) RendererOpt {
 	return func(c *RendererConfig) {
 		if renderInFooter {

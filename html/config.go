@@ -15,10 +15,10 @@ var IDTag = "id"
 
 const (
 	FlagsNone               Flags = 0
-	SkipHTML                Flags = 1 << iota // Skip raw HTML blocks.
+	SkipHTML                Flags = 1 << iota // Skip raw HTML, and keep only document attributes that can't run script or load anything.
 	SkipImages                                // Skip embedded images.
 	SkipLinks                                 // Render link text without links.
-	Safelink                                  // Allow only trusted URL schemes in links and images. Doesn't check hosts or sanitize HTML.
+	Safelink                                  // Allow only trusted URL schemes in links and images, and keep only safe document attributes. Doesn't check hosts or sanitize HTML.
 	NofollowLinks                             // Add rel="nofollow" to external links.
 	NoreferrerLinks                           // Add rel="noreferrer" to external links.
 	NoopenerLinks                             // Add rel="noopener" to external links.
