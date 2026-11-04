@@ -29,7 +29,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 		if p.extensions&SuperSubscript != 0 && c == '~' {
 			// potential subscript: no spaces, except when escaped. helperEmphasis does
 			// not check that for us, so walk the bytes and check.
-			ret := skipUntilChar(data[1:], 0, c)
+			ret := skipUntilUnescapedChar(data[1:], 0, c)
 			if ret == 0 || ret >= len(data)-1 {
 				// empty, or no closing '~'
 				return 0, nil

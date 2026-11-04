@@ -491,6 +491,23 @@ func TestDocumentAttributesTrusted(t *testing.T) {
 	}
 }
 
+// An escaped delimiter ended a super- or subscript anyway.
+func TestSuperSubscriptEscapedDelimiter(t *testing.T) {
+	for input, want := range map[string]string{
+		`H~2\~x~O`: "<p>H<sub>2~x</sub>O</p>\n",
+		`a^b\^c^d`: "<p>a<sup>b^c</sup>d</p>\n",
+		`~a\~`:     "<p>~a~</p>\n",
+		`x^\^^`:    "<p>x<sup>^</sup></p>\n",
+		`a^b\\^c`:  "<p>a<sup>b\\</sup>c</p>\n",
+		`H~2~O`:    "<p>H<sub>2</sub>O</p>\n",
+	} {
+		p := parser.NewWithExtensions(parser.CommonExtensions | parser.SuperSubscript)
+		if got := string(ToHTML([]byte(input+"\n"), p, nil)); got != want {
+			t.Errorf("%q: got %q, want %q", input, got, want)
+		}
+	}
+}
+
 // Super- and subscripts were written without escaping HTML, so they could
 // add markup even with SkipHTML.
 func TestSuperSubscriptEscapeHTML(t *testing.T) {

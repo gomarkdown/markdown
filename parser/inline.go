@@ -148,7 +148,7 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 	}
 
 	if p.extensions&SuperSubscript != 0 {
-		ret := skipUntilChar(data[offset:], 1, '^')
+		ret := skipUntilUnescapedChar(data[offset:], 1, '^')
 		if ret >= len(data)-offset {
 			// no closing '^'
 			return 0, nil

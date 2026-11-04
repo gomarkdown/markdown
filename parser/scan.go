@@ -58,6 +58,18 @@ func skipUntilChar(data []byte, i int, c byte) int {
 	return i
 }
 
+// skipUntilUnescapedChar is like skipUntilChar for a c that is not escaped
+// with a backslash.
+func skipUntilUnescapedChar(data []byte, i int, c byte) int {
+	for {
+		i = skipUntilChar(data, i, c)
+		if i >= len(data) || !isEscape(data, i) {
+			return i
+		}
+		i++
+	}
+}
+
 func skipAlnum(data []byte, i int) int {
 	for i < len(data) && IsAlnum(data[i]) {
 		i++
