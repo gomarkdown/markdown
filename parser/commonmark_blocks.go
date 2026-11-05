@@ -32,6 +32,10 @@ func (p *Parser) commonMarkBlocks(data []byte) (loose bool) {
 		}
 		blank = false
 		p.tip = parent
+		if n := p.commonMarkHook(data); n > 0 {
+			data = data[n:]
+			continue
+		}
 		n := p.commonMarkBlock(data)
 		if n <= 0 {
 			panic("CommonMark block parser made no progress")
@@ -293,7 +297,7 @@ func (p *Parser) commonMarkBlock(data []byte) int {
 		return p.commonMarkCode(data)
 	}
 	if level, content := commonMarkHeading(line); level > 0 {
-		p.AddBlock(&ast.Heading{Level: level, Container: ast.Container{Content: content}})
+		p.commonMarkAddHeading(level, content)
 		return end
 	}
 	if marker, count, indent, info := commonMarkFence(line); marker != 0 {
@@ -312,7 +316,61 @@ func (p *Parser) commonMarkBlock(data []byte) int {
 	if m, ok := commonMarkListPrefix(line); ok {
 		return p.commonMarkList(data, m)
 	}
+	if n := p.commonMarkTable(data); n > 0 {
+		return n
+	}
 	return p.commonMarkParagraph(data)
+}
+
+// commonMarkHook runs Opts.ParserHook at the start of a block, like the
+// historical parser does, and returns how much of data it consumed.
+func (p *Parser) commonMarkHook(data []byte) int {
+	if !p.commonMarkHooks || p.Opts.ParserHook == nil {
+		return 0
+	}
+	node, blockData, consumed := p.Opts.ParserHook(data)
+	if consumed <= 0 {
+		return 0
+	}
+	if node != nil {
+		p.AddBlock(node)
+		if blockData != nil {
+			p.Block(blockData)
+			p.Finalize(node)
+		}
+	}
+	return consumed
+}
+
+func (p *Parser) commonMarkAddHeading(level int, content []byte) {
+	heading := &ast.Heading{Level: level, Container: ast.Container{Content: content}}
+	if p.commonMarkExtensions&AutoHeadingIDs != 0 {
+		heading.HeadingID = sanitizeHeadingID(string(content))
+		p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, heading)
+	}
+	p.AddBlock(heading)
+}
+
+// commonMarkTableStart reports whether data starts with the header and
+// delimiter rows of a table.
+func (p *Parser) commonMarkTableStart(data []byte) bool {
+	if p.commonMarkExtensions&Tables == 0 {
+		return false
+	}
+	line, _ := commonMarkLine(data)
+	if commonMarkIndent(line) > 3 || bytes.IndexByte(line, '|') < 0 {
+		return false
+	}
+	size, _, _ := p.tableHeader(data[skipHSpace(data, 0):], false)
+	return size > 0
+}
+
+func (p *Parser) commonMarkTable(data []byte) int {
+	if !p.commonMarkTableStart(data) {
+		return 0
+	}
+	indent := skipHSpace(data, 0)
+	return indent + p.table(data[indent:])
 }
 
 func (p *Parser) commonMarkCode(data []byte) int {
@@ -388,10 +446,10 @@ func (p *Parser) commonMarkParagraph(data []byte) int {
 		}
 		if i > start {
 			if level := commonMarkSetext(line); level > 0 && !p.commonMarkLazy(data[i:]) {
-				p.AddBlock(&ast.Heading{Level: level, Container: ast.Container{Content: bytes.Trim(work.Bytes(), " \t\n")}})
+				p.commonMarkAddHeading(level, bytes.Trim(work.Bytes(), " \t\n"))
 				return i + end
 			}
-			if commonMarkInterrupts(line) {
+			if commonMarkInterrupts(line) || p.commonMarkTableStart(data[i:]) {
 				break
 			}
 		}

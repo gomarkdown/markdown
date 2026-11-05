@@ -197,33 +197,39 @@ func FuzzCommonMark(f *testing.F) {
 	for _, example := range commonMarkExamples(f) {
 		f.Add([]byte(example.Markdown))
 	}
+	f.Add([]byte("a | b\n--|--\n1 | ~~2~~\n\nsee http://a.com/(x)."))
 	f.Fuzz(func(t *testing.T, input []byte) {
-		original := bytes.Clone(input)
 		p := parser.New()
 		p.Opts.Flags = parser.CommonMark
-		doc := p.Parse(input)
-		ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
-			if !entering {
-				return ast.GoToNext
-			}
-			for i, child := range node.GetChildren() {
-				if child.GetParent() != node {
-					t.Fatal("incorrect AST parent")
-				}
-				if i > 0 && ast.GetPrevNode(child) != node.GetChildren()[i-1] {
-					t.Fatal("incorrect AST previous sibling")
-				}
-				if i+1 < len(node.GetChildren()) && ast.GetNextNode(child) != node.GetChildren()[i+1] {
-					t.Fatal("incorrect AST next sibling")
-				}
-			}
-			return ast.GoToNext
-		})
-		Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.UseXHTML}))
-		if !bytes.Equal(input, original) {
-			t.Fatal("parser modified the input")
-		}
+		fuzzCommonMark(t, input, p)
+		fuzzCommonMark(t, input, parser.NewCommonMarkWithExtensions(parser.CommonMarkExtensions))
 	})
+}
+
+func fuzzCommonMark(t *testing.T, input []byte, p *parser.Parser) {
+	original := bytes.Clone(input)
+	doc := p.Parse(input)
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.GoToNext
+		}
+		for i, child := range node.GetChildren() {
+			if child.GetParent() != node {
+				t.Fatal("incorrect AST parent")
+			}
+			if i > 0 && ast.GetPrevNode(child) != node.GetChildren()[i-1] {
+				t.Fatal("incorrect AST previous sibling")
+			}
+			if i+1 < len(node.GetChildren()) && ast.GetNextNode(child) != node.GetChildren()[i+1] {
+				t.Fatal("incorrect AST next sibling")
+			}
+		}
+		return ast.GoToNext
+	})
+	Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.UseXHTML}))
+	if !bytes.Equal(input, original) {
+		t.Fatal("parser modified the input")
+	}
 }
 
 func TestCommonMarkASTIntegration(t *testing.T) {

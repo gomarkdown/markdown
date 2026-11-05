@@ -88,15 +88,18 @@ func commonMarkEmphasis(bottom *commonMarkDelimiter, last **commonMarkDelimiter)
 	}
 	// Remember failed searches separately for each delimiter and rule-of-three
 	// class, so unmatched runs do not repeatedly search the same prefix.
-	var floors [2][3][2]*commonMarkDelimiter
+	var floors [3][3][2]*commonMarkDelimiter
 	for closer != nil {
 		if !closer.close {
 			closer = closer.next
 			continue
 		}
 		kind := 0
-		if closer.char == '_' {
+		switch closer.char {
+		case '_':
 			kind = 1
+		case '~':
+			kind = 2
 		}
 		both := 0
 		if closer.open {
@@ -108,8 +111,10 @@ func commonMarkEmphasis(bottom *commonMarkDelimiter, last **commonMarkDelimiter)
 		}
 		opener := closer.prev
 		for opener != nil && opener != floor && opener != bottom {
-			if opener.char == closer.char && opener.open &&
-				!((opener.close || closer.open) && (opener.length+closer.length)%3 == 0 && (opener.length%3 != 0 || closer.length%3 != 0)) {
+			// strikethrough delimiters are always two tildes, so the rule of
+			// three doesn't apply to them
+			if opener.char == closer.char && opener.open && (closer.char == '~' ||
+				!((opener.close || closer.open) && (opener.length+closer.length)%3 == 0 && (opener.length%3 != 0 || closer.length%3 != 0))) {
 				break
 			}
 			opener = opener.prev
@@ -125,7 +130,10 @@ func commonMarkEmphasis(bottom *commonMarkDelimiter, last **commonMarkDelimiter)
 		}
 		use := 1
 		var node ast.Node = &ast.Emph{}
-		if opener.length >= 2 && closer.length >= 2 {
+		if closer.char == '~' {
+			use = 2
+			node = &ast.Del{}
+		} else if opener.length >= 2 && closer.length >= 2 {
 			use = 2
 			node = &ast.Strong{}
 		}
@@ -205,9 +213,35 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 		backticks[end-i] = append(backticks[end-i], i)
 		i = end
 	}
+	strikethrough := p.commonMarkExtensions&Strikethrough != 0
+	autolink := p.commonMarkExtensions&Autolink != 0
+	// autolinks are the links made from bare URLs, which become text again
+	// when they end up inside another link
+	var autolinks map[*ast.Link]bool
+	// inside raw <a> ... </a> URLs are not made into links
+	inAnchor := false
+	specials := "*_[]!`<\\& \t\n"
+	if strikethrough {
+		specials += "~"
+	}
 	for i := 0; i < len(data); {
 		c := data[i]
 		switch c {
+		case '~':
+			if strikethrough {
+				end := skipChar(data, i, c)
+				token := appendNode(newTextNode(data[i:end]))
+				if end-i == 2 {
+					open, close := commonMarkFlanking(data, i, end)
+					d := &commonMarkDelimiter{token: token, char: c, length: 2, open: open, close: close, prev: lastDelimiter}
+					if lastDelimiter != nil {
+						lastDelimiter.next = d
+					}
+					lastDelimiter = d
+				}
+				i = end
+				continue
+			}
 		case '*', '_':
 			end := skipChar(data, i, c)
 			token := appendNode(newTextNode(data[i:end]))
@@ -283,6 +317,13 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 				if _, link := node.(*ast.Link); link {
 					lastLinkStart = i + 1
 				}
+				if span, ok := node.(*ast.HTMLSpan); ok && autolink {
+					if commonMarkIsTag(span.Literal, "<a") {
+						inAnchor = true
+					} else if commonMarkIsTag(span.Literal, "</a") {
+						inAnchor = false
+					}
+				}
 				appendNode(node)
 				i += consumed
 				continue
@@ -327,8 +368,22 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 			i = skipHSpace(data, i+1)
 			continue
 		}
+		if autolink && !inAnchor && commonMarkURLStart(data, i) {
+			if n := p.commonMarkBareURL(data[i:], bracket != nil); n > 0 {
+				literal := commonMarkLiteral(data[i : i+n])
+				link := &ast.Link{Destination: commonMarkURL(literal)}
+				ast.AppendChild(link, newTextNode(literal))
+				if autolinks == nil {
+					autolinks = map[*ast.Link]bool{}
+				}
+				autolinks[link] = true
+				appendNode(link)
+				i += n
+				continue
+			}
+		}
 		end := i + 1
-		for end < len(data) && !bytes.ContainsRune([]byte("*_[]!`<\\& \t\n"), rune(data[end])) {
+		for end < len(data) && strings.IndexByte(specials, data[end]) < 0 && !(autolink && commonMarkURLStart(data, end)) {
 			end++
 		}
 		appendNode(newTextNode(data[i:end]))
@@ -336,6 +391,110 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 	}
 	commonMarkEmphasis(nil, &lastDelimiter)
 	commonMarkAppendTokens(parent, root.next, nil)
+	if len(autolinks) > 0 {
+		commonMarkUnnestAutolinks(parent, autolinks, false)
+	}
+}
+
+// commonMarkIsTag reports whether an HTML span starts with tag, like "<a".
+func commonMarkIsTag(literal []byte, tag string) bool {
+	return len(literal) > len(tag) && hasPrefixCaseInsensitive(literal, []byte(tag)) &&
+		(IsSpace(literal[len(tag)]) || literal[len(tag)] == '>' || literal[len(tag)] == '/')
+}
+
+// commonMarkURLStart reports whether a bare URL could start at data[i]: one
+// of its schemes starts there and not in the middle of a word.
+func commonMarkURLStart(data []byte, i int) bool {
+	switch data[i] | 0x20 {
+	case 'h', 'f', 'm':
+	default:
+		return false
+	}
+	if i > 0 && IsAlnum(data[i-1]) {
+		return false
+	}
+	for _, prefix := range commonMarkURLSchemes {
+		if hasPrefixCaseInsensitive(data[i:], prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+var commonMarkURLSchemes = [][]byte{[]byte("http://"), []byte("https://"), []byte("ftp://"), []byte("mailto:")}
+
+// commonMarkBareURL returns the length of the URL that data starts with, or 0.
+// Like GitHub Flavored Markdown, trailing punctuation is not part of it and
+// neither is a closing parenthesis or bracket without an opening one. In
+// link text (inBrackets), the URL ends at a ']'.
+func (p *Parser) commonMarkBareURL(data []byte, inBrackets bool) int {
+	isSafeURL := p.IsSafeURLOverride
+	if isSafeURL == nil {
+		isSafeURL = IsSafeURL
+	}
+	if !isSafeURL(data) {
+		return 0
+	}
+	end := 0
+	// how many more closing than opening (), [] and {} the URL has
+	var unbalanced [3]int
+	const closers, openers = ")]}", "([{"
+	for end < len(data) && !isEndOfLink(data[end]) && !(inBrackets && data[end] == ']') {
+		if k := strings.IndexByte(closers, data[end]); k >= 0 {
+			unbalanced[k]++
+		} else if k := strings.IndexByte(openers, data[end]); k >= 0 {
+			unbalanced[k]--
+		}
+		end++
+	}
+	for end > 0 {
+		c := data[end-1]
+		if strings.IndexByte("?!.,:*_~'\"", c) >= 0 {
+			end--
+			continue
+		}
+		if c == ';' {
+			if linkEndsWithEntity(data, end) {
+				end = bytes.LastIndexByte(data[:end], '&')
+			} else {
+				end--
+			}
+			continue
+		}
+		if k := strings.IndexByte(closers, c); k >= 0 && unbalanced[k] > 0 {
+			unbalanced[k]--
+			end--
+			continue
+		}
+		break
+	}
+	for _, prefix := range commonMarkURLSchemes {
+		if hasPrefixCaseInsensitive(data, prefix) && end <= len(prefix) {
+			return 0
+		}
+	}
+	return end
+}
+
+// commonMarkUnnestAutolinks turns autolinks inside other links back into text.
+func commonMarkUnnestAutolinks(node ast.Node, autolinks map[*ast.Link]bool, inLink bool) {
+	children := node.GetChildren()
+	replaced := false
+	for i, child := range children {
+		link, isLink := child.(*ast.Link)
+		if isLink && inLink && autolinks[link] {
+			text := newTextNode(link.Children[0].AsLeaf().Literal)
+			text.SetParent(node)
+			children[i] = text
+			replaced = true
+			continue
+		}
+		commonMarkUnnestAutolinks(child, autolinks, inLink || isLink)
+	}
+	if replaced {
+		// relinks the siblings
+		node.SetChildren(children)
+	}
 }
 
 func commonMarkLabel(label []byte) string {
