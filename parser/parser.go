@@ -288,7 +288,9 @@ func (p *Parser) Parse(input []byte) ast.Node {
 
 	if p.Opts.Flags&CommonMark != 0 {
 		p.Doc.(*ast.Document).CommonMark = true
-		input = bytes.ReplaceAll(input, []byte{0}, []byte("\ufffd"))
+		if bytes.IndexByte(input, 0) >= 0 {
+			input = bytes.ReplaceAll(input, []byte{0}, []byte("\ufffd"))
+		}
 		defer func() { p.commonMarkLazyLines = nil }()
 	}
 

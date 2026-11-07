@@ -43,6 +43,8 @@ func TestCommonMarkInlineSpaces(t *testing.T) {
 		{"a  b", `"a  b"`},
 		{"a \tb", `"a \tb"`},
 		{"a \nb", `"a\nb"`},
+		{"a b\nc d\ne", `"a b\nc d\ne"`},
+		{"a\n*b*", `"a\n" Emph "b" /Emph`},
 		{"a  \nb", `"a" Hardbreak "b"`},
 		{"a b *c* d", `"a b " Emph "c" /Emph " d"`},
 		{"a *b *c", `"a *b *c"`},

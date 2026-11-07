@@ -384,10 +384,11 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 		}
 		end := i + 1
 		for end < len(data) {
-			if data[end] == ' ' {
-				// A single space between words stays in the text. A space
-				// run, or a space before a tab or a line break, goes to the
-				// ' ' case above.
+			if c := data[end]; c == ' ' || c == '\n' {
+				// A single space between words, or a line break before a
+				// line that starts with text, stays in the text. A space
+				// run, or a space or line break before a tab, a space or a
+				// line break, goes to the ' ' and '\n' cases above.
 				if end+1 == len(data) || data[end+1] == ' ' || data[end+1] == '\t' || data[end+1] == '\n' {
 					break
 				}

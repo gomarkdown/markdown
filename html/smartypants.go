@@ -19,6 +19,7 @@ type SPRenderer struct {
 	inSingleQuote bool
 	inDoubleQuote bool
 	callbacks     [256]smartCallback
+	tmp           bytes.Buffer // reused by Process for each callback's output
 }
 
 func wordBoundary(c byte) bool { return c == 0 || isSpace(c) || isPunctuation(c) }
@@ -341,9 +342,9 @@ func (r *SPRenderer) Process(w io.Writer, text []byte) {
 			if i > 0 {
 				previousChar = text[i-1]
 			}
-			var tmp bytes.Buffer
-			i += action(&tmp, previousChar, text[i:])
-			w.Write(tmp.Bytes())
+			r.tmp.Reset()
+			i += action(&r.tmp, previousChar, text[i:])
+			w.Write(r.tmp.Bytes())
 			mark = i + 1
 		}
 	}

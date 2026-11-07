@@ -90,9 +90,9 @@ func (r *Renderer) OutHRTag(w io.Writer, attrs []string) {
 // Text writes ast.Text node
 func (r *Renderer) Text(w io.Writer, text *ast.Text) {
 	if r.Opts.Flags&Smartypants != 0 {
-		var tmp bytes.Buffer
-		EscapeHTML(&tmp, text.Literal)
-		r.sr.Process(w, tmp.Bytes())
+		r.textBuf.Reset()
+		EscapeHTML(&r.textBuf, text.Literal)
+		r.sr.Process(w, r.textBuf.Bytes())
 	} else {
 		_, parentIsLink := text.Parent.(*ast.Link)
 		if parentIsLink && !r.commonMark {
