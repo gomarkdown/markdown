@@ -383,8 +383,17 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 			}
 		}
 		end := i + 1
-		for end < len(data) && strings.IndexByte(specials, data[end]) < 0 && !(autolink && commonMarkURLStart(data, end)) {
-			end++
+		for {
+			for end < len(data) && strings.IndexByte(specials, data[end]) < 0 && !(autolink && commonMarkURLStart(data, end)) {
+				end++
+			}
+			// A single space between words is plain text. Only a space run
+			// or a space before a line break needs the code above.
+			if end+1 < len(data) && data[end] == ' ' && data[end+1] != ' ' && data[end+1] != '\t' && data[end+1] != '\n' {
+				end++
+				continue
+			}
+			break
 		}
 		appendNode(newTextNode(data[i:end]))
 		i = end
