@@ -27,18 +27,18 @@ func (p *Parser) renderParagraph(data []byte) {
 	p.AddBlock(para)
 }
 
+// blockStarts reports whether ext is enabled and parse, run without
+// rendering, accepts data as the start of its block.
+func (p *Parser) blockStarts(ext Extensions, parse func(*Parser, []byte, bool) int, data []byte) bool {
+	return p.extensions&ext != 0 && parse(p, data, false) > 0
+}
+
 func (p *Parser) interruptsParagraph(data []byte) bool {
-	if p.extensions&LaxHTMLBlocks != 0 && data[0] == '<' && p.html(data, false) > 0 {
-		return true
-	}
-	if p.isPrefixHeading(data) || p.isPrefixSpecialHeading(data) ||
-		isHRule(data) || quotePrefix(data) > 0 {
-		return true
-	}
-	if p.extensions&FencedCode != 0 && p.fencedCodeBlock(data, false) > 0 {
-		return true
-	}
-	if p.extensions&Mmark != 0 && p.figureBlock(data, false) > 0 {
+	if data[0] == '<' && p.blockStarts(LaxHTMLBlocks, (*Parser).html, data) ||
+		p.isPrefixHeading(data) || p.isPrefixSpecialHeading(data) ||
+		isHRule(data) || quotePrefix(data) > 0 ||
+		p.blockStarts(FencedCode, (*Parser).fencedCodeBlock, data) ||
+		p.blockStarts(Mmark, (*Parser).figureBlock, data) {
 		return true
 	}
 	if p.extensions&Tables != 0 {

@@ -162,7 +162,7 @@ func (p *Parser) tableHeader(data []byte, doRender bool) (size int, columns []as
 		if data[i] == '|' && !isEscape(data, i) {
 			colCount++
 		}
-		if data[i] != '-' && data[i] != ' ' && data[i] != ':' && data[i] != '|' {
+		if !byteIn(data[i], "- :|") {
 			headerIsUnderline = false
 		}
 		if data[i] != ' ' && data[i] != '|' {

@@ -134,16 +134,24 @@ func lineBreak(p *Parser, data []byte, offset int) (int, ast.Node) {
 	return 0, nil
 }
 
-func maybeImage(p *Parser, data []byte, offset int) (int, ast.Node) {
-	if offset < len(data)-1 && data[offset+1] == '[' {
-		return link(p, data, offset)
+// linkAfterMarker parses a link when a '[' follows the marker at
+// data[offset], as in ![alt] and ^[note]. found reports whether it did.
+func linkAfterMarker(p *Parser, data []byte, offset int) (consumed int, node ast.Node, found bool) {
+	if !nextByteIs(data, offset, '[') {
+		return 0, nil, false
 	}
-	return 0, nil
+	consumed, node = link(p, data, offset)
+	return consumed, node, true
+}
+
+func maybeImage(p *Parser, data []byte, offset int) (int, ast.Node) {
+	consumed, node, _ := linkAfterMarker(p, data, offset)
+	return consumed, node
 }
 
 func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.Node) {
-	if offset < len(data)-1 && data[offset+1] == '[' {
-		return link(p, data, offset)
+	if consumed, node, found := linkAfterMarker(p, data, offset); found {
+		return consumed, node
 	}
 
 	if p.extensions&SuperSubscript != 0 {

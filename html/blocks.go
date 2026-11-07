@@ -45,9 +45,7 @@ func (r *Renderer) paragraphEnter(w io.Writer, para *ast.Paragraph) {
 
 func (r *Renderer) paragraphExit(w io.Writer, para *ast.Paragraph) {
 	r.Outs(w, "</"+r.paragraphTag()+">")
-	if !(IsListItem(para.Parent) && ast.GetNextNode(para) == nil) {
-		r.CR(w)
-	}
+	r.crAfterBlock(w, para)
 }
 
 func (r *Renderer) paragraphTag() string {
@@ -132,9 +130,7 @@ func (r *Renderer) HeadingEnter(w io.Writer, hdr *ast.Heading) {
 
 func (r *Renderer) HeadingExit(w io.Writer, hdr *ast.Heading) {
 	r.Outs(w, HeadingCloseTagFromLevel(hdr.Level))
-	if !(IsListItem(hdr.Parent) && ast.GetNextNode(hdr) == nil) {
-		r.CR(w)
-	}
+	r.crAfterBlock(w, hdr)
 }
 
 // Heading writes ast.Heading node

@@ -93,11 +93,10 @@ func quoteTitle(title []byte, commonMark bool) string {
 	if commonMark {
 		title = backslashEscape(title, func(_ int, c byte) bool { return c == '\\' || c == '&' })
 	}
-	if !bytes.Contains(title, []byte(`"`)) {
-		return `"` + string(title) + `"`
-	}
-	if !bytes.Contains(title, []byte(`'`)) {
-		return `'` + string(title) + `'`
+	for _, quote := range [...]string{`"`, `'`} {
+		if !bytes.Contains(title, []byte(quote)) {
+			return quote + string(title) + quote
+		}
 	}
 	return `"` + string(bytes.ReplaceAll(title, []byte(`"`), []byte(`\"`))) + `"`
 }

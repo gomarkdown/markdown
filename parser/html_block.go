@@ -309,10 +309,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 		// not an <hr> tag after all; at least not a valid one
 		return 0
 	}
-	i := 3
-	for i < len(data) && data[i] != '>' && data[i] != '\n' {
-		i++
-	}
+	i := skipUntilAny(data, 3, ">\n")
 	if i < len(data) && data[i] == '>' {
 		return p.htmlBlockBeforeBlank(data, i+1, doRender)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/internal/matter"
 	"github.com/gomarkdown/markdown/internal/render"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // Renderer renders a parsed document as Markdown. Create one with
@@ -394,9 +395,7 @@ func blockMarkerIndex(text []byte) int {
 		}
 		return -1
 	}
-	for i < len(text) && text[i] >= '0' && text[i] <= '9' {
-		i++
-	}
+	i = textutil.SkipDigits(text, i)
 	if i > first && i < len(text) && (text[i] == '.' || text[i] == ')') && (i+1 == len(text) || text[i+1] == ' ') {
 		return i
 	}
@@ -815,16 +814,27 @@ func (r *Renderer) citation(w io.Writer, node *ast.Citation) {
 	r.outs(w, "]")
 }
 
+// delimited writes literal between two copies of delim, as in $x$ or ~x~.
+func (r *Renderer) delimited(w io.Writer, delim string, literal []byte) {
+	r.outs(w, delim+string(literal)+delim)
+}
+
+// closeParen ends a parenthesized reference, with ", suffix" before the
+// closing parenthesis when suffix is set.
+func (r *Renderer) closeParen(w io.Writer, suffix []byte) {
+	if len(suffix) > 0 {
+		r.outs(w, ", "+string(suffix))
+	}
+	r.outs(w, ")")
+}
+
 func (r *Renderer) index(w io.Writer, node *ast.Index) {
 	r.outs(w, "(!")
 	if node.Primary {
 		r.outs(w, "!")
 	}
 	r.out(w, node.Item)
-	if len(node.Subitem) > 0 {
-		r.outs(w, ", "+string(node.Subitem))
-	}
-	r.outs(w, ")")
+	r.closeParen(w, node.Subitem)
 }
 
 // RenderNode renders markdown node
@@ -895,16 +905,16 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.NonBlockingSpace:
 		r.outs(w, "&nbsp;")
 	case *ast.Math:
-		r.outs(w, "$"+string(node.Literal)+"$")
+		r.delimited(w, "$", node.Literal)
 	case *ast.MathBlock:
 		if entering {
 			r.outs(w, "$$"+string(node.Literal)+"$$\n\n")
 		}
 		return ast.SkipChildren
 	case *ast.Subscript:
-		r.outs(w, "~"+string(node.Literal)+"~")
+		r.delimited(w, "~", node.Literal)
 	case *ast.Superscript:
-		r.outs(w, "^"+string(node.Literal)+"^")
+		r.delimited(w, "^", node.Literal)
 	case *ast.Table:
 		return r.table(w, node, entering)
 	case *ast.CaptionFigure:
@@ -914,10 +924,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.CrossReference:
 		if entering {
 			r.outs(w, "(#"+string(node.Destination))
-			if len(node.Suffix) > 0 {
-				r.outs(w, ", "+string(node.Suffix))
-			}
-			r.outs(w, ")")
+			r.closeParen(w, node.Suffix)
 		}
 		return ast.SkipChildren
 	case *ast.Citation:

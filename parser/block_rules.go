@@ -14,6 +14,9 @@ type blockRule struct {
 	match  func(*Parser, []byte) bool
 	prefix func([]byte) int
 	parse  func(*Parser, []byte) int
+	// render, set instead of parse, is a parser that can run without
+	// rendering; a rule runs it with rendering.
+	render func(*Parser, []byte, bool) int
 }
 
 // standardBlockRules defines block precedence. The first matching rule consumes
@@ -22,15 +25,15 @@ func standardBlockRules() [17]blockRule {
 	return [17]blockRule{
 		{match: (*Parser).isPrefixHeading, parse: (*Parser).prefixHeading},
 		{match: (*Parser).isPrefixSpecialHeading, parse: (*Parser).prefixSpecialHeading},
-		{parse: parseHTMLBlock},
+		{match: startsHTML, render: (*Parser).html},
 		{extension: Titleblock, parse: (*Parser).titleBlock},
 		{parse: parseBlankLines},
 		{prefix: codePrefix, parse: (*Parser).code},
-		{extension: FencedCode, parse: parseFencedCode},
+		{extension: FencedCode, render: (*Parser).fencedCodeBlock},
 		{parse: parseHorizontalRule},
 		{prefix: quotePrefix, parse: (*Parser).quote},
 		{extension: Mmark, prefix: asidePrefix, parse: (*Parser).aside},
-		{extension: Mmark, parse: parseFigure},
+		{extension: Mmark, render: (*Parser).figureBlock},
 		{extension: Tables, parse: (*Parser).table},
 		{prefix: uliPrefix, parse: parseUnorderedList},
 		{parse: parseOrderedList},
@@ -48,23 +51,22 @@ func (p *Parser) parseBlock(data []byte) int {
 		if rule.match != nil && !rule.match(p, data) || rule.prefix != nil && rule.prefix(data) == 0 {
 			continue
 		}
-		if consumed := rule.parse(p, data); consumed > 0 {
+		var consumed int
+		if rule.render != nil {
+			consumed = rule.render(p, data, true)
+		} else {
+			consumed = rule.parse(p, data)
+		}
+		if consumed > 0 {
 			return consumed
 		}
 	}
 	return p.paragraph(data)
 }
 
-func parseHTMLBlock(p *Parser, data []byte) int {
-	if data[0] == '<' {
-		return p.html(data, true)
-	}
-	return 0
-}
+func startsHTML(_ *Parser, data []byte) bool { return data[0] == '<' }
 
 func parseBlankLines(_ *Parser, data []byte) int { return IsEmpty(data) }
-
-func parseFencedCode(p *Parser, data []byte) int { return p.fencedCodeBlock(data, true) }
 
 func parseHorizontalRule(p *Parser, data []byte) int {
 	if !isHRule(data) {
@@ -74,8 +76,6 @@ func parseHorizontalRule(p *Parser, data []byte) int {
 	p.AddBlock(&ast.HorizontalRule{Leaf: ast.Leaf{Literal: bytes.Trim(data[:end], " \n")}})
 	return end
 }
-
-func parseFigure(p *Parser, data []byte) int { return p.figureBlock(data, true) }
 
 func parseUnorderedList(p *Parser, data []byte) int { return p.list(data, 0, 0, '.') }
 

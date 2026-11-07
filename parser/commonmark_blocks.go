@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // CommonMark uses the same block/inline passes and AST as the historical
@@ -182,7 +183,7 @@ func commonMarkFence(line []byte) (marker byte, count, indent int, info []byte) 
 		return 0, 0, 0, nil
 	}
 	// like the legacy parser, ``` {go} has info string "go"
-	if len(info) >= 2 && info[0] == '{' && info[len(info)-1] == '}' && bytes.IndexByte(info[1:len(info)-1], '}') < 0 {
+	if enclosedBy(info, '{', '}') && bytes.IndexByte(info[1:len(info)-1], '}') < 0 {
 		info = bytes.TrimSpace(info[1 : len(info)-1])
 	}
 	return
@@ -227,9 +228,7 @@ func commonMarkListPrefix(line []byte) (m commonMarkListMarker, ok bool) {
 		m.char = line[i]
 		i++
 	} else {
-		for i < len(line) && line[i] >= '0' && line[i] <= '9' {
-			i++
-		}
+		i = textutil.SkipDigits(line, i)
 		if i == start || i-start > 9 || i >= len(line) || line[i] != '.' && line[i] != ')' {
 			return
 		}

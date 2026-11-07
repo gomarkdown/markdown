@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"bytes"
+
 	"github.com/gomarkdown/markdown/ast"
 )
 
@@ -97,7 +99,7 @@ func (p *Parser) AddBlock(n ast.Node) ast.Node {
 }
 
 func (p *Parser) blockMath(data []byte) int {
-	if len(data) <= 4 || data[0] != '$' || data[1] != '$' || data[2] == '$' {
+	if len(data) <= 4 || !bytes.HasPrefix(data, []byte("$$")) || data[2] == '$' {
 		return 0
 	}
 

@@ -112,9 +112,7 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 		}
 	}
 
-	nextChar := byteAt(text, 1)
-	smartQuote(out, previousChar, nextChar, 's', &r.inSingleQuote, false)
-	return 0
+	return quoteToken(out, previousChar, text, 1, 's', &r.inSingleQuote, false)
 }
 
 // smartToken is a run of characters that smartypants writes as an entity.
@@ -167,9 +165,7 @@ func (r *SPRenderer) smartDash(out *bytes.Buffer, previousChar byte, text []byte
 
 func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text []byte, quote byte, addNBSP bool) int {
 	if bytes.HasPrefix(text, []byte("&quot;")) {
-		nextChar := byteAt(text, 6)
-		smartQuote(out, previousChar, nextChar, quote, &r.inDoubleQuote, addNBSP)
-		return 5
+		return quoteToken(out, previousChar, text, len("&quot;"), quote, &r.inDoubleQuote, addNBSP)
 	}
 
 	if bytes.HasPrefix(text, []byte("&#0;")) {
@@ -184,8 +180,14 @@ func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text 
 // backticks) at the start of text as a double quote, and returns 1 to skip
 // its second mark.
 func (r *SPRenderer) smartDoubledQuote(out *bytes.Buffer, previousChar byte, text []byte) int {
-	smartQuote(out, previousChar, byteAt(text, 2), 'd', &r.inDoubleQuote, false)
-	return 1
+	return quoteToken(out, previousChar, text, 2, 'd', &r.inDoubleQuote, false)
+}
+
+// quoteToken writes the quote mark that the n-byte token at the start of
+// text stands for, and returns n-1, the bytes it used after text[0].
+func quoteToken(out *bytes.Buffer, previous byte, text []byte, n int, quote byte, isOpen *bool, addNBSP bool) int {
+	smartQuote(out, previous, byteAt(text, n), quote, isOpen, addNBSP)
+	return n - 1
 }
 
 func (r *SPRenderer) smartBacktick(out *bytes.Buffer, previousChar byte, text []byte) int {
@@ -282,9 +284,7 @@ func NewSmartypantsRenderer(flags Flags) *SPRenderer {
 		quote = 'a'
 	}
 	r.callbacks['"'] = func(out *bytes.Buffer, previous byte, text []byte) int {
-		next := byteAt(text, 1)
-		smartQuote(out, previous, next, quote, &r.inDoubleQuote, false)
-		return 0
+		return quoteToken(out, previous, text, 1, quote, &r.inDoubleQuote, false)
 	}
 	addNBSP := flags&SmartypantsQuotesNBSP != 0
 	r.callbacks['&'] = func(out *bytes.Buffer, previous byte, text []byte) int {

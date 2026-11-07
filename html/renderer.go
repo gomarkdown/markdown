@@ -286,11 +286,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Del:
 		r.OutOneOf(w, entering, "<del>", "</del>")
 	case *ast.BlockQuote:
-		tag := TagWithAttributes("<blockquote", r.blockAttrs(node))
-		r.OutOneOfCr(w, entering, tag, "</blockquote>")
+		r.blockElement(w, node, "blockquote", entering)
 	case *ast.Aside:
-		tag := TagWithAttributes("<aside", r.blockAttrs(node))
-		r.OutOneOfCr(w, entering, tag, "</aside>")
+		r.blockElement(w, node, "aside", entering)
 	case *ast.Link:
 		r.Link(w, node, entering)
 	case *ast.CrossReference:
@@ -327,8 +325,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.ListItem:
 		r.ListItem(w, node, entering)
 	case *ast.Table:
-		tag := TagWithAttributes("<table", r.blockAttrs(node))
-		r.OutOneOfCr(w, entering, tag, "</table>")
+		r.blockElement(w, node, "table", entering)
 	case *ast.TableCell:
 		r.TableCell(w, node, entering)
 	case *ast.TableHeader:

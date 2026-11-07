@@ -57,6 +57,35 @@ func byteIn(c byte, set string) bool {
 	return strings.IndexByte(set, c) >= 0
 }
 
+// pairAt reports whether data[i] is a and the byte after it is b.
+func pairAt(data []byte, i int, a, b byte) bool {
+	return i >= 0 && i < len(data) && data[i] == a && nextByteIs(data, i, b)
+}
+
+// enclosedBy reports whether s starts with open and ends with a separate
+// close.
+func enclosedBy(s []byte, open, close byte) bool {
+	return len(s) >= 2 && s[0] == open && s[len(s)-1] == close
+}
+
+// skipUntilAny advances i to the first byte at or after it that is in set,
+// or to len(data). A set of more than one byte must be ASCII.
+func skipUntilAny(data []byte, i int, set string) int {
+	if i >= len(data) {
+		return i
+	}
+	var j int
+	if len(set) == 1 {
+		j = bytes.IndexByte(data[i:], set[0])
+	} else {
+		j = bytes.IndexAny(data[i:], set)
+	}
+	if j < 0 {
+		return len(data)
+	}
+	return i + j
+}
+
 // like skipChar but only skips up to max characters
 func skipCharN(data []byte, i int, c byte, max int) int {
 	for i < len(data) && max > 0 && data[i] == c {
@@ -68,13 +97,7 @@ func skipCharN(data []byte, i int, c byte, max int) int {
 
 // skipUntilChar advances i as long as data[i] != c
 func skipUntilChar(data []byte, i int, c byte) int {
-	if i >= len(data) {
-		return i
-	}
-	if j := bytes.IndexByte(data[i:], c); j >= 0 {
-		return i + j
-	}
-	return len(data)
+	return skipUntilAny(data, i, string([]byte{c}))
 }
 
 // skipUntilUnescapedChar is like skipUntilChar for a c that is not escaped

@@ -134,9 +134,7 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 		i++
 	}
 	linkOffset = i
-	for i < len(data) && !byteIn(data[i], " \t\n\r") {
-		i++
-	}
+	i = skipUntilAny(data, i, " \t\n\r")
 	linkEnd = i
 	if linkEnd < len(data) && data[linkOffset] == '<' && data[linkEnd-1] == '>' {
 		linkOffset++
@@ -153,7 +151,7 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 	if i >= len(data) || data[i] == '\r' || data[i] == '\n' {
 		lineEnd = i
 	}
-	if i+1 < len(data) && data[i] == '\r' && data[i+1] == '\n' {
+	if pairAt(data, i, '\r', '\n') {
 		lineEnd++
 	}
 
@@ -168,10 +166,8 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 		titleOffset = i
 
 		// look for EOL
-		for i < len(data) && data[i] != '\n' && data[i] != '\r' {
-			i++
-		}
-		if i+1 < len(data) && data[i] == '\n' && data[i+1] == '\r' {
+		i = skipUntilAny(data, i, "\n\r")
+		if pairAt(data, i, '\n', '\r') {
 			titleEnd = i + 1
 		} else {
 			titleEnd = i
