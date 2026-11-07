@@ -107,7 +107,7 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 	// skip any amount of whitespace or newline
 	// (this is much more lax than original markdown syntax)
-	i = skipSpace(data, i)
+	i = skipWhile(data, i, IsSpace)
 
 	// inline style link
 	switch {

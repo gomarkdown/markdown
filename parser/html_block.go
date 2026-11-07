@@ -317,7 +317,7 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 }
 
 func (p *Parser) htmlFindTag(data []byte) (string, bool) {
-	i := skipAlnum(data, 0)
+	i := skipWhile(data, 0, IsAlnum)
 	key := string(data[:i])
 	if inStringSet(blockTags, key) ||
 		p.extensions&MarkdownInHTML != 0 && inStringSet(markdownInHTMLTags, key) {

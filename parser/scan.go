@@ -112,10 +112,6 @@ func skipUntilUnescapedChar(data []byte, i int, c byte) int {
 	}
 }
 
-func skipAlnum(data []byte, i int) int { return skipWhile(data, i, IsAlnum) }
-
-func skipSpace(data []byte, i int) int { return skipWhile(data, i, IsSpace) }
-
 func skipHSpace(data []byte, i int) int {
 	return skipWhile(data, i, func(b byte) bool { return b == ' ' || b == '\t' })
 }

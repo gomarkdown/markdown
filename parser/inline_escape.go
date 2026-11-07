@@ -68,7 +68,7 @@ func entity(p *Parser, data []byte, offset int) (int, ast.Node) {
 	data = data[offset:]
 
 	end := skipCharN(data, 1, '#', 1)
-	end = skipAlnum(data, end)
+	end = skipWhile(data, end, IsAlnum)
 
 	if end < len(data) && data[end] == ';' {
 		end++ // real entity
