@@ -4,7 +4,9 @@ package matter
 
 import "github.com/gomarkdown/markdown/ast"
 
-var names = [...]struct{ name, tag string }{
+type names struct{ name, tag string }
+
+var table = [...]names{
 	ast.DocumentMatterFront: {"front", "{frontmatter}"},
 	ast.DocumentMatterMain:  {"main", "{mainmatter}"},
 	ast.DocumentMatterBack:  {"back", "{backmatter}"},
@@ -13,19 +15,17 @@ var names = [...]struct{ name, tag string }{
 // Kinds lists the document matters that have a name.
 var Kinds = [...]ast.DocumentMatters{ast.DocumentMatterFront, ast.DocumentMatterMain, ast.DocumentMatterBack}
 
-// Name returns "front", "main" or "back", or "" for any other value.
-func Name(m ast.DocumentMatters) string {
-	if m < 0 || int(m) >= len(names) {
-		return ""
+// lookup returns the names of m, which are empty for a matter without them.
+func lookup(m ast.DocumentMatters) names {
+	if m < 0 || int(m) >= len(table) {
+		return names{}
 	}
-	return names[m].name
+	return table[m]
 }
+
+// Name returns "front", "main" or "back", or "" for any other value.
+func Name(m ast.DocumentMatters) string { return lookup(m).name }
 
 // Tag returns the markdown tag that starts a matter, like "{frontmatter}",
 // or "" for any other value.
-func Tag(m ast.DocumentMatters) string {
-	if m < 0 || int(m) >= len(names) {
-		return ""
-	}
-	return names[m].tag
-}
+func Tag(m ast.DocumentMatters) string { return lookup(m).tag }

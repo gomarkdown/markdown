@@ -140,8 +140,12 @@ func smartReplace(out *bytes.Buffer, text []byte, tokens []smartToken) int {
 	return 0
 }
 
-func (r *SPRenderer) smartParens(out *bytes.Buffer, previousChar byte, text []byte) int {
-	return smartReplace(out, text, parenTokens)
+// tokenCallback returns a callback that writes the entity of the first of
+// tokens that the text starts with.
+func tokenCallback(tokens []smartToken) smartCallback {
+	return func(out *bytes.Buffer, _ byte, text []byte) int {
+		return smartReplace(out, text, tokens)
+	}
 }
 
 func (r *SPRenderer) smartDash(out *bytes.Buffer, previousChar byte, text []byte) int {
@@ -161,10 +165,6 @@ func (r *SPRenderer) smartDash(out *bytes.Buffer, previousChar byte, text []byte
 	return 0
 }
 
-func (r *SPRenderer) smartDashLatex(out *bytes.Buffer, previousChar byte, text []byte) int {
-	return smartReplace(out, text, latexDashes)
-}
-
 func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text []byte, quote byte, addNBSP bool) int {
 	if bytes.HasPrefix(text, []byte("&quot;")) {
 		nextChar := byteAt(text, 6)
@@ -178,10 +178,6 @@ func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text 
 
 	out.WriteByte('&')
 	return 0
-}
-
-func (r *SPRenderer) smartPeriod(out *bytes.Buffer, previousChar byte, text []byte) int {
-	return smartReplace(out, text, periodTokens)
 }
 
 // smartDoubledQuote writes a doubled quote mark (two apostrophes or two
@@ -295,15 +291,15 @@ func NewSmartypantsRenderer(flags Flags) *SPRenderer {
 		return r.smartAmpVariant(out, previous, text, quote, addNBSP)
 	}
 	r.callbacks['\''] = r.smartSingleQuote
-	r.callbacks['('] = r.smartParens
+	r.callbacks['('] = tokenCallback(parenTokens)
 	if flags&SmartypantsDashes != 0 {
 		if flags&SmartypantsLatexDashes == 0 {
 			r.callbacks['-'] = r.smartDash
 		} else {
-			r.callbacks['-'] = r.smartDashLatex
+			r.callbacks['-'] = tokenCallback(latexDashes)
 		}
 	}
-	r.callbacks['.'] = r.smartPeriod
+	r.callbacks['.'] = tokenCallback(periodTokens)
 	if flags&SmartypantsFractions == 0 {
 		r.callbacks['1'] = r.smartNumber
 		r.callbacks['3'] = r.smartNumber
