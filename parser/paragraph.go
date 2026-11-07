@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"bytes"
-
 	"github.com/gomarkdown/markdown/ast"
 )
 
@@ -145,12 +143,8 @@ func (p *Parser) paragraph(data []byte) int {
 		}
 
 		// otherwise, scan to the beginning of the next line
-		nl := bytes.IndexByte(data[i:], '\n')
-		if nl >= 0 {
-			i += nl + 1
-		} else {
-			i += len(data[i:])
-		}
+		_, n := commonMarkLine(data[i:])
+		i += n
 	}
 
 	p.renderParagraph(data[:i])

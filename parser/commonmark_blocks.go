@@ -59,17 +59,27 @@ func commonMarkBlank(line []byte) bool { return len(bytes.Trim(line, " \t")) == 
 // Removing indentation may consume only part of a tab's four-column stop.
 // Preserve its remaining columns as spaces, and leave later tabs untouched.
 func commonMarkIndent(data []byte) int {
-	column := 0
-	for _, c := range data {
-		if c == ' ' {
-			column++
-		} else if c == '\t' {
-			column += 4 - column%4
-		} else {
-			break
-		}
-	}
+	_, column := commonMarkSkipIndent(data, 0, 0)
 	return column
+}
+
+// commonMarkSkipIndent skips the spaces and tabs at data[i:], where data[i]
+// is at column, and returns the index and the column after them.
+func commonMarkSkipIndent(data []byte, i, column int) (int, int) {
+	for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
+		column = commonMarkNextColumn(column, data[i])
+		i++
+	}
+	return i, column
+}
+
+// commonMarkNextColumn returns the column after a space or a tab at column.
+// A tab advances to the next multiple of four.
+func commonMarkNextColumn(column int, c byte) int {
+	if c == '\t' {
+		return column + 4 - column%4
+	}
+	return column + 1
 }
 
 func commonMarkDedent(data []byte, width int) []byte {
@@ -78,25 +88,12 @@ func commonMarkDedent(data []byte, width int) []byte {
 
 func commonMarkDedentFrom(data []byte, startColumn, width int) []byte {
 	column, i := startColumn, 0
-	for i < len(data) && column < startColumn+width {
-		if data[i] == ' ' {
-			column++
-		} else if data[i] == '\t' {
-			column += 4 - column%4
-		} else {
-			break
-		}
+	for i < len(data) && column < startColumn+width && (data[i] == ' ' || data[i] == '\t') {
+		column = commonMarkNextColumn(column, data[i])
 		i++
 	}
 	if (startColumn+width)%4 != 0 {
-		for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-			if data[i] == ' ' {
-				column++
-			} else {
-				column += 4 - column%4
-			}
-			i++
-		}
+		i, column = commonMarkSkipIndent(data, i, column)
 	}
 	if extra := column - startColumn - width; extra > 0 {
 		// spaces before data[i] can stay as they are, which saves copying the
@@ -250,16 +247,7 @@ func commonMarkListPrefix(line []byte) (m commonMarkListMarker, ok bool) {
 		m.content = nil
 		return m, true
 	}
-	column := i
-	j := i
-	for j < len(line) && (line[j] == ' ' || line[j] == '\t') {
-		if line[j] == ' ' {
-			column++
-		} else {
-			column += 4 - column%4
-		}
-		j++
-	}
+	_, column := commonMarkSkipIndent(line, i, i)
 	padding := column - i
 	if padding > 4 {
 		padding = 1
@@ -325,28 +313,16 @@ func (p *Parser) commonMarkBlock(data []byte) int {
 // commonMarkHook runs Opts.ParserHook at the start of a block, like the
 // historical parser does, and returns how much of data it consumed.
 func (p *Parser) commonMarkHook(data []byte) int {
-	if !p.commonMarkHooks || p.Opts.ParserHook == nil {
+	if !p.commonMarkHooks {
 		return 0
 	}
-	node, blockData, consumed := p.Opts.ParserHook(data)
-	if consumed <= 0 {
-		return 0
-	}
-	if node != nil {
-		p.AddBlock(node)
-		if blockData != nil {
-			p.Block(blockData)
-			p.Finalize(node)
-		}
-	}
-	return consumed
+	return p.runParserHook(data)
 }
 
 func (p *Parser) commonMarkAddHeading(level int, content []byte) {
 	heading := &ast.Heading{Level: level, Container: ast.Container{Content: content}}
 	if p.commonMarkExtensions&AutoHeadingIDs != 0 {
-		heading.HeadingID = sanitizeHeadingID(string(content))
-		p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, heading)
+		p.autoHeadingID(heading, content)
 	}
 	p.AddBlock(heading)
 }
@@ -492,10 +468,7 @@ func (p *Parser) commonMarkReference(data []byte) int {
 	if commonMarkLabel(label) == "" {
 		return 0
 	}
-	i := skipHSpace(data, close+2)
-	if i < len(data) && data[i] == '\n' {
-		i = skipHSpace(data, i+1)
-	}
+	i := commonMarkLinkSpace(data, close+2)
 	destEnd, destination, ok := commonMarkDestination(data, i)
 	if !ok {
 		return 0

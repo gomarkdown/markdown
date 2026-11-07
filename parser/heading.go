@@ -85,9 +85,15 @@ func (p *Parser) parseHeadingContent(data []byte, i, end int) (id string, conten
 func (p *Parser) setHeadingID(block *ast.Heading, id string, text []byte) {
 	block.HeadingID = id
 	if id == "" && p.extensions&AutoHeadingIDs != 0 {
-		block.HeadingID = sanitizeHeadingID(string(text))
-		p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
+		p.autoHeadingID(block, text)
 	}
+}
+
+// autoHeadingID sets block's id from text and records the heading so that
+// its id is made unique after parsing.
+func (p *Parser) autoHeadingID(block *ast.Heading, text []byte) {
+	block.HeadingID = sanitizeHeadingID(string(text))
+	p.allHeadingsWithAutoID = append(p.allHeadingsWithAutoID, block)
 }
 
 func (p *Parser) prefixHeading(data []byte) int {

@@ -24,6 +24,14 @@ type SPRenderer struct {
 
 func wordBoundary(c byte) bool { return c == 0 || isSpace(c) || isPunctuation(c) }
 
+// byteAt returns text[i], or 0 when i is outside text.
+func byteAt(text []byte, i int) byte {
+	if i < 0 || i >= len(text) {
+		return 0
+	}
+	return text[i]
+}
+
 func tolower(c byte) byte {
 	if c >= 'A' && c <= 'Z' {
 		return c - 'A' + 'a'
@@ -91,10 +99,7 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 		t1 := tolower(text[1])
 
 		if t1 == '\'' {
-			nextChar := byte(0)
-			if len(text) >= 3 {
-				nextChar = text[2]
-			}
+			nextChar := byteAt(text, 2)
 			smartQuote(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false)
 			return 1
 		}
@@ -109,10 +114,7 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 		}
 	}
 
-	nextChar := byte(0)
-	if len(text) > 1 {
-		nextChar = text[1]
-	}
+	nextChar := byteAt(text, 1)
 	smartQuote(out, previousChar, nextChar, 's', &r.inSingleQuote, false)
 	return 0
 }
@@ -166,10 +168,7 @@ func (r *SPRenderer) smartDashLatex(out *bytes.Buffer, previousChar byte, text [
 
 func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text []byte, quote byte, addNBSP bool) int {
 	if bytes.HasPrefix(text, []byte("&quot;")) {
-		nextChar := byte(0)
-		if len(text) >= 7 {
-			nextChar = text[6]
-		}
+		nextChar := byteAt(text, 6)
 		smartQuote(out, previousChar, nextChar, quote, &r.inDoubleQuote, addNBSP)
 		return 5
 	}
@@ -199,10 +198,7 @@ func (r *SPRenderer) smartPeriod(out *bytes.Buffer, previousChar byte, text []by
 
 func (r *SPRenderer) smartBacktick(out *bytes.Buffer, previousChar byte, text []byte) int {
 	if len(text) >= 2 && text[1] == '`' {
-		nextChar := byte(0)
-		if len(text) >= 3 {
-			nextChar = text[2]
-		}
+		nextChar := byteAt(text, 2)
 		smartQuote(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false)
 		return 1
 	}
@@ -296,10 +292,7 @@ func NewSmartypantsRenderer(flags Flags) *SPRenderer {
 		quote = 'a'
 	}
 	r.callbacks['"'] = func(out *bytes.Buffer, previous byte, text []byte) int {
-		next := byte(0)
-		if len(text) > 1 {
-			next = text[1]
-		}
+		next := byteAt(text, 1)
 		smartQuote(out, previous, next, quote, &r.inDoubleQuote, false)
 		return 0
 	}
@@ -338,12 +331,8 @@ func (r *SPRenderer) Process(w io.Writer, text []byte) {
 			if i > mark {
 				w.Write(text[mark:i])
 			}
-			previousChar := byte(0)
-			if i > 0 {
-				previousChar = text[i-1]
-			}
 			r.tmp.Reset()
-			i += action(&r.tmp, previousChar, text[i:])
+			i += action(&r.tmp, byteAt(text, i-1), text[i:])
 			w.Write(r.tmp.Bytes())
 			mark = i + 1
 		}

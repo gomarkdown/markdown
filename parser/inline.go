@@ -86,30 +86,29 @@ func (p *Parser) Inline(currBlock ast.Node, data []byte) {
 // a buffer that was rewritten in place must not see entries built from the
 // old contents.
 func (p *Parser) resetInlineCaches() {
-	p.codeSpans.data = nil
-	p.spaces.data = nil
-	p.angles.data = nil
-	p.nextGt.data = nil
-	p.nextCommentEnd.data = nil
+	p.codeSpans.buf = bufferID{}
+	p.spaces.buf = bufferID{}
+	p.angles.buf = bufferID{}
+	p.nextGt.buf = bufferID{}
+	p.nextCommentEnd.buf = bufferID{}
 }
 
 // runCache remembers the end of the run of one byte value that the inline
 // cursor is inside. A callback registered for that byte fires once per
 // byte of the run, and without the cache each firing rescanned the run.
 type runCache struct {
-	data       *byte
-	n          int
+	buf        bufferID
 	start, end int
 }
 
 // endOf returns the index just past the run of b that starts at
 // data[offset], scanning only when offset is outside the remembered run.
 func (c *runCache) endOf(data []byte, offset int, b byte) int {
-	if c.data == &data[0] && c.n == len(data) && offset >= c.start && offset < c.end {
+	if c.buf == idOf(data) && offset >= c.start && offset < c.end {
 		return c.end
 	}
 	end := skipChar(data, offset, b)
-	*c = runCache{data: &data[0], n: len(data), start: offset, end: end}
+	*c = runCache{buf: idOf(data), start: offset, end: end}
 	return end
 }
 

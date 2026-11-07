@@ -252,6 +252,16 @@ func (r *Renderer) Image(w io.Writer, node *ast.Image, entering bool) {
 	}
 }
 
+// scriptText writes a subscript or superscript as <tag>text</tag>, with
+// backslash escapes removed from its text.
+func (r *Renderer) scriptText(w io.Writer, tag string, literal []byte, entering bool) {
+	r.Outs(w, "<"+tag+">")
+	if entering {
+		EscapeHTML(w, removeBackslashEscapes(literal))
+	}
+	r.Outs(w, "</"+tag+">")
+}
+
 // RenderNode renders a markdown node to HTML
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
 	if doc, ok := node.(*ast.Document); ok && entering {
@@ -353,17 +363,9 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Index:
 		r.Index(w, node)
 	case *ast.Subscript:
-		r.Outs(w, "<sub>")
-		if entering {
-			EscapeHTML(w, removeBackslashEscapes(node.Literal))
-		}
-		r.Outs(w, "</sub>")
+		r.scriptText(w, "sub", node.Literal, entering)
 	case *ast.Superscript:
-		r.Outs(w, "<sup>")
-		if entering {
-			EscapeHTML(w, removeBackslashEscapes(node.Literal))
-		}
-		r.Outs(w, "</sup>")
+		r.scriptText(w, "sup", node.Literal, entering)
 	case *ast.Footnotes:
 		// nothing by default; just output the list.
 	case *ast.ReferenceDefinition:

@@ -192,23 +192,26 @@ Parse:
 
 // CodeBlock writes ast.CodeBlock node
 func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
-	attrs := appendLanguageAttr(nil, codeBlock.Info)
-	attrs = append(attrs, r.blockAttrs(codeBlock)...)
-	attrs = coalesceClassAttrs(attrs)
 	r.CR(w)
+	r.codeBlockElement(w, codeBlock)
+	if !IsListItem(codeBlock.Parent) {
+		r.CR(w)
+	}
+}
 
+// codeBlockElement writes the <pre><code> element of a code block, with its
+// language and block attributes and its escaped text.
+func (r *Renderer) codeBlockElement(w io.Writer, codeBlock *ast.CodeBlock) {
+	attrs := appendLanguageAttr(nil, codeBlock.Info)
+	attrs = coalesceClassAttrs(append(attrs, r.blockAttrs(codeBlock)...))
 	r.Outs(w, "<pre>")
-	code := TagWithAttributes("<code", attrs)
-	r.Outs(w, code)
+	r.OutTag(w, "<code", attrs)
 	if r.Opts.Comments != nil {
 		r.EscapeHTMLCallouts(w, codeBlock.Literal)
 	} else {
 		EscapeHTML(w, codeBlock.Literal)
 	}
 	r.Outs(w, "</code></pre>")
-	if !IsListItem(codeBlock.Parent) {
-		r.CR(w)
-	}
 }
 
 // Caption writes ast.Caption node

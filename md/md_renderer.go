@@ -574,6 +574,13 @@ func (r *Renderer) code(w io.Writer, node *ast.Code) {
 	r.outs(w, fence+padding+string(literal)+padding+fence)
 }
 
+// headingIDSuffix writes " {#id}" after a heading or caption, if id is set.
+func (r *Renderer) headingIDSuffix(w io.Writer, id string) {
+	if id != "" {
+		r.outs(w, " {#"+id+"}")
+	}
+}
+
 func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.WalkStatus {
 	if !entering {
 		return ast.GoToNext
@@ -594,9 +601,7 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.Wa
 	}
 	r.outs(w, strings.Repeat("#", node.Level)+" ")
 	r.out(w, escapeClosingHashes(content))
-	if node.HeadingID != "" {
-		r.outs(w, " {#"+node.HeadingID+"}")
-	}
+	r.headingIDSuffix(w, node.HeadingID)
 	r.outs(w, "\n\n")
 	return ast.SkipChildren
 }
@@ -771,9 +776,7 @@ func (r *Renderer) captionFigure(w io.Writer, node *ast.CaptionFigure, entering 
 	if caption != nil {
 		r.outs(w, prefix)
 		r.out(w, bytes.TrimRight(r.renderBlocks(caption, true), " "))
-		if node.HeadingID != "" {
-			r.outs(w, " {#"+node.HeadingID+"}")
-		}
+		r.headingIDSuffix(w, node.HeadingID)
 		r.outs(w, "\n")
 	}
 	r.outs(w, "\n")

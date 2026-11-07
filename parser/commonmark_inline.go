@@ -334,7 +334,7 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 				i = skipHSpace(data, i+2)
 				continue
 			}
-			if i+1 < len(data) && isEscapable(data[i+1]) {
+			if isBackslashEscape(data, i) {
 				appendNode(newTextNode(data[i+1 : i+2]))
 				i += 2
 				continue
@@ -562,7 +562,7 @@ func commonMarkLabelEnd(data []byte, start int) int {
 		if count >= 999 {
 			return -1
 		}
-		if data[i] == '\\' && i+1 < len(data) && isEscapable(data[i+1]) {
+		if isBackslashEscape(data, i) {
 			i += 2
 			count += 2
 			if count > 999 {
@@ -589,7 +589,7 @@ func commonMarkLiteral(source []byte) []byte {
 	}
 	result := make([]byte, 0, len(source))
 	for i := 0; i < len(source); i++ {
-		if source[i] == '\\' && i+1 < len(source) && isEscapable(source[i+1]) {
+		if isBackslashEscape(source, i) {
 			i++
 			result = append(result, source[i])
 			continue
@@ -613,7 +613,7 @@ func commonMarkDestination(data []byte, start int) (end int, destination []byte,
 	}
 	if data[start] == '<' {
 		for i := start + 1; i < len(data); i++ {
-			if data[i] == '\\' && i+1 < len(data) && isEscapable(data[i+1]) {
+			if isBackslashEscape(data, i) {
 				i++
 				continue
 			}
@@ -630,7 +630,7 @@ func commonMarkDestination(data []byte, start int) (end int, destination []byte,
 	i := start
 	for ; i < len(data); i++ {
 		c := data[i]
-		if c == '\\' && i+1 < len(data) && isEscapable(data[i+1]) {
+		if isBackslashEscape(data, i) {
 			i++
 			continue
 		}
@@ -669,7 +669,7 @@ func (p *Parser) commonMarkTitle(data []byte, start int) (end int, title []byte,
 		return 0, nil, false
 	}
 	for i := start + 1; i < end; i++ {
-		if data[i] == '\\' && i+1 < len(data) && isEscapable(data[i+1]) {
+		if isBackslashEscape(data, i) {
 			i++
 			continue
 		}

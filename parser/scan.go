@@ -52,10 +52,13 @@ func skipCharN(data []byte, i int, c byte, max int) int {
 
 // skipUntilChar advances i as long as data[i] != c
 func skipUntilChar(data []byte, i int, c byte) int {
-	for i < len(data) && data[i] != c {
-		i++
+	if i >= len(data) {
+		return i
 	}
-	return i
+	if j := bytes.IndexByte(data[i:], c); j >= 0 {
+		return i + j
+	}
+	return len(data)
 }
 
 // skipUntilUnescapedChar is like skipUntilChar for a c that is not escaped
