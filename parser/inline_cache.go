@@ -12,6 +12,12 @@ type bufferID struct {
 // idOf returns the bufferID of data, which must not be empty.
 func idOf(data []byte) bufferID { return bufferID{&data[0], len(data)} }
 
+// covers reports whether data is the buffer b identifies and offset is in
+// [lo, hi), the range a cache entry is valid for.
+func (b bufferID) covers(data []byte, offset, lo, hi int) bool {
+	return b == idOf(data) && offset >= lo && offset < hi
+}
+
 // nextMatchCache remembers the next match at or after the inline cursor.
 // Failed callbacks therefore do not repeatedly scan the rest of the buffer.
 type nextMatchCache struct {
@@ -21,7 +27,7 @@ type nextMatchCache struct {
 }
 
 func (c *nextMatchCache) next(data []byte, offset int, find func([]byte) int) int {
-	if c.buf == idOf(data) && offset >= c.from && offset <= c.at {
+	if c.buf.covers(data, offset, c.from, c.at+1) {
 		return c.at
 	}
 	at := len(data)

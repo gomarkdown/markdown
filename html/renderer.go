@@ -181,11 +181,7 @@ func (r *Renderer) Link(w io.Writer, link *ast.Link, entering bool) {
 		return
 	}
 
-	if entering {
-		r.linkEnter(w, link)
-	} else {
-		r.linkExit(w, link)
-	}
+	enterOrExit(r, w, link, entering, (*Renderer).linkEnter, (*Renderer).linkExit)
 }
 
 func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
@@ -245,11 +241,7 @@ func (r *Renderer) Image(w io.Writer, node *ast.Image, entering bool) {
 		return
 	}
 
-	if entering {
-		r.imageEnter(w, node)
-	} else {
-		r.imageExit(w, node)
-	}
+	enterOrExit(r, w, node, entering, (*Renderer).imageEnter, (*Renderer).imageExit)
 }
 
 // scriptText writes a subscript or superscript as <tag>text</tag>, with

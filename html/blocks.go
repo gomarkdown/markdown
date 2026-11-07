@@ -62,11 +62,7 @@ func (r *Renderer) Paragraph(w io.Writer, para *ast.Paragraph, entering bool) {
 	if SkipParagraphTags(para) {
 		return
 	}
-	if entering {
-		r.paragraphEnter(w, para)
-	} else {
-		r.paragraphExit(w, para)
-	}
+	enterOrExit(r, w, para, entering, (*Renderer).paragraphEnter, (*Renderer).paragraphExit)
 }
 
 // Code writes ast.Code node
@@ -143,11 +139,7 @@ func (r *Renderer) HeadingExit(w io.Writer, hdr *ast.Heading) {
 
 // Heading writes ast.Heading node
 func (r *Renderer) Heading(w io.Writer, hdr *ast.Heading, entering bool) {
-	if entering {
-		r.HeadingEnter(w, hdr)
-	} else {
-		r.HeadingExit(w, hdr)
-	}
+	enterOrExit(r, w, hdr, entering, (*Renderer).HeadingEnter, (*Renderer).HeadingExit)
 }
 
 // HorizontalRule writes ast.HorizontalRule node

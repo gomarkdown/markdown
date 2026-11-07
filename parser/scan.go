@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -33,12 +34,27 @@ func IsEmpty(data []byte) int {
 	return i
 }
 
-// skipChar advances i as long as data[i] == c
-func skipChar(data []byte, i int, c byte) int {
-	for i < len(data) && data[i] == c {
+// skipWhile advances i as long as keep(data[i]) holds.
+func skipWhile(data []byte, i int, keep func(byte) bool) int {
+	for i < len(data) && keep(data[i]) {
 		i++
 	}
 	return i
+}
+
+// skipChar advances i as long as data[i] == c
+func skipChar(data []byte, i int, c byte) int {
+	return skipWhile(data, i, func(b byte) bool { return b == c })
+}
+
+// nextByteIs reports whether the byte after data[i] is c.
+func nextByteIs(data []byte, i int, c byte) bool {
+	return i+1 < len(data) && data[i+1] == c
+}
+
+// byteIn reports whether c is one of the bytes in set.
+func byteIn(c byte, set string) bool {
+	return strings.IndexByte(set, c) >= 0
 }
 
 // like skipChar but only skips up to max characters
@@ -73,25 +89,12 @@ func skipUntilUnescapedChar(data []byte, i int, c byte) int {
 	}
 }
 
-func skipAlnum(data []byte, i int) int {
-	for i < len(data) && IsAlnum(data[i]) {
-		i++
-	}
-	return i
-}
+func skipAlnum(data []byte, i int) int { return skipWhile(data, i, IsAlnum) }
 
-func skipSpace(data []byte, i int) int {
-	for i < len(data) && IsSpace(data[i]) {
-		i++
-	}
-	return i
-}
+func skipSpace(data []byte, i int) int { return skipWhile(data, i, IsSpace) }
 
 func skipHSpace(data []byte, i int) int {
-	for i < len(data) && (data[i] == ' ' || data[i] == '\t') {
-		i++
-	}
-	return i
+	return skipWhile(data, i, func(b byte) bool { return b == ' ' || b == '\t' })
 }
 
 func backChar(data []byte, i int, c byte) int {
@@ -101,11 +104,12 @@ func backChar(data []byte, i int, c byte) int {
 	return i
 }
 
+// backUntilChar moves i back to just after the last c before it, or to 0.
 func backUntilChar(data []byte, i int, c byte) int {
-	for i > 0 && data[i-1] != c {
-		i--
+	if i <= 0 {
+		return i
 	}
-	return i
+	return bytes.LastIndexByte(data[:i], c) + 1
 }
 
 func prefixedBlock(data []byte, marker string) int {

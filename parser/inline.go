@@ -104,7 +104,7 @@ type runCache struct {
 // endOf returns the index just past the run of b that starts at
 // data[offset], scanning only when offset is outside the remembered run.
 func (c *runCache) endOf(data []byte, offset int, b byte) int {
-	if c.buf == idOf(data) && offset >= c.start && offset < c.end {
+	if c.buf.covers(data, offset, c.start, c.end) {
 		return c.end
 	}
 	end := skipChar(data, offset, b)

@@ -2,12 +2,23 @@ package html
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/internal/textutil"
 )
+
+// enterOrExit renders node with enter when the walk enters it and with exit
+// when it leaves it.
+func enterOrExit[N any](r *Renderer, w io.Writer, node N, entering bool, enter, exit func(*Renderer, io.Writer, N)) {
+	if entering {
+		enter(r, w, node)
+	} else {
+		exit(r, w, node)
+	}
+}
 
 func IsList(node ast.Node) bool { _, ok := node.(*ast.List); return ok }
 

@@ -51,7 +51,7 @@ type codeSpanCache struct {
 // count of the remaining backticks.
 func (p *Parser) codeSpanClosers(data []byte, offset int) (int, []int) {
 	c := &p.codeSpans
-	if c.buf == idOf(data) && offset >= c.runStart && offset < c.runEnd {
+	if c.buf.covers(data, offset, c.runStart, c.runEnd) {
 		return c.runEnd - offset, c.closers
 	}
 

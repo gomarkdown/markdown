@@ -134,7 +134,7 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 		i++
 	}
 	linkOffset = i
-	for i < len(data) && data[i] != ' ' && data[i] != '\t' && data[i] != '\n' && data[i] != '\r' {
+	for i < len(data) && !byteIn(data[i], " \t\n\r") {
 		i++
 	}
 	linkEnd = i
@@ -145,7 +145,7 @@ func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd
 
 	// optional spacer: (space | tab)* (newline | '\'' | '"' | '(' )
 	i = skipHSpace(data, i)
-	if i < len(data) && data[i] != '\n' && data[i] != '\r' && data[i] != '\'' && data[i] != '"' && data[i] != '(' {
+	if i < len(data) && !byteIn(data[i], "\n\r'\"(") {
 		return
 	}
 

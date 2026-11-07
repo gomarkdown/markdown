@@ -9,6 +9,7 @@ import (
 
 	"github.com/gomarkdown/markdown/ast"
 	"github.com/gomarkdown/markdown/internal/matter"
+	"github.com/gomarkdown/markdown/internal/render"
 )
 
 // Renderer renders a parsed document as Markdown. Create one with
@@ -80,9 +81,7 @@ func (r *Renderer) outs(w io.Writer, s string) {
 // render returns the output for node and its children.
 func (r *Renderer) render(node ast.Node) []byte {
 	var buf bytes.Buffer
-	ast.WalkFunc(node, func(n ast.Node, entering bool) ast.WalkStatus {
-		return r.RenderNode(&buf, n, entering)
-	})
+	render.Tree(&buf, node, r.RenderNode)
 	return buf.Bytes()
 }
 
