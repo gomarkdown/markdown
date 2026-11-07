@@ -438,7 +438,10 @@ func (p *Parser) commonMarkParagraph(data []byte) int {
 		}
 	}
 	start := i
+	// While no line is indented, the paragraph is data[start:i] as is and
+	// work stays empty. The first indented line copies the lines so far.
 	var work bytes.Buffer
+	copied := false
 	for i < len(data) {
 		line, end := commonMarkLine(data[i:])
 		if commonMarkBlank(line) {
@@ -446,18 +449,33 @@ func (p *Parser) commonMarkParagraph(data []byte) int {
 		}
 		if i > start {
 			if level := commonMarkSetext(line); level > 0 && !p.commonMarkLazy(data[i:]) {
-				p.commonMarkAddHeading(level, bytes.Trim(work.Bytes(), " \t\n"))
+				content := data[start:i]
+				if copied {
+					content = work.Bytes()
+				}
+				p.commonMarkAddHeading(level, bytes.Trim(content, " \t\n"))
 				return i + end
 			}
 			if commonMarkInterrupts(line) || p.commonMarkTableStart(data[i:]) {
 				break
 			}
 		}
-		work.Write(bytes.TrimLeft(line, " \t"))
-		work.WriteByte('\n')
+		if trimmed := bytes.TrimLeft(line, " \t"); copied || len(trimmed) < len(line) {
+			if !copied {
+				copied = true
+				work.Write(data[start:i])
+			}
+			work.Write(trimmed)
+			work.WriteByte('\n')
+		}
 		i += end
 	}
-	p.renderParagraph(work.Bytes())
+	if copied {
+		p.renderParagraph(work.Bytes())
+	} else {
+		// The full slice expression keeps appends off the bytes after it.
+		p.renderParagraph(data[start:i:i])
+	}
 	return i
 }
 

@@ -66,3 +66,29 @@ func TestCommonMarkInlineSpaceBeforeURL(t *testing.T) {
 		t.Errorf("\nExpected[%s]\nGot     [%s]", want, got)
 	}
 }
+
+// A paragraph with no indented line uses the input bytes rather than a
+// copy. Parsing must leave the input as it was either way.
+func TestCommonMarkParagraphInput(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"a b\nc *d*\n", `"a b\nc " Emph "d" /Emph`},
+		{"a b\n  c\n d", `"a b\nc\nd"`},
+		{"  a\nb  \n", `"a\nb"`},
+		{"a\nb", `"a\nb"`},
+		{"a b\n c\n===\n", `Heading "a b\nc" /Heading`},
+		{"a b\nc\n---\nd", `Heading "a b\nc" /Heading "d"`},
+	}
+	for _, tc := range tests {
+		input := []byte(tc.input)
+		got := inlineShape(NewCommonMark().Parse(input))
+		if got != tc.want {
+			t.Errorf("input %q\nExpected[%s]\nGot     [%s]", tc.input, tc.want, got)
+		}
+		if string(input) != tc.input {
+			t.Errorf("input %q changed to %q", tc.input, input)
+		}
+	}
+}

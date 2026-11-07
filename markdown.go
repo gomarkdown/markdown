@@ -57,7 +57,13 @@ func Parse(markdown []byte, p *parser.Parser) ast.Node {
 //
 // To convert to HTML, pass html.Renderer
 func Render(doc ast.Node, renderer Renderer) []byte {
+	return render(doc, renderer, 0)
+}
+
+// render is Render with the output buffer sized to sizeHint up front.
+func render(doc ast.Node, renderer Renderer, sizeHint int) []byte {
 	var buf bytes.Buffer
+	buf.Grow(sizeHint)
 	renderer.RenderHeader(&buf, doc)
 	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
 		return renderer.RenderNode(&buf, node, entering)
@@ -86,7 +92,9 @@ func ToHTML(markdown []byte, p *parser.Parser, renderer Renderer) []byte {
 		}
 		renderer = html.NewRenderer(opts)
 	}
-	return Render(doc, renderer)
+	// HTML is typically 1.2-1.5 times the size of its markdown source, so
+	// most documents fit without growing the buffer.
+	return render(doc, renderer, len(markdown)+len(markdown)/2)
 }
 
 // NormalizeNewlines converts Windows and Mac newlines to Unix newlines.
