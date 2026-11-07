@@ -99,9 +99,7 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 		t1 := tolower(text[1])
 
 		if t1 == '\'' {
-			nextChar := byteAt(text, 2)
-			smartQuote(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false)
-			return 1
+			return r.smartDoubledQuote(out, previousChar, text)
 		}
 
 		for _, suffix := range [...]string{"s", "t", "m", "d", "re", "ll", "ve"} {
@@ -196,11 +194,17 @@ func (r *SPRenderer) smartPeriod(out *bytes.Buffer, previousChar byte, text []by
 	return 0
 }
 
+// smartDoubledQuote writes a doubled quote mark (two apostrophes or two
+// backticks) at the start of text as a double quote, and returns 1 to skip
+// its second mark.
+func (r *SPRenderer) smartDoubledQuote(out *bytes.Buffer, previousChar byte, text []byte) int {
+	smartQuote(out, previousChar, byteAt(text, 2), 'd', &r.inDoubleQuote, false)
+	return 1
+}
+
 func (r *SPRenderer) smartBacktick(out *bytes.Buffer, previousChar byte, text []byte) int {
 	if len(text) >= 2 && text[1] == '`' {
-		nextChar := byteAt(text, 2)
-		smartQuote(out, previousChar, nextChar, 'd', &r.inDoubleQuote, false)
-		return 1
+		return r.smartDoubledQuote(out, previousChar, text)
 	}
 
 	out.WriteByte(text[0])
