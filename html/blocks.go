@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/matter"
 	"github.com/gomarkdown/markdown/parser"
 )
 
@@ -278,13 +279,8 @@ func (r *Renderer) DocumentMatter(w io.Writer, node *ast.DocumentMatter, enterin
 	if r.documentMatter != ast.DocumentMatterNone {
 		r.Outs(w, "</section>\n")
 	}
-	switch node.Matter {
-	case ast.DocumentMatterFront:
-		r.Outs(w, `<section data-matter="front">`)
-	case ast.DocumentMatterMain:
-		r.Outs(w, `<section data-matter="main">`)
-	case ast.DocumentMatterBack:
-		r.Outs(w, `<section data-matter="back">`)
+	if name := matter.Name(node.Matter); name != "" {
+		r.Outs(w, `<section data-matter="`+name+`">`)
 	}
 	r.documentMatter = node.Matter
 }

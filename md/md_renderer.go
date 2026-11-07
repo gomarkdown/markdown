@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/matter"
 )
 
 // Renderer renders a parsed document as Markdown. Create one with
@@ -787,13 +788,8 @@ func (r *Renderer) documentMatter(w io.Writer, node *ast.DocumentMatter, enterin
 	if !entering {
 		return
 	}
-	switch node.Matter {
-	case ast.DocumentMatterFront:
-		r.outs(w, "{frontmatter}\n\n")
-	case ast.DocumentMatterMain:
-		r.outs(w, "{mainmatter}\n\n")
-	case ast.DocumentMatterBack:
-		r.outs(w, "{backmatter}\n\n")
+	if tag := matter.Tag(node.Matter); tag != "" {
+		r.outs(w, tag+"\n\n")
 	}
 }
 

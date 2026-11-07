@@ -117,20 +117,31 @@ func (r *SPRenderer) smartSingleQuote(out *bytes.Buffer, previousChar byte, text
 	return 0
 }
 
-func (r *SPRenderer) smartParens(out *bytes.Buffer, previousChar byte, text []byte) int {
-	for _, replacement := range [...]struct{ token, entity string }{
-		{"(c)", "&copy;"},
-		{"(r)", "&reg;"},
-		{"(tm)", "&trade;"},
-	} {
-		if len(text) >= len(replacement.token) && bytes.EqualFold(text[:len(replacement.token)], []byte(replacement.token)) {
-			out.WriteString(replacement.entity)
-			return len(replacement.token) - 1
+// smartToken is a run of characters that smartypants writes as an entity.
+type smartToken struct{ token, entity string }
+
+var (
+	parenTokens  = []smartToken{{"(c)", "&copy;"}, {"(r)", "&reg;"}, {"(tm)", "&trade;"}}
+	latexDashes  = []smartToken{{"---", "&mdash;"}, {"--", "&ndash;"}}
+	periodTokens = []smartToken{{"...", "&hellip;"}, {". . .", "&hellip;"}}
+)
+
+// smartReplace writes the entity of the first token that text starts with,
+// ignoring case, and returns how many bytes after text[0] it used. Without
+// a match it writes text[0] and returns 0.
+func smartReplace(out *bytes.Buffer, text []byte, tokens []smartToken) int {
+	for _, t := range tokens {
+		if len(text) >= len(t.token) && bytes.EqualFold(text[:len(t.token)], []byte(t.token)) {
+			out.WriteString(t.entity)
+			return len(t.token) - 1
 		}
 	}
-
 	out.WriteByte(text[0])
 	return 0
+}
+
+func (r *SPRenderer) smartParens(out *bytes.Buffer, previousChar byte, text []byte) int {
+	return smartReplace(out, text, parenTokens)
 }
 
 func (r *SPRenderer) smartDash(out *bytes.Buffer, previousChar byte, text []byte) int {
@@ -151,17 +162,7 @@ func (r *SPRenderer) smartDash(out *bytes.Buffer, previousChar byte, text []byte
 }
 
 func (r *SPRenderer) smartDashLatex(out *bytes.Buffer, previousChar byte, text []byte) int {
-	if len(text) >= 3 && text[1] == '-' && text[2] == '-' {
-		out.WriteString("&mdash;")
-		return 2
-	}
-	if len(text) >= 2 && text[1] == '-' {
-		out.WriteString("&ndash;")
-		return 1
-	}
-
-	out.WriteByte(text[0])
-	return 0
+	return smartReplace(out, text, latexDashes)
 }
 
 func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text []byte, quote byte, addNBSP bool) int {
@@ -180,18 +181,7 @@ func (r *SPRenderer) smartAmpVariant(out *bytes.Buffer, previousChar byte, text 
 }
 
 func (r *SPRenderer) smartPeriod(out *bytes.Buffer, previousChar byte, text []byte) int {
-	if len(text) >= 3 && text[1] == '.' && text[2] == '.' {
-		out.WriteString("&hellip;")
-		return 2
-	}
-
-	if len(text) >= 5 && text[1] == ' ' && text[2] == '.' && text[3] == ' ' && text[4] == '.' {
-		out.WriteString("&hellip;")
-		return 4
-	}
-
-	out.WriteByte(text[0])
-	return 0
+	return smartReplace(out, text, periodTokens)
 }
 
 // smartDoubledQuote writes a doubled quote mark (two apostrophes or two
