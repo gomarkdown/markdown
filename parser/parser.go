@@ -204,11 +204,12 @@ func (p *Parser) addChild(node ast.Node) ast.Node {
 }
 
 func canNodeContain(n ast.Node, v ast.Node) bool {
+	_, vIsListItem := v.(*ast.ListItem)
 	switch n.(type) {
 	case *ast.List:
-		return isListItem(v)
+		return vIsListItem
 	case *ast.Document, *ast.BlockQuote, *ast.Aside, *ast.ListItem, *ast.CaptionFigure:
-		return !isListItem(v)
+		return !vIsListItem
 	case *ast.Table:
 		switch v.(type) {
 		case *ast.TableHeader, *ast.TableBody, *ast.TableFooter:
@@ -420,9 +421,4 @@ func (p *Parser) parseInlineContainers(root ast.Node, includeTableCells bool) {
 		container.Content = nil
 		return ast.GoToNext
 	})
-}
-
-func isListItem(d ast.Node) bool {
-	_, ok := d.(*ast.ListItem)
-	return ok
 }
