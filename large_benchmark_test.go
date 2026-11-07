@@ -69,3 +69,16 @@ func BenchmarkLargeDocumentToHTML(b *testing.B) {
 		largeDocumentResult = ToHTML(data, p, renderer)
 	}
 }
+
+func BenchmarkLargeDocumentCommonMarkToHTML(b *testing.B) {
+	data := readLargeBenchmarkDocument(b)
+	opts := html.RendererOptions{Flags: html.CommonFlags}
+	b.SetBytes(int64(len(data)))
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		p := parser.NewCommonMark()
+		renderer := html.NewRenderer(opts)
+		largeDocumentResult = ToHTML(data, p, renderer)
+	}
+}

@@ -1,0 +1,66 @@
+package parser
+
+import (
+	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/gomarkdown/markdown/ast"
+)
+
+// inlineShape describes the inline nodes of a document, quoting text
+// literals exactly (ast.Print trims their spaces).
+func inlineShape(doc ast.Node) string {
+	var parts []string
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		switch n := node.(type) {
+		case *ast.Document, *ast.Paragraph:
+		case *ast.Text:
+			if entering {
+				parts = append(parts, fmt.Sprintf("%q", n.Literal))
+			}
+		default:
+			name := strings.TrimPrefix(fmt.Sprintf("%T", node), "*ast.")
+			if !entering {
+				name = "/" + name
+			}
+			parts = append(parts, name)
+		}
+		return ast.GoToNext
+	})
+	return strings.Join(parts, " ")
+}
+
+// TestCommonMarkInlineSpaces covers the spaces that end a text token in
+// CommonMark mode: a single space between words stays in the token, while
+// a space run, or a space before a tab or a line break, has its own rules.
+func TestCommonMarkInlineSpaces(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"a b c", `"a b c"`},
+		{"a  b", `"a  b"`},
+		{"a \tb", `"a \tb"`},
+		{"a \nb", `"a\nb"`},
+		{"a  \nb", `"a" Hardbreak "b"`},
+		{"a b *c* d", `"a b " Emph "c" /Emph " d"`},
+		{"a *b *c", `"a *b *c"`},
+		{"[a b ](u)", `Link "a b " /Link`},
+	}
+	for _, tc := range tests {
+		got := inlineShape(NewCommonMark().Parse([]byte(tc.input)))
+		if got != tc.want {
+			t.Errorf("input %q\nExpected[%s]\nGot     [%s]", tc.input, tc.want, got)
+		}
+	}
+}
+
+func TestCommonMarkInlineSpaceBeforeURL(t *testing.T) {
+	p := NewCommonMarkWithExtensions(Autolink)
+	got := inlineShape(p.Parse([]byte("see http://example.com now")))
+	want := `"see " Link "http://example.com" /Link " now"`
+	if got != want {
+		t.Errorf("\nExpected[%s]\nGot     [%s]", want, got)
+	}
+}
