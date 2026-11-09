@@ -59,3 +59,10 @@ func TestNormalizeNewlines(t *testing.T) {
 
 	}
 }
+
+func TestSetextHeadingAtEndOfInput(t *testing.T) {
+	got := string(ToHTML([]byte("Sub\n---"), nil, nil))
+	if want := "<h2>Sub</h2>\n"; got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
