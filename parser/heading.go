@@ -166,7 +166,7 @@ func isUnderlinedHeading(data []byte) int {
 	}
 	i := skipChar(data, 1, marker)
 	i = skipChar(data, i, ' ')
-	if i < len(data) && data[i] == '\n' {
+	if i == len(data) || data[i] == '\n' {
 		if marker == '=' {
 			return 1
 		}

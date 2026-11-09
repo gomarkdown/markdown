@@ -129,6 +129,25 @@ func TestUnderlineHeaders(t *testing.T) {
 	doTestsBlock(t, "UnderlineHeaders.tests", 0)
 }
 
+// UnderlineHeaders.tests always ends an input with a newline, so an
+// underline that is the last bytes of the input is tested here.
+func TestUnderlineHeadersAtEndOfInput(t *testing.T) {
+	tests := []string{
+		"Sub\n---",
+		"<h2>Sub</h2>\n",
+
+		"Title\n==",
+		"<h1>Title</h1>\n",
+
+		"Sub\n--- ",
+		"<h2>Sub</h2>\n",
+
+		"> Quote\n> ===",
+		"<blockquote>\n<h1>Quote</h1>\n</blockquote>\n",
+	}
+	doTestsParam(t, tests, TestParams{Flags: html.UseXHTML})
+}
+
 func TestUnderlineHeadersAutoIDs(t *testing.T) {
 	doTestsBlock(t, "UnderlineHeadersAutoIDs.tests", parser.AutoHeadingIDs)
 }
