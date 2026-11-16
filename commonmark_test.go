@@ -164,6 +164,22 @@ func TestCommonMarkReferenceDefinitionContinuation(t *testing.T) {
 	}
 }
 
+// A blank line between an indented code block and the next block in a list
+// item makes the list loose.
+func TestCommonMarkLooseListAfterIndentedCode(t *testing.T) {
+	for _, tc := range []struct{ input, want string }{
+		{"-     code\n\n  para\n", "<ul>\n<li>\n<pre><code>code\n</code></pre>\n<p>para</p>\n</li>\n</ul>\n"},
+		{"- a\n-     code\n\n  para\n", "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<pre><code>code\n</code></pre>\n<p>para</p>\n</li>\n</ul>\n"},
+		{"1.     code\n\n\n   para\n", "<ol>\n<li>\n<pre><code>code\n</code></pre>\n<p>para</p>\n</li>\n</ol>\n"},
+		// Blank lines inside the code block still don't make the list loose.
+		{"-     a\n\n      b\n", "<ul>\n<li>\n<pre><code>a\n\nb\n</code></pre>\n</li>\n</ul>\n"},
+	} {
+		if got := string(ToHTML([]byte(tc.input), parser.NewCommonMark(), nil)); got != tc.want {
+			t.Errorf("input %q: want %q, got %q", tc.input, tc.want, got)
+		}
+	}
+}
+
 func TestCommonMarkAdversarialInputs(t *testing.T) {
 	for name, input := range map[string]string{
 		"open brackets":                    strings.Repeat("[", 32768),
