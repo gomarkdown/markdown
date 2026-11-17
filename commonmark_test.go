@@ -171,6 +171,8 @@ func TestCommonMarkLooseListAfterIndentedCode(t *testing.T) {
 		{"-     code\n\n  para\n", "<ul>\n<li>\n<pre><code>code\n</code></pre>\n<p>para</p>\n</li>\n</ul>\n"},
 		{"- a\n-     code\n\n  para\n", "<ul>\n<li>\n<p>a</p>\n</li>\n<li>\n<pre><code>code\n</code></pre>\n<p>para</p>\n</li>\n</ul>\n"},
 		{"1.     code\n\n\n   para\n", "<ol>\n<li>\n<pre><code>code\n</code></pre>\n<p>para</p>\n</li>\n</ol>\n"},
+		// Without a blank line the list stays tight.
+		{"-     code\n- b\n", "<ul>\n<li>\n<pre><code>code\n</code></pre>\n</li>\n<li>b</li>\n</ul>\n"},
 		// Blank lines inside the code block still don't make the list loose.
 		{"-     a\n\n      b\n", "<ul>\n<li>\n<pre><code>a\n\nb\n</code></pre>\n</li>\n</ul>\n"},
 	} {

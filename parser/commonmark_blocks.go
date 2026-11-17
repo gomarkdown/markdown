@@ -350,6 +350,7 @@ func (p *Parser) commonMarkTable(data []byte) int {
 
 func (p *Parser) commonMarkCode(data []byte) int {
 	var work bytes.Buffer
+	// last is the end of the last code line in work; consumed is its end in data.
 	i, last, consumed := 0, 0, 0
 	for i < len(data) {
 		line, end := commonMarkLine(data[i:])
