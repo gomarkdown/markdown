@@ -188,7 +188,6 @@ func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 		return 0, nil
 	}
 
-	origData := data
 	data = data[offset-rewind:]
 
 	isSafeURL := p.IsSafeURLOverride
@@ -214,15 +213,20 @@ func autoLink(p *Parser, data []byte, offset int) (int, ast.Node) {
 		linkEnd--
 	}
 
-	// See if the link finishes with a punctuation sign that has an opener on
-	// this line. The balance cache advances with the inline cursor, so repeated
-	// URLs do not each scan back to the beginning of the line.
+	// Drop a closing ')', ']' or '}' that has no opener inside the link:
+	// "(see https://x.org/a)" ends before it, but a balanced pair at the end
+	// of a URL (https://en.wikipedia.org/wiki/Go_(language)) stays.
+	var opener byte
 	switch data[linkEnd-1] {
-	case ')', ']', '}':
-		closeAt := offset - rewind + linkEnd - 1
-		if p.closerBalance.hasOpener(origData, closeAt) {
-			linkEnd--
-		}
+	case ')':
+		opener = '('
+	case ']':
+		opener = '['
+	case '}':
+		opener = '{'
+	}
+	if opener != 0 && bytes.Count(data[:linkEnd], data[linkEnd-1:linkEnd]) > bytes.Count(data[:linkEnd], []byte{opener}) {
+		linkEnd--
 	}
 
 	link := unescapeBytes(data[:linkEnd])
