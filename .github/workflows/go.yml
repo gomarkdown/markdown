@@ -5,13 +5,13 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Check out source code
+        uses: actions/checkout@v7
+
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v7
         with:
           go-version: 1.22.x
-
-      - name: Check out source code
-        uses: actions/checkout@v3
 
       - name: Test
         run: go test -v . && go test -v ./ast && go test -v ./parser && go test -v ./html
