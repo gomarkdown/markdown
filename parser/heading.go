@@ -149,8 +149,10 @@ func (p *Parser) prefixSpecialHeading(data []byte) int {
 	end := skipUntilChar(data, i, '\n')
 	id, end, skip := p.parseHeadingContent(data, i, end)
 	if end > i {
+		// Content only, same as other headings. Literal would be written again
+		// on top of the inlines parsed from Content.
 		block := &ast.Heading{
-			Container: ast.Container{Literal: data[i:end], Content: data[i:end]},
+			Container: ast.Container{Content: data[i:end]},
 			IsSpecial: true,
 			Level:     1,
 		}

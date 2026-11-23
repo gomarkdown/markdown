@@ -15,7 +15,8 @@ Markdown syntax, which differs between those parsers.
 
 The output is a normalized form of the document: the lines of a paragraph are
 joined, emphasis is written with *, headings with # and code blocks with
-fences. These don't round-trip:
+fences. A title block stays a % block and a .# heading stays .#. These don't
+round-trip:
 
   - whitespace that HTML ignores
   - the leading . of a code block's info string: {.go} is written as go

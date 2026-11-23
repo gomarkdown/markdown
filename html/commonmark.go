@@ -122,9 +122,9 @@ func (r *Renderer) commonMarkImageText(w io.Writer, image ast.Node) {
 				EscapeHTML(w, n.Literal)
 			case *ast.Code:
 				EscapeHTML(w, n.Literal)
-			case *ast.Hardbreak:
-				r.HardBreak(w, n)
-			case *ast.Softbreak:
+			case *ast.Hardbreak, *ast.Softbreak:
+				// Alt text is an attribute. A <br> here would be literal text
+				// inside the quotes; the other image path strips that tag.
 				r.Outs(w, "\n")
 			}
 		}

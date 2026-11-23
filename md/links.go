@@ -52,8 +52,9 @@ func hasBalancedParens(text []byte) bool {
 // linkTarget returns the destination and title of a link as written after the
 // label. Both parsers unescape destinations. CommonMark also decodes entities
 // and needs <> around a destination that is empty or has spaces or control
-// characters.
-func linkTarget(dest, title []byte, node ast.Node) string {
+// characters. escapePipe backslash-escapes | in the destination so a table
+// cell is not split.
+func linkTarget(dest, title []byte, node ast.Node, escapePipe bool) string {
 	commonMark := isCommonMarkDoc(node)
 	hasSpace := bytes.ContainsFunc(dest, func(c rune) bool { return c <= ' ' || c == 0x7f })
 	var target string
@@ -68,6 +69,11 @@ func linkTarget(dest, title []byte, node ast.Node) string {
 				((c == '(' || c == ')') && parens)
 		}))
 	}
+	// A table cell ends at an unescaped |, and the destination was unescaped
+	// when it was parsed. The title is still in source form.
+	if escapePipe {
+		target = strings.ReplaceAll(target, "|", `\|`)
+	}
 	// CommonMark keeps an empty title, which the HTML renderer writes as title="".
 	if len(title) != 0 || (commonMark && title != nil) {
 		target += " " + quoteTitle(title, commonMark)
@@ -79,7 +85,7 @@ func linkTarget(dest, title []byte, node ast.Node) string {
 // legacy parser keeps them in source form.
 func refTarget(ref *ast.ReferenceDefinition) string {
 	if isCommonMarkDoc(ref) {
-		return linkTarget(ref.Destination, ref.Title, ref)
+		return linkTarget(ref.Destination, ref.Title, ref, false)
 	}
 	target := string(ref.Destination)
 	if len(ref.Title) != 0 {
@@ -108,7 +114,7 @@ func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 		return
 	}
 	r.outs(w, "](")
-	r.outs(w, linkTarget(node.Destination, node.Title, node))
+	r.outs(w, linkTarget(node.Destination, node.Title, node, r.inTableCell))
 	r.outs(w, ")")
 }
 
@@ -173,7 +179,7 @@ func (r *Renderer) uniqueFooterLabel(label, target string) string {
 // footerLink renders a link whose destination goes to the footer.
 func (r *Renderer) footerLink(w io.Writer, node *ast.Link) {
 	text := r.appendChildren(nil, node)
-	target := linkTarget(node.Destination, node.Title, node)
+	target := linkTarget(node.Destination, node.Title, node, false)
 	label := r.uniqueFooterLabel(footerLinkLabel(text), target)
 
 	r.outs(w, "[")
@@ -239,7 +245,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 	}
 
 	r.outs(w, "](")
-	r.outs(w, linkTarget(node.Destination, node.Title, node))
+	r.outs(w, linkTarget(node.Destination, node.Title, node, r.inTableCell))
 	r.outs(w, ")")
 	return ast.GoToNext
 }

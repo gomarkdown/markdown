@@ -479,15 +479,33 @@ func escapeText(clean []byte, text *ast.Text) []byte {
 	return res
 }
 
+// preserveTextWhitespace reports whether cleanWithoutTrim would change text
+// that HTML keeps. Image alt is an attribute, and a title block's newlines
+// separate its % lines.
+func preserveTextWhitespace(text *ast.Text) bool {
+	if _, ok := text.Parent.(*ast.Image); ok {
+		return true
+	}
+	heading, ok := text.Parent.(*ast.Heading)
+	return ok && heading.IsTitleblock
+}
+
 func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	lit := text.Literal
 	raw := isRawText(text)
 	needsEscape := !raw && needsEscaping(lit, r.previousWasNumber)
 	r.previousWasNumber = isNumber(lit)
-	if r.listDepth > 0 && len(lit) == 1 && lit[0] == '\n' {
+	// A line break between inlines in a list. Dropping it glues *a* and *b*
+	// into one emphasis. A space keeps them apart; prefixing a real newline
+	// would indent the next line into a nested block.
+	if !preserveTextWhitespace(text) && r.listDepth > 0 && len(lit) == 1 && lit[0] == '\n' {
+		r.outs(w, " ")
 		return
 	}
-	clean := cleanWithoutTrim(lit)
+	clean := lit
+	if !preserveTextWhitespace(text) {
+		clean = cleanWithoutTrim(lit)
+	}
 	if len(clean) == 0 {
 		return
 	}
@@ -579,8 +597,10 @@ func (r *Renderer) code(w io.Writer, node *ast.Code) {
 }
 
 // headingIDSuffix writes " {#id}" after a heading or caption, if id is set.
-func (r *Renderer) headingIDSuffix(w io.Writer, id string) {
-	if id != "" {
+// CommonMark has no {#id} syntax, so an auto id would become heading text and
+// the next parse would build a different id.
+func (r *Renderer) headingIDSuffix(w io.Writer, node ast.Node, id string) {
+	if id != "" && !isCommonMarkDoc(node) {
 		r.outs(w, " {#"+id+"}")
 	}
 }
@@ -590,6 +610,16 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.Wa
 		return ast.GoToNext
 	}
 	content := r.appendChildren(append([]byte{}, node.Literal...), node)
+	if node.IsTitleblock {
+		lines := bytes.Split(bytes.TrimRight(content, "\n"), []byte("\n"))
+		for _, line := range lines {
+			r.outs(w, "% ")
+			r.out(w, line)
+			r.outs(w, "\n")
+		}
+		r.outs(w, "\n")
+		return ast.SkipChildren
+	}
 	// a # heading can't span lines; CommonMark has multi-line setext headings
 	if bytes.IndexByte(content, '\n') >= 0 && node.Level <= 2 && node.HeadingID == "" {
 		underline := "==="
@@ -600,9 +630,13 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.Wa
 		r.outs(w, "\n"+underline+"\n\n")
 		return ast.SkipChildren
 	}
-	r.outs(w, strings.Repeat("#", node.Level)+" ")
+	marker := strings.Repeat("#", node.Level) + " "
+	if node.IsSpecial {
+		marker = ".# "
+	}
+	r.outs(w, marker)
 	r.out(w, escapeClosingHashes(content))
-	r.headingIDSuffix(w, node.HeadingID)
+	r.headingIDSuffix(w, node, node.HeadingID)
 	r.outs(w, "\n\n")
 	return ast.SkipChildren
 }
@@ -774,7 +808,7 @@ func (r *Renderer) captionFigure(w io.Writer, node *ast.CaptionFigure, entering 
 	if caption != nil {
 		r.outs(w, prefix)
 		r.out(w, bytes.TrimRight(r.renderBlocks(caption, true), " "))
-		r.headingIDSuffix(w, node.HeadingID)
+		r.headingIDSuffix(w, node, node.HeadingID)
 		r.outs(w, "\n")
 	}
 	r.outs(w, "\n")

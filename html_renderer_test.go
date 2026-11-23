@@ -519,3 +519,98 @@ func TestSuperSubscriptEscapeHTML(t *testing.T) {
 		t.Errorf("got  %q\nwant %q", got, want)
 	}
 }
+
+func TestHeadingIDPrefixMatchesTOCAndSurvivesRerender(t *testing.T) {
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.AutoHeadingIDs)
+	doc := p.Parse([]byte("# Title\n\n## Sub\n"))
+	r := html.NewRenderer(html.RendererOptions{
+		Flags:           html.TOC,
+		HeadingIDPrefix: "PRE:",
+		HeadingIDSuffix: ":POST",
+	})
+	first := Render(doc, r)
+	second := Render(doc, r)
+	if !bytes.Equal(first, second) {
+		t.Errorf("second render changed the output\nfirst:\n%s\nsecond:\n%s", first, second)
+	}
+	for _, id := range []string{"PRE:title:POST", "PRE:sub:POST"} {
+		if !bytes.Contains(first, []byte(`href="#`+id+`"`)) || !bytes.Contains(first, []byte(`id="`+id+`"`)) {
+			t.Errorf("output missing href and id for %s\n%s", id, first)
+		}
+	}
+	if bytes.Contains(first, []byte("PRE:PRE:")) {
+		t.Errorf("heading id prefix was applied twice\n%s", first)
+	}
+}
+
+func TestDuplicateHeadingIDsMatchInTOC(t *testing.T) {
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.HeadingIDs)
+	r := html.NewRenderer(html.RendererOptions{Flags: html.TOC})
+	got := Render(p.Parse([]byte("# One {#x}\n\n# Two {#x}\n")), r)
+	for _, fragment := range []string{`href="#x"`, `id="x"`, `href="#x-1"`, `id="x-1"`} {
+		if !bytes.Contains(got, []byte(fragment)) {
+			t.Errorf("missing %s\n%s", fragment, got)
+		}
+	}
+}
+
+func TestCompletePageTitleIsEscapedWhenSmartypantsIsOn(t *testing.T) {
+	r := html.NewRenderer(html.RendererOptions{
+		Flags: html.CompletePage | html.Smartypants,
+		Title: `A <b> "quote"`,
+	})
+	got := Render(&ast.Document{}, r)
+	if !bytes.Contains(got, []byte("&lt;b&gt;")) {
+		t.Errorf("title was not escaped\n%s", got)
+	}
+	if bytes.Contains(got, []byte("<b>")) {
+		t.Errorf("title contains a raw tag\n%s", got)
+	}
+}
+
+func TestUseXHTMLKeepsHorizontalRuleAttributes(t *testing.T) {
+	input := "---\n{: .rule}\n"
+	p := parser.NewWithExtensions(parser.CommonExtensions | parser.Attributes)
+	r := html.NewRenderer(html.RendererOptions{Flags: html.UseXHTML})
+	got := string(ToHTML([]byte(input), p, r))
+	if want := `<hr class="rule" />`; !bytes.Contains([]byte(got), []byte(want)) {
+		t.Errorf("got %q, want it to contain %q", got, want)
+	}
+}
+
+func TestCommonMarkImageAltHardBreakIsNotATag(t *testing.T) {
+	p := parser.NewCommonMark()
+	got := string(ToHTML([]byte("![foo\\\nbar](/url)\n"), p, nil))
+	if bytes.Contains([]byte(got), []byte("<br")) {
+		t.Errorf("alt text contains a break tag\n%s", got)
+	}
+	if !bytes.Contains([]byte(got), []byte("foo\nbar")) && !bytes.Contains([]byte(got), []byte("foo bar")) {
+		t.Errorf("got %s", got)
+	}
+}
+
+func TestSafelinkAllowsRelativeLinks(t *testing.T) {
+	for _, input := range []string{"[x](#a)", "[x](foo.md)", "[x](/?q=1)", "[x](./a)"} {
+		got := string(ToHTML([]byte(input+"\n"), parser.New(), html.NewRenderer(html.RendererOptions{Flags: html.Safelink})))
+		if bytes.Contains([]byte(got), []byte("<tt>")) {
+			t.Errorf("%s was treated as unsafe\n%s", input, got)
+		}
+	}
+	got := string(ToHTML([]byte("[x](javascript:alert(1))\n"), parser.New(), html.NewRenderer(html.RendererOptions{Flags: html.Safelink})))
+	if !bytes.Contains([]byte(got), []byte("<tt>")) {
+		t.Errorf("javascript link was kept\n%s", got)
+	}
+}
+
+func TestIndexAndCalloutIDsAreEscaped(t *testing.T) {
+	doc := &ast.Document{}
+	ast.AppendChild(doc, &ast.Index{ID: `a" onload="x`})
+	ast.AppendChild(doc, &ast.Callout{ID: []byte(`1"><script>`)})
+	got := Render(doc, html.NewRenderer(html.RendererOptions{}))
+	if bytes.Contains(got, []byte(`onload="x`)) || bytes.Contains(got, []byte("<script>")) {
+		t.Errorf("id was not escaped\n%s", got)
+	}
+	if !bytes.Contains(got, []byte(`id="a&quot; onload=&quot;x"`)) || !bytes.Contains(got, []byte(`1&quot;&gt;&lt;script&gt;`)) {
+		t.Errorf("got %s", got)
+	}
+}

@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"path"
-	"path/filepath"
 
 	"github.com/gomarkdown/markdown/internal/textutil"
 )
@@ -138,10 +137,11 @@ func newIncStack() *incStack {
 }
 
 // Push adds the directory of new, which is relative to the current one unless
-// it's absolute, to the stack.
+// it's absolute, to the stack. Paths stay slash-separated: include names are
+// document paths, and path.Dir does not treat a backslash as a separator.
 func (i *incStack) Push(new string) {
 	if !path.IsAbs(new) {
-		new = filepath.Join(i.Last(), new)
+		new = path.Join(i.Last(), new)
 	}
 	i.stack = append(i.stack, path.Dir(new))
 }

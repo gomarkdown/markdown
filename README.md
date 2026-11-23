@@ -75,7 +75,7 @@ Example source: [examples/basic.go](examples/basic.go)
 
 `parser.NewCommonMark()` creates a parser for the [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/) grammar. It's a shortcut for setting the `parser.CommonMark` flag. All 652 official examples are tested against exact HTML output. The flag is off by default, preserving existing parsing and rendering behavior.
 
-CommonMark mode uses this library's parser and usual `ast` nodes, so AST traversal, transformation, custom renderers, and HTML rendering hooks remain available. It uses strict CommonMark syntax regardless of the parser's `Extensions` setting; extensions and custom block/inline parsers apply only when the flag is off. Reference destination and title overrides remain available.
+CommonMark mode uses this library's parser and usual `ast` nodes, so AST traversal, transformation, custom renderers, and HTML rendering hooks remain available. `NewCommonMark` follows the spec and ignores the parser's extensions. `NewCommonMarkWithExtensions` is the exception: it applies the extensions in `CommonMarkExtensions` and runs `Opts.ParserHook`. Custom inline parsers apply only when the flag is off. Reference destination and title overrides remain available.
 
 When `markdown.ToHTML` receives no renderer, CommonMark documents use XHTML tags and no smart punctuation, matching the official examples. To customize rendering, supply an `html.Renderer` with your own flags.
 
@@ -314,6 +314,9 @@ implements the following extensions:
 
 - **Hard line breaks**. With this extension enabled, newlines in the input
   translate into line breaks in the output. This extension is off by default.
+  A trailing backslash already becomes a line break under `CommonExtensions`
+  (`BackslashLineBreak`). Two spaces at the end of a line do too, which is
+  standard Markdown and does not need an extension.
 
 - **Non-breaking space**. With this extension enabled, a space preceded by a backslash
   in the input becomes a non-breaking space in the output. This extension is off by default.

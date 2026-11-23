@@ -75,7 +75,7 @@ func (r *Renderer) crIf(w io.Writer, cond bool) {
 }
 
 func normalizedHeadingLevel(level int) int {
-	if level < 1 || level > 5 {
+	if level < 1 || level > 6 {
 		return 6
 	}
 	return level
@@ -90,8 +90,12 @@ func HeadingCloseTagFromLevel(level int) string {
 }
 
 func (r *Renderer) OutHRTag(w io.Writer, attrs []string) {
-	hr := TagWithAttributes("<hr", attrs)
-	r.OutOneOf(w, r.Opts.Flags&UseXHTML == 0, hr, "<hr />")
+	hr := tagStart("<hr", attrs)
+	if r.Opts.Flags&UseXHTML != 0 {
+		r.Outs(w, hr+" />")
+		return
+	}
+	r.Outs(w, hr+">")
 }
 
 // Text writes ast.Text node

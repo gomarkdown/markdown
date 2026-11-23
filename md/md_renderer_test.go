@@ -737,6 +737,71 @@ func TestRenderTable(t *testing.T) {
 	testRendering(t, input, "| a | b |\n| :--- | ---: |\n| 1 | 2 |\n\n")
 }
 
+func TestRenderListInlineLineBreakKeepsEmphasis(t *testing.T) {
+	source := "* *a*\n*b*\n"
+	for name, p := range testParsers {
+		t.Run(name, func(t *testing.T) {
+			output := markdown.Render(p().Parse([]byte(source)), NewRenderer())
+			if strings.Contains(string(output), "*a**b*") || strings.Contains(string(output), "*a*b*") {
+				t.Fatalf("line break glued emphasis together: %q", output)
+			}
+			got := markdown.ToHTML(output, p(), nil)
+			if !strings.Contains(string(got), "<em>a</em>") || !strings.Contains(string(got), "<em>b</em>") {
+				t.Fatalf("rendered %q as %q\nHTML: %s", source, output, got)
+			}
+		})
+	}
+}
+
+func TestRenderCommonMarkAutoHeadingID(t *testing.T) {
+	newParser := func() *parser.Parser {
+		return parser.NewCommonMarkWithExtensions(parser.CommonMarkExtensions)
+	}
+	source := "# Hello\n"
+	output := testSameHTML(t, newParser, source)
+	if strings.Contains(output, "{#") {
+		t.Errorf("auto id written into heading text: %q", output)
+	}
+}
+
+func TestRenderSpecialHeadingAndTitleBlock(t *testing.T) {
+	mmark := func() *parser.Parser {
+		return parser.NewWithExtensions(parser.CommonExtensions | parser.Mmark)
+	}
+	testSameHTML(t, mmark, ".# Header 1\n")
+	title := func() *parser.Parser {
+		return parser.NewWithExtensions(parser.CommonExtensions | parser.Titleblock)
+	}
+	testSameHTML(t, title, "% Title\n% Author\n\ntext\n")
+}
+
+func TestRenderImageAltWhitespace(t *testing.T) {
+	for name, p := range testParsers {
+		t.Run(name, func(t *testing.T) {
+			testSameHTML(t, p, "![foo  bar](u)\n")
+		})
+	}
+}
+
+func TestRenderTableDestinationPipe(t *testing.T) {
+	parsers := map[string]func() *parser.Parser{
+		"legacy": testLegacyParser,
+		"commonmark+ext": func() *parser.Parser {
+			return parser.NewCommonMarkWithExtensions(parser.CommonMarkExtensions)
+		},
+	}
+	for _, source := range []string{
+		"| [a](http://ex.com/a\\|b) |\n| --- |\n| x |\n",
+		"| ![a](http://ex.com/a\\|b) |\n| --- |\n| x |\n",
+	} {
+		for name, p := range parsers {
+			t.Run(name+" "+source, func(t *testing.T) {
+				testSameHTML(t, p, source)
+			})
+		}
+	}
+}
+
 func TestRenderMmarkNodes(t *testing.T) {
 	mmark := func() *parser.Parser {
 		return parser.NewWithExtensions(parser.CommonExtensions | parser.Mmark)

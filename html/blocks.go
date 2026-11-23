@@ -110,9 +110,14 @@ func (r *Renderer) MakeUniqueHeadingID(hdr *ast.Heading) string {
 	if hdr.HeadingID == "" {
 		return ""
 	}
-	id := r.EnsureUniqueHeadingID(hdr.HeadingID)
-	id = r.Opts.HeadingIDPrefix + id + r.Opts.HeadingIDSuffix
-	hdr.HeadingID = id
+	if anchor, ok := r.headingAnchors[hdr]; ok && anchor.base == hdr.HeadingID {
+		return anchor.id
+	}
+	id := r.Opts.HeadingIDPrefix + r.EnsureUniqueHeadingID(hdr.HeadingID) + r.Opts.HeadingIDSuffix
+	if r.headingAnchors == nil {
+		r.headingAnchors = map[*ast.Heading]headingAnchor{}
+	}
+	r.headingAnchors[hdr] = headingAnchor{base: hdr.HeadingID, id: id}
 	return id
 }
 
@@ -304,13 +309,13 @@ func (r *Renderer) Citation(w io.Writer, node *ast.Citation) {
 // Callout writes ast.Callout node
 func (r *Renderer) Callout(w io.Writer, node *ast.Callout) {
 	r.OutTag(w, "<span", []string{`class="callout"`})
-	r.Out(w, node.ID)
+	EscapeHTML(w, node.ID)
 	r.Outs(w, "</span>")
 }
 
 // Index writes ast.Index node
 func (r *Renderer) Index(w io.Writer, node *ast.Index) {
 	// there is no in-text representation.
-	r.OutTag(w, "<span", []string{`class="index"`, fmt.Sprintf(`id="%s"`, node.ID)})
+	r.OutTag(w, "<span", []string{`class="index"`, `id="` + escapeAttr(node.ID) + `"`})
 	r.Outs(w, "</span>")
 }

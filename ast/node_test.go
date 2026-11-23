@@ -84,6 +84,30 @@ func TestRemoveLeaveFromTree(t *testing.T) {
 	}
 }
 
+func TestRemoveContainerKeepsItsChildren(t *testing.T) {
+	doc := &Document{}
+	para := &Paragraph{}
+	text := &Text{Leaf: Leaf{Literal: []byte("hi")}}
+	AppendChild(para, text)
+	AppendChild(doc, para)
+
+	other := &Document{}
+	AppendChild(other, para)
+
+	if got := para.GetChildren(); len(got) != 1 || got[0] != Node(text) {
+		t.Fatalf("moved paragraph children = %v, want the text node", got)
+	}
+	if text.GetParent() != para {
+		t.Fatal("text node lost its parent when the paragraph was moved")
+	}
+	if len(doc.GetChildren()) != 0 {
+		t.Fatal("paragraph was still a child of the document it was moved from")
+	}
+	if len(other.GetChildren()) != 1 || other.GetChildren()[0] != Node(para) {
+		t.Fatal("paragraph was not attached to its new parent")
+	}
+}
+
 func TestSiblingLinks(t *testing.T) {
 	parent := &Document{}
 	first := &Paragraph{}

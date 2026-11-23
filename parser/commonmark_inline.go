@@ -513,11 +513,14 @@ func commonMarkUnicodeSpace(r rune) bool {
 	return r == '\t' || r == '\n' || r == '\f' || r == '\r' || unicode.Is(unicode.Zs, r)
 }
 
+// commonMarkURLEscapes are the ASCII bytes percent-encoded in a destination.
+const commonMarkURLEscapes = "\"<>\\`{}|^[]"
+
 func commonMarkURL(source []byte) []byte {
 	const hex = "0123456789ABCDEF"
 	result := make([]byte, 0, len(source))
 	for _, c := range source {
-		if c >= 0x80 || c <= 0x20 || bytes.IndexByte([]byte("\"<>\\`{}|^[]"), c) >= 0 {
+		if c >= 0x80 || c <= 0x20 || strings.IndexByte(commonMarkURLEscapes, c) >= 0 {
 			result = append(result, '%', hex[c>>4], hex[c&15])
 		} else {
 			result = append(result, c)

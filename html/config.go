@@ -74,6 +74,15 @@ type Renderer struct {
 	sr                *SPRenderer
 	documentMatter    ast.DocumentMatters
 	textBuf           bytes.Buffer // reused by Text for escaped text before smartypants
+	// headingAnchors remembers the id written for a heading. The table of
+	// contents and the heading itself both ask for it, and a later render of
+	// the same node must not add the prefix and suffix a second time.
+	headingAnchors map[*ast.Heading]headingAnchor
+}
+
+// headingAnchor is the output id of a heading and the HeadingID it was built from.
+type headingAnchor struct {
+	base, id string
 }
 
 // NewRenderer creates an HTML renderer.

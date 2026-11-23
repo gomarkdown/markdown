@@ -130,15 +130,18 @@ func isReference(p *Parser, data []byte, tabSize int) int {
 }
 
 func scanLinkRef(data []byte, i int) (linkOffset, linkEnd, titleOffset, titleEnd, lineEnd int) {
-	// link: whitespace-free sequence, optionally between angle brackets
+	// link: whitespace-free sequence, optionally between angle brackets.
+	// The opening '<' is not part of the destination, so remember it before
+	// advancing; checking data[linkOffset] afterwards never sees it.
+	bracketed := false
 	if data[i] == '<' {
 		i++
+		bracketed = true
 	}
 	linkOffset = i
 	i = skipUntilAny(data, i, " \t\n\r")
 	linkEnd = i
-	if linkEnd < len(data) && data[linkOffset] == '<' && data[linkEnd-1] == '>' {
-		linkOffset++
+	if bracketed && linkEnd > linkOffset && data[linkEnd-1] == '>' {
 		linkEnd--
 	}
 

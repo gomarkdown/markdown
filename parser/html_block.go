@@ -326,10 +326,8 @@ func (p *Parser) htmlFindTag(data []byte) (string, bool) {
 }
 
 func (p *Parser) htmlFindEnd(tag string, data []byte) int {
-	// assume data[0] == '<' && data[1] == '/' already tested
-	if tag == "hr" {
-		return 2
-	}
+	// assume data[0] == '<' && data[1] == '/' already tested.
+	// hr is not a block tag, so it never reaches this function.
 	// check if tag is a match
 	closetag := []byte("</" + tag + ">")
 	if !bytes.HasPrefix(data, closetag) {

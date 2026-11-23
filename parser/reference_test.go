@@ -48,6 +48,24 @@ func TestReferenceDefinitionInAST(t *testing.T) {
 	}
 }
 
+func TestAngleBracketReferenceDestination(t *testing.T) {
+	p := New()
+	doc := p.Parse([]byte("[id]: <http://example.com/a> \"t\"\n\n[id]\n"))
+	var link *ast.Link
+	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
+		if l, ok := node.(*ast.Link); ok && entering && l.NoteID == 0 {
+			link = l
+		}
+		return ast.GoToNext
+	})
+	if link == nil {
+		t.Fatal("missing link")
+	}
+	if got := string(link.Destination); got != "http://example.com/a" {
+		t.Errorf("destination %q", got)
+	}
+}
+
 func TestReferenceDefinitionNotInHTML(t *testing.T) {
 	// sanity: node type name is stable for debug printers
 	var buf bytes.Buffer

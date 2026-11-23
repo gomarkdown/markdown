@@ -41,10 +41,15 @@ func (r *Renderer) writeDocumentHeader(w io.Writer) {
 		io.WriteString(w, "<!DOCTYPE html>\n<html>\n")
 	}
 	io.WriteString(w, "<head>\n  <title>")
+	// Escape before smart punctuation. Process leaves a raw '<' in place, and
+	// CommonFlags turns smart punctuation on, so a title would otherwise be
+	// able to close the <title> element.
+	var title bytes.Buffer
+	EscapeHTML(&title, []byte(r.Opts.Title))
 	if r.Opts.Flags&Smartypants != 0 {
-		r.sr.Process(w, []byte(r.Opts.Title))
+		r.sr.Process(w, title.Bytes())
 	} else {
-		EscapeHTML(w, []byte(r.Opts.Title))
+		title.WriteTo(w)
 	}
 	io.WriteString(w, "</title>\n")
 	io.WriteString(w, r.Opts.Generator)
@@ -92,6 +97,9 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 			if heading.HeadingID == "" {
 				heading.HeadingID = fmt.Sprintf("toc_%d", headingCount)
 			}
+			// The same id the heading element gets, including the prefix,
+			// suffix and any suffix added to keep ids unique.
+			headingID := r.MakeUniqueHeadingID(heading)
 			if heading.Level > tocLevel {
 				buf.WriteString(strings.Repeat("\n<ul>\n<li>", heading.Level-tocLevel))
 			} else {
@@ -99,7 +107,7 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 				buf.WriteString("</li>\n\n<li>")
 			}
 			tocLevel = heading.Level
-			fmt.Fprintf(&buf, `<a href="#%s">`, escapeAttr(heading.HeadingID))
+			fmt.Fprintf(&buf, `<a href="#%s">`, escapeAttr(headingID))
 			headingCount++
 			return ast.GoToNext
 		}

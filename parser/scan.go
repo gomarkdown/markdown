@@ -154,9 +154,13 @@ func terminatesPrefixedBlock(data []byte, begin, end int, prefix func([]byte) in
 		(end >= len(data) || prefix(data[end:]) == 0 && IsEmpty(data[end:]) == 0)
 }
 
+// punctuation is the ASCII set IsPunctuation recognizes. A string avoids
+// allocating that set on every call; emphasis checks it for each closer.
+const punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+
 // IsPunctuation returns true if c is a punctuation symbol.
 func IsPunctuation(c byte) bool {
-	return bytes.IndexByte([]byte("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"), c) >= 0
+	return strings.IndexByte(punctuation, c) >= 0
 }
 
 func IsPunctuation2(d []byte) bool {

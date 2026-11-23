@@ -29,6 +29,8 @@ func TestCrossReference(t *testing.T) {
 		},
 		// fails
 		{data: []byte("(#y es)"), r: nil, fail: true},
+		{data: []byte("(# yes)"), r: nil, fail: true},
+		{data: []byte("(#,yes)"), r: nil, fail: true},
 		{data: []byte("(#yes"), r: nil, fail: true},
 		{data: []byte("(#y es, random text"), r: nil, fail: true},
 	}
@@ -93,5 +95,22 @@ func TestIndex(t *testing.T) {
 		if test.i.Primary != idx.Primary {
 			t.Errorf("test %d, got item %t, wanted %t", i, idx.Primary, test.i.Primary)
 		}
+	}
+}
+
+// A parenthesized list with more than an item and a subitem is not an index.
+// Rejecting it used to consume an id anyway, so the next real index skipped a number.
+func TestIndexRejectDoesNotConsumeID(t *testing.T) {
+	p := New()
+	if _, n := maybeShortRefOrIndex(p, []byte("(!a, b, c)"), 0); n != nil {
+		t.Fatalf("three-part index parsed as %T", n)
+	}
+	_, n := maybeShortRefOrIndex(p, []byte("(!ok)"), 0)
+	idx, ok := n.(*ast.Index)
+	if !ok {
+		t.Fatalf("got %T, want *ast.Index", n)
+	}
+	if idx.ID != "idxref:0" {
+		t.Fatalf("id = %q, want idxref:0", idx.ID)
 	}
 }

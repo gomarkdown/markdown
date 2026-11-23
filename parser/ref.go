@@ -53,9 +53,9 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 			node.Destination = idpart
 			node.Suffix = suff
 		}
-		// no spaces or commas allowed in id
+		// no spaces or commas allowed in id, including a leading one
 		for _, c := range []byte(" ,") {
-			if bytes.IndexByte(node.Destination, c) > 0 {
+			if bytes.IndexByte(node.Destination, c) >= 0 {
 				return 0, nil
 			}
 		}
@@ -81,9 +81,6 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 		idx := &ast.Index{}
 
-		idx.ID = fmt.Sprintf("idxref:%d", p.indexCnt)
-		p.indexCnt++
-
 		idx.Primary = data[start] == '!'
 		buf := data[start:i]
 
@@ -94,12 +91,16 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 		switch len(items) {
 		case 1:
 			idx.Item = bytes.TrimSpace(items[0])
-			return i + 1, idx
 		case 2:
 			idx.Item = bytes.TrimSpace(items[0])
 			idx.Subitem = bytes.TrimSpace(items[1])
-			return i + 1, idx
+		default:
+			// Not an index. Leave the id counter for an entry that is emitted.
+			return 0, nil
 		}
+		idx.ID = fmt.Sprintf("idxref:%d", p.indexCnt)
+		p.indexCnt++
+		return i + 1, idx
 	}
 
 	return 0, nil

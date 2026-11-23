@@ -98,7 +98,9 @@ func needSkipLink(r *Renderer, dest []byte) bool {
 		return true
 	}
 	dest = r.outputDest(dest)
-	return r.Opts.Flags&Safelink != 0 && !r.isSafeURL(dest) && !bytes.HasPrefix(dest, []byte("mailto:"))
+	// Fragments (#a) and bare relative paths (foo.md) stay on this page.
+	// IsSafeURL only treats /, ./ and ../ as relative, which dropped those.
+	return r.Opts.Flags&Safelink != 0 && !r.isSafeURL(dest) && !isSchemelessPath(dest) && !bytes.HasPrefix(dest, []byte("mailto:"))
 }
 
 // needSkipImage reports whether Safelink rejects an image source. Images also
