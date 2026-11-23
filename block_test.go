@@ -319,12 +319,22 @@ func TestSec1(t *testing.T) {
 		parser.SuperSubscript |
 		parser.Mmark
 
-	tests := []string{
-		"[@]", "[#]", "[@", "[#", "[@@]", "[@#]",
+	// [@] is a citation whose only segment is too short to name a destination,
+	// so the paragraph is empty. The other unmatched forms stay text.
+	// [@@] and [@#] are informative citations.
+	tests := []struct{ in, want string }{
+		{"[@]", "<p></p>\n"},
+		{"[#]", "<p>[#]</p>\n"},
+		{"[@", "<p>[@</p>\n"},
+		{"[#", "<p>[#</p>\n"},
+		{"[@@]", "<p><cite class=\"informative\"><a href=\"#@\"><sup>[@]</sup></a></cite></p>\n"},
+		{"[@#]", "<p><cite class=\"informative\"><a href=\"##\"><sup>[#]</sup></a></cite></p>\n"},
 	}
 	for _, test := range tests {
 		p := parser.NewWithExtensions(ext)
-		inp := []byte(test)
-		ToHTML(inp, p, nil)
+		got := string(ToHTML([]byte(test.in), p, nil))
+		if got != test.want {
+			t.Errorf("%q:\ngot  %q\nwant %q", test.in, got, test.want)
+		}
 	}
 }

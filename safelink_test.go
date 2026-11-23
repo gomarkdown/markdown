@@ -125,7 +125,7 @@ func TestSafelinkImageSurroundings(t *testing.T) {
 		want       string
 	}{
 		// rendering continues normally after a blocked image
-		{"![a](javascript:x) *b* ![c](/d.png)", false, "<p><tt>a</tt> <em>b</em> <img src=\"/d.png\" alt=\"c\" /></p>\n"},
+		{"![a](javascript:x) *b* ![c](/d.png)", false, "<p><tt>a</tt> <em>b</em> <img src=\"/d.png\" alt=\"c\"></p>\n"},
 		{"[![a](javascript:x)](/b)", false, "<p><a href=\"/b\"><tt>a</tt></a></p>\n"},
 		// alt text is escaped, and only CommonMark parses it as markdown
 		{"![<b>](javascript:x)", false, "<p><tt>&lt;b&gt;</tt></p>\n"},
@@ -147,7 +147,7 @@ func TestSafelinkImageSurroundings(t *testing.T) {
 // Without Safelink images are unrestricted, as before.
 func TestImagesWithoutSafelink(t *testing.T) {
 	got := renderHTML("![a](data:text/html,x)", html.FlagsNone, false, nil)
-	want := "<p><img src=\"data:text/html,x\" alt=\"a\" /></p>\n"
+	want := "<p><img src=\"data:text/html,x\" alt=\"a\"></p>\n"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
@@ -159,7 +159,7 @@ func TestLinkDestinationEntities(t *testing.T) {
 		// a legacy entity name without a semicolon is query string text
 		{"[x](/a?b=1&copy=2)", "<p><a href=\"/a?b=1&amp;copy=2\">x</a></p>\n"},
 		{"[x](/a?b=1&amp=2)", "<p><a href=\"/a?b=1&amp;amp=2\">x</a></p>\n"},
-		{"![x](/a?b=1&copy=2)", "<p><img src=\"/a?b=1&amp;copy=2\" alt=\"x\" /></p>\n"},
+		{"![x](/a?b=1&copy=2)", "<p><img src=\"/a?b=1&amp;copy=2\" alt=\"x\"></p>\n"},
 		// only a complete entity name is decoded
 		{"[x](/a&notit;)", "<p><a href=\"/a&amp;notit;\">x</a></p>\n"},
 		{"[x](/a&nosuchentity;)", "<p><a href=\"/a&amp;nosuchentity;\">x</a></p>\n"},
@@ -168,10 +168,10 @@ func TestLinkDestinationEntities(t *testing.T) {
 		{"[x](/caf&#233;)", "<p><a href=\"/café\">x</a></p>\n"},
 		{"[x](/caf&#xE9;)", "<p><a href=\"/café\">x</a></p>\n"},
 		{"[x](/a&semi;b)", "<p><a href=\"/a;b\">x</a></p>\n"},
-		{"![x](/a&#32;b.png)", "<p><img src=\"/a b.png\" alt=\"x\" /></p>\n"},
+		{"![x](/a&#32;b.png)", "<p><img src=\"/a b.png\" alt=\"x\"></p>\n"},
 		// decoding happens exactly once
 		{"[x](/a&amp;lt;)", "<p><a href=\"/a&amp;lt;\">x</a></p>\n"},
-		{"![x](/a&amp;#64;)", "<p><img src=\"/a&amp;#64;\" alt=\"x\" /></p>\n"},
+		{"![x](/a&amp;#64;)", "<p><img src=\"/a&amp;#64;\" alt=\"x\"></p>\n"},
 		// decoded text can't break out of the attribute
 		{"[x](/a&quot;&lt;b&gt;)", "<p><a href=\"/a&quot;&lt;b&gt;\">x</a></p>\n"},
 	}

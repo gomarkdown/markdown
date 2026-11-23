@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"path"
 	"testing"
 )
 
@@ -107,6 +108,45 @@ func TestPush(t *testing.T) {
 
 	if i.Push("new/new"); i.stack[1] != "/new/new" {
 		t.Errorf("want %s, got %s", "/new/new", i.stack[1])
+	}
+}
+
+func TestPushWindowsPath(t *testing.T) {
+	i := newIncStack()
+	i.Push(`C:\dir\file`)
+	if i.stack[0] != "C:/dir" {
+		t.Errorf("drive path: want C:/dir, got %s", i.stack[0])
+	}
+	if got := path.Join(i.Last(), "a.md"); got != "C:/dir/a.md" {
+		t.Errorf("relative include: want C:/dir/a.md, got %s", got)
+	}
+	i.Push("a.md")
+	if i.stack[1] != "C:/dir" {
+		t.Errorf("relative include dir: want C:/dir, got %s", i.stack[1])
+	}
+
+	j := newIncStack()
+	j.Push("C:/dir/file")
+	if j.stack[0] != "C:/dir" {
+		t.Errorf("slash drive path: want C:/dir, got %s", j.stack[0])
+	}
+
+	k := newIncStack()
+	k.Push("/docs/a.md")
+	k.Push(`D:\other\b.md`)
+	if k.stack[1] != "D:/other" {
+		t.Errorf("drive path joined onto the previous directory: %s", k.stack[1])
+	}
+	k.Push(`sub\c.md`)
+	if k.stack[2] != "D:/other/sub" {
+		t.Errorf("backslash relative path: want D:/other/sub, got %s", k.stack[2])
+	}
+
+	u := newIncStack()
+	u.Push("/docs/a.md")
+	u.Push(`\\server\share\file.md`)
+	if u.stack[1] != "/server/share" {
+		t.Errorf("UNC path: want /server/share, got %s", u.stack[1])
 	}
 }
 

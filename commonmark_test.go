@@ -89,7 +89,7 @@ func TestCommonMarkEmptyTitles(t *testing.T) {
 // only get title="" in CommonMark, where an empty title can be written.
 func TestLegacyReferenceImageHasNoEmptyTitle(t *testing.T) {
 	input := "![i][r]\n\n[r]: /u\n"
-	want := "<p><img src=\"/u\" alt=\"i\" /></p>\n"
+	want := "<p><img src=\"/u\" alt=\"i\"></p>\n"
 	if got := string(ToHTML([]byte(input), parser.New(), nil)); got != want {
 		t.Errorf("want %q, got %q", want, got)
 	}

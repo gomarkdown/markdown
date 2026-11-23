@@ -227,7 +227,7 @@ water is H~2~O
 !---
 Figure: this is a figure containing subfigures.
 +++
-<figure><p><img src="/path/to/img1.jpg" alt="Alt text" title="Optional title" />
-<img src="/path/to/img2.jpg" alt="Alt text" title="Optional title" /></p>
+<figure><p><img src="/path/to/img1.jpg" alt="Alt text" title="Optional title">
+<img src="/path/to/img2.jpg" alt="Alt text" title="Optional title"></p>
 <figcaption>this is a figure containing subfigures.</figcaption>
 </figure>

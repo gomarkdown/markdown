@@ -48,13 +48,14 @@ func IsListItemTerm(node ast.Node) bool {
 func Slugify(in []byte) []byte { return textutil.Slugify(in) }
 
 // BlockAttrs returns the serialized block attributes attached to node.
+// The ID attribute is named "id". A renderer uses RendererOptions.IDTag.
 //
 // The renderer itself doesn't write all of them: see Renderer.blockAttrs.
-func BlockAttrs(node ast.Node) []string { return blockAttrs(node, nil) }
+func BlockAttrs(node ast.Node) []string { return blockAttrs(node, "id", nil) }
 
 // blockAttrs is BlockAttrs keeping only the key="value" attributes for which
-// keep, if not nil, returns true.
-func blockAttrs(node ast.Node, keep func(name string) bool) []string {
+// keep, if not nil, returns true. idTag is the name of the ID attribute.
+func blockAttrs(node ast.Node, idTag string, keep func(name string) bool) []string {
 	field := ast.AttributeField(node)
 	if field == nil || *field == nil {
 		return nil
@@ -63,7 +64,10 @@ func blockAttrs(node ast.Node, keep func(name string) bool) []string {
 
 	var attrs []string
 	if attr.ID != nil {
-		attrs = append(attrs, fmt.Sprintf(`%s="%s"`, IDTag, escapeAttr(string(attr.ID))))
+		if idTag == "" {
+			idTag = "id"
+		}
+		attrs = append(attrs, fmt.Sprintf(`%s="%s"`, idTag, escapeAttr(string(attr.ID))))
 	}
 	if len(attr.Classes) > 0 {
 		classes := make([]string, len(attr.Classes))
@@ -94,7 +98,7 @@ func blockAttrs(node ast.Node, keep func(name string) bool) []string {
 // trusted, it only keeps attributes that can't run script or load anything.
 func (r *Renderer) blockAttrs(node ast.Node, own ...string) []string {
 	trusted := r.Opts.Flags&(SkipHTML|Safelink) == 0
-	return blockAttrs(node, func(name string) bool {
+	return blockAttrs(node, r.Opts.IDTag, func(name string) bool {
 		name = strings.ToLower(name)
 		for _, o := range own {
 			if name == o {

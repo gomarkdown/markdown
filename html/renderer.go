@@ -235,7 +235,7 @@ func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {
 		r.Outs(w, `" title="`)
 		EscapeHTML(w, image.Title)
 	}
-	r.Outs(w, `" />`)
+	r.Outs(w, `"`+r.closeTag)
 }
 
 // Image writes ast.Image node

@@ -162,6 +162,13 @@ func (r *Renderer) HorizontalRule(w io.Writer, node *ast.HorizontalRule) {
 // ast.Callout node.
 func (r *Renderer) EscapeHTMLCallouts(w io.Writer, d []byte) {
 	ld := len(d)
+	// start is the first byte of the current run of characters that need no escape.
+	start := 0
+	flush := func(end int) {
+		if end > start {
+			w.Write(d[start:end])
+		}
+	}
 Parse:
 	for i := 0; i < ld; i++ {
 		for _, comment := range r.Opts.Comments {
@@ -173,22 +180,22 @@ Parse:
 			lc := len(comment)
 			if i+lc < ld {
 				if id, consumed := parser.IsCallout(d[i+lc:]); consumed > 0 {
-					// We have seen a callout
-					callout := &ast.Callout{ID: id}
-					r.Callout(w, callout)
+					flush(i)
+					r.Callout(w, &ast.Callout{ID: id})
 					i += consumed + lc - 1
+					start = i + 1
 					continue Parse
 				}
 			}
 		}
 
-		escSeq := Escaper[d[i]]
-		if escSeq != nil {
+		if escSeq := Escaper[d[i]]; escSeq != nil {
+			flush(i)
 			w.Write(escSeq)
-		} else {
-			w.Write(d[i : i+1])
+			start = i + 1
 		}
 	}
+	flush(ld)
 }
 
 // CodeBlock writes ast.CodeBlock node

@@ -390,6 +390,31 @@ implements the following extensions:
   [Sanitize untrusted content](#sanitize-untrusted-content) for what's kept
   for untrusted documents.
 
+- **Lax HTML blocks** (`LaxHTMLBlocks`). An HTML block ends at its closing
+  tag. Without this extension the line after that tag must be blank, and an
+  HTML block cannot interrupt a paragraph.
+
+- **Tab size eight** (`TabSizeEight`). A continuation line of a footnote needs
+  eight leading spaces instead of four. A leading tab still counts as an indent.
+
+- **Title block** (`Titleblock`). Consecutive lines that start with `%` become
+  a level-1 heading. The last of those lines must end with a newline. The HTML
+  renderer marks that heading with `class="title"`, and the Markdown renderer
+  writes the lines back with `%`.
+
+- **Includes** (`Includes`). `{{path}}` includes another file, and `<{{path}}`
+  includes it as a fenced code block. An optional `[address]` after the path
+  is passed through unchanged. The bytes come from `Parser.Opts.ReadIncludeFn`;
+  without that function an include is empty. Paths stay slash-separated. A
+  path is absolute when it starts with `/` or a drive letter such as `C:/` or
+  `C:\`. A relative path is resolved against the directory of the file that
+  included it.
+
+- **Markdown in HTML** (`MarkdownInHTML`). Markdown inside an HTML table is
+  parsed. That covers table cells (`td`, `th`) and the structure tags around
+  them (`table`, `thead`, `tbody`, `tfoot`, `tr`). The cell needs a blank line
+  after its opening tag and before its closing tag.
+
 - **Mmark support**, see <https://mmark.miek.nl/post/syntax/> for all new syntax elements this adds.
   Table captions (`Table: ...`) require both `Tables` and `Mmark`.
 

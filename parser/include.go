@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"path"
+	"strings"
 
 	"github.com/gomarkdown/markdown/internal/textutil"
 )
@@ -136,11 +137,27 @@ func newIncStack() *incStack {
 	return &incStack{}
 }
 
+// includePathIsAbs reports whether p is absolute. p uses slashes.
+// path.IsAbs only accepts a leading slash, so a Windows drive path such as
+// C:/dir/file is absolute here as well.
+func includePathIsAbs(p string) bool {
+	if path.IsAbs(p) {
+		return true
+	}
+	return len(p) >= 3 && p[1] == ':' && p[2] == '/' && isDriveLetter(p[0])
+}
+
+func isDriveLetter(b byte) bool {
+	return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')
+}
+
 // Push adds the directory of new, which is relative to the current one unless
 // it's absolute, to the stack. Paths stay slash-separated: include names are
 // document paths, and path.Dir does not treat a backslash as a separator.
+// A drive path (C:\dir\file) and a UNC path (\\server\share\file) are absolute.
 func (i *incStack) Push(new string) {
-	if !path.IsAbs(new) {
+	new = strings.ReplaceAll(new, `\`, `/`)
+	if !includePathIsAbs(new) {
 		new = path.Join(i.Last(), new)
 	}
 	i.stack = append(i.stack, path.Dir(new))

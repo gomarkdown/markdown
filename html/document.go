@@ -11,6 +11,11 @@ import (
 
 // RenderHeader writes HTML document preamble and TOC if requested.
 func (r *Renderer) RenderHeader(w io.Writer, doc ast.Node) {
+	// Each document starts with empty heading ids. Reusing one renderer must
+	// not turn the next document's "intro" into "intro-1", and must not keep
+	// the previous document's heading nodes alive.
+	r.headingIDs = make(map[string]int)
+	r.headingAnchors = nil
 	root, ok := doc.(*ast.Document)
 	r.commonMark = ok && root.CommonMark
 	r.writeDocumentHeader(w)
@@ -53,9 +58,7 @@ func (r *Renderer) writeDocumentHeader(w io.Writer) {
 	}
 	io.WriteString(w, "</title>\n")
 	io.WriteString(w, r.Opts.Generator)
-	io.WriteString(w, "\"")
-	io.WriteString(w, ending)
-	io.WriteString(w, ">\n  <meta charset=\"utf-8\"")
+	io.WriteString(w, "\n  <meta charset=\"utf-8\"")
 	io.WriteString(w, ending)
 	io.WriteString(w, ">\n")
 	writeHeadLink(w, "stylesheet", "text/css", r.Opts.CSS, ending)

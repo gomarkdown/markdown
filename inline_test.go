@@ -1283,10 +1283,10 @@ func TestInlineAttributesOff(t *testing.T) {
 func TestBlockAttributeStaysOnParagraphWithImage(t *testing.T) {
 	doTestsParam(t, []string{
 		"{.the-class}\n![alt](/img.png)\n",
-		"<p class=\"the-class\"><img src=\"/img.png\" alt=\"alt\" /></p>\n",
+		"<p class=\"the-class\"><img src=\"/img.png\" alt=\"alt\"></p>\n",
 
 		"{align=\"left\"}\n![alt](/img.png)Having\n",
-		"<p align=\"left\"><img src=\"/img.png\" alt=\"alt\" />Having</p>\n",
+		"<p align=\"left\"><img src=\"/img.png\" alt=\"alt\">Having</p>\n",
 
 		"{.the-class}\nSample text.\n",
 		"<p class=\"the-class\">Sample text.</p>\n",
@@ -1294,7 +1294,7 @@ func TestBlockAttributeStaysOnParagraphWithImage(t *testing.T) {
 
 	doTestsParam(t, []string{
 		"{.the-class}\n![alt](/img.png){:.img-class}\n",
-		"<p class=\"the-class\"><img class=\"img-class\" src=\"/img.png\" alt=\"alt\" /></p>\n",
+		"<p class=\"the-class\"><img class=\"img-class\" src=\"/img.png\" alt=\"alt\"></p>\n",
 	}, TestParams{extensions: parser.CommonExtensions | parser.Attributes | parser.InlineAttributes})
 }
 

@@ -289,7 +289,7 @@ func TestRenderNodeHookLinkAttrs(t *testing.T) {
 func TestAbsolutePrefixRelativeImagePath(t *testing.T) {
 	tests := []string{
 		`![](image.png)`,
-		`<p><img src="/public/image.png" alt="" /></p>` + "\n",
+		`<p><img src="/public/image.png" alt=""></p>` + "\n",
 	}
 	opts := html.RendererOptions{
 		AbsolutePrefix: "/public",
@@ -457,7 +457,7 @@ func TestDocumentAttributesUntrusted(t *testing.T) {
 			"{onmouseover=\"alert(1)\"}\npara\n":        "<p>para</p>\n",
 			"[x](/u){onclick=\"alert(1)\"}\n":           "<p><a href=\"/u\">x</a></p>\n",
 			"{style=\"color:red\"}\n# h\n":              "<h1>h</h1>\n",
-			"![x](/u.png){src=\"javascript:alert(1)\"}": "<p><img src=\"/u.png\" alt=\"x\" /></p>\n",
+			"![x](/u.png){src=\"javascript:alert(1)\"}": "<p><img src=\"/u.png\" alt=\"x\"></p>\n",
 			"[x](/u){href=\"javascript:alert(1)\"}\n":   "<p><a href=\"/u\">x</a></p>\n",
 			// attributes that can't run script or load anything stay
 			"{#i .c lang=\"en\" data-x=\"1\" aria-label=\"a\" width=\"5\"}\npara\n": "<p id=\"i\" class=\"c\" aria-label=\"a\" data-x=\"1\" lang=\"en\" width=\"5\">para</p>\n",
@@ -476,7 +476,7 @@ func TestDocumentAttributesTrusted(t *testing.T) {
 	for input, want := range map[string]string{
 		"[x](http://a.b){onclick=\"f()\" target=\"_blank\"}\n": "<p><a href=\"http://a.b\" onclick=\"f()\" target=\"_blank\">x</a></p>\n",
 		"[x](/u){href=\"/other\" data-x=\"1\"}\n":              "<p><a href=\"/u\" data-x=\"1\">x</a></p>\n",
-		"![x](/u.png){src=\"/other.png\" width=\"10\"}\n":      "<p><img width=\"10\" src=\"/u.png\" alt=\"x\" /></p>\n",
+		"![x](/u.png){src=\"/other.png\" width=\"10\"}\n":      "<p><img width=\"10\" src=\"/u.png\" alt=\"x\"></p>\n",
 		"{start=\"9\"}\n3. a\n":                                "<ol start=\"3\">\n<li>a</li>\n</ol>\n",
 		"{style=\"color:red\"}\n# h\n":                         "<h1 style=\"color:red\">h</h1>\n",
 	} {
@@ -565,6 +565,71 @@ func TestCompletePageTitleIsEscapedWhenSmartypantsIsOn(t *testing.T) {
 	}
 	if bytes.Contains(got, []byte("<b>")) {
 		t.Errorf("title contains a raw tag\n%s", got)
+	}
+}
+
+func TestHeadingIDsDoNotCarryAcrossDocuments(t *testing.T) {
+	ext := parser.CommonExtensions | parser.AutoHeadingIDs
+	r := html.NewRenderer(html.RendererOptions{})
+	for i := 0; i < 2; i++ {
+		p := parser.NewWithExtensions(ext)
+		got := ToHTML([]byte("# Intro\n"), p, r)
+		if !bytes.Contains(got, []byte(`id="intro"`)) || bytes.Contains(got, []byte(`intro-1`)) {
+			t.Fatalf("render %d: %s", i, got)
+		}
+	}
+	got := ToHTML([]byte("# Intro\n\n# Intro\n"), parser.NewWithExtensions(ext), r)
+	if !bytes.Contains(got, []byte(`id="intro"`)) || !bytes.Contains(got, []byte(`id="intro-1"`)) {
+		t.Fatalf("duplicates in one document: %s", got)
+	}
+}
+
+func TestRendererIDTagIsNotGlobal(t *testing.T) {
+	prev := html.IDTag
+	html.IDTag = "name"
+	t.Cleanup(func() { html.IDTag = prev })
+
+	ext := parser.CommonExtensions | parser.Attributes
+	got := ToHTML([]byte("{#foo}\npara\n"), parser.NewWithExtensions(ext), nil)
+	if !bytes.Contains(got, []byte(`id="foo"`)) || bytes.Contains(got, []byte(`name="foo"`)) {
+		t.Fatalf("package IDTag affected rendering: %s", got)
+	}
+	r := html.NewRenderer(html.RendererOptions{IDTag: "name"})
+	got = ToHTML([]byte("{#foo}\npara\n"), parser.NewWithExtensions(ext), r)
+	if !bytes.Contains(got, []byte(`name="foo"`)) {
+		t.Fatalf("RendererOptions.IDTag: %s", got)
+	}
+}
+
+func TestGeneratorIsAFinishedTag(t *testing.T) {
+	for _, tc := range []struct {
+		flags html.Flags
+		want  string
+	}{
+		{html.CompletePage, "  <meta name=\"GENERATOR\" content=\"github.com/gomarkdown/markdown markdown processor for Go\">\n"},
+		{html.CompletePage | html.UseXHTML, "  <meta name=\"GENERATOR\" content=\"github.com/gomarkdown/markdown markdown processor for Go\" />\n"},
+	} {
+		got := Render(&ast.Document{}, html.NewRenderer(html.RendererOptions{Flags: tc.flags}))
+		if !bytes.Contains(got, []byte(tc.want)) {
+			t.Errorf("flags %d missing %q\n%s", tc.flags, tc.want, got)
+		}
+	}
+	custom := `  <meta name="generator" content="x">`
+	got := Render(&ast.Document{}, html.NewRenderer(html.RendererOptions{Flags: html.CompletePage, Generator: custom}))
+	if !bytes.Contains(got, []byte(custom+"\n")) || bytes.Contains(got, []byte(custom+`"`)) {
+		t.Errorf("custom generator was rewritten\n%s", got)
+	}
+}
+
+func TestImageCloseFollowsUseXHTML(t *testing.T) {
+	input := []byte("![a](/b.png)\n")
+	htmlOut := string(ToHTML(input, parser.New(), html.NewRenderer(html.RendererOptions{})))
+	xhtml := string(ToHTML(input, parser.New(), html.NewRenderer(html.RendererOptions{Flags: html.UseXHTML})))
+	if htmlOut != "<p><img src=\"/b.png\" alt=\"a\"></p>\n" {
+		t.Errorf("html: %q", htmlOut)
+	}
+	if xhtml != "<p><img src=\"/b.png\" alt=\"a\" /></p>\n" {
+		t.Errorf("xhtml: %q", xhtml)
 	}
 }
 
