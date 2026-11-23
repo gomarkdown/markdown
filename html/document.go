@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
 )
@@ -70,6 +71,11 @@ func writeHeadLink(w io.Writer, rel, typ, href, ending string) {
 	io.WriteString(w, `"`+ending+">\n")
 }
 
+// closeTOCLevels closes n levels of nested TOC lists.
+func closeTOCLevels(buf *bytes.Buffer, n int) {
+	buf.WriteString(strings.Repeat("</li>\n</ul>", n))
+}
+
 func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 	var buf bytes.Buffer
 	inHeading := false
@@ -87,15 +93,12 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 				heading.HeadingID = fmt.Sprintf("toc_%d", headingCount)
 			}
 			if heading.Level > tocLevel {
-				for ; tocLevel < heading.Level; tocLevel++ {
-					buf.WriteString("\n<ul>\n<li>")
-				}
+				buf.WriteString(strings.Repeat("\n<ul>\n<li>", heading.Level-tocLevel))
 			} else {
-				for ; tocLevel > heading.Level; tocLevel-- {
-					buf.WriteString("</li>\n</ul>")
-				}
+				closeTOCLevels(&buf, tocLevel-heading.Level)
 				buf.WriteString("</li>\n\n<li>")
 			}
+			tocLevel = heading.Level
 			fmt.Fprintf(&buf, `<a href="#%s">`, escapeAttr(heading.HeadingID))
 			headingCount++
 			return ast.GoToNext
@@ -106,9 +109,7 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 		return ast.GoToNext
 	})
 
-	for ; tocLevel > 0; tocLevel-- {
-		buf.WriteString("</li>\n</ul>")
-	}
+	closeTOCLevels(&buf, tocLevel)
 	tocLen := buf.Len()
 	if tocLen > 0 {
 		io.WriteString(w, "<nav>\n")

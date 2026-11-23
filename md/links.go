@@ -219,10 +219,7 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 		return r.outsOnEnter(w, entering, "[^"+string(node.Destination)+"]")
 	}
 	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 && canBeInFooter(node) {
-		if entering {
-			r.footerLink(w, node)
-		}
-		return ast.SkipChildren
+		return onEnter(entering, func() { r.footerLink(w, node) })
 	}
 	if entering {
 		r.outs(w, "[")

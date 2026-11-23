@@ -91,12 +91,17 @@ func (r *Renderer) appendChildren(dst []byte, node ast.Node) []byte {
 	return dst
 }
 
-// outsOnEnter writes s when entering a node whose children it replaces.
-func (r *Renderer) outsOnEnter(w io.Writer, entering bool, s string) ast.WalkStatus {
+// onEnter calls write when entering a node whose children write replaces.
+func onEnter(entering bool, write func()) ast.WalkStatus {
 	if entering {
-		r.outs(w, s)
+		write()
 	}
 	return ast.SkipChildren
+}
+
+// outsOnEnter writes s when entering a node whose children it replaces.
+func (r *Renderer) outsOnEnter(w io.Writer, entering bool, s string) ast.WalkStatus {
+	return onEnter(entering, func() { r.outs(w, s) })
 }
 
 // emphasisChar returns the delimiter character of an emphasis node. It's *

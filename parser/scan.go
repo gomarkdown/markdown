@@ -108,6 +108,19 @@ func lineEnd(data []byte, i int) int {
 	return len(data)
 }
 
+// nextGatheredLine finds the next line of a block whose lines are gathered
+// one at a time: the line starts at data[start] and ends at or after i+1. It
+// returns the end of the line and whether it is blank, and records a blank
+// line in *sawBlank.
+func nextGatheredLine(data []byte, start, i int, sawBlank *bool) (end int, blank bool) {
+	end = lineEnd(data, i+1)
+	blank = IsEmpty(data[start:end]) > 0
+	if blank {
+		*sawBlank = true
+	}
+	return end, blank
+}
+
 // hasUnescapedSpace reports whether data[start:end] has a space that is not
 // escaped with a backslash.
 func hasUnescapedSpace(data []byte, start, end int) bool {

@@ -195,26 +195,23 @@ func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
 // imageOpen writes the <img tag of image, with src set to dest, up to the
 // start of the alt text.
 func (r *Renderer) imageOpen(w io.Writer, image *ast.Image, dest []byte) {
-	attrs := r.blockAttrs(image, imageAttrNames(r, image.Title)...)
-	if r.Opts.Flags&LazyLoadImages != 0 {
+	// the attributes the renderer writes itself, which user attributes of the
+	// same name must not repeat
+	names := []string{"src", "alt"}
+	if len(image.Title) > 0 || (r.commonMark && image.Title != nil) {
+		names = append(names, "title")
+	}
+	lazy := r.Opts.Flags&LazyLoadImages != 0
+	if lazy {
+		names = append(names, "loading")
+	}
+	attrs := r.blockAttrs(image, names...)
+	if lazy {
 		attrs = append(attrs, `loading="lazy"`)
 	}
 	r.Outs(w, tagStart("<img", attrs)+` src="`)
 	EscapeHTML(w, AddAbsPrefixToImage(dest, r.Opts.AbsolutePrefix))
 	r.Outs(w, `" alt="`)
-}
-
-// imageAttrNames returns the names of the attributes the renderer writes on
-// an image with the given title.
-func imageAttrNames(r *Renderer, title []byte) []string {
-	names := []string{"src", "alt"}
-	if len(title) > 0 || (r.commonMark && title != nil) {
-		names = append(names, "title")
-	}
-	if r.Opts.Flags&LazyLoadImages != 0 {
-		names = append(names, "loading")
-	}
-	return names
 }
 
 func (r *Renderer) imageExit(w io.Writer, image *ast.Image) {

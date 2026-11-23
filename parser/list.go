@@ -178,15 +178,10 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 
 gatherlines:
 	for line < len(data) {
-		i++
-
-		// find the end of this line
-		i = lineEnd(data, i)
-
 		// if it is an empty line, guess that it is part of this item
 		// and move on to the next line
-		if IsEmpty(data[line:i]) > 0 {
-			containsBlankLine = true
+		var blank bool
+		if i, blank = nextGatheredLine(data, line, i, &containsBlankLine); blank {
 			line = i
 			continue
 		}

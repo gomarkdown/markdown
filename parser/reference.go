@@ -220,15 +220,10 @@ func scanFootnote(data []byte, i, indentSize int) (blockStart, blockEnd int, con
 
 gatherLines:
 	for blockEnd < len(data) {
-		i++
-
-		// find the end of this line
-		i = lineEnd(data, i)
-
 		// if it is an empty line, guess that it is part of this item
 		// and move on to the next line
-		if IsEmpty(data[blockEnd:i]) > 0 {
-			containsBlankLine = true
+		var blank bool
+		if i, blank = nextGatheredLine(data, blockEnd, i, &containsBlankLine); blank {
 			blockEnd = i
 			continue
 		}
