@@ -116,6 +116,29 @@ func skipHSpace(data []byte, i int) int {
 	return skipWhile(data, i, func(b byte) bool { return b == ' ' || b == '\t' })
 }
 
+// lineEnd returns the end of the line holding data[i-1]: the index after its
+// '\n', or len(data). It returns i if i is 0 or not before len(data).
+func lineEnd(data []byte, i int) int {
+	if i <= 0 || i >= len(data) {
+		return i
+	}
+	if j := skipUntilChar(data, i-1, '\n'); j < len(data) {
+		return j + 1
+	}
+	return len(data)
+}
+
+// hasUnescapedSpace reports whether data[start:end] has a space that is not
+// escaped with a backslash.
+func hasUnescapedSpace(data []byte, start, end int) bool {
+	for i := start; i < end; i++ {
+		if IsSpace(data[i]) && !isEscape(data, i) {
+			return true
+		}
+	}
+	return false
+}
+
 func backChar(data []byte, i int, c byte) int {
 	for i > 0 && data[i-1] == c {
 		i--

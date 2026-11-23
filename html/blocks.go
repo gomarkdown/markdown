@@ -10,12 +10,19 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 )
 
+// emitsHTML reports whether block n produces HTML output; reference
+// definitions do not.
+func emitsHTML(n ast.Node) bool {
+	_, hidden := n.(*ast.ReferenceDefinition)
+	return !hidden
+}
+
 // prevVisibleBlock returns the previous sibling of n, skipping siblings that
 // emit no HTML, such as reference definitions, so inter-block spacing stays
 // stable.
 func prevVisibleBlock(n ast.Node) ast.Node {
 	for prev := ast.GetPrevNode(n); prev != nil; prev = ast.GetPrevNode(prev) {
-		if _, hidden := prev.(*ast.ReferenceDefinition); !hidden {
+		if emitsHTML(prev) {
 			return prev
 		}
 	}

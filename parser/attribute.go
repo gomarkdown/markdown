@@ -126,15 +126,8 @@ func mergeAttribute(dst, src *ast.Attribute) *ast.Attribute {
 }
 
 func applyAttribute(n ast.Node, attr *ast.Attribute) {
-	if n == nil || attr == nil {
-		return
-	}
-	if c := n.AsContainer(); c != nil {
-		c.Attribute = mergeAttribute(c.Attribute, attr)
-		return
-	}
-	if l := n.AsLeaf(); l != nil {
-		l.Attribute = mergeAttribute(l.Attribute, attr)
+	if field := ast.AttributeField(n); field != nil && attr != nil {
+		*field = mergeAttribute(*field, attr)
 	}
 }
 

@@ -88,11 +88,7 @@ func (p *Parser) html(data []byte, doRender bool) int {
 		return 0
 	}
 
-	if doRender {
-		end := backChar(data, consumed, '\n')
-		p.addHTMLBlock(data[:end])
-	}
-	return consumed
+	return p.emitHTMLBlock(data, consumed, doRender)
 }
 
 func (p *Parser) markdownHTMLTag(tag string) bool {
@@ -289,10 +285,14 @@ func (p *Parser) htmlBlockBeforeBlank(data []byte, i int, doRender bool) int {
 	if j == 0 {
 		return 0
 	}
-	size := i + j
+	return p.emitHTMLBlock(data, i+j, doRender)
+}
+
+// emitHTMLBlock adds data[:size], without trailing newlines, as an HTML block
+// if doRender is set, and returns size.
+func (p *Parser) emitHTMLBlock(data []byte, size int, doRender bool) int {
 	if doRender {
-		end := backChar(data, size, '\n')
-		p.addHTMLBlock(data[:end])
+		p.addHTMLBlock(data[:backChar(data, size, '\n')])
 	}
 	return size
 }

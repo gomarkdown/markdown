@@ -88,10 +88,8 @@ func (p *Parser) AddBlock(n ast.Node) ast.Node {
 	p.closeUnmatchedBlocks()
 
 	if p.attr != nil {
-		if c := n.AsContainer(); c != nil {
-			c.Attribute = p.attr
-		} else if l := n.AsLeaf(); l != nil {
-			l.Attribute = p.attr
+		if field := ast.AttributeField(n); field != nil {
+			*field = p.attr
 		}
 		p.attr = nil
 	}

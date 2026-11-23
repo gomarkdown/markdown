@@ -160,10 +160,8 @@ func maybeInlineFootnoteOrSuper(p *Parser, data []byte, offset int) (int, ast.No
 			// no closing '^'
 			return 0, nil
 		}
-		for i := offset; i < offset+ret; i++ {
-			if IsSpace(data[i]) && !isEscape(data, i) {
-				return 0, nil
-			}
+		if hasUnescapedSpace(data, offset, offset+ret) {
+			return 0, nil
 		}
 		sup := &ast.Superscript{Leaf: ast.Leaf{Literal: data[offset+1 : offset+ret]}}
 		return ret + 1, sup

@@ -113,7 +113,7 @@ func (r *Renderer) renderCommonMarkNode(w io.Writer, node ast.Node, entering boo
 
 func firstCommonMarkBlock(parent ast.Node) ast.Node {
 	for _, child := range parent.GetChildren() {
-		if _, hidden := child.(*ast.ReferenceDefinition); !hidden {
+		if emitsHTML(child) {
 			return child
 		}
 	}

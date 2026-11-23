@@ -57,15 +57,11 @@ func BlockAttrs(node ast.Node) []string { return blockAttrs(node, nil) }
 // blockAttrs is BlockAttrs keeping only the key="value" attributes for which
 // keep, if not nil, returns true.
 func blockAttrs(node ast.Node, keep func(name string) bool) []string {
-	var attr *ast.Attribute
-	if container := node.AsContainer(); container != nil {
-		attr = container.Attribute
-	} else if leaf := node.AsLeaf(); leaf != nil {
-		attr = leaf.Attribute
-	}
-	if attr == nil {
+	field := ast.AttributeField(node)
+	if field == nil || *field == nil {
 		return nil
 	}
+	attr := *field
 
 	var attrs []string
 	if attr.ID != nil {

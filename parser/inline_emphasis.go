@@ -35,10 +35,8 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 				return 0, nil
 			}
 			ret++ // we started with data[1:] above.
-			for i := 1; i < ret; i++ {
-				if IsSpace(data[i]) && !isEscape(data, i) {
-					return 0, nil
-				}
+			if hasUnescapedSpace(data, 1, ret) {
+				return 0, nil
 			}
 			sub := &ast.Subscript{Leaf: ast.Leaf{Literal: data[1:ret]}}
 			return ret + 1, sub

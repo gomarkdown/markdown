@@ -160,9 +160,7 @@ func (p *Parser) listItem(data []byte, flags *ast.ListType) int {
 
 	// find the end of the line
 	line := i
-	for i > 0 && i < len(data) && data[i-1] != '\n' {
-		i++
-	}
+	i = lineEnd(data, i)
 
 	// get working buffer
 	var raw bytes.Buffer
@@ -183,9 +181,7 @@ gatherlines:
 		i++
 
 		// find the end of this line
-		for i < len(data) && data[i-1] != '\n' {
-			i++
-		}
+		i = lineEnd(data, i)
 
 		// if it is an empty line, guess that it is part of this item
 		// and move on to the next line

@@ -207,9 +207,7 @@ func scanFootnote(data []byte, i, indentSize int) (blockStart, blockEnd int, con
 
 	// find the end of the line
 	blockEnd = i
-	for i < len(data) && data[i-1] != '\n' {
-		i++
-	}
+	i = lineEnd(data, i)
 
 	// get working buffer
 	var raw bytes.Buffer
@@ -226,9 +224,7 @@ gatherLines:
 		i++
 
 		// find the end of this line
-		for i < len(data) && data[i-1] != '\n' {
-			i++
-		}
+		i = lineEnd(data, i)
 
 		// if it is an empty line, guess that it is part of this item
 		// and move on to the next line
