@@ -13,9 +13,7 @@ import (
 // crAfterBlock ends the line after a block, except for the last block of a
 // list item, which the item's closing tag follows directly.
 func (r *Renderer) crAfterBlock(w io.Writer, node ast.Node) {
-	if !(IsListItem(node.GetParent()) && ast.GetNextNode(node) == nil) {
-		r.CR(w)
-	}
+	r.crIf(w, !(IsListItem(node.GetParent()) && ast.GetNextNode(node) == nil))
 }
 
 // blockElement writes the opening tag of a block element, with the node's

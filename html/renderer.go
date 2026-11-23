@@ -67,6 +67,13 @@ func (r *Renderer) CR(w io.Writer) {
 	}
 }
 
+// crIf writes a new line, as CR does, if cond is true.
+func (r *Renderer) crIf(w io.Writer, cond bool) {
+	if cond {
+		r.CR(w)
+	}
+}
+
 func normalizedHeadingLevel(level int) int {
 	if level < 1 || level > 5 {
 		return 6

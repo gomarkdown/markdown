@@ -99,11 +99,6 @@ func onEnter(entering bool, write func()) ast.WalkStatus {
 	return ast.SkipChildren
 }
 
-// outsOnEnter writes s when entering a node whose children it replaces.
-func (r *Renderer) outsOnEnter(w io.Writer, entering bool, s string) ast.WalkStatus {
-	return onEnter(entering, func() { r.outs(w, s) })
-}
-
 // emphasisChar returns the delimiter character of an emphasis node. It's *
 // except for Emph that is all the content of other emphasis: **foo** would be
 // strong instead of emphasis in emphasis, and ***foo*** is emphasis around
@@ -911,7 +906,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Math:
 		r.delimited(w, "$", node.Literal)
 	case *ast.MathBlock:
-		return r.outsOnEnter(w, entering, "$$"+string(node.Literal)+"$$\n\n")
+		return onEnter(entering, func() { r.outs(w, "$$"+string(node.Literal)+"$$\n\n") })
 	case *ast.Subscript:
 		r.delimited(w, "~", node.Literal)
 	case *ast.Superscript:

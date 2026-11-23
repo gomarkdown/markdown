@@ -190,9 +190,7 @@ Parse:
 func (r *Renderer) CodeBlock(w io.Writer, codeBlock *ast.CodeBlock) {
 	r.CR(w)
 	r.codeBlockElement(w, codeBlock)
-	if !IsListItem(codeBlock.Parent) {
-		r.CR(w)
-	}
+	r.crIf(w, !IsListItem(codeBlock.Parent))
 }
 
 // codeBlockElement writes the <pre><code> element of a code block, with its
@@ -245,9 +243,7 @@ func (r *Renderer) TableCell(w io.Writer, tableCell *ast.TableCell, entering boo
 	if colspan := tableCell.ColSpan; colspan > 0 {
 		attrs = append(attrs, fmt.Sprintf(`colspan="%d"`, colspan))
 	}
-	if ast.GetPrevNode(tableCell) == nil {
-		r.CR(w)
-	}
+	r.crIf(w, ast.GetPrevNode(tableCell) == nil)
 	r.OutTag(w, openTag, attrs)
 }
 
@@ -257,9 +253,7 @@ func (r *Renderer) TableBody(w io.Writer, node *ast.TableBody, entering bool) {
 		r.CR(w)
 		r.Outs(w, "<tbody>")
 		// Preserve the historical newline for empty table bodies.
-		if ast.GetFirstChild(node) == nil {
-			r.CR(w)
-		}
+		r.crIf(w, ast.GetFirstChild(node) == nil)
 	} else {
 		r.Outs(w, "</tbody>")
 		r.CR(w)

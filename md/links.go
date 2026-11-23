@@ -216,7 +216,7 @@ func canBeInFooter(node *ast.Link) bool {
 
 func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStatus {
 	if node.NoteID != 0 {
-		return r.outsOnEnter(w, entering, "[^"+string(node.Destination)+"]")
+		return onEnter(entering, func() { r.outs(w, "[^"+string(node.Destination)+"]") })
 	}
 	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 && canBeInFooter(node) {
 		return onEnter(entering, func() { r.footerLink(w, node) })
