@@ -116,6 +116,7 @@ func (r *Renderer) image(w io.Writer, node *ast.Image, entering bool) {
 	r.outs(w, "](")
 	r.outs(w, linkTarget(node.Destination, node.Title, node, r.inTableCell))
 	r.outs(w, ")")
+	r.writeAttribute(w, node, false)
 }
 
 func linkPlainText(node *ast.Link) []byte {
@@ -187,11 +188,10 @@ func (r *Renderer) footerLink(w io.Writer, node *ast.Link) {
 	r.outs(w, "]")
 	if label != string(text) {
 		r.outs(w, "["+label+"]")
-		return
-	}
-	if shortcutNeedsBrackets(node) {
+	} else if shortcutNeedsBrackets(node) {
 		r.outs(w, "[]")
 	}
+	r.writeAttribute(w, node, false)
 }
 
 // shortcutNeedsBrackets returns true if a shortcut reference [a] needs to be
@@ -241,11 +241,13 @@ func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStat
 			// the legacy parser keeps the label in source form
 			r.outs(w, "]["+string(node.DeferredID)+"]")
 		}
+		r.writeAttribute(w, node, false)
 		return ast.GoToNext
 	}
 
 	r.outs(w, "](")
 	r.outs(w, linkTarget(node.Destination, node.Title, node, r.inTableCell))
 	r.outs(w, ")")
+	r.writeAttribute(w, node, false)
 	return ast.GoToNext
 }

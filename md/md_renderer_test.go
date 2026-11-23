@@ -802,6 +802,29 @@ func TestRenderTableDestinationPipe(t *testing.T) {
 	}
 }
 
+func TestRenderAttributesRoundTrip(t *testing.T) {
+	newParser := func() *parser.Parser {
+		return parser.NewWithExtensions(parser.CommonExtensions | parser.Attributes | parser.InlineAttributes)
+	}
+	for _, source := range []string{
+		"{#id3 .myclass fontsize=\"tiny\"}\n# Header 1\n",
+		"hello\n{: .cls}\n",
+		"para\n{: #p1 .cls data-x=\"1\"}\n",
+		"[text](url){:.btn}\n",
+		"[docs](https://example.com){.external target=\"_blank\"}\n",
+		"![logo](logo.png){width=\"64\"}\n",
+		"{.the-class}\n![alt](/img.png)\n",
+		"---\n{: .rule}\n",
+		"{.list}\n* a\n* b\n",
+		"```\ncode\n```\n{: .highlight}\n",
+		"> hi\n{: .q}\n",
+	} {
+		t.Run(source, func(t *testing.T) {
+			testSameHTML(t, newParser, source)
+		})
+	}
+}
+
 func TestRenderMmarkNodes(t *testing.T) {
 	mmark := func() *parser.Parser {
 		return parser.NewWithExtensions(parser.CommonExtensions | parser.Mmark)

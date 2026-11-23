@@ -15,7 +15,9 @@ Markdown syntax, which differs between those parsers.
 
 The output is a normalized form of the document: the lines of a paragraph are
 joined, emphasis is written with *, headings with # and code blocks with
-fences. A title block stays a % block and a .# heading stays .#. These don't
+fences. A title block stays a % block and a .# heading stays .#. Block
+attributes are written on the line before the block, and inline attributes
+immediately after a link or image. These don't
 round-trip:
 
   - whitespace that HTML ignores

@@ -128,6 +128,75 @@ func emphasisChar(node ast.Node) string {
 	return "*"
 }
 
+// markdownAttribute writes an attribute list the parser accepts: {#id .class key="value"}.
+// skipID is a heading id already written as {#id} on the heading line.
+func markdownAttribute(attr *ast.Attribute, skipID string) string {
+	if attr == nil {
+		return ""
+	}
+	var b strings.Builder
+	empty := true
+	write := func(s string) {
+		if !empty {
+			b.WriteByte(' ')
+		}
+		empty = false
+		b.WriteString(s)
+	}
+	if len(attr.ID) > 0 && string(attr.ID) != skipID {
+		write("#" + string(attr.ID))
+	}
+	for _, class := range attr.Classes {
+		write("." + string(class))
+	}
+	if len(attr.Attrs) > 0 {
+		keys := make([]string, 0, len(attr.Attrs))
+		for key := range attr.Attrs {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			write(key + `="` + string(attr.Attrs[key]) + `"`)
+		}
+	}
+	if empty {
+		return ""
+	}
+	b.WriteByte('}')
+	return "{" + b.String()
+}
+
+func nodeAttribute(node ast.Node) *ast.Attribute {
+	field := ast.AttributeField(node)
+	if field == nil {
+		return nil
+	}
+	return *field
+}
+
+// writeAttribute writes node's attribute list. A block list is its own line,
+// before the block, which is where the Attributes extension reads it. An inline
+// list is {#id .class} with no extra characters, which is where InlineAttributes
+// reads it, immediately after a link or image.
+func (r *Renderer) writeAttribute(w io.Writer, node ast.Node, block bool) {
+	skipID := ""
+	if heading, ok := node.(*ast.Heading); ok {
+		skipID = heading.HeadingID
+	}
+	text := markdownAttribute(nodeAttribute(node), skipID)
+	if text == "" {
+		return
+	}
+	if r.inTableCell {
+		text = strings.ReplaceAll(text, "|", `\|`)
+	}
+	if block {
+		r.outs(w, text+"\n")
+		return
+	}
+	r.outs(w, text)
+}
+
 // isBlockNode returns true if node is a block and not inline content.
 func isBlockNode(node ast.Node) bool {
 	switch node.(type) {
@@ -872,6 +941,13 @@ func (r *Renderer) index(w io.Writer, node *ast.Index) {
 
 // RenderNode renders markdown node
 func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.WalkStatus {
+	// A list item's attribute would sit in front of the marker and attach to
+	// the list. Item attributes are not produced by the parser.
+	if entering && isBlockNode(node) {
+		if _, item := node.(*ast.ListItem); !item {
+			r.writeAttribute(w, node, true)
+		}
+	}
 	switch node := node.(type) {
 	case *ast.Text:
 		r.text(w, node)
