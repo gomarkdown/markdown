@@ -1,20 +1,16 @@
 #!/bin/bash
 set -u -e -o pipefail
 
-# This runs a go-fuzz as described in:
-# https://medium.com/@dgryski/go-fuzz-github-com-arolek-ase-3c74d5a3150c
-# https://github.com/dvyukov/go-fuzz
+# Fuzz with the built-in Go fuzzer.
+# FuzzParse covers the historical parser and CommonMark.
+# FuzzCommonMark adds the CommonMark spec examples as seeds.
+# Without a duration each target runs until a crash or until you stop it.
+# Example: ./s/fuzz.sh 30s
 
-go get github.com/dvyukov/go-fuzz/go-fuzz
-go get github.com/dvyukov/go-fuzz/go-fuzz-build
-
-# this step is expensive, so re-use previous runs if possible
-if [ ! -f ./markdown-fuzz.zip ]; then
-    mkdir -p fuzz-workdir/corpus
-    cp testdata/*.text fuzz-workdir/corpus
-    echo "running go-fuzz-build, might take a while..."
-    go-fuzz-build github.com/gomarkdown/markdown
+if [ "${1:-}" != "" ]; then
+	go test -fuzz=FuzzParse -fuzztime="$1"
+	go test -fuzz=FuzzCommonMark -fuzztime="$1"
+else
+	go test -fuzz=FuzzParse
+	go test -fuzz=FuzzCommonMark
 fi
-
-echo "running go-fuzz"
-go-fuzz -bin=./markdown-fuzz.zip -workdir=fuzz-workdir

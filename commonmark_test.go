@@ -1,7 +1,6 @@
 package markdown
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -225,29 +224,7 @@ func FuzzCommonMark(f *testing.F) {
 }
 
 func fuzzCommonMark(t *testing.T, input []byte, p *parser.Parser) {
-	original := bytes.Clone(input)
-	doc := p.Parse(input)
-	ast.WalkFunc(doc, func(node ast.Node, entering bool) ast.WalkStatus {
-		if !entering {
-			return ast.GoToNext
-		}
-		for i, child := range node.GetChildren() {
-			if child.GetParent() != node {
-				t.Fatal("incorrect AST parent")
-			}
-			if i > 0 && ast.GetPrevNode(child) != node.GetChildren()[i-1] {
-				t.Fatal("incorrect AST previous sibling")
-			}
-			if i+1 < len(node.GetChildren()) && ast.GetNextNode(child) != node.GetChildren()[i+1] {
-				t.Fatal("incorrect AST next sibling")
-			}
-		}
-		return ast.GoToNext
-	})
-	Render(doc, html.NewRenderer(html.RendererOptions{Flags: html.UseXHTML}))
-	if !bytes.Equal(input, original) {
-		t.Fatal("parser modified the input")
-	}
+	fuzzParsed(t, input, p, html.UseXHTML)
 }
 
 func TestCommonMarkASTIntegration(t *testing.T) {
