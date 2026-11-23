@@ -363,6 +363,9 @@ func (r *Renderer) para(w io.Writer, node *ast.Paragraph, entering bool) {
 }
 
 func isNumber(data []byte) bool {
+	if len(data) == 0 {
+		return false
+	}
 	for _, b := range data {
 		if b < '0' || b > '9' {
 			return false
@@ -563,7 +566,11 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 	lit := text.Literal
 	raw := isRawText(text)
 	needsEscape := !raw && needsEscaping(lit, r.previousWasNumber)
-	r.previousWasNumber = isNumber(lit)
+	// An empty text node is not a number, and it is not visible text, so it
+	// must not change whether the next "." follows a number.
+	if len(lit) > 0 {
+		r.previousWasNumber = isNumber(lit)
+	}
 	// A line break between inlines in a list. Dropping it glues *a* and *b*
 	// into one emphasis. A space keeps them apart; prefixing a real newline
 	// would indent the next line into a nested block.

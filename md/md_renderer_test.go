@@ -802,6 +802,24 @@ func TestRenderTableDestinationPipe(t *testing.T) {
 	}
 }
 
+func TestEmptyTextDoesNotCountAsNumber(t *testing.T) {
+	para := &ast.Paragraph{}
+	ast.AppendChild(para, &ast.Text{Leaf: ast.Leaf{Literal: []byte("a")}})
+	ast.AppendChild(para, &ast.Text{})
+	ast.AppendChild(para, &ast.Text{Leaf: ast.Leaf{Literal: []byte(".")}})
+	if got := string(markdown.Render(para, NewRenderer())); strings.Contains(got, `\`) {
+		t.Fatalf("empty text made the period look like it followed a number: %q", got)
+	}
+
+	para = &ast.Paragraph{}
+	ast.AppendChild(para, &ast.Text{Leaf: ast.Leaf{Literal: []byte("1")}})
+	ast.AppendChild(para, &ast.Text{})
+	ast.AppendChild(para, &ast.Text{Leaf: ast.Leaf{Literal: []byte(".")}})
+	if got := string(markdown.Render(para, NewRenderer())); !strings.Contains(got, `\.`) {
+		t.Fatalf("period after a number was not escaped: %q", got)
+	}
+}
+
 func TestRenderAttributesRoundTrip(t *testing.T) {
 	newParser := func() *parser.Parser {
 		return parser.NewWithExtensions(parser.CommonExtensions | parser.Attributes | parser.InlineAttributes)
