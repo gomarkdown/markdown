@@ -373,10 +373,7 @@ func (p *Parser) commonMarkInline(parent ast.Node, data []byte) {
 				literal := commonMarkLiteral(data[i : i+n])
 				link := &ast.Link{Destination: commonMarkURL(literal)}
 				ast.AppendChild(link, newTextNode(literal))
-				if autolinks == nil {
-					autolinks = map[*ast.Link]bool{}
-				}
-				autolinks[link] = true
+				textutil.MapSet(&autolinks, link, true)
 				appendNode(link)
 				i += n
 				continue

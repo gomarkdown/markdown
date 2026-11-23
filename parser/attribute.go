@@ -114,11 +114,8 @@ func mergeAttribute(dst, src *ast.Attribute) *ast.Attribute {
 		dst.ID = src.ID
 	}
 	dst.Classes = append(dst.Classes, src.Classes...)
-	if dst.Attrs == nil {
-		dst.Attrs = make(map[string][]byte)
-	}
 	for k, v := range src.Attrs {
-		dst.Attrs[k] = v
+		textutil.MapSet(&dst.Attrs, k, v)
 	}
 	return dst
 }

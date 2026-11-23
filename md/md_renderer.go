@@ -51,10 +51,7 @@ func NewRenderer(opts ...RendererOpt) *Renderer {
 	for _, opt := range opts {
 		opt(c)
 	}
-	return &Renderer{
-		orderedListCounter: map[int]int{},
-		C:                  c,
-	}
+	return &Renderer{C: c}
 }
 
 // WithRenderInFooter sets whether links are written as references with their
@@ -186,14 +183,12 @@ func (r *Renderer) list(w io.Writer, node *ast.List, entering bool) ast.WalkStat
 	}
 	r.listDepth++
 	if node.ListFlags&ast.ListTypeOrdered != 0 {
-		if r.orderedListCounter == nil {
-			r.orderedListCounter = map[int]int{}
-		}
 		// CommonMark keeps the start number, while the legacy parser uses 0 for 1
-		r.orderedListCounter[r.listDepth] = 1
+		start := 1
 		if node.Start > 0 || isCommonMarkDoc(node) {
-			r.orderedListCounter[r.listDepth] = node.Start
+			start = node.Start
 		}
+		textutil.MapSet(&r.orderedListCounter, r.listDepth, start)
 	}
 	for i, item := range node.GetChildren() {
 		// without a blank line a term would become a part of the previous definition

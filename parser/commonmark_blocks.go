@@ -33,11 +33,10 @@ func (p *Parser) commonMarkBlocks(data []byte) (loose bool) {
 		}
 		blank = false
 		p.tip = parent
-		if n := p.commonMarkHook(data); n > 0 {
-			data = data[n:]
-			continue
-		}
-		n := p.commonMarkBlock(data)
+		n := firstConsumed(
+			func() int { return p.commonMarkHook(data) },
+			func() int { return p.commonMarkBlock(data) },
+		)
 		if n <= 0 {
 			panic("CommonMark block parser made no progress")
 		}
@@ -722,12 +721,9 @@ func (p *Parser) commonMarkMarkLazy(data []byte, offsets []int) {
 	if len(offsets) == 0 {
 		return
 	}
-	if p.commonMarkLazyLines == nil {
-		p.commonMarkLazyLines = make(map[*byte]bool)
-	}
 	for _, offset := range offsets {
 		if offset < len(data) {
-			p.commonMarkLazyLines[&data[offset]] = true
+			textutil.MapSet(&p.commonMarkLazyLines, &data[offset], true)
 		}
 	}
 }

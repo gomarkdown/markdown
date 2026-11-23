@@ -53,42 +53,42 @@ func (p *Parser) html(data []byte, doRender bool) int {
 	}
 	curtag, tagfound := p.htmlFindTag(data[1:])
 
-	// handle special cases
+	// handle special cases: an HTML comment or an <hr> tag
 	if !tagfound {
-		// check for an HTML comment
-		if size := p.htmlComment(data, doRender); size > 0 {
-			return size
-		}
-
-		// check for an <hr> tag
-		if size := p.htmlHr(data, doRender); size > 0 {
-			return size
-		}
-
-		// no special case recognized
-		return 0
+		return firstConsumed(
+			func() int { return p.htmlComment(data, doRender) },
+			func() int { return p.htmlHr(data, doRender) },
+		)
 	}
 
-	if p.markdownHTMLTag(curtag) {
-		if p.extensions&MarkdownInHTML != 0 && isHTMLStructureTag(curtag) {
-			if size := p.htmlStructuredBlock(data, curtag, doRender); size > 0 {
-				return size
+	markdownTag := p.markdownHTMLTag(curtag)
+	return firstConsumed(
+		func() int {
+			if !markdownTag || p.extensions&MarkdownInHTML == 0 || !isHTMLStructureTag(curtag) {
+				return 0
 			}
-		}
-		if size := p.htmlMarkdownBlock(data, curtag, doRender); size > 0 {
-			return size
-		}
-	}
+			return p.htmlStructuredBlock(data, curtag, doRender)
+		},
+		func() int {
+			if !markdownTag {
+				return 0
+			}
+			return p.htmlMarkdownBlock(data, curtag, doRender)
+		},
+		func() int { return p.htmlRawBlock(data, curtag, doRender) },
+	)
+}
 
+// htmlRawBlock parses an HTML block that ends at the closing tag of tag.
+func (p *Parser) htmlRawBlock(data []byte, tag string, doRender bool) int {
 	// Following Markdown.pl, ins and del cannot form these blocks.
-	if curtag == "ins" || curtag == "del" {
+	if tag == "ins" || tag == "del" {
 		return 0
 	}
-	_, consumed := p.findHTMLCloseTag(data, curtag, 1, false)
+	_, consumed := p.findHTMLCloseTag(data, tag, 1, false)
 	if consumed == 0 {
 		return 0
 	}
-
 	return p.emitHTMLBlock(data, consumed, doRender)
 }
 
@@ -177,10 +177,7 @@ func (p *Parser) findHTMLCloseTag(data []byte, tag string, start int, loose bool
 	}
 	closeStart, consumed = p.scanHTMLCloseTag(data, tag, start, loose)
 	if consumed == 0 {
-		if p.htmlCloseMisses == nil {
-			p.htmlCloseMisses = map[htmlCloseKey]int{}
-		}
-		p.htmlCloseMisses[key] = tail
+		textutil.MapSet(&p.htmlCloseMisses, key, tail)
 	}
 	return closeStart, consumed
 }

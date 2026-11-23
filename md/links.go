@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // backslashEscape returns text with a backslash before each byte for which
@@ -153,9 +154,6 @@ func (r *Renderer) reserveDefinedLabels(doc ast.Node) {
 // uniqueFooterLabel returns a label based on label that refers to target, adding
 // a definition to the footer unless there already is one.
 func (r *Renderer) uniqueFooterLabel(label, target string) string {
-	if r.footerLabels == nil {
-		r.footerLabels = map[string]string{}
-	}
 	unique := label
 	for i := 2; ; i++ {
 		existing, ok := r.footerLabels[normalizeLabel(unique)]
@@ -167,11 +165,8 @@ func (r *Renderer) uniqueFooterLabel(label, target string) string {
 		}
 		unique = label + "-" + strconv.Itoa(i)
 	}
-	r.footerLabels[normalizeLabel(unique)] = target
-	if r.linkcache == nil {
-		r.linkcache = make(map[string]bool)
-	}
-	r.linkcache["["+unique+"]: "+target] = true
+	textutil.MapSet(&r.footerLabels, normalizeLabel(unique), target)
+	textutil.MapSet(&r.linkcache, "["+unique+"]: "+target, true)
 	return unique
 }
 

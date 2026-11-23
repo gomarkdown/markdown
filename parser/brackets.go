@@ -1,6 +1,10 @@
 package parser
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/gomarkdown/markdown/internal/textutil"
+)
 
 // bracketTable maps each '[' in one Inline() buffer to its matching ']'.
 // Built once per buffer so a run of unmatched '[' is O(n) (GHSA-85vw-wvf9-r522).
@@ -26,11 +30,8 @@ func (t *bracketTable) emphFailed(s emphSearch) bool {
 }
 
 func (t *bracketTable) markEmphFailed(searches []emphSearch) {
-	if t.emphFails == nil {
-		t.emphFails = make(map[emphSearch]struct{})
-	}
 	for _, s := range searches {
-		t.emphFails[s] = struct{}{}
+		textutil.MapSet(&t.emphFails, s, struct{}{})
 	}
 }
 
