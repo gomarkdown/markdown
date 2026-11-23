@@ -20,9 +20,7 @@ func (r *Renderer) RenderHeader(w io.Writer, doc ast.Node) {
 
 // RenderFooter writes HTML document footer.
 func (r *Renderer) RenderFooter(w io.Writer, _ ast.Node) {
-	if r.documentMatter != ast.DocumentMatterNone {
-		r.Outs(w, "</section>\n")
-	}
+	r.closeMatterSection(w)
 	if r.Opts.Flags&CompletePage != 0 {
 		io.WriteString(w, "\n</body>\n</html>\n")
 	}
@@ -88,20 +86,15 @@ func (r *Renderer) writeTOC(w io.Writer, doc ast.Node) {
 			if heading.HeadingID == "" {
 				heading.HeadingID = fmt.Sprintf("toc_%d", headingCount)
 			}
-			switch {
-			case heading.Level == tocLevel:
-				buf.WriteString("</li>\n\n<li>")
-			case heading.Level < tocLevel:
-				for heading.Level < tocLevel {
-					tocLevel--
+			if heading.Level > tocLevel {
+				for ; tocLevel < heading.Level; tocLevel++ {
+					buf.WriteString("\n<ul>\n<li>")
+				}
+			} else {
+				for ; tocLevel > heading.Level; tocLevel-- {
 					buf.WriteString("</li>\n</ul>")
 				}
 				buf.WriteString("</li>\n\n<li>")
-			default:
-				for heading.Level > tocLevel {
-					tocLevel++
-					buf.WriteString("\n<ul>\n<li>")
-				}
 			}
 			fmt.Fprintf(&buf, `<a href="#%s">`, escapeAttr(heading.HeadingID))
 			headingCount++

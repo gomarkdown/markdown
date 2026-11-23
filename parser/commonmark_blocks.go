@@ -113,15 +113,12 @@ func commonMarkHeading(data []byte) (level int, content []byte) {
 		return
 	}
 	line = bytes.TrimLeft(line, " \t")
-	level = skipChar(line, 0, '#')
+	level = textutil.SkipChar(line, 0, '#')
 	if level == 0 || level > 6 || level < len(line) && line[level] != ' ' && line[level] != '\t' {
 		return 0, nil
 	}
 	content = bytes.Trim(line[level:], " \t")
-	end := len(content)
-	for end > 0 && content[end-1] == '#' {
-		end--
-	}
+	end := textutil.BackChar(content, len(content), '#')
 	if end < len(content) && (end == 0 || content[end-1] == ' ' || content[end-1] == '\t') {
 		content = bytes.TrimRight(content[:end], " \t")
 	}
@@ -136,7 +133,7 @@ func commonMarkSetext(line []byte) int {
 	if len(line) == 0 || line[0] != '=' && line[0] != '-' {
 		return 0
 	}
-	if skipChar(line, 0, line[0]) != len(line) {
+	if textutil.SkipChar(line, 0, line[0]) != len(line) {
 		return 0
 	}
 	if line[0] == '=' {
@@ -174,7 +171,7 @@ func commonMarkFence(line []byte) (marker byte, count, indent int, info []byte) 
 		return
 	}
 	marker = line[0]
-	count = skipChar(line, 0, marker)
+	count = textutil.SkipChar(line, 0, marker)
 	if count < 3 {
 		return 0, 0, 0, nil
 	}
@@ -194,7 +191,7 @@ func commonMarkQuotePrefix(line []byte) int {
 		return 0
 	}
 	i := skipHSpace(line, 0)
-	if i < len(line) && line[i] == '>' {
+	if textutil.ByteAt(line, i, '>') {
 		return i + 1
 	}
 	return 0
@@ -379,7 +376,7 @@ func (p *Parser) commonMarkFencedCode(data []byte, i int, marker byte, count, in
 	for i < len(data) {
 		line, end := commonMarkLine(data[i:])
 		trimmed := bytes.TrimLeft(line, " \t")
-		if commonMarkIndent(line) <= 3 && len(trimmed) > 0 && trimmed[0] == marker && skipChar(trimmed, 0, marker) >= count && commonMarkBlank(trimmed[skipChar(trimmed, 0, marker):]) {
+		if commonMarkIndent(line) <= 3 && len(trimmed) > 0 && trimmed[0] == marker && textutil.SkipChar(trimmed, 0, marker) >= count && commonMarkBlank(trimmed[textutil.SkipChar(trimmed, 0, marker):]) {
 			i += end
 			break
 		}
@@ -460,11 +457,11 @@ func (p *Parser) commonMarkParagraph(data []byte) int {
 
 func (p *Parser) commonMarkReference(data []byte) int {
 	start := skipHSpace(data, 0)
-	if start >= len(data) || data[start] != '[' {
+	if !textutil.ByteAt(data, start, '[') {
 		return 0
 	}
 	close := commonMarkLabelEnd(data, start+1)
-	if close < 0 || close+1 >= len(data) || data[close+1] != ':' {
+	if close < 0 || !textutil.ByteAt(data, close+1, ':') {
 		return 0
 	}
 	label := data[start+1 : close]
@@ -496,9 +493,7 @@ func (p *Parser) commonMarkReference(data []byte) int {
 	if lineEnd < 0 {
 		return 0
 	}
-	if end < len(data) && data[end] == '\n' {
-		end++
-	}
+	end = textutil.SkipCharN(data, end, '\n', 1)
 	key := commonMarkLabel(label)
 	if _, exists := p.refs[key]; !exists {
 		p.refs[key] = &reference{link: destination, title: title}
@@ -552,7 +547,7 @@ func (s *commonMarkContinuation) feed(line []byte) {
 	}
 	if s.fence != 0 {
 		trimmed := bytes.Trim(line, " \t")
-		if commonMarkIndent(line) <= 3 && len(trimmed) > 0 && trimmed[0] == s.fence && skipChar(trimmed, 0, s.fence) >= s.count && commonMarkBlank(trimmed[skipChar(trimmed, 0, s.fence):]) {
+		if commonMarkIndent(line) <= 3 && len(trimmed) > 0 && trimmed[0] == s.fence && textutil.SkipChar(trimmed, 0, s.fence) >= s.count && commonMarkBlank(trimmed[textutil.SkipChar(trimmed, 0, s.fence):]) {
 			s.fence = 0
 		}
 		s.paragraph = false
@@ -762,15 +757,12 @@ func commonMarkHTMLStart(line []byte) (kind int, closer string) {
 			return index + 2, pair[1]
 		}
 	}
-	i := 1
-	if i < len(line) && line[i] == '/' {
-		i++
-	}
+	i := textutil.SkipCharN(line, 1, '/', 1)
 	start := i
 	for i < len(line) && (IsAlnum(line[i]) || line[i] == '-') {
 		i++
 	}
-	if i > start && (i == len(line) || IsSpace(line[i]) || line[i] == '>' || line[i] == '/' && i+1 < len(line) && line[i+1] == '>') && inStringSet(commonMarkBlockTags, strings.ToLower(string(line[start:i]))) {
+	if i > start && (i == len(line) || IsSpace(line[i]) || line[i] == '>' || line[i] == '/' && textutil.ByteAt(line, i+1, '>')) && inStringSet(commonMarkBlockTags, strings.ToLower(string(line[start:i]))) {
 		return 6, ""
 	}
 	if tag := commonMarkHTMLTag.Find(line); tag != nil && commonMarkBlank(line[len(tag):]) {

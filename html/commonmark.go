@@ -88,13 +88,7 @@ func (r *Renderer) renderCommonMarkNode(w io.Writer, node ast.Node, entering boo
 				r.Outs(w, "</tt>")
 				return ast.SkipChildren, true
 			}
-			attrs := r.blockAttrs(n, imageAttrNames(r, n.Title)...)
-			if r.Opts.Flags&LazyLoadImages != 0 {
-				attrs = append(attrs, `loading="lazy"`)
-			}
-			r.Outs(w, tagStart("<img", attrs)+` src="`)
-			EscapeHTML(w, AddAbsPrefixToImage(n.Destination, r.Opts.AbsolutePrefix))
-			r.Outs(w, `" alt="`)
+			r.imageOpen(w, n, n.Destination)
 			r.commonMarkImageText(w, n)
 			r.Outs(w, `"`)
 			if n.Title != nil {

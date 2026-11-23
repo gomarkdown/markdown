@@ -86,6 +86,22 @@ func (r *Renderer) render(node ast.Node) []byte {
 	return buf.Bytes()
 }
 
+// appendChildren appends the output for the children of node to dst.
+func (r *Renderer) appendChildren(dst []byte, node ast.Node) []byte {
+	for _, child := range node.GetChildren() {
+		dst = append(dst, r.render(child)...)
+	}
+	return dst
+}
+
+// outsOnEnter writes s when entering a node whose children it replaces.
+func (r *Renderer) outsOnEnter(w io.Writer, entering bool, s string) ast.WalkStatus {
+	if entering {
+		r.outs(w, s)
+	}
+	return ast.SkipChildren
+}
+
 // emphasisChar returns the delimiter character of an emphasis node. It's *
 // except for Emph that is all the content of other emphasis: **foo** would be
 // strong instead of emphasis in emphasis, and ***foo*** is emphasis around
@@ -377,10 +393,7 @@ func isAtLineStart(text *ast.Text) bool {
 // blockMarkerIndex returns the index of the character to escape so that text at
 // the start of a line doesn't start a block, or -1 if there's no such character.
 func blockMarkerIndex(text []byte) int {
-	i := 0
-	for i < len(text) && text[i] == ' ' {
-		i++
-	}
+	i := textutil.SkipChar(text, 0, ' ')
 	if i == len(text) {
 		return -1
 	}
@@ -418,15 +431,12 @@ func nextNonEmptyNode(node ast.Node) ast.Node {
 // startsWithEntity returns true if text, which starts with &, would be parsed
 // as an entity.
 func startsWithEntity(text []byte) bool {
-	i := 1
-	if i < len(text) && text[i] == '#' {
-		i++
-	}
+	i := textutil.SkipCharN(text, 1, '#', 1)
 	start := i
 	for i < len(text) && text[i] < 0x80 && isWordChar(text[i]) {
 		i++
 	}
-	return i > start && i < len(text) && text[i] == ';'
+	return i > start && textutil.ByteAt(text, i, ';')
 }
 
 func isWordChar(c byte) bool {
@@ -584,10 +594,7 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.Wa
 	if !entering {
 		return ast.GoToNext
 	}
-	content := append([]byte{}, node.Literal...)
-	for _, child := range node.GetChildren() {
-		content = append(content, r.render(child)...)
-	}
+	content := r.appendChildren(append([]byte{}, node.Literal...), node)
 	// a # heading can't span lines; CommonMark has multi-line setext headings
 	if bytes.IndexByte(content, '\n') >= 0 && node.Level <= 2 && node.HeadingID == "" {
 		underline := "==="
@@ -611,10 +618,7 @@ func (r *Renderer) heading(w io.Writer, node *ast.Heading, entering bool) ast.Wa
 // before it.
 func escapeClosingHashes(text []byte) []byte {
 	end := len(bytes.TrimRight(text, " "))
-	start := end
-	for start > 0 && text[start-1] == '#' {
-		start--
-	}
+	start := textutil.BackChar(text, end, '#')
 	if start == end {
 		return text
 	}
@@ -907,10 +911,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Math:
 		r.delimited(w, "$", node.Literal)
 	case *ast.MathBlock:
-		if entering {
-			r.outs(w, "$$"+string(node.Literal)+"$$\n\n")
-		}
-		return ast.SkipChildren
+		return r.outsOnEnter(w, entering, "$$"+string(node.Literal)+"$$\n\n")
 	case *ast.Subscript:
 		r.delimited(w, "~", node.Literal)
 	case *ast.Superscript:

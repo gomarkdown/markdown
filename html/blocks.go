@@ -266,14 +266,20 @@ func (r *Renderer) TableBody(w io.Writer, node *ast.TableBody, entering bool) {
 	}
 }
 
+// closeMatterSection closes the <section> of the current document matter, if
+// one is open.
+func (r *Renderer) closeMatterSection(w io.Writer) {
+	if r.documentMatter != ast.DocumentMatterNone {
+		r.Outs(w, "</section>\n")
+	}
+}
+
 // DocumentMatter writes ast.DocumentMatter
 func (r *Renderer) DocumentMatter(w io.Writer, node *ast.DocumentMatter, entering bool) {
 	if !entering {
 		return
 	}
-	if r.documentMatter != ast.DocumentMatterNone {
-		r.Outs(w, "</section>\n")
-	}
+	r.closeMatterSection(w)
 	if name := matter.Name(node.Matter); name != "" {
 		r.Outs(w, `<section data-matter="`+name+`">`)
 	}

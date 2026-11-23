@@ -4,6 +4,8 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
+
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // TestCodeSpanClosersMatchReference walks random inputs the way Inline
@@ -17,7 +19,7 @@ func TestCodeSpanClosersMatchReference(t *testing.T) {
 			return
 		}
 		nb, closers := p.codeSpanClosers(data, off)
-		if wantNb := skipChar(data, off, '`') - off; nb != wantNb {
+		if wantNb := textutil.SkipChar(data, off, '`') - off; nb != wantNb {
 			t.Fatalf("%q at %d: got run length %d, want %d", data, off, nb, wantNb)
 		}
 		got := closers[nb]

@@ -107,11 +107,11 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 
 	// skip any amount of whitespace or newline
 	// (this is much more lax than original markdown syntax)
-	i = skipWhile(data, i, IsSpace)
+	i = textutil.SkipWhile(data, i, IsSpace)
 
 	// inline style link
 	switch {
-	case i < len(data) && data[i] == '(':
+	case textutil.ByteAt(data, i, '('):
 		var ok bool
 		i, link, title, ok = parseInlineLink(p, data, i)
 		if !ok {

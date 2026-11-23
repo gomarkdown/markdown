@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // attribute parses a (potential) block attribute and adds it to p.
@@ -30,11 +31,8 @@ func parseAttributeList(data []byte, requireEOL bool) (*ast.Attribute, int) {
 		}
 	}
 
-	i := 1
-	if i < len(data) && data[i] == ':' {
-		i++
-	}
-	i = skipWhile(data, i, func(b byte) bool { return byteIn(b, " \t\f\v") })
+	i := textutil.SkipCharN(data, 1, ':', 1)
+	i = textutil.SkipWhile(data, i, func(b byte) bool { return byteIn(b, " \t\f\v") })
 
 	b := &ast.Attribute{Attrs: make(map[string][]byte)}
 	esc := false
@@ -153,7 +151,7 @@ func parseAfterBlockAttribute(data []byte) (*ast.Attribute, int) {
 	if len(data) > 0 && data[0] == '\n' {
 		i++
 	}
-	i = skipCharN(data, i, ' ', 3)
+	i = textutil.SkipCharN(data, i, ' ', 3)
 	if !pairAt(data, i, '{', ':') {
 		return nil, 0
 	}
@@ -162,10 +160,7 @@ func parseAfterBlockAttribute(data []byte) (*ast.Attribute, int) {
 		return nil, 0
 	}
 	consumed := i + n
-	if consumed < len(data) && data[consumed] == '\n' {
-		consumed++
-	}
-	return attr, consumed
+	return attr, textutil.SkipCharN(data, consumed, '\n', 1)
 }
 
 func isAfterBlockIAL(data []byte) bool {

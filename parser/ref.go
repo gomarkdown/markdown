@@ -53,13 +53,11 @@ func maybeShortRefOrIndex(p *Parser, data []byte, offset int) (int, ast.Node) {
 			node.Destination = idpart
 			node.Suffix = suff
 		}
-		if bytes.Index(node.Destination, []byte(" ")) > 0 {
-			// no spaces allowed in id
-			return 0, nil
-		}
-		if bytes.Index(node.Destination, []byte(",")) > 0 {
-			// nor comma
-			return 0, nil
+		// no spaces or commas allowed in id
+		for _, c := range []byte(" ,") {
+			if bytes.IndexByte(node.Destination, c) > 0 {
+				return 0, nil
+			}
 		}
 
 		return i + 1, node

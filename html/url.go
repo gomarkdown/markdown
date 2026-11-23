@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gomarkdown/markdown/internal/textutil"
 	"github.com/gomarkdown/markdown/parser"
 )
 
@@ -53,23 +54,18 @@ func AddAbsPrefixToImage(link []byte, prefix string) []byte {
 	return []byte(prefix + string(link))
 }
 
+// linkRelNames are the rel values of the link flags.
+var linkRelNames = []textutil.FlagName[Flags]{
+	{Flag: NofollowLinks, Name: "nofollow"},
+	{Flag: NoreferrerLinks, Name: "noreferrer"},
+	{Flag: NoopenerLinks, Name: "noopener"},
+}
+
 func appendLinkAttrs(attrs []string, flags Flags, link []byte) []string {
 	if isRelativeLink(link) {
 		return attrs
 	}
-	rels := make([]string, 0, 3)
-	for _, rel := range []struct {
-		flag Flags
-		name string
-	}{
-		{NofollowLinks, "nofollow"},
-		{NoreferrerLinks, "noreferrer"},
-		{NoopenerLinks, "noopener"},
-	} {
-		if flags&rel.flag != 0 {
-			rels = append(rels, rel.name)
-		}
-	}
+	rels := textutil.FlagNames(flags, linkRelNames)
 	if flags&HrefTargetBlank != 0 {
 		attrs = append(attrs, `target="_blank"`)
 	}

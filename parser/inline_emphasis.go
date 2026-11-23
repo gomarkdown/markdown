@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // single and double emphasis parsing
@@ -11,7 +12,7 @@ func emphasis(p *Parser, data []byte, offset int) (int, ast.Node) {
 	// Registering '~' for subscript must not enable double-tilde syntax or
 	// reinterpret the suffix of a double-tilde opener as a single opener.
 	if data[offset] == '~' && p.extensions&Strikethrough == 0 {
-		if offset+1 < len(data) && data[offset+1] == '~' ||
+		if textutil.ByteAt(data, offset+1, '~') ||
 			offset > 0 && data[offset-1] == '~' && !isEscape(data, offset-1) {
 			return 0, nil
 		}

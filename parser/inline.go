@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // Parsing of inline elements
@@ -107,7 +108,7 @@ func (c *runCache) endOf(data []byte, offset int, b byte) int {
 	if c.buf.covers(data, offset, c.start, c.end) {
 		return c.end
 	}
-	end := skipChar(data, offset, b)
+	end := textutil.SkipChar(data, offset, b)
 	*c = runCache{buf: idOf(data), start: offset, end: end}
 	return end
 }
@@ -117,7 +118,7 @@ func maybeLineBreak(p *Parser, data []byte, offset int) (int, ast.Node) {
 	origOffset := offset
 	offset = p.spaces.endOf(data, offset, ' ')
 
-	if offset < len(data) && data[offset] == '\n' {
+	if textutil.ByteAt(data, offset, '\n') {
 		if offset-origOffset >= 2 {
 			return offset - origOffset + 1, &ast.Hardbreak{}
 		}

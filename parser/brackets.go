@@ -44,15 +44,8 @@ func (t *bracketTable) lookup(open int) (closeAt int, nested, ok bool) {
 // '[' does not require another scan to the end of the inline buffer.
 func (t *bracketTable) firstEmphasis(start, end int, c byte) (int, bool) {
 	t.ensure()
-	var slot int
-	switch c {
-	case '*':
-		slot = 0
-	case '_':
-		slot = 1
-	case '~':
-		slot = 2
-	default:
+	slot := emphSlot(c)
+	if slot < 0 {
 		return 0, false
 	}
 	positions := t.emph[slot]
@@ -73,13 +66,22 @@ func (t *bracketTable) ensure() {
 	}
 	t.pairs.ensure()
 	for i, c := range t.data {
-		switch c {
-		case '*':
-			t.emph[0] = append(t.emph[0], i)
-		case '_':
-			t.emph[1] = append(t.emph[1], i)
-		case '~':
-			t.emph[2] = append(t.emph[2], i)
+		if slot := emphSlot(c); slot >= 0 {
+			t.emph[slot] = append(t.emph[slot], i)
 		}
 	}
+}
+
+// emphSlot returns the index in bracketTable.emph of the positions of
+// emphasis delimiter c, or -1 if c is not one.
+func emphSlot(c byte) int {
+	switch c {
+	case '*':
+		return 0
+	case '_':
+		return 1
+	case '~':
+		return 2
+	}
+	return -1
 }

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"path"
 	"path/filepath"
+
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 var includeCaptions = [...]string{captionFigure, captionTable, captionQuote}
@@ -11,7 +13,7 @@ var includeCaptions = [...]string{captionFigure, captionTable, captionQuote}
 // isInclude parses {{path}}[address]. The optional address selects which lines
 // to include. It is treated as an opaque string and just given to readInclude.
 func isInclude(data []byte) (filename string, address []byte, consumed int) {
-	i := skipCharN(data, 0, ' ', 3) // start with up to 3 spaces
+	i := textutil.SkipCharN(data, 0, ' ', 3) // start with up to 3 spaces
 	if len(data[i:]) < 3 {
 		return "", nil, 0
 	}
@@ -32,7 +34,7 @@ func isInclude(data []byte) (filename string, address []byte, consumed int) {
 	}
 	filename = string(data[start:end])
 
-	if i+1 < len(data) && data[i+1] == '[' { // potential address specification
+	if textutil.ByteAt(data, i+1, '[') { // potential address specification
 		start := i + 2
 
 		end = skipUntilChar(data, start, ']')
@@ -57,7 +59,7 @@ func (p *Parser) readInclude(from, file string, address []byte) []byte {
 // isCodeInclude parses <{{...}}, which is like isInclude, except that the
 // returned bytes are wrapped in a code block.
 func isCodeInclude(data []byte) (filename string, address []byte, consumed int) {
-	i := skipCharN(data, 0, ' ', 3) // start with up to 3 spaces
+	i := textutil.SkipCharN(data, 0, ' ', 3) // start with up to 3 spaces
 	if len(data[i:]) < 3 {
 		return "", nil, 0
 	}

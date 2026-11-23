@@ -189,14 +189,18 @@ func (r *Renderer) imageEnter(w io.Writer, image *ast.Image) {
 	if r.DisableTags > 1 {
 		return
 	}
-	src := AddAbsPrefixToImage(r.outputDest(image.Destination), r.Opts.AbsolutePrefix)
+	r.imageOpen(w, image, r.outputDest(image.Destination))
+}
+
+// imageOpen writes the <img tag of image, with src set to dest, up to the
+// start of the alt text.
+func (r *Renderer) imageOpen(w io.Writer, image *ast.Image, dest []byte) {
 	attrs := r.blockAttrs(image, imageAttrNames(r, image.Title)...)
 	if r.Opts.Flags&LazyLoadImages != 0 {
 		attrs = append(attrs, `loading="lazy"`)
 	}
-
 	r.Outs(w, tagStart("<img", attrs)+` src="`)
-	EscapeHTML(w, src)
+	EscapeHTML(w, AddAbsPrefixToImage(dest, r.Opts.AbsolutePrefix))
 	r.Outs(w, `" alt="`)
 }
 

@@ -177,10 +177,7 @@ func (r *Renderer) uniqueFooterLabel(label, target string) string {
 
 // footerLink renders a link whose destination goes to the footer.
 func (r *Renderer) footerLink(w io.Writer, node *ast.Link) {
-	var text []byte
-	for _, child := range node.GetChildren() {
-		text = append(text, r.render(child)...)
-	}
+	text := r.appendChildren(nil, node)
 	target := linkTarget(node.Destination, node.Title, node)
 	label := r.uniqueFooterLabel(footerLinkLabel(text), target)
 
@@ -224,10 +221,7 @@ func canBeInFooter(node *ast.Link) bool {
 
 func (r *Renderer) link(w io.Writer, node *ast.Link, entering bool) ast.WalkStatus {
 	if node.NoteID != 0 {
-		if entering {
-			r.outs(w, "[^"+string(node.Destination)+"]")
-		}
-		return ast.SkipChildren
+		return r.outsOnEnter(w, entering, "[^"+string(node.Destination)+"]")
 	}
 	if r.C != nil && r.C.Flags&renderLinksInFooter != 0 && canBeInFooter(node) {
 		if entering {

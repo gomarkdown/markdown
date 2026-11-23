@@ -5,6 +5,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 // sliceOffset reports where part starts in whole when part is a suffix backed
@@ -30,26 +32,13 @@ func IsEmpty(data []byte) int {
 			return 0
 		}
 	}
-	i = skipCharN(data, i, '\n', 1)
+	i = textutil.SkipCharN(data, i, '\n', 1)
 	return i
-}
-
-// skipWhile advances i as long as keep(data[i]) holds.
-func skipWhile(data []byte, i int, keep func(byte) bool) int {
-	for i < len(data) && keep(data[i]) {
-		i++
-	}
-	return i
-}
-
-// skipChar advances i as long as data[i] == c
-func skipChar(data []byte, i int, c byte) int {
-	return skipWhile(data, i, func(b byte) bool { return b == c })
 }
 
 // nextByteIs reports whether the byte after data[i] is c.
 func nextByteIs(data []byte, i int, c byte) bool {
-	return i+1 < len(data) && data[i+1] == c
+	return textutil.ByteAt(data, i+1, c)
 }
 
 // byteIn reports whether c is one of the bytes in set.
@@ -59,7 +48,7 @@ func byteIn(c byte, set string) bool {
 
 // pairAt reports whether data[i] is a and the byte after it is b.
 func pairAt(data []byte, i int, a, b byte) bool {
-	return i >= 0 && i < len(data) && data[i] == a && nextByteIs(data, i, b)
+	return textutil.ByteAt(data, i, a) && nextByteIs(data, i, b)
 }
 
 // enclosedBy reports whether s starts with open and ends with a separate
@@ -86,15 +75,6 @@ func skipUntilAny(data []byte, i int, set string) int {
 	return i + j
 }
 
-// like skipChar but only skips up to max characters
-func skipCharN(data []byte, i int, c byte, max int) int {
-	for i < len(data) && max > 0 && data[i] == c {
-		i++
-		max--
-	}
-	return i
-}
-
 // skipUntilChar advances i as long as data[i] != c
 func skipUntilChar(data []byte, i int, c byte) int {
 	return skipUntilAny(data, i, string([]byte{c}))
@@ -113,7 +93,7 @@ func skipUntilUnescapedChar(data []byte, i int, c byte) int {
 }
 
 func skipHSpace(data []byte, i int) int {
-	return skipWhile(data, i, func(b byte) bool { return b == ' ' || b == '\t' })
+	return textutil.SkipWhile(data, i, func(b byte) bool { return b == ' ' || b == '\t' })
 }
 
 // lineEnd returns the end of the line holding data[i-1]: the index after its
@@ -139,13 +119,6 @@ func hasUnescapedSpace(data []byte, start, end int) bool {
 	return false
 }
 
-func backChar(data []byte, i int, c byte) int {
-	for i > 0 && data[i-1] == c {
-		i--
-	}
-	return i
-}
-
 // backUntilChar moves i back to just after the last c before it, or to 0.
 func backUntilChar(data []byte, i int, c byte) int {
 	if i <= 0 {
@@ -155,15 +128,12 @@ func backUntilChar(data []byte, i int, c byte) int {
 }
 
 func prefixedBlock(data []byte, marker string) int {
-	i := skipCharN(data, 0, ' ', 3)
+	i := textutil.SkipCharN(data, 0, ' ', 3)
 	if !bytes.HasPrefix(data[i:], []byte(marker)) {
 		return 0
 	}
 	i += len(marker)
-	if i < len(data) && data[i] == ' ' {
-		i++
-	}
-	return i
+	return textutil.SkipCharN(data, i, ' ', 1)
 }
 
 func terminatesPrefixedBlock(data []byte, begin, end int, prefix func([]byte) int) bool {

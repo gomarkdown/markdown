@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 var (
@@ -92,8 +93,13 @@ func (p *Parser) html(data []byte, doRender bool) int {
 }
 
 func (p *Parser) markdownHTMLTag(tag string) bool {
-	return inStringSet(markdownHTMLBlockTags, tag) ||
-		p.extensions&MarkdownInHTML != 0 && inStringSet(markdownInHTMLTags, tag)
+	return inStringSet(markdownHTMLBlockTags, tag) || p.markdownInHTMLTag(tag)
+}
+
+// markdownInHTMLTag reports whether tag is a block tag only because the
+// MarkdownInHTML extension is on.
+func (p *Parser) markdownInHTMLTag(tag string) bool {
+	return p.extensions&MarkdownInHTML != 0 && inStringSet(markdownInHTMLTags, tag)
 }
 
 func isHTMLStructureTag(tag string) bool {
@@ -207,16 +213,13 @@ func htmlFindEndLoose(tag string, data []byte) int {
 		return 0
 	}
 	i := len(closetag)
-	for i < len(data) && data[i] != '\n' {
-		if data[i] != ' ' && data[i] != '\t' {
-			return 0
-		}
-		i++
+	if i == len(data) {
+		return i
 	}
-	if i < len(data) && data[i] == '\n' {
-		i++
+	if n := IsEmpty(data[i:]); n > 0 {
+		return i + n
 	}
-	return i
+	return 0
 }
 
 func (p *Parser) htmlStructuredBlock(data []byte, tag string, doRender bool) int {
@@ -247,7 +250,7 @@ func (p *Parser) parseHTMLInterior(data []byte) {
 			continue
 		}
 		i := skipHSpace(data, 0)
-		if i < len(data) && data[i] == '<' {
+		if textutil.ByteAt(data, i, '<') {
 			if n := p.html(data[i:], true); n > 0 {
 				data = data[i+n:]
 				continue
@@ -292,7 +295,7 @@ func (p *Parser) htmlBlockBeforeBlank(data []byte, i int, doRender bool) int {
 // if doRender is set, and returns size.
 func (p *Parser) emitHTMLBlock(data []byte, size int, doRender bool) int {
 	if doRender {
-		p.addHTMLBlock(data[:backChar(data, size, '\n')])
+		p.addHTMLBlock(data[:textutil.BackChar(data, size, '\n')])
 	}
 	return size
 }
@@ -310,17 +313,16 @@ func (p *Parser) htmlHr(data []byte, doRender bool) int {
 		return 0
 	}
 	i := skipUntilAny(data, 3, ">\n")
-	if i < len(data) && data[i] == '>' {
+	if textutil.ByteAt(data, i, '>') {
 		return p.htmlBlockBeforeBlank(data, i+1, doRender)
 	}
 	return 0
 }
 
 func (p *Parser) htmlFindTag(data []byte) (string, bool) {
-	i := skipWhile(data, 0, IsAlnum)
+	i := textutil.SkipWhile(data, 0, IsAlnum)
 	key := string(data[:i])
-	if inStringSet(blockTags, key) ||
-		p.extensions&MarkdownInHTML != 0 && inStringSet(markdownInHTMLTags, key) {
+	if inStringSet(blockTags, key) || p.markdownInHTMLTag(key) {
 		return key, true
 	}
 	return "", false
