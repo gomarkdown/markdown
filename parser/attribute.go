@@ -46,8 +46,7 @@ func parseAttributeList(data []byte, requireEOL bool) (*ast.Attribute, int) {
 			if quote {
 				continue
 			}
-			chunk := data[trail+1 : i]
-			if len(chunk) > 0 && !addAttrChunk(b, chunk) {
+			if !addAttrChunk(b, data[trail+1:i], true) {
 				return nil, 0
 			}
 			trail = i
@@ -74,8 +73,7 @@ func parseAttributeList(data []byte, requireEOL bool) (*ast.Attribute, int) {
 				esc = false
 				continue
 			}
-			chunk := data[trail+1 : i]
-			if len(chunk) == 0 || !addAttrChunk(b, chunk) {
+			if !addAttrChunk(b, data[trail+1:i], false) {
 				return nil, 0
 			}
 			i++
@@ -87,8 +85,12 @@ func parseAttributeList(data []byte, requireEOL bool) (*ast.Attribute, int) {
 	return nil, 0
 }
 
-func addAttrChunk(b *ast.Attribute, chunk []byte) bool {
+// addAttrChunk adds chunk, a .class, #id or key=value, to b, and reports
+// whether chunk is valid. An empty chunk is valid only if emptyOK is set.
+func addAttrChunk(b *ast.Attribute, chunk []byte, emptyOK bool) bool {
 	switch {
+	case len(chunk) == 0:
+		return emptyOK
 	case chunk[0] == '.':
 		b.Classes = append(b.Classes, chunk[1:])
 	case chunk[0] == '#':
