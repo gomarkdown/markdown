@@ -171,7 +171,7 @@ func prefixLines(text []byte, prefix string) []byte {
 	lines := bytes.Split(text, []byte("\n"))
 	for i, line := range lines {
 		if i > 0 && len(line) > 0 {
-			lines[i] = append([]byte(prefix), line...)
+			lines[i] = textutil.Concat(prefix, line)
 		}
 	}
 	return bytes.Join(lines, []byte("\n"))
@@ -510,7 +510,7 @@ func (r *Renderer) text(w io.Writer, text *ast.Text) {
 		return
 	}
 	if needsEscape {
-		clean = append([]byte("\\"), clean...)
+		clean = textutil.Concat(`\`, clean)
 	} else if !raw {
 		clean = escapeText(clean, text)
 	}

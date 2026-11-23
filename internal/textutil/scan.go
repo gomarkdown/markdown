@@ -1,5 +1,14 @@
 package textutil
 
+// Concat returns prefix followed by b in one allocation. append([]byte(prefix), b...)
+// allocates the prefix and then a second slice once b makes it grow.
+func Concat(prefix string, b []byte) []byte {
+	out := make([]byte, len(prefix)+len(b))
+	copy(out, prefix)
+	copy(out[len(prefix):], b)
+	return out
+}
+
 // ByteAt reports whether data[i] exists and is c.
 func ByteAt(data []byte, i int, c byte) bool {
 	return i >= 0 && i < len(data) && data[i] == c

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gomarkdown/markdown/ast"
+	"github.com/gomarkdown/markdown/internal/textutil"
 )
 
 func (r *Renderer) OutTag(w io.Writer, name string, attrs []string) {
@@ -304,7 +305,7 @@ func (r *Renderer) RenderNode(w io.Writer, node ast.Node, entering bool) ast.Wal
 	case *ast.Link:
 		r.Link(w, node, entering)
 	case *ast.CrossReference:
-		link := &ast.Link{Destination: append([]byte("#"), node.Destination...)}
+		link := &ast.Link{Destination: textutil.Concat("#", node.Destination)}
 		r.Link(w, link, entering)
 	case *ast.Citation:
 		r.Citation(w, node)

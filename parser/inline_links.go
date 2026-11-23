@@ -88,7 +88,7 @@ func leftAngle(p *Parser, data []byte, offset int) (int, ast.Node) {
 		Destination: link,
 	}
 	if altype == emailAutolink {
-		node.Destination = append([]byte("mailto:"), link...)
+		node.Destination = textutil.Concat("mailto:", link)
 	}
 	ast.AppendChild(node, newTextNode(stripMailto(link)))
 	return end, node

@@ -730,7 +730,7 @@ func commonMarkAngle(source []byte, offset int, closers *[4]nextMatchCache) (int
 		if commonMarkAutolink.Match(label) || commonMarkEmail.Match(label) {
 			destination := commonMarkURL(label)
 			if commonMarkEmail.Match(label) {
-				destination = append([]byte("mailto:"), destination...)
+				destination = textutil.Concat("mailto:", destination)
 			}
 			link := &ast.Link{Destination: destination}
 			ast.AppendChild(link, newTextNode(label))

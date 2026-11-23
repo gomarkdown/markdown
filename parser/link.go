@@ -178,7 +178,10 @@ func link(p *Parser, data []byte, offset int) (int, ast.Node) {
 				fragment = make([]byte, length)
 				copy(fragment, textutil.Slugify(id))
 			} else {
-				fragment = append([]byte("footnote-"), []byte(strconv.Itoa(noteID))...)
+				// "footnote-" plus a decimal id fits; AppendInt grows if it does not.
+				fragment = make([]byte, len("footnote-"), len("footnote-")+8)
+				copy(fragment, "footnote-")
+				fragment = strconv.AppendInt(fragment, int64(noteID), 10)
 			}
 
 			ref := &reference{
