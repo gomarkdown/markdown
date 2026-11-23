@@ -34,16 +34,21 @@ func wikiLink(p *parser.Parser, fn parser.InlineParser) parser.InlineParser {
 		if n < 5 || data[1] != '[' {
 			return fn(p, original, offset)
 		}
+		// A wiki link closes at "]]". Stopping when either byte is ']' treats
+		// "[[ab]" as a link and then reads past the end of the block.
 		i := 2
-		for i+1 < n && data[i] != ']' && data[i+1] != ']' {
+		for i+1 < n && (data[i] != ']' || data[i+1] != ']') {
 			i++
 		}
-		text := data[2 : i+1]
+		if i+1 >= n || data[i] != ']' || data[i+1] != ']' {
+			return fn(p, original, offset)
+		}
+		text := data[2:i]
 		link := &ast.Link{
 			Destination: []byte(url.PathEscape(string(text))),
 		}
 		ast.AppendChild(link, &ast.Text{Leaf: ast.Leaf{Literal: text}})
-		return i + 3, link
+		return i + 2, link
 	}
 }
 

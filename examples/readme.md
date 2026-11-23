@@ -10,6 +10,6 @@ The examples:
 * `basic.go` : simplest markdown => HTML example
 * `inline.go` : extend the parser with custom inline syntax (wiki links, hashtags)
 * `render_hook.go` : shows how to customize the HTML renderer with a render hook function
-* `code_highlight.go` : shows how to syntax-highlight code blocks using `github.com/alecthomas/chroma`
+* `code_highlight.go` : shows how to syntax-highlight code blocks using `github.com/alecthomas/chroma/v2`
 * `parser_hook.go` : shows how to extend the parser to recognize custom block-level syntax
 * `modify_ast.go` : shows how to modify the AST after parsing but before HTML rendering
