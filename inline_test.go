@@ -822,6 +822,15 @@ func TestAutoLink(t *testing.T) {
 
 		"(see https://en.wikipedia.org/wiki/Go_(language))\n",
 		"<p>(see <a href=\"https://en.wikipedia.org/wiki/Go_(language)\">https://en.wikipedia.org/wiki/Go_(language)</a>)</p>\n",
+
+		"((https://example.com/a))\n",
+		"<p>((<a href=\"https://example.com/a\">https://example.com/a</a>))</p>\n",
+
+		"https://example.com/a)) stray\n",
+		"<p><a href=\"https://example.com/a\">https://example.com/a</a>)) stray</p>\n",
+
+		"[(https://example.com/a_(b))]\n",
+		"<p>[(<a href=\"https://example.com/a_(b)\">https://example.com/a_(b)</a>)]</p>\n",
 	}
 	doLinkTestsInline(t, tests)
 }
