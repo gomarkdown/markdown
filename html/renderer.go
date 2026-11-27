@@ -46,7 +46,8 @@ func SkipParagraphTags(para *ast.Paragraph) bool {
 // Out is a helper to write data to writer
 func (r *Renderer) Out(w io.Writer, d []byte) {
 	r.lastOutputLen = len(d)
-	if r.DisableTags > 0 {
+	// htmlTagRe matches only at the start, and each tag starts with '<'
+	if r.DisableTags > 0 && len(d) > 0 && d[0] == '<' {
 		d = htmlTagRe.ReplaceAll(d, []byte{})
 	}
 	w.Write(d)
@@ -55,7 +56,8 @@ func (r *Renderer) Out(w io.Writer, d []byte) {
 // Outs is a helper to write data to writer
 func (r *Renderer) Outs(w io.Writer, s string) {
 	r.lastOutputLen = len(s)
-	if r.DisableTags > 0 {
+	// htmlTagRe matches only at the start, and each tag starts with '<'
+	if r.DisableTags > 0 && len(s) > 0 && s[0] == '<' {
 		s = htmlTagRe.ReplaceAllString(s, "")
 	}
 	io.WriteString(w, s)
