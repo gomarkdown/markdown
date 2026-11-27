@@ -25,6 +25,9 @@ const (
 	unquotedValue         = "[^\"'=<>`\\x00-\\x20]+"
 )
 
+// htmlTagRe matches one tag at the start of the text only. Out and Outs rely
+// on that, and on every htmlTag alternative starting with '<', to skip it for
+// text that does not start with '<'; TestStripTagsNeedsLeadingAngle checks it.
 var htmlTagRe = regexp.MustCompile("(?i)^" + htmlTag)
 
 var entityRe = regexp.MustCompile(`&(?:#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);`)
